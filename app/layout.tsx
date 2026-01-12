@@ -1,4 +1,14 @@
+import Image from "next/image";
+import Link from "next/link";
 import "./globals.css";
+import { Cormorant_Garamond } from "next/font/google";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-cormorant",
+});
+
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,27 +23,35 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white">
+      <body className={`bg-black text-white ${cormorant.className}`}>
         {/* HEADER */}
         <header className="w-full border-b border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="/" className="text-xl font-bold">
-              VIA
-            </a>
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/">
+              <Image
+                src="/via-logo-black.png"
+                alt="VIA logo"
+                width={120}
+                height={40}
+                priority
+              />
+            </Link>
 
+            {/* Nav */}
             <nav className="flex items-center gap-6">
-              <a
+              <Link
                 href="/for-stores"
-                className="text-gray-400 hover:text-white transition"
+                className="text-gray-300 hover:text-white transition"
               >
                 For Stores
-              </a>
+              </Link>
 
               <a
-                href="https://viaplatform.carrd.co/"
+                href="https://forms.gle/rNWypufodudZe46MA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md bg-white px-4 py-2 text-black font-medium hover:bg-gray-200 transition"
+                className="rounded-md bg-white text-black px-5 py-2 font-medium hover:bg-gray-200 transition"
               >
                 Join Waitlist
               </a>
@@ -42,35 +60,23 @@ export default function RootLayout({
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {children}
-        </main>
+        <main>{children}</main>
 
         {/* FOOTER */}
-        <footer className="mt-32 border-t border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-400">
-            <p>© VIA 2026 — Curated vintage & resale, nationwide.</p>
-
-            <div className="flex items-center gap-6">
-              <a
-                href="https://www.instagram.com/viaplatform"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                Instagram
-              </a>
-
-              <span className="text-gray-600">
-                Vetted partners · Early access
-              </span>
-            </div>
+        <footer className="border-t border-gray-800 mt-24 py-8 text-sm text-gray-400">
+          <div className="max-w-7xl mx-auto px-6 flex justify-between">
+            <span>VIA 2026 — Curated vintage & resale, nationwide.</span>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white"
+            >
+              Instagram
+            </a>
           </div>
         </footer>
       </body>
     </html>
   );
 }
-
-
-

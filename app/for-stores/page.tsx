@@ -41,7 +41,7 @@ export default function ForStoresPage() {
           <div>
             <h3 className="text-xl font-medium mb-3">2. Sync inventory</h3>
             <p className="text-gray-400">
-            VIA connects to your existing website or storefront — no re-listing,
+            VIA connects to your existing website or storefront, no re-listing,
             no migration, no change to how you sell.
             </p>
           </div>
