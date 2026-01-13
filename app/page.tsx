@@ -3,74 +3,60 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-[70vh] flex flex-col items-center justify-center text-center px-6">
-      
-      {/* LOGO */}
-      {/* HERO TITLE (logo is the H1) */}
-<h1 style={{ marginBottom: "32px" }}>
-  <Image
-    src="/via-logo-black.png"
-    alt="VIA — curated vintage & resale marketplace"
-    width={240}
-    height={140}
-    priority
-  />
-</h1>
+    <section className="bg-black text-white min-h-screen flex items-center">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
 
-{/* HERO TITLE */}
-<h1
-  style={{
-    fontFamily: "var(--font-cormorant)",
-    fontSize: "88px",
-    fontWeight: 300,
-    letterSpacing: "0.08em",
-    marginBottom: "24px",
-  }}
->
-</h1>
+        {/* LEFT: Text */}
+        <div>
+          <p className="text-sm tracking-widest text-gray-400 mb-6">
+            SHOP CURATED & VINTAGE RESALE
+          </p>
 
-      {/* HER{/* HERO TITLE */}
-      <p
-  style={{
-    fontFamily: "var(--font-cormorant)",
-    fontSize: "22px",
-    fontWeight: 300,
-    maxWidth: "720px",
-    color: "#9CA3AF",
-    marginBottom: "48px",
-    lineHeight: 1.6,
-  }}
->
-  Shop curated vintage & resale from the best independent stores — all in one place.
-</p>
+          <Image
+            src="/via-logo-black.png"
+            alt="VIA"
+            width={240}
+            height={80}
+            className="mb-8"
+            priority
+          />
 
-      {/* CTA BUTTONS */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <a
-          href="https://viaplatform.carrd.co"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-lg bg-white text-black px-8 py-4 font-medium hover:bg-gray-200 transition"
-        >
-          Join the waitlist
-        </a>
+          <p className="text-gray-300 max-w-md leading-relaxed mb-10">
+            VIA lets you shop independent resale and vintage stores from across
+            the country, all in one place. Browse multiple stores at once and
+            discover unique pieces you won’t find anywhere else.
+          </p>
 
-        <Link
-          href="/stores"
-          className="rounded-lg border border-gray-700 px-8 py-4 font-medium hover:border-white transition"
-        >
-          Browse stores
-        </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/stores"
+              className="bg-white text-black px-6 py-3 rounded-full font-medium"
+            >
+              Browse Stores
+            </Link>
+
+            <Link
+              href="/for-stores"
+              className="border border-gray-500 px-6 py-3 rounded-full text-gray-200"
+            >
+              Partner with us
+            </Link>
+          </div>
+        </div>
+
+        {/* RIGHT: Image */}
+        <div className="w-full">
+          <Image
+            src="/via-shoes.png"
+            alt="Vintage shoes"
+            width={600}
+            height={520}
+            className="w-full h-[520px] object-cover rounded-lg"
+            priority
+          />
+        </div>
+
       </div>
-
-      {/* STORE LINK */}
-      <Link
-        href="/for-stores"
-        className="text-gray-400 underline underline-offset-4 hover:text-white transition"
-      >
-        Are you a store? →
-      </Link>
-
-    </main>
+    </section>
   );
 }
