@@ -60,7 +60,9 @@ export default function RootLayout({
         </header>
 
         {/* PAGE CONTENT */}
-        <main>{children}</main>
+        <main className="snap-y snap-mandatory">
+  {children}
+</main>
 
         {/* FOOTER */}
         <footer className="border-t border-gray-800 mt-24 py-8 text-sm text-gray-400">
