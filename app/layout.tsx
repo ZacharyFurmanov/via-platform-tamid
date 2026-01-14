@@ -25,7 +25,7 @@ export default function RootLayout({
 
         {/* HEADER */}
         <header className="sticky top-0 z-50 w-full bg-black/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             
             {/* Logo */}
             <Link href="/" className="shrink-0">
@@ -41,6 +41,8 @@ export default function RootLayout({
 
             {/* Nav */}
             <nav className="flex items-center gap-4 sm:gap-6">
+
+              {/* For Stores (info page) */}
               <Link
                 href="/for-stores"
                 className="text-gray-300 hover:text-white transition text-sm sm:text-base"
@@ -48,16 +50,25 @@ export default function RootLayout({
                 For Stores
               </Link>
 
+              {/* Partner with VIA (internal) */}
+              <Link
+                href="/partner-with-us"
+                className="text-gray-300 hover:text-white transition text-sm sm:text-base"
+              >
+                Partner with VIA
+              </Link>
+
+              {/* Join Waitlist (external) */}
               <a
-                href="https://forms.gle/rNWypufodudZe46MA"
+                href="https://viaplatform.carrd.co/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-md bg-white text-black px-4 py-2 text-sm sm:px-5 sm:py-2 sm:text-base font-medium hover:bg-gray-200 transition"
               >
                 Join Waitlist
               </a>
-            </nav>
 
+            </nav>
           </div>
         </header>
 
@@ -68,7 +79,7 @@ export default function RootLayout({
 
         {/* FOOTER */}
         <footer className="mt-24 py-8 text-sm text-gray-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row gap-4 sm:gap-0 items-center sm:items-center justify-between text-center sm:text-left">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row gap-4 items-center justify-between text-center sm:text-left">
             
             <span>
               © 2026 VIA — Curated vintage & resale, nationwide.
@@ -90,3 +101,4 @@ export default function RootLayout({
     </html>
   );
 }
+
