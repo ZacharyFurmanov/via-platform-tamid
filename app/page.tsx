@@ -1,65 +1,48 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
 
-export default function PartnerWithUsPage() {
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-black text-white px-4 sm:px-6 py-24 flex justify-center">
-      <div className="w-full max-w-xl">
+    <section className="min-h-screen bg-black text-white flex items-center">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p className="text-sm tracking-widest text-gray-400 mb-6">
+            SHOP CURATED & VINTAGE RESALE
+          </p>
 
-        <h1 className="text-4xl font-semibold mb-6 text-center">
-          Partner with VIA
-        </h1>
-
-        <p className="text-gray-400 text-center mb-12">
-          Tell us about your store and we’ll be in touch shortly.
-        </p>
-
-        <form
-          action="https://formspree.io/f/mpqqzgeb"
-          method="POST"
-          className="space-y-6"
-        >
-          <input
-            type="text"
-            name="store_name"
-            placeholder="Store name"
-            required
-            className="w-full bg-black border border-gray-700 px-4 py-3 rounded-md focus:border-white focus:outline-none"
+          <Image
+            src="/via-logo-black.png"
+            alt="VIA"
+            width={240}
+            height={80}
+            className="mb-8"
+            priority
           />
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Contact email"
-            required
-            className="w-full bg-black border border-gray-700 px-4 py-3 rounded-md focus:border-white focus:outline-none"
-          />
+          <p className="text-gray-300 max-w-md mb-10">
+            VIA lets you shop independent resale and vintage stores from across
+            the country, all in one place.
+          </p>
 
-          <input
-            type="url"
-            name="website"
-            placeholder="Website or Instagram"
-            className="w-full bg-black border border-gray-700 px-4 py-3 rounded-md focus:border-white focus:outline-none"
-          />
+          <div className="flex gap-4">
+            <Link href="/stores" className="bg-white text-black px-6 py-3 rounded-full">
+              Browse Stores
+            </Link>
+            <Link href="/partner-with-us" className="border border-gray-600 px-6 py-3 rounded-full">
+              Partner with us
+            </Link>
+          </div>
+        </div>
 
-          <textarea
-            name="about"
-            rows={4}
-            placeholder="Tell us about your store"
-            className="w-full bg-black border border-gray-700 px-4 py-3 rounded-md focus:border-white focus:outline-none"
-          />
-
-          {/* Metadata */}
-          <input type="hidden" name="source" value="Partner with VIA page" />
-
-          <button
-            type="submit"
-            className="w-full bg-white text-black py-3 rounded-md font-medium hover:bg-gray-200 transition"
-          >
-            Submit
-          </button>
-        </form>
-
+        <Image
+          src="/via-shoes.png"
+          alt="Vintage shoes"
+          width={600}
+          height={520}
+          className="rounded-lg"
+        />
       </div>
-    </main>
+    </section>
   );
 }
+
