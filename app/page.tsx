@@ -3,9 +3,9 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <section className="bg-black text-white min-h-screen flex items-center">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-
+    <section className="bg-black text-white flex items-center">
+      <div className="max-w-7xl mx-auto px-6 py-32 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        
         {/* LEFT: Text */}
         <div>
           <p className="text-sm tracking-widest text-gray-400 mb-6">
