@@ -3,54 +3,37 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-[100] w-full bg-black/95 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+    <header className="fixed top-0 z-50 w-full bg-black">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
-        {/* LOGO → HOME */}
-        <Link href="/" className="shrink-0">
+        {/* LOGO */}
+        <Link href="/" className="flex items-center">
           <Image
-            src="/via-logo-black.png"
+            src="/via-logo-white.png"
             alt="VIA"
-            width={120}
-            height={40}
+            width={72}
+            height={28}
             priority
           />
         </Link>
 
         {/* NAV */}
-        <nav className="flex items-center gap-4 sm:gap-6">
-
-          {/* For Stores → INTERNAL */}
-          <Link
-            href="/for-stores"
-            className="text-gray-300 hover:text-white transition text-sm sm:text-base"
-          >
-            For Stores
+        <nav className="flex items-center gap-10 text-sm uppercase tracking-wide text-white/80">
+          <Link href="/stores" className="hover:text-white transition">
+            Stores
           </Link>
 
-          {/* Partner with VIA → INTERNAL */}
-          <Link
-            href="/partner-with-us"
-            className="text-gray-300 hover:text-white transition text-sm sm:text-base"
-          >
-            Partner with VIA
+          <Link href="/categories" className="hover:text-white transition">
+            Categories
           </Link>
 
-          {/* Join Waitlist → EXTERNAL */}
-          <a
-            href="https://viaplatform.carrd.co/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-md bg-white text-black px-4 py-2 text-sm sm:px-5 sm:py-2 sm:text-base font-medium hover:bg-gray-200 transition"
-          >
-            Join Waitlist
-          </a>
-
+          <Link href="/for-stores" className="hover:text-white transition">
+            Partner With VIA
+          </Link>
         </nav>
       </div>
     </header>
   );
 }
-
 
 

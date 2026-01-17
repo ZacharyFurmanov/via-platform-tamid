@@ -1,40 +1,59 @@
 @import "tailwindcss";
 
+/* ================================
+   Design tokens
+================================ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
+  --font-cormorant: "Cormorant Garamond", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-:root {
-  --font-cormorant: 'Cormorant Garamond', serif;
-}
-
-body {
-  font-family: var(--font-cormorant);
-}
+/* ================================
+   Base document styles
+================================ */
 html,
 body {
   height: 100%;
   scroll-behavior: smooth;
 }
+
 html {
-  scroll-padding-top: 72px; /* match header height */
+  scroll-padding-top: 72px; /* header height */
 }
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-cormorant);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================================
+   Links & focus handling
+   (prevents mystery outlines)
+================================ */
+
+/* Keep focus accessible but subtle */
 *:focus-visible {
-  outline: 2px solid rgba(255,255,255,0.4);
-  outline-offset: 2px;
+  outline: none;
 }
 
+/* Optional: restore focus rings ONLY for keyboard users if you want later */
+/*
+*:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.25);
+  outline-offset: 3px;
+}
+*/
 
+/* ================================
+   Media defaults
+================================ */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

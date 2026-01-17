@@ -1,69 +1,60 @@
-type Store = {
-  name: string;
-  location: string;
-  description: string;
-  externalUrl: string;
-  products: {
-    id: number;
-    name: string;
-    price: string;
-  }[];
-};
+import { notFound } from "next/navigation";
+import { stores } from "../storeData";
+import { products } from "../productData";
+import ProductCard from "@/app/components/ProductCard";
 
-export default function StorePage({
+export default async function StorePage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  // later this will come from a database using `params.slug`
-  const store: Store = {
-    name: "No Standing NYC",
-    location: "New York, NY",
-    description:
-      "A curated selection of designer vintage and archival pieces.",
-    externalUrl: "https://example.com",
-    products: [
-      { id: 1, name: "Vintage Prada Jacket", price: "$420" },
-      { id: 2, name: "Gucci Loafers", price: "$380" },
-      { id: 3, name: "Silk Slip Dress", price: "$190" },
-    ],
-  };
+  const { slug } = await params;
+
+  const store = stores.find((s) => s.slug === slug);
+  if (!store) return notFound();
+
+  const storeProducts = products.filter(
+    (p) => p.storeSlug === store.slug
+  );
 
   return (
-    <div className="py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">{store.name}</h1>
-        <p className="text-gray-400">{store.location}</p>
-      </div>
+    <main className="bg-white min-h-screen">
+      {/* HERO */}
+      <section className="bg-[#f7f6f3] py-32">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h1 className="text-6xl font-serif mb-4">{store.name}</h1>
+          <p className="text-gray-600 mb-6">{store.location}</p>
+          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+            {store.description}
+          </p>
+        </div>
+      </section>
 
-      {/* Description */}
-      <p className="text-gray-300 mb-8 max-w-2xl">
-        {store.description}
-      </p>
+      {/* PRODUCTS */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-serif mb-12">
+            Available from {store.name}
+          </h2>
 
-      {/* Products */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {store.products.map((product) => (
-          <div
-            key={product.id}
-            className="border border-gray-800 rounded-lg p-4"
-          >
-            <h3 className="font-medium mb-1">{product.name}</h3>
-            <p className="text-gray-400">{product.price}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* External link (temporary) */}
-      <a
-        href={store.externalUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block rounded-md bg-white px-6 py-3 text-black font-medium hover:bg-gray-200 transition"
-      >
-        Shop on store site
-      </a>
-    </div>
+          {storeProducts.length === 0 ? (
+            <p className="text-gray-500">Products coming soon.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
+              {storeProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  name={product.name}
+                  price={product.price}
+                  category={product.category}
+                  storeName={store.name}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }
+

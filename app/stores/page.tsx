@@ -1,44 +1,51 @@
-import Image from "next/image";
 import Link from "next/link";
-
-const stores = [
-  {
-    name: "No Standing NYC",
-    slug: "no-standing-nyc",
-    location: "New York, NY",
-  },
-];
+import { stores } from "./storeData";
 
 export default function StoresPage() {
   return (
-    <section className="py-16">
-      {/* VIA LOGO */}
-      <div className="mb-10 flex justify-center">
-        <Image
-          src="/via-logo-black.png"
-          alt="VIA logo"
-          width={160}
-          height={60}
-          priority
-        />
-      </div>
+    <main className="bg-white min-h-screen text-black">
+      {/* HEADER */}
+      <section className="bg-[#f7f6f3] py-32">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h1 className="text-6xl font-serif mb-6 text-black">
+            Explore our stores
+          </h1>
+          <p className="text-lg text-gray-800 max-w-2xl mx-auto">
+            Discover independent vintage and resale stores from across the country —
+            each curated with a distinct point of view.
+          </p>
+        </div>
+      </section>
 
-      <h1 className="text-4xl font-bold mb-10 text-center">
-        Stores on VIA
-      </h1>
+      {/* STORES GRID */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+            {stores.map((store) => (
+              <Link
+                key={store.slug}
+                href={`/stores/${store.slug}`}
+                className="group bg-neutral-100 p-16 transition-all hover:bg-black"
+              >
+                {/* Image placeholder */}
+                <div className="aspect-[4/5] bg-gray-200 mb-6" />
 
-      <div className="max-w-3xl mx-auto grid gap-6">
-        {stores.map((store) => (
-          <Link
-            key={store.slug}
-            href={`/stores/${store.slug}`}
-            className="border border-gray-800 rounded-lg p-6 hover:border-white transition"
-          >
-            <h2 className="text-xl font-medium">{store.name}</h2>
-            <p className="text-gray-400">{store.location}</p>
-          </Link>
-        ))}
-      </div>
-    </section>
+                <h2 className="text-2xl font-serif mb-1">
+                  {store.name}
+                </h2>
+
+                <p className="text-sm text-gray-600 group-hover:text-gray-300 mb-3">
+                  {store.location}
+                </p>
+
+                <p className="text-gray-800 group-hover:text-gray-300 leading-relaxed">
+                  {store.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

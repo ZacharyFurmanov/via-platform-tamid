@@ -1,54 +1,129 @@
 export default function ForStoresPage() {
   return (
-    <main className="flex flex-col items-center text-center">
+    <main className="bg-white min-h-screen">
 
-      {/* FOR STORES */}
-      <section className="min-h-screen w-full flex flex-col items-center pt-32 pb-32">
-        <h1 className="text-4xl font-bold mb-6">For Stores</h1>
-
-        <p className="text-lg md:text-xl text-gray-400 leading-relaxed max-w-xl mb-12">
-          VIA helps independent vintage & resale stores reach customers nationwide
-          — without changing how you run your business.
-        </p>
-
-        <ul className="text-base md:text-lg text-gray-300 mb-14 space-y-4">
-          <li>Sell your existing inventory online</li>
-          <li>Keep your brand, pricing, and voice</li>
-          <li>Get discovered by shoppers across stores</li>
-          <li>No SEO, ads, or marketing required</li>
-        </ul>
+      {/* HEADER */}
+      <section className="bg-[#f7f6f3] py-32">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h1 className="text-6xl font-serif mb-6">
+            Partner with VIA
+          </h1>
+          <p className="text-lg text-black max-w-2xl mx-auto">
+            We work with independent vintage & resale stores to help them reach
+            customers nationwide — without changing how they run their business.
+          </p>
+        </div>
       </section>
 
-      {/* HOW VIA WORKS */}
-      <section className="min-h-screen w-full flex flex-col items-center pt-24 pb-32">
-        <h2 className="text-4xl font-semibold mb-16">
-          How VIA Works
-        </h2>
+      {/* FORM */}
+      <section className="py-32">
+        <div className="max-w-xl mx-auto px-6">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-5xl px-6">
-          <div>
-            <h3 className="text-2xl font-medium mb-4">1. Apply</h3>
-            <p className="text-gray-300">
-              Stores apply to join VIA and are vetted to ensure quality and fit.
-            </p>
-          </div>
+          <form
+            action="https://formspree.io/f/mpqqzgeb"
+            method="POST"
+            className="space-y-12"
+          >
 
-          <div>
-            <h3 className="text-2xl font-medium mb-4">2. Sync inventory</h3>
-            <p className="text-gray-300">
-              VIA connects to your existing site — no re-listing, no migration.
-            </p>
-          </div>
+            {/* Store Name */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Store Name
+              </label>
+              <input
+                type="text"
+                name="store_name"
+                required
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none"
+              />
+            </div>
 
-          <div>
-            <h3 className="text-2xl font-medium mb-4">3. Get discovered</h3>
-            <p className="text-gray-300">
-              Shoppers find you via cross-store search while you keep full control.
-            </p>
-          </div>
+            {/* Website */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Website / Instagram
+              </label>
+              <input
+                type="text"
+                name="website"
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Store Location
+              </label>
+              <input
+                type="text"
+                name="location"
+                required
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none"
+              />
+            </div>
+
+            {/* Inventory Size */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Approximate Inventory Size
+              </label>
+              <select
+                name="inventory_size"
+                required
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none"
+              >
+                <option value="">Select one</option>
+                <option value="under-500">Under 500 items</option>
+                <option value="500-2000">500 – 2,000 items</option>
+                <option value="2000+">2,000+ items</option>
+              </select>
+            </div>
+
+            {/* Ecommerce */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Do you currently sell online?
+              </label>
+              <select
+                name="sells_online"
+                required
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none"
+              >
+                <option value="">Select one</option>
+                <option value="yes-own-site">Yes — my own site</option>
+                <option value="yes-marketplace">Yes — marketplace only</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            {/* Additional Notes */}
+            <div>
+              <label className="block text-sm uppercase tracking-wide mb-3">
+                Anything else you'd like us to know?
+              </label>
+              <textarea
+                name="notes"
+                rows={4}
+                className="w-full border-b border-black bg-transparent py-3 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Submit */}
+            <div className="pt-12">
+              <button
+                type="submit"
+                className="w-full border border-black py-4 text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
+              >
+                Submit Application
+              </button>
+            </div>
+
+          </form>
         </div>
       </section>
 
     </main>
   );
 }
+
