@@ -1,0 +1,14 @@
+# Query: opacity-
+# ContextLines: 1
+
+2 results - 2 files
+
+via/app/components/ProductCard.tsx:
+  16          {/* Image placeholder */}
+  17:         <div className="aspect-[3/4] bg-gray-200 mb-4 transition" />
+  18    
+
+via/app/stores/page.tsx:
+  30                  {/* Image placeholder (editorial block) */}
+  31:                 <div className="aspect-[4/5] bg-gray-200 mb-6 transition" />
+  32  

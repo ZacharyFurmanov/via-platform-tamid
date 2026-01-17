@@ -1,0 +1,111 @@
+# Query: text-gray
+# ContextLines: 1
+
+26 results - 10 files
+
+via/app/layout.tsx:
+  27  
+  28:         <footer className="mt-24 py-8 text-sm text-black-500">
+  29            <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row gap-4 items-center justify-between text-center sm:text-left">
+
+via/app/page.tsx:
+    9          <div className="max-w-7xl mx-auto px-6">
+   10:         <p className="text-sm tracking-widest text-black-600 mb-6">
+   11              SHOP CURATED & VINTAGE RESALE
+
+  113            </h2>
+  114:           <p className="text-black-800 max-w-2xl mx-auto mb-20">
+  115              A refined online experience designed for ease, trust, and global reach.
+
+  120                <h3 className="text-xl font-serif mb-3">Browse local stores</h3>
+  121:               <p className="text-black-600">
+  122                  Discover curated resale from independent stores nationwide.
+
+  127                <h3 className="text-xl font-serif mb-3">Search by items</h3>
+  128:               <p className="text-black-600">
+  129                  Find exactly what you’re looking for across multiple stores.
+
+  134                <h3 className="text-xl font-serif mb-3">Find hidden gems</h3>
+  135:               <p className="text-black-600">
+  136                  Uncover rare, one-of-a-kind pieces curated with intention.
+
+via/app/categories/page.tsx:
+  32            <h1 className="text-6xl font-serif mb-6">Shop by Category</h1>
+  33:           <p className="text-lg text-black-700">
+  34              Explore curated pieces across categories.
+
+  48                <h2 className="text-3xl font-serif mb-4">{cat.label}</h2>
+  49:               <p className="text-black-600 group-hover:text-black-300">
+  50                  {cat.description}
+
+via/app/categories/[category]/page.tsx:
+  33            <h1 className="text-6xl font-serif mb-6">{label}</h1>
+  34:           <p className="text-lg text-black-700">
+  35              Curated {label.toLowerCase()} from independent resale stores.
+
+  43            {filteredProducts.length === 0 ? (
+  44:             <p className="text-black-500">Products coming soon.</p>
+  45            ) : (
+
+via/app/components/Footer.tsx:
+  3        <footer className="border-t border-gray-800 mt-32">
+  4:         <div className="max-w-7xl mx-auto px-6 py-12 flex justify-between text-sm text-gray-400">
+  5            <p>© {new Date().getFullYear()} VIA</p>
+
+via/app/components/Header.tsx:
+  25              href="/for-stores"
+  26:             className="text-black-300 hover:text-white transition text-sm sm:text-base"
+  27            >
+
+  33              href="/partner-with-us"
+  34:             className="text-black-300 hover:text-white transition text-sm sm:text-base"
+  35            >
+
+via/app/for-stores/page.tsx:
+   8  
+   9:         <p className="text-lg md:text-xl text-black-400 leading-relaxed max-w-xl mb-12">
+  10            VIA helps independent vintage & resale stores reach customers nationwide
+
+  13  
+  14:         <ul className="text-base md:text-lg text-black-300 mb-14 space-y-4">
+  15            <li>Sell your existing inventory online</li>
+
+  30              <h3 className="text-2xl font-medium mb-4">1. Apply</h3>
+  31:             <p className="text-black-300">
+  32                Stores apply to join VIA and are vetted to ensure quality and fit.
+
+  37              <h3 className="text-2xl font-medium mb-4">2. Sync inventory</h3>
+  38:             <p className="text-black-300">
+  39                VIA connects to your existing site — no re-listing, no migration.
+
+  44              <h3 className="text-2xl font-medium mb-4">3. Get discovered</h3>
+  45:             <p className="text-black-300">
+  46                Shoppers find you via cross-store search while you keep full control.
+
+via/app/partner-with-us/page.tsx:
+   9    
+  10:           <p className="text-black-400 text-center mb-12">
+  11              Tell us a bit about your store and we’ll be in touch.
+
+via/app/stores/page.tsx:
+  12            </h1>
+  13:           <p className="text-lg text-black-700 max-w-2xl mx-auto">
+  14              Discover independent vintage and resale stores from across the country —
+
+  36  
+  37:                 <p className="text-sm text-black-500 mb-3">
+  38                    {store.location}
+
+  40  
+  41:                 <p className="text-black-700 leading-relaxed">
+  42                    {store.description}
+
+via/app/stores/[slug]/page.tsx:
+  25            <h1 className="text-6xl font-serif mb-4">{store.name}</h1>
+  26:           <p className="text-black-600 mb-6">{store.location}</p>
+  27:           <p className="text-lg text-black-700 max-w-2xl mx-auto">
+  28              {store.description}
+
+  40            {storeProducts.length === 0 ? (
+  41:             <p className="text-black-500">Products coming soon.</p>
+  42            ) : (

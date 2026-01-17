@@ -5,17 +5,18 @@ export default function StoresPage() {
   return (
     <main className="bg-white min-h-screen text-black">
       {/* HEADER */}
-      <section className="bg-[#f7f6f3] py-32">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h1 className="text-6xl font-serif mb-6 text-black">
-            Explore our stores
-          </h1>
-          <p className="text-lg text-gray-800 max-w-2xl mx-auto">
-            Discover independent vintage and resale stores from across the country —
-            each curated with a distinct point of view.
-          </p>
-        </div>
-      </section>
+      {/* HEADER */}
+<section className="bg-[#f7f6f3] py-32">
+  <div className="max-w-5xl mx-auto px-6 text-center">
+    <h1 className="text-6xl font-serif mb-6 text-black">
+      Explore Our Stores
+    </h1>
+    <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
+      Discover independent vintage and resale stores from across the country —
+      each curated with a distinct point of view.
+    </p>
+  </div>
+</section>
 
       {/* STORES GRID */}
       <section className="py-24">

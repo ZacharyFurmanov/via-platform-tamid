@@ -1,0 +1,16 @@
+# Query: <p className="text-lg text-gray-700">\n
+# ContextLines: 1
+
+2 results - 2 files
+
+via/app/categories/page.tsx:
+  32            <h1 className="text-6xl font-serif mb-6">Shop by Category</h1>
+  33:           <p className="text-lg text-black">
+  34:             Explore curated pieces across categories.
+  35            </p>
+
+via/app/categories/[category]/page.tsx:
+  33            <h1 className="text-6xl font-serif mb-6">{label}</h1>
+  34:           <p className="text-lg text-black">
+  35:             Curated {label.toLowerCase()} from independent resale stores.
+  36            </p>

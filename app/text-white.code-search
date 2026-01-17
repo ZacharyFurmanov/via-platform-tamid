@@ -1,0 +1,43 @@
+# Query: text-white
+# ContextLines: 1
+
+9 results - 6 files
+
+via/app/layout.tsx:
+  22      <html lang="en">
+  23:       <body className={`bg-black text-gray-900  ${cormorant.className}`}>
+  24          <Header />
+
+  35                rel="noopener noreferrer"
+  36:               className="hover:text-gray-900 "
+  37              >
+
+via/app/page.tsx:
+  7        {/* ================= HERO ================= */}
+  8:       <section className="min-h-screen bg-black text-gray-900  flex items-center">
+  9          <div className="max-w-7xl mx-auto px-6">
+
+via/app/categories/page.tsx:
+  45                href={`/categories/${cat.slug}`}
+  46:               className="group border p-12 hover:bg-black hover:text-gray-900  transition-colors duration-300"
+  47              >
+
+via/app/components/Footer.tsx:
+  7            <div className="space-x-6">
+  8:             <a href="#" className="hover:text-gray-900 ">Instagram</a>
+  9:             <a href="#" className="hover:text-gray-900 ">Contact</a>
+  10            </div>
+
+via/app/components/Header.tsx:
+  25              href="/for-stores"
+  26:             className="text-gray-300 hover:text-gray-900  transition text-sm sm:text-base"
+  27            >
+
+  33              href="/partner-with-us"
+  34:             className="text-gray-300 hover:text-gray-900  transition text-sm sm:text-base"
+  35            >
+
+via/app/partner-with-us/page.tsx:
+  2      return (
+  3:       <main className="min-h-screen bg-black text-white px-4 sm:px-6 py-24 flex justify-center">
+  4          <div className="w-full max-w-xl">

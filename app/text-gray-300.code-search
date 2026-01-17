@@ -1,0 +1,35 @@
+# Query: text-gray-300
+# ContextLines: 1
+
+7 results - 3 files
+
+via/app/categories/page.tsx:
+  48                <h2 className="text-3xl font-serif mb-4">{cat.label}</h2>
+  49:               <p className="text-gray-600 group-hover:text-black">
+  50                  {cat.description}
+
+via/app/components/Header.tsx:
+  25              href="/for-stores"
+  26:             className="text-black hover:text-white transition text-sm sm:text-base"
+  27            >
+
+  33              href="/partner-with-us"
+  34:             className="text-black hover:text-white transition text-sm sm:text-base"
+  35            >
+
+via/app/for-stores/page.tsx:
+  13  
+  14:         <ul className="text-base md:text-lg text-black mb-14 space-y-4">
+  15            <li>Sell your existing inventory online</li>
+
+  30              <h3 className="text-2xl font-medium mb-4">1. Apply</h3>
+  31:             <p className="text-black">
+  32                Stores apply to join VIA and are vetted to ensure quality and fit.
+
+  37              <h3 className="text-2xl font-medium mb-4">2. Sync inventory</h3>
+  38:             <p className="text-black">
+  39                VIA connects to your existing site — no re-listing, no migration.
+
+  44              <h3 className="text-2xl font-medium mb-4">3. Get discovered</h3>
+  45:             <p className="text-black">
+  46                Shoppers find you via cross-store search while you keep full control.

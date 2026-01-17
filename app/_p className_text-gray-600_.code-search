@@ -1,0 +1,20 @@
+# Query: <p className="text-gray-600">\n
+# ContextLines: 1
+
+3 results - 1 file
+
+via/app/page.tsx:
+  120                <h3 className="text-xl font-serif mb-3">Browse local stores</h3>
+  121:               <p className="text-neutral-700">
+  122:                 Discover curated resale from independent stores nationwide.
+  123                </p>
+
+  127                <h3 className="text-xl font-serif mb-3">Search by items</h3>
+  128:               <p className="text-neutral-700">
+  129:                 Find exactly what you’re looking for across multiple stores.
+  130                </p>
+
+  134                <h3 className="text-xl font-serif mb-3">Find hidden gems</h3>
+  135:              <p className="text-neutral-700">
+  136:                 Uncover rare, one-of-a-kind pieces curated with intention.
+  137                </p>

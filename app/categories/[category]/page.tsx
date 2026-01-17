@@ -28,15 +28,16 @@ export default async function CategoryPage({
     <main className="bg-white min-h-screen text-black">
       {/* HEADER */}
       <section className="bg-neutral-100 py-32">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h1 className="text-6xl font-serif mb-6 text-black">
-            {label}
-          </h1>
-          <p className="text-lg text-black/80">
-            Curated {label.toLowerCase()} from independent resale stores.
-          </p>
-        </div>
-      </section>
+  <div className="max-w-5xl mx-auto px-6 text-center">
+    <h1 className="text-6xl font-serif mb-6 text-black">
+      {label}
+    </h1>
+    <p className="text-lg text-neutral-700">
+      Curated {label.toLowerCase()} from independent resale stores.
+    </p>
+  </div>
+</section>
+
 
       {/* PRODUCTS */}
       <section className="py-24">
