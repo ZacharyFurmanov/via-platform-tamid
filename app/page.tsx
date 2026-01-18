@@ -29,11 +29,12 @@ export default function HomePage() {
           Curated Vintage & Resale
         </p>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight">
-          Shop the best vintage stores,
-          <br className="hidden sm:block" />
-          all in one place
-        </h1>
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight max-w-5xl">
+  Shop the best vintage<br />
+  <span className="whitespace-nowrap">
+    and resale stores 
+  </span>
+</h1>
 
         <p className="max-w-xl mb-10 text-lg text-gray-200">
           Discover and browse independent vintage and resale stores nationwide.
@@ -62,67 +63,116 @@ export default function HomePage() {
   </div>
 </section>
 
-      {/* ================= HIGHLIGHTED STORES ================= */}
-      <section className="bg-neutral-100 py-32 text-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-end mb-16">
-            <div>
-              <h2 className="text-5xl font-serif mb-4">
-                Selected by VIA
-              </h2>
+     {/* ================= SHOP BY STORE ================= */}
+<section className="bg-neutral-100 py-32">
+  <div className="max-w-7xl mx-auto px-6">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-16">
+      <div>
+        <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+          Selected by VIA
+        </p>
+        <h2 className="text-5xl font-serif text-black">
+          Shop by Store
+        </h2>
+      </div>
 
-              <p className="max-w-md">
-                A curated selection of independent stores we’re excited about.
-              </p>
-            </div>
+      <Link
+        href="/stores"
+        className="mt-6 sm:mt-0 text-sm uppercase tracking-wide underline"
+      >
+        View all stores
+      </Link>
+    </div>
 
-            <Link
-              href="/stores"
-              className="border border-black px-6 py-3 text-sm uppercase"
-            >
-              Explore all stores
-            </Link>
+    {/* Store grid */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+      {[
+        {
+          name: "LEI",
+          slug: "lei",
+          location: "Boston, MA",
+          image: "/stores/LEI.jpg",
+        },
+        {
+          name: "Sourced by Scottie",
+          slug: "sourced-by-scottie",
+          location: "Washington, DC",
+          image: "/stores/sourced-by-scottie.jpg",
+        },
+        {
+          name: "RE Park City",
+          slug: "re-park-city",
+          location: "Park City, UT",
+          image: "/stores/re-park-city.jpg",
+        },
+      ].map((store) => (
+        <Link
+          key={store.slug}
+          href={`/stores/${store.slug}`}
+          className="group block"
+        >
+          {/* Image */}
+          <div className="aspect-[4/5] relative overflow-hidden mb-4">
+            <Image
+              src={store.image}
+              alt={store.name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
           </div>
 
-          <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto md:overflow-visible pb-4">
-            {["LEI", "Sourced by Scottie", "RE Park City"].map((store) => (
-              <Link
-                key={store}
-                href={`/stores/${store.toLowerCase().replace(/\s/g, "-")}`}
-                className="group relative min-w-[80%] md:min-w-0"
-              >
-               <div className="aspect-[3/4] bg-gray-300 mb-4 overflow-hidden relative transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-[1.01]">
-  <div className="absolute inset-0 bg-black/10" />
-</div>
-<h3 className="text-lg font-serif">{store}</h3>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* Text */}
+          <h3 className="text-xl font-serif text-black">
+            {store.name}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {store.location}
+          </p>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
 
-      {/* ================= SHOP BY CATEGORY ================= */}
+    {/* ================= SHOP BY CATEGORY ================= */}
 <section className="bg-[#f1f1ee] py-32">
   <div className="max-w-7xl mx-auto px-6">
-  <h2 className="text-5xl font-serif mb-14">
+    <h2 className="text-6xl font-serif mb-12 text-black">
       Shop by Category
     </h2>
 
-    <div className="flex md:grid md:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible pb-4">
-      {["Clothes", "Bags", "Shoes", "Accessories"].map((category) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      {[
+        { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },
+        { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
+        { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
+        { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },
+      ].map((category) => (
         <Link
-          key={category}
-          href={`/categories/${category.toLowerCase()}`}
-          className="group relative min-w-[75%] md:min-w-0"
+          key={category.slug}
+          href={`/categories/${category.slug}`}
+          className="group relative block overflow-hidden"
         >
-          <div className="aspect-[3/4] bg-gray-300 overflow-hidden relative transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-[1.01]">
-            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition" />
+          {/* Image */}
+          <div className="aspect-[3/4] relative">
+            <Image
+              src={category.image}
+              alt={category.label}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
 
-            <div className="absolute top-6 left-6">
-            <h3 className="text-xl font-serif text-black">
-                {category}
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
+
+            {/* Text */}
+            <div className="absolute bottom-6 left-6">
+              <h3 className="text-2xl font-serif text-white mb-1">
+                {category.label}
               </h3>
-              <p className="text-xs uppercase tracking-wide text-black/70 mt-1">
+              <p className="text-xs uppercase tracking-wide text-white/80">
                 Explore
               </p>
             </div>
@@ -132,6 +182,7 @@ export default function HomePage() {
     </div>
   </div>
 </section>
+
       {/* ================= FAQ TEASER ================= */}
       <section className="bg-[#f7f6f3] py-32">
         <div className="max-w-6xl mx-auto px-6">

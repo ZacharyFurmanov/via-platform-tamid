@@ -24,25 +24,43 @@ export default function FAQAccordion({ faqs }: { faqs: FAQ[] }) {
               onClick={() =>
                 setOpenIndex(isOpen ? null : index)
               }
-              className="w-full flex items-center justify-between text-left"
+              className="w-full flex items-center justify-between text-left group"
             >
-              <h3 className="text-xl font-serif">
+              <h3 className="text-xl font-serif transition-opacity group-hover:opacity-70">
                 {faq.q}
               </h3>
 
-              <span className="text-2xl leading-none">
-                {isOpen ? "−" : "+"}
-              </span>
+              <span
+  className={`text-2xl leading-none transition-transform duration-300 ${
+    isOpen ? "rotate-45" : "rotate-0"
+  }`}
+>
+  +
+</span>
             </button>
 
-            {isOpen && (
-              <p className="mt-4 text-gray-700 max-w-3xl">
-                {faq.a}
-              </p>
-            )}
+            {/* Animated answer */}
+            <div
+              className={`grid transition-all duration-300 ease-in-out ${
+                isOpen
+                  ? "grid-rows-[1fr] opacity-100 mt-4"
+                  : "grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="overflow-hidden">
+                <p
+                  className={`text-gray-700 max-w-3xl transition-all duration-300 ease-in-out ${
+                    isOpen ? "translate-y-0" : "-translate-y-2"
+                  }`}
+                >
+                  {faq.a}
+                </p>
+              </div>
+            </div>
           </div>
         );
       })}
     </div>
   );
 }
+
