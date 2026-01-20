@@ -21,7 +21,7 @@ type SearchResult =
 export default function HeaderClient({
   categories,
 }: {
-  categories: Category[];
+  categories: { slug: string; label: string }[];
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");

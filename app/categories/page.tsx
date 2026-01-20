@@ -8,8 +8,7 @@ export default function CategoriesPage() {
   const categories = getActiveCategories();
   {categories.length === 0 && (
     <p className="text-neutral-500">Categories coming soon.</p>
-  )}
-  
+  )}  
 
   return (
     <main className="bg-white min-h-screen">

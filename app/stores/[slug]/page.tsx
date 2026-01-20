@@ -6,12 +6,6 @@ import { loadStoreProducts } from "@/app/lib/loadStoreProducts";
 import { StoreProduct } from "@/app/lib/types";
 import { categoryMap } from "@/app/lib/categoryMap";
 
-const CATEGORY_LABEL_MAP: Record<string, "Clothing" | "Bags" | "Shoes" | "Accessories"> = {
-  clothes: "Clothing",
-  bags: "Bags",
-  shoes: "Shoes",
-  accessories: "Accessories",
-};
 type StorePageProps = {
   params: Promise<{
     slug: string;
@@ -69,7 +63,7 @@ export default async function StorePage({ params }: StorePageProps) {
                 key={product.id}
                 name={product.name}
                 price={product.price}
-                category={categoryMap[product.category]}
+                category={categoryMap[product.category as keyof typeof categoryMap]}
                 storeName={store.name}
                 storeSlug={store.slug}
                 externalId={product.id}

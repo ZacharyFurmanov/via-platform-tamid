@@ -1,10 +1,25 @@
-import { categories } from "./categories";
-import { inventory } from "./inventory";
+import { inventory } from "@/app/lib/inventory";
+import { categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
 
-console.log("INVENTORY LENGTH:", inventory.length);
-console.log("INVENTORY CATEGORIES:", inventory.map(i => i.category));
+type ActiveCategory = {
+  slug: CategorySlug;
+  label: string;
+  image: string;
+};
 
-export function getActiveCategories() {
-  const activeSlugs = new Set(inventory.map(i => i.category));
-  return categories.filter(cat => activeSlugs.has(cat.slug));
+export function getActiveCategories(): ActiveCategory[] {
+  // collect unique category slugs that exist in inventory
+  const activeSlugs = new Set<CategorySlug>();
+
+  for (const item of inventory) {
+    activeSlugs.add(item.category);
+  }
+
+  // build display-ready category objects
+  return Array.from(activeSlugs).map((slug) => ({
+    slug,
+    label: categoryMap[slug],
+    image: `/categories/${slug}.jpg`, // adjust path if needed
+  }));
 }

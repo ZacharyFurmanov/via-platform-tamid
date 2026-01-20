@@ -1,30 +1,29 @@
 import leiVintageProducts from "@/app/data/lei-vintage.json";
+import type { StoreProduct } from "./types";
+import type { CategorySlug } from "@/app/lib/categoryMap";
 import { products as staticProducts } from "@/app/stores/productData";
-import { StoreProduct } from "./types";
 
 export function loadStoreProducts(storeSlug: string): StoreProduct[] {
-  // LEI → external Squarespace data
+  // ================= LEI (external Squarespace data) =================
   if (storeSlug === "lei-vintage") {
-    return leiVintageProducts.map((p: any): StoreProduct => ({
-      id: p.title,
-      name: p.title,
-      price: `$${p.price}`,
-      category: "Vintage",
-      storeSlug: "lei-vintage",
-      externalUrl: p.productUrl,
-      image: p.image, // ✅ always exists for LEI
-    }));
+    return (leiVintageProducts as any[]).map(
+      (p, idx): StoreProduct => ({
+        id: `lei-${idx}`,
+        name: p.title,
+        price: `$${p.price}`,
+        category: "clothes" as CategorySlug, // ✅ valid CategorySlug
+        storeSlug: "lei-vintage",
+        externalUrl: p.productUrl ?? "",
+        image: p.image,
+      })
+    );
   }
 
-  // All other stores → static internal data
+  // ================= ALL OTHER STORES (internal data) =================
   return staticProducts
     .filter((p) => p.storeSlug === storeSlug)
-    .map((p): StoreProduct => ({
-      id: p.id,
-      name: p.name,
-      price: `$${p.price}`,
-      category: p.category,
-      storeSlug: p.storeSlug,
-      image: undefined, // ✅ explicitly undefined
+    .map((p) => ({
+      ...p,
+      category: p.category as CategorySlug, // ensure category is a valid CategorySlug
     }));
 }
