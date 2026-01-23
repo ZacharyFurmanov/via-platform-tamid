@@ -74,14 +74,15 @@ export default async function CategoryPage({
                   className="group min-w-[70%] sm:min-w-[45%] md:min-w-0"
                 >
                   <ProductCard
-  name={product.title}
-  price={`$${product.price}`}
-  category={categoryMeta.label}
-  storeName={product.store}
-  storeSlug={product.store.toLowerCase().replace(/\s+/g, "-")}
-  externalId={product.id}
-  image={product.image}
-/>
+                    id={product.id}
+                    name={product.title}
+                    price={`$${product.price}`}
+                    category={categoryMeta.label}
+                    storeName={product.store}
+                    storeSlug={product.storeSlug}
+                    externalUrl={product.externalUrl}
+                    image={product.image}
+                  />
                 </div>
               ))}
             </div>

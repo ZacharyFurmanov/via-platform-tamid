@@ -9,6 +9,8 @@ export type InventoryItem = {
   price: number;
   image: string;
   store: string;
+  storeSlug: string;
+  externalUrl?: string;
 };
 
 const inferCategoryFromTitle = (title: string): CategorySlug | null => {
@@ -67,6 +69,8 @@ export const inventory: InventoryItem[] = (leiVintage as any[])
       price: Number(item.price),
       image: item.image ?? "/placeholder.jpg",
       store: item.store ?? "LEI Vintage",
+      storeSlug: "lei-vintage",
+      externalUrl: item.externalUrl,
     };
   })
   .filter(Boolean) as InventoryItem[];

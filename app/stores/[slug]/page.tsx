@@ -60,15 +60,16 @@ export default async function StorePage({ params }: StorePageProps) {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
               {storeProducts.map((product) => (
                 <ProductCard
-                key={product.id}
-                name={product.name}
-                price={product.price}
-                category={categoryMap[product.category as keyof typeof categoryMap]}
-                storeName={store.name}
-                storeSlug={store.slug}
-                externalId={product.id}
-                image={product.image ?? ""}
-              />              
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  category={categoryMap[product.category as keyof typeof categoryMap]}
+                  storeName={store.name}
+                  storeSlug={store.slug}
+                  externalUrl={product.externalUrl}
+                  image={product.image ?? ""}
+                />
               ))}
             </div>
           )}
