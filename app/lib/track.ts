@@ -18,6 +18,7 @@ export type ClickRecord = {
   store: string;
   storeSlug: string;
   externalUrl: string;
+  userAgent?: string;
 };
 
 /**

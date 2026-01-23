@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
     store: store || "unknown",
     storeSlug: storeSlug || "unknown",
     externalUrl,
+    userAgent: request.headers.get("user-agent") || undefined,
   };
 
   // Fire and forget - don't wait for save to complete

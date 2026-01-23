@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type SquarespaceStore = {
   type: "squarespace";
@@ -130,6 +131,16 @@ export default function SyncAdminPage() {
       {/* Header */}
       <section className="border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-black">Sync</span>
+            <span className="text-neutral-300">/</span>
+            <Link
+              href="/admin/analytics"
+              className="text-neutral-400 hover:text-black transition-colors"
+            >
+              Analytics
+            </Link>
+          </div>
           <h1 className="text-5xl font-serif mb-4">Inventory Sync</h1>
           <p className="text-neutral-600 text-lg">
             Sync products from Squarespace and Shopify partner stores.
@@ -326,6 +337,21 @@ export default function SyncAdminPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Admin Navigation */}
+      <section className="border-t border-neutral-200 py-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-6 text-sm">
+            <span className="text-black">Inventory Sync</span>
+            <Link
+              href="/admin/analytics"
+              className="text-neutral-500 hover:text-black transition-colors"
+            >
+              Analytics
+            </Link>
           </div>
         </div>
       </section>
