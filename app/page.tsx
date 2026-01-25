@@ -65,9 +65,9 @@ export default function HomePage() {
 
      {/* ================= SHOP BY STORE ================= */}
 <section className="bg-neutral-100 py-20 sm:py-32">
-  <div className="max-w-7xl mx-auto px-6">
+  <div className="max-w-7xl mx-auto">
     {/* Header */}
-    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 sm:mb-16">
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
       <div>
         <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
           Selected by VIA
@@ -85,54 +85,71 @@ export default function HomePage() {
       </Link>
     </div>
 
-    {/* Store grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10">
-      {[
-        {
-          name: "LEI",
-          slug: "lei-vintage",
-          location: "Boston, MA",
-          image: "/stores/lei-vintage.jpg",
-        },
-        {
-          name: "Sourced by Scottie",
-          slug: "sourced-by-scottie",
-          location: "Washington, DC",
-          image: "/stores/sourced-by-scottie.jpg",
-        },
-        {
-          name: "RE Park City",
-          slug: "re-park-city",
-          location: "Park City, UT",
-          image: "/stores/re-park-city.jpg",
-        },
-      ].map((store) => (
-        <Link
-          key={store.slug}
-          href={`/stores/${store.slug}`}
-          className="group block"
-        >
-          {/* Image */}
-          <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4">
-            <Image
-              src={store.image}
-              alt={store.name}
-              fill
-              sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-          </div>
+    {/* Store carousel (mobile) / grid (desktop) */}
+    <div className="relative">
+      {/* Fade edges - mobile only */}
+      <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-neutral-100 to-transparent z-10 pointer-events-none md:hidden" />
+      <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-neutral-100 to-transparent z-10 pointer-events-none md:hidden" />
 
-          {/* Text */}
-          <h3 className="text-lg sm:text-xl font-serif text-black">
-            {store.name}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {store.location}
-          </p>
-        </Link>
-      ))}
+      {/* Scrollable container (mobile) / Grid (desktop) */}
+      <div className="
+        flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-6 pb-4
+        scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+        md:grid md:grid-cols-3 md:gap-10 md:overflow-visible md:snap-none md:pb-0
+      ">
+        {[
+          {
+            name: "LEI",
+            slug: "lei-vintage",
+            location: "Boston, MA",
+            image: "/stores/lei-vintage.jpg",
+          },
+          {
+            name: "Sourced by Scottie",
+            slug: "sourced-by-scottie",
+            location: "Washington, DC",
+            image: "/stores/sourced-by-scottie.jpg",
+          },
+          {
+            name: "RE Park City",
+            slug: "re-park-city",
+            location: "Park City, UT",
+            image: "/stores/re-park-city.jpg",
+          },
+        ].map((store, index) => (
+          <Link
+            key={store.slug}
+            href={`/stores/${store.slug}`}
+            className={`
+              group block flex-shrink-0 snap-center
+              w-[75vw] max-w-[300px]
+              md:w-auto md:max-w-none md:snap-align-none
+              ${index === 0 ? 'ml-0' : ''}
+              ${index === 2 ? 'mr-0' : ''}
+            `}
+          >
+            {/* Image */}
+            <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+              <Image
+                src={store.image}
+                alt={store.name}
+                fill
+                sizes="(min-width: 768px) 33vw, 75vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+            </div>
+
+            {/* Text */}
+            <h3 className="text-lg sm:text-xl font-serif text-black">
+              {store.name}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {store.location}
+            </p>
+          </Link>
+        ))}
+      </div>
     </div>
   </div>
 </section>
