@@ -1,6 +1,5 @@
 import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
-import NewsletterSignup from "./components/NewsletterSignup";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -254,7 +253,7 @@ export default function HomePage() {
             with the store you love.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 mb-12 sm:mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <div>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Browse across stores</h3>
               <p className="text-gray-300 text-sm sm:text-base">
@@ -277,10 +276,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Newsletter Signup */}
-          <div className="max-w-lg mx-auto">
-            <NewsletterSignup variant="hero" />
-          </div>
         </div>
       </section>
 
