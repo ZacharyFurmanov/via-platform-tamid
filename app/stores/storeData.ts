@@ -1,32 +1,12 @@
 export const stores = [
   {
-    slug: "lei",
-    name: "LEI",
-    image: "/stores/lei-vintage.jpg",
+    slug: "lei-vintage",
+    name: "LEI Vintage",
+    image: "/stores/LEI.jpg",
     baseUrl: "https://leivintage.com",
     location: "Boston, MA",
     description:
-      "Based in Boston, LEI curates pieces that represent timelessness and history.",
-    categories: ["Clothes", "Accessories"],
-  },
-  {
-    slug: "sourced-by-scottie",
-    name: "Sourced by Scottie",
-    image: "/stores/sourced-by-scottie.jpg",
-    baseUrl: "https://sourcedbyscottie.com",
-    location: "Washington, DC",
-    description:
-      "Sourcing pieces in Milan and beyond, Sourced by Scottie highlights one-of-a-kind European finds.",
-    categories: ["Clothes", "Shoes"],
-  },
-  {
-    slug: "re-park-city",
-    name: "RE Park City",
-    image: "/stores/re-park-city.jpg",
-    baseUrl: "https://reparkcity.com",
-    location: "Park City, UT",
-    description:
-      "Curated consignment ranging from western styles to high-quality ski gear.",
+      "LEI was born from the belief that the best style already exists. Rooted in vintage and sustainability, we curate timeless pieces with history and character. Reviving the past to create modern staples meant to be worn again and again.",
     categories: ["Clothes", "Accessories"],
   },
 ];

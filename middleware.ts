@@ -4,8 +4,16 @@ import type { NextRequest } from "next/server";
 // Routes under /admin that should remain public
 const PUBLIC_ADMIN_ROUTES = ["/admin/login"];
 
+// Default admin page to redirect to
+const DEFAULT_ADMIN_PAGE = "/admin/sync";
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Redirect /admin to /admin/sync (the default admin page)
+  if (pathname === "/admin") {
+    return NextResponse.redirect(new URL(DEFAULT_ADMIN_PAGE, request.url));
+  }
 
   // Skip if this is a public admin route
   const isPublicRoute = PUBLIC_ADMIN_ROUTES.some(
@@ -23,7 +31,7 @@ export function middleware(request: NextRequest) {
   // If no password is configured, always require login (show error on login page)
   if (!expectedToken) {
     const loginUrl = new URL("/admin/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
+    loginUrl.searchParams.set("redirect", DEFAULT_ADMIN_PAGE);
     loginUrl.searchParams.set("error", "not_configured");
     return NextResponse.redirect(loginUrl);
   }
@@ -51,5 +59,5 @@ function hashPassword(password: string): string {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*"],
 };

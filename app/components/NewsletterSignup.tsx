@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 type NewsletterSignupProps = {
   variant?: "default" | "hero" | "footer";
@@ -16,9 +16,18 @@ export default function NewsletterSignup({
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const isSubmittingRef = useRef(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitForm = async () => {
+    // Prevent double submission from touch + click events
+    if (isSubmittingRef.current || status === "loading") return;
+    isSubmittingRef.current = true;
+
+    // Reset the flag after a short delay to allow future submissions
+    setTimeout(() => {
+      isSubmittingRef.current = false;
+    }, 500);
 
     if (!email.trim()) {
       setStatus("error");
@@ -59,6 +68,18 @@ export default function NewsletterSignup({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitForm();
+  };
+
+  // Handle button click/touch directly for better mobile support
+  const handleButtonInteraction = async (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await submitForm();
+  };
+
   // Hero variant - larger, more prominent
   if (variant === "hero") {
     return (
@@ -68,23 +89,29 @@ export default function NewsletterSignup({
             <p className="text-lg text-green-600 font-medium">{message}</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="w-full">
+          <form ref={formRef} onSubmit={handleSubmit} className="w-full">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                autoCorrect="off"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3.5 bg-white/10 border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:border-white transition min-h-[48px]"
+                className="flex-1 px-4 py-3.5 bg-white/10 border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:border-white transition min-h-[48px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="px-8 py-3.5 bg-white text-black text-sm uppercase tracking-wide hover:bg-neutral-200 transition disabled:opacity-50 min-h-[48px]"
+                onClick={handleButtonInteraction}
+                onTouchEnd={handleButtonInteraction}
+                className="px-8 py-3.5 bg-white text-black text-sm uppercase tracking-wide hover:bg-neutral-200 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "Joining..." : "Get Updates"}
               </button>
@@ -106,23 +133,29 @@ export default function NewsletterSignup({
         {status === "success" ? (
           <p className="text-sm text-neutral-400">{message}</p>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form ref={formRef} onSubmit={handleSubmit}>
             <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                autoCorrect="off"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Your email"
-                className="flex-1 px-4 py-2.5 bg-transparent border border-neutral-700 text-white placeholder:text-neutral-500 text-sm focus:outline-none focus:border-white transition min-h-[44px]"
+                className="flex-1 px-4 py-2.5 bg-transparent border border-neutral-700 text-white placeholder:text-neutral-500 text-sm focus:outline-none focus:border-white transition min-h-[44px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="px-5 py-2.5 border border-white text-white text-xs uppercase tracking-wide hover:bg-white hover:text-black transition disabled:opacity-50 min-h-[44px]"
+                onClick={handleButtonInteraction}
+                onTouchEnd={handleButtonInteraction}
+                className="px-5 py-2.5 border border-white text-white text-xs uppercase tracking-wide hover:bg-white hover:text-black transition disabled:opacity-50 min-h-[44px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "..." : "Join"}
               </button>
@@ -147,23 +180,29 @@ export default function NewsletterSignup({
           <p className="text-green-800">{message}</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form ref={formRef} onSubmit={handleSubmit}>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="off"
+              autoCorrect="off"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (status === "error") setStatus("idle");
               }}
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition min-h-[48px]"
+              className="flex-1 px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition min-h-[48px] touch-manipulation"
               disabled={status === "loading"}
             />
             <button
               type="submit"
               disabled={status === "loading"}
-              className="px-6 py-3 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 min-h-[48px]"
+              onClick={handleButtonInteraction}
+              onTouchEnd={handleButtonInteraction}
+              className="px-6 py-3 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
             >
               {status === "loading" ? "Joining..." : "Join Waitlist"}
             </button>

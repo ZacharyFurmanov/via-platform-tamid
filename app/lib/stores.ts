@@ -4,10 +4,10 @@ export const stores = [
     name: "LEI Vintage",
     location: "Boston, MA",
     description:
-      "Based in Boston, LEI curates pieces that represent timelessness and history.",
+      "LEI was born from the belief that the best style already exists. Rooted in vintage and sustainability, we curate timeless pieces with history and character. Reviving the past to create modern staples meant to be worn again and again.",
     website: "https://www.leivintage.com",
     dataSource: "lei-vintage",
-    image: "/stores/lei-vintage.jpg",
+    image: "/stores/LEI.jpg",
   },
 ]
   
