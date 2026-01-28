@@ -14,6 +14,9 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "VIA",
   description: "Curated vintage & resale, nationwide.",
+  other: {
+    "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",
+  },
 };
 
 export default function RootLayout({
@@ -24,14 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${cormorant.className} bg-white text-black`}>
-      <Header />
-
-      <main className="pt-20">
-        {children}
-      </main>
-      <Footer />
+        <Header />
+        <main className="pt-20">{children}</main>
+        <Footer />
       </body>
     </html>
   );
 }
+
 
