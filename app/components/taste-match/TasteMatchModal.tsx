@@ -360,6 +360,7 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
                 secondaryPercentage={profile.secondaryPercentage}
                 tertiaryTag={profile.tertiaryTag}
                 tertiaryPercentage={profile.tertiaryPercentage}
+                locked={!isUnlocked}
               />
             </div>
 
@@ -400,8 +401,13 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
             {/* Action buttons */}
             <div className="mt-6 space-y-3 animate-[fadeSlideUp_0.4s_ease-out_0.3s_both]">
               <button
-                onClick={handleViewFullResults}
-                className="w-full border border-black py-3 px-6 text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
+                onClick={isUnlocked ? handleViewFullResults : undefined}
+                disabled={!isUnlocked}
+                className={`w-full border py-3 px-6 text-sm uppercase tracking-wide transition ${
+                  isUnlocked
+                    ? "border-black hover:bg-black hover:text-white cursor-pointer"
+                    : "border-gray-300 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 View Full Results
               </button>

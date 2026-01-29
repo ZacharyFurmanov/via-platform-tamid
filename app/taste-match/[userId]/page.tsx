@@ -129,6 +129,7 @@ export default function ResultsPage({ params }: ResultsPageProps) {
             secondaryPercentage={profile.secondaryPercentage}
             tertiaryTag={profile.tertiaryTag}
             tertiaryPercentage={profile.tertiaryPercentage}
+            locked={isOwnProfile && !isUnlocked}
           />
         </div>
 
