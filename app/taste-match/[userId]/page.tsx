@@ -120,29 +120,54 @@ export default function ResultsPage({ params }: ResultsPageProps) {
           <h1 className="text-3xl font-serif">VIA Taste Match</h1>
         </div>
 
-        {/* Taste Card */}
-        <div className="mb-8">
-          <TasteCard
-            primaryTag={profile.primaryTag}
-            primaryPercentage={profile.primaryPercentage}
-            secondaryTag={profile.secondaryTag}
-            secondaryPercentage={profile.secondaryPercentage}
-            tertiaryTag={profile.tertiaryTag}
-            tertiaryPercentage={profile.tertiaryPercentage}
-            locked={isOwnProfile && !isUnlocked}
-          />
-        </div>
+        {/* Own profile - Locked state */}
+        {isOwnProfile && !isUnlocked && (
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-black/5 flex items-center justify-center">
+              <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
 
-        {/* Share + Referral Section - only for own profile */}
-        {isOwnProfile && (
+            <h2 className="text-2xl sm:text-3xl font-serif mb-3 text-black">
+              Invite 2 friends to unlock
+              <br />
+              your results
+            </h2>
+
+            <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto">
+              Share the quiz with friends. When 2 complete it, your full taste profile unlocks.
+            </p>
+
+            <div className="mb-8">
+              <ReferralProgress
+                completedCount={completedCount}
+                isUnlocked={isUnlocked}
+              />
+            </div>
+
+            <ShareButton userId={userId} />
+          </div>
+        )}
+
+        {/* Own profile - Unlocked state */}
+        {isOwnProfile && isUnlocked && (
           <>
+            <div className="mb-8">
+              <TasteCard
+                primaryTag={profile.primaryTag}
+                primaryPercentage={profile.primaryPercentage}
+                secondaryTag={profile.secondaryTag}
+                secondaryPercentage={profile.secondaryPercentage}
+                tertiaryTag={profile.tertiaryTag}
+                tertiaryPercentage={profile.tertiaryPercentage}
+              />
+            </div>
+
             <div className="mb-8">
               <ShareButton userId={userId} />
 
               <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600 mb-3">
-                  Invite 2 friends to unlock Taste Matches
-                </p>
                 <ReferralProgress
                   completedCount={completedCount}
                   isUnlocked={isUnlocked}
@@ -150,29 +175,33 @@ export default function ResultsPage({ params }: ResultsPageProps) {
               </div>
             </div>
 
-            {/* Taste Matches Section */}
-            {isUnlocked && (
+            {referrals && referrals.friends.length > 0 && (
               <div className="border-t border-gray-200 pt-8">
                 <UnlockCelebration>
                   <div className="bg-white rounded-lg p-6 border border-gray-200">
-                    <ReferralProgress
-                      completedCount={completedCount}
-                      isUnlocked={isUnlocked}
+                    <TasteComparison
+                      userProfile={profile}
+                      friendProfiles={referrals.friends}
                     />
-
-                    {referrals && referrals.friends.length > 0 && (
-                      <div className="mt-6">
-                        <TasteComparison
-                          userProfile={profile}
-                          friendProfiles={referrals.friends}
-                        />
-                      </div>
-                    )}
                   </div>
                 </UnlockCelebration>
               </div>
             )}
           </>
+        )}
+
+        {/* Visitor viewing someone else's profile */}
+        {!isOwnProfile && (
+          <div className="mb-8">
+            <TasteCard
+              primaryTag={profile.primaryTag}
+              primaryPercentage={profile.primaryPercentage}
+              secondaryTag={profile.secondaryTag}
+              secondaryPercentage={profile.secondaryPercentage}
+              tertiaryTag={profile.tertiaryTag}
+              tertiaryPercentage={profile.tertiaryPercentage}
+            />
+          </div>
         )}
 
         {/* Not own profile - CTA to take quiz */}

@@ -342,10 +342,54 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
           </div>
         )}
 
-        {/* Results Step */}
-        {step === "results" && profile && (
+        {/* Results Step - Locked */}
+        {step === "results" && profile && !isUnlocked && (
+          <div className="p-8 sm:p-12 animate-[fadeSlideUp_0.4s_ease-out_both]">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-black/5 flex items-center justify-center">
+                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-serif mb-3 text-black">
+                Invite 2 friends to unlock
+                <br />
+                your results
+              </h2>
+
+              <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto">
+                Share the quiz with friends. When 2 complete it, your full taste profile unlocks.
+              </p>
+
+              <div className="mb-8">
+                <ReferralProgress
+                  completedCount={completedCount}
+                  isUnlocked={isUnlocked}
+                />
+              </div>
+
+              {userId && (
+                <ShareButton
+                  userId={userId}
+                  onShareStart={() => setIsShareBlurred(true)}
+                  onShareEnd={() => setIsShareBlurred(false)}
+                />
+              )}
+
+              <button
+                onClick={handleRetakeQuiz}
+                className="mt-4 w-full text-sm text-gray-500 hover:text-black transition py-2"
+              >
+                Retake Quiz
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Results Step - Unlocked */}
+        {step === "results" && profile && isUnlocked && (
           <div className="p-6 sm:p-8">
-            {/* Results card with fade-in */}
             <div className="animate-[fadeSlideUp_0.4s_ease-out_both]">
               <div className="text-center mb-6">
                 <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-2">
@@ -360,7 +404,6 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
                 secondaryPercentage={profile.secondaryPercentage}
                 tertiaryTag={profile.tertiaryTag}
                 tertiaryPercentage={profile.tertiaryPercentage}
-                locked={!isUnlocked}
               />
             </div>
 
@@ -374,19 +417,14 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
                 />
               )}
 
-              {/* Referral Progress */}
               <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600 mb-4">
-                  Invite 2 friends to unlock Taste Matches
-                </p>
                 <ReferralProgress
                   completedCount={completedCount}
                   isUnlocked={isUnlocked}
                 />
               </div>
 
-              {/* Taste Comparison - shown when unlocked */}
-              {isUnlocked && referrals && referrals.friends.length > 0 && (
+              {referrals && referrals.friends.length > 0 && (
                 <div className="mt-6 animate-[fadeSlideUp_0.4s_ease-out_both]">
                   <UnlockCelebration>
                     <TasteComparison
@@ -401,13 +439,8 @@ export default function TasteMatchModal({ isOpen, onClose }: TasteMatchModalProp
             {/* Action buttons */}
             <div className="mt-6 space-y-3 animate-[fadeSlideUp_0.4s_ease-out_0.3s_both]">
               <button
-                onClick={isUnlocked ? handleViewFullResults : undefined}
-                disabled={!isUnlocked}
-                className={`w-full border py-3 px-6 text-sm uppercase tracking-wide transition ${
-                  isUnlocked
-                    ? "border-black hover:bg-black hover:text-white cursor-pointer"
-                    : "border-gray-300 text-gray-400 cursor-not-allowed"
-                }`}
+                onClick={handleViewFullResults}
+                className="w-full border border-black py-3 px-6 text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
               >
                 View Full Results
               </button>

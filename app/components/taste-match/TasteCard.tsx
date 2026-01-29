@@ -10,7 +10,6 @@ interface TasteCardProps {
   secondaryPercentage: number;
   tertiaryTag: TasteTag;
   tertiaryPercentage: number;
-  locked?: boolean;
 }
 
 export default function TasteCard({
@@ -20,7 +19,6 @@ export default function TasteCard({
   secondaryPercentage,
   tertiaryTag,
   tertiaryPercentage,
-  locked = false,
 }: TasteCardProps) {
   const primary = TASTE_TAGS[primaryTag];
   const secondary = TASTE_TAGS[secondaryTag];
@@ -63,31 +61,19 @@ export default function TasteCard({
         </div>
 
         {/* Bottom - Secondary/Tertiary Tags */}
-        <div className="relative">
-          <div className={`space-y-2 ${locked ? "blur-sm select-none" : ""}`}>
-            <div className="flex justify-between items-center text-sm">
-              <span style={{ color: secondary.color }} className="font-medium">
-                {secondary.label}
-              </span>
-              <span className="text-gray-600">{secondaryPercentage}%</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span style={{ color: tertiary.color }} className="font-medium">
-                {tertiary.label}
-              </span>
-              <span className="text-gray-600">{tertiaryPercentage}%</span>
-            </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <span style={{ color: secondary.color }} className="font-medium">
+              {secondary.label}
+            </span>
+            <span className="text-gray-600">{secondaryPercentage}%</span>
           </div>
-          {locked && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex items-center gap-1.5 text-gray-500 text-xs">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Invite friends to unlock
-              </div>
-            </div>
-          )}
+          <div className="flex justify-between items-center text-sm">
+            <span style={{ color: tertiary.color }} className="font-medium">
+              {tertiary.label}
+            </span>
+            <span className="text-gray-600">{tertiaryPercentage}%</span>
+          </div>
         </div>
       </div>
 
