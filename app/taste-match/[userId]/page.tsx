@@ -50,7 +50,6 @@ export default function ResultsPage({ params }: ResultsPageProps) {
         }
 
         if (!profileData) {
-          // Profile not found - redirect to quiz if own profile
           if (storedUserId === userId) {
             router.push("/taste-match/quiz");
           } else {
@@ -61,7 +60,7 @@ export default function ResultsPage({ params }: ResultsPageProps) {
 
         setProfile(profileData);
 
-        // Try to fetch referral status (optional)
+        // Fetch referral status
         try {
           const referralsRes = await fetch(
             `/api/taste-match/referrals/${userId}`
@@ -133,70 +132,46 @@ export default function ResultsPage({ params }: ResultsPageProps) {
           />
         </div>
 
-        {/* Share Button - only for own profile */}
+        {/* Share + Referral Section - only for own profile */}
         {isOwnProfile && (
-          <div className="mb-8">
-            <ShareButton userId={userId} />
-          </div>
-        )}
+          <>
+            <div className="mb-8">
+              <ShareButton userId={userId} />
 
-        {/* Referral Section - only for own profile */}
-        {isOwnProfile && (
-          <div className="border-t border-gray-200 pt-8">
-            <h2 className="text-xl font-serif text-center mb-6">
-              Taste Matches
-            </h2>
-
-            {!isUnlocked ? (
-              <div className="text-center">
-                <div className="bg-white rounded-lg p-6 border border-gray-200">
-                  <div className="mb-4">
-                    <svg
-                      className="w-8 h-8 mx-auto text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                  </div>
-
-                  <p className="text-gray-600 mb-4">
-                    Invite 2 friends to take the quiz and unlock your Taste
-                    Matches to see how your styles compare!
-                  </p>
-
-                  <ReferralProgress
-                    completedCount={completedCount}
-                    isUnlocked={isUnlocked}
-                  />
-                </div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600 mb-3">
+                  Invite 2 friends to unlock Taste Matches
+                </p>
+                <ReferralProgress
+                  completedCount={completedCount}
+                  isUnlocked={isUnlocked}
+                />
               </div>
-            ) : (
-              <UnlockCelebration>
-                <div className="bg-white rounded-lg p-6 border border-gray-200">
-                  <ReferralProgress
-                    completedCount={completedCount}
-                    isUnlocked={isUnlocked}
-                  />
+            </div>
 
-                  {referrals && referrals.friends.length > 0 && (
-                    <div className="mt-6">
-                      <TasteComparison
-                        userProfile={profile}
-                        friendProfiles={referrals.friends}
-                      />
-                    </div>
-                  )}
-                </div>
-              </UnlockCelebration>
+            {/* Taste Matches Section */}
+            {isUnlocked && (
+              <div className="border-t border-gray-200 pt-8">
+                <UnlockCelebration>
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <ReferralProgress
+                      completedCount={completedCount}
+                      isUnlocked={isUnlocked}
+                    />
+
+                    {referrals && referrals.friends.length > 0 && (
+                      <div className="mt-6">
+                        <TasteComparison
+                          userProfile={profile}
+                          friendProfiles={referrals.friends}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </UnlockCelebration>
+              </div>
             )}
-          </div>
+          </>
         )}
 
         {/* Not own profile - CTA to take quiz */}

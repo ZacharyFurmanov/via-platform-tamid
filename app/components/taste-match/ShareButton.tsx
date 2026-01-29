@@ -4,39 +4,42 @@ import { useState } from "react";
 
 interface ShareButtonProps {
   userId: string;
+  onShareStart?: () => void;
+  onShareEnd?: () => void;
 }
 
-export default function ShareButton({ userId }: ShareButtonProps) {
+export default function ShareButton({ userId, onShareStart, onShareEnd }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/taste-match?ref=${userId}`
-      : "";
+  const shareUrl = `https://thevia.co/taste-match?ref=${userId}`;
+  const shareText = `I just discovered my VIA taste! Take the quiz and see yours: ${shareUrl}`;
 
   const handleShare = async () => {
-    // Try native share on mobile
+    onShareStart?.();
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Discover Your VIA Taste",
-          text: "I just found my fashion taste profile! Take the quiz and see if we match.",
+          title: "VIA Taste Match",
+          text: "I just discovered my VIA taste! Take the quiz and see yours:",
           url: shareUrl,
         });
+        onShareEnd?.();
         return;
       } catch {
-        // User cancelled or share failed, fall through to clipboard
+        onShareEnd?.();
       }
     }
 
     // Fallback to clipboard
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(shareText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       console.error("Failed to copy to clipboard");
     }
+    onShareEnd?.();
   };
 
   return (
