@@ -61,7 +61,7 @@ export default function WaitlistPage() {
           />
 
           {/* Body Text */}
-          <p className="text-[16px] sm:text-[17px] leading-[2] font-extralight tracking-wide mb-12">
+          <p className="text-[16px] sm:text-[17px] leading-[2] font-light tracking-wide mb-12">
             VIA lets you shop independent resale and vintage stores across the
             country, all in one place. Browse multiple stores at once and
             discover unique pieces you won&apos;t find anywhere else.
