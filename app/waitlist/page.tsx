@@ -58,7 +58,7 @@ export default function WaitlistPage() {
               alt="VIA"
               width={990}
               height={492}
-              className="w-[160px] sm:w-[240px] h-auto mb-6 sm:mb-8"
+              className="w-[160px] sm:w-[240px] h-auto mb-6 sm:mb-8 -ml-7 sm:-ml-10"
               priority
             />
 
