@@ -39,39 +39,39 @@ export default function WaitlistPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-20">
-        <div className="max-w-xl w-full text-center">
+      <main className="flex-1 flex items-center justify-center px-8">
+        <div className="max-w-lg w-full text-center">
           {/* Logo */}
-          <h1 className="text-5xl sm:text-7xl font-serif tracking-wide mb-8">
+          <h1 className="text-7xl sm:text-8xl md:text-9xl font-serif tracking-[0.15em] mb-12">
             VIA
           </h1>
 
           {/* Tagline */}
-          <p className="text-neutral-400 text-base sm:text-lg leading-relaxed mb-4 max-w-md mx-auto">
+          <p className="text-neutral-300 text-base sm:text-lg leading-[2] tracking-wide mb-6 max-w-md mx-auto font-light">
             Shop independent resale and vintage stores from across the country, all in one place.
           </p>
 
-          <p className="text-neutral-500 text-sm leading-relaxed mb-12 max-w-sm mx-auto">
+          <p className="text-neutral-500 text-sm leading-[2] tracking-wide mb-14 max-w-sm mx-auto font-light">
             Browse multiple stores at once and discover unique pieces you won&apos;t find anywhere else.
           </p>
 
           {/* Email Form */}
           {status === "success" ? (
             <div className="animate-[fadeIn_0.4s_ease-out]">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full border border-neutral-700 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-neutral-700 flex items-center justify-center">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-white text-lg font-serif mb-2">{message}</p>
-              <p className="text-neutral-500 text-sm">
+              <p className="text-white text-xl font-serif mb-3">{message}</p>
+              <p className="text-neutral-500 text-sm tracking-wide">
                 We&apos;ll let you know when VIA launches.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="max-w-sm mx-auto">
+            <form onSubmit={handleSubmit} className="max-w-md mx-auto">
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="email"
@@ -82,19 +82,19 @@ export default function WaitlistPage() {
                   }}
                   placeholder="Enter your email"
                   required
-                  className="flex-1 px-5 py-4 bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 text-sm outline-none focus:border-neutral-600 transition-colors"
+                  className="flex-1 px-5 py-4 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm tracking-wide outline-none focus:border-neutral-400 transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={status === "loading" || !email.trim()}
-                  className="px-8 py-4 bg-white text-black text-sm uppercase tracking-wide hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-8 py-4 bg-white text-black text-sm uppercase tracking-[0.15em] font-medium hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {status === "loading" ? "Joining..." : "Join Waitlist"}
                 </button>
               </div>
 
               {status === "error" && message && (
-                <p className="text-red-400 text-sm mt-3">{message}</p>
+                <p className="text-red-400 text-sm mt-4 tracking-wide">{message}</p>
               )}
             </form>
           )}
@@ -102,8 +102,8 @@ export default function WaitlistPage() {
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-8">
-        <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-neutral-600 text-xs">
+      <footer className="px-8 py-8">
+        <div className="max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-neutral-600 text-xs tracking-wide">
           <div className="flex items-center gap-6">
             <Link href="/terms" className="hover:text-neutral-400 transition-colors">
               Terms
