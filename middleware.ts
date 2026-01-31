@@ -9,6 +9,7 @@ const PUBLIC_ROUTES = [
   "/api/admin/auth",
   "/terms",
   "/privacy",
+  "/api/giveaway",
 ];
 
 // Simple hash function for password comparison
@@ -49,6 +50,12 @@ function isPublicRoute(pathname: string): boolean {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Allow homepage access when ?ref= param is present (giveaway referral links)
+  const refCode = request.nextUrl.searchParams.get("ref");
+  if (pathname === "/" && refCode) {
+    return NextResponse.next();
+  }
 
   // Allow public routes without auth
   if (isPublicRoute(pathname)) {

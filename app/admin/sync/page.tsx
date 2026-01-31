@@ -42,7 +42,7 @@ const SQUARESPACE_STORES: SquarespaceStore[] = [
     type: "squarespace",
     name: "LEI Vintage",
     slug: "lei-vintage",
-    rssUrl: "https://www.leivintage.com/blog?format=rss",
+    rssUrl: "https://www.leivintage.com/shop?format=rss",
   },
 ];
 

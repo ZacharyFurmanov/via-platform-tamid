@@ -1,6 +1,6 @@
 import Link from "next/link";
 import NewsletterSignup from "./NewsletterSignup";
-import { TasteMatchFooterLink } from "./TasteMatchTrigger";
+import { GiveawayFooterLink } from "./GiveawayProvider";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -89,7 +89,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <TasteMatchFooterLink />
+                <GiveawayFooterLink />
               </li>
             </ul>
           </div>
