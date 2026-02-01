@@ -40,7 +40,7 @@ function WaitlistContent() {
       setReferralCode(storedCode);
       setEmail(storedEmail);
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
-      setReferralLink(`${baseUrl}/?ref=${storedCode}`);
+      setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
       setPhase("confirmation");
 
       fetch(`/api/giveaway/status/${storedCode}`)

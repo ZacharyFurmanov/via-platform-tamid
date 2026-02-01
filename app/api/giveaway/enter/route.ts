@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const { referralCode, isExisting } = await createGiveawayEntry(normalizedEmail, refCode);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
-    const referralLink = `${baseUrl}/?ref=${referralCode}`;
+    const referralLink = `${baseUrl}/waitlist?ref=${referralCode}`;
 
     // Send confirmation email to the new user (only for new entries)
     if (!isExisting) {

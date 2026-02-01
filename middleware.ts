@@ -51,10 +51,12 @@ function isPublicRoute(pathname: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow homepage access when ?ref= param is present (giveaway referral links)
+  // Redirect referral links to waitlist page with the giveaway modal
   const refCode = request.nextUrl.searchParams.get("ref");
   if (pathname === "/" && refCode) {
-    return NextResponse.next();
+    const waitlistUrl = new URL("/waitlist", request.url);
+    waitlistUrl.searchParams.set("ref", refCode);
+    return NextResponse.redirect(waitlistUrl);
   }
 
   // Allow public routes without auth

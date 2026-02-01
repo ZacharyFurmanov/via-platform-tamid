@@ -51,7 +51,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
       setReferralCode(storedCode);
       setEmail(storedEmail);
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
-      setReferralLink(`${baseUrl}/?ref=${storedCode}`);
+      setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
 
       // Fetch current status
       fetch(`/api/giveaway/status/${storedCode}`)

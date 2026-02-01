@@ -32,16 +32,9 @@ function GiveawayProviderInner({ children }: { children: ReactNode }) {
 
   // Auto-show logic
   useEffect(() => {
-    // Only auto-show on homepage
-    if (pathname !== "/") return;
-
-    // If already entered, don't auto-show
-    const alreadyEntered = localStorage.getItem("via_giveaway_entered");
-    if (alreadyEntered) return;
-
-    // If URL has ?ref=, show immediately
+    // If URL has ?ref=, show giveaway modal immediately (works on /waitlist)
     const ref = searchParams.get("ref");
-    if (ref) {
+    if (ref && pathname === "/waitlist") {
       setRefCode(ref);
       if (!hasAutoShownRef.current) {
         hasAutoShownRef.current = true;
@@ -49,6 +42,13 @@ function GiveawayProviderInner({ children }: { children: ReactNode }) {
       }
       return;
     }
+
+    // Only auto-show on homepage
+    if (pathname !== "/") return;
+
+    // If already entered, don't auto-show
+    const alreadyEntered = localStorage.getItem("via_giveaway_entered");
+    if (alreadyEntered) return;
 
     // Otherwise show after 2s delay
     if (hasAutoShownRef.current) return;

@@ -28,7 +28,7 @@ function baseStyles() {
 
 export async function sendGiveawayConfirmation(email: string, referralCode: string) {
   const resend = getResend();
-  const referralLink = `${BASE_URL}/?ref=${referralCode}`;
+  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
 
   await resend.emails.send({
     from: FROM_EMAIL,
@@ -64,7 +64,7 @@ export async function sendFriendEnteredEmail(
   friendNumber: 1 | 2
 ) {
   const resend = getResend();
-  const referralLink = `${BASE_URL}/?ref=${referralCode}`;
+  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
 
   const isComplete = friendNumber === 2;
 
