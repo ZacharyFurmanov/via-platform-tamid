@@ -51,11 +51,13 @@ body {
 /* ================================
    Media defaults
 ================================ */
-img,
-video {
-  max-width: 100%;
-  height: auto;
-  display: block;
+@layer base {
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 }
 
 @keyframes heroFadeUp {
@@ -79,4 +81,11 @@ video {
   animation-delay: 150ms;
 }
 
-
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

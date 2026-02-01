@@ -149,7 +149,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
 
     // Open native SMS app with deep link
     const phones = [phone1, phone2].filter(Boolean).join(",");
-    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a bag up to $1,000: ${referralLink}`;
+    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
 
     if (phones) {
       window.location.href = `sms:${phones}?&body=${encodeURIComponent(message)}`;
@@ -214,12 +214,12 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
 
             <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-black leading-tight">
               Help Build VIA.<br />
-              Win the Bag You&apos;ve<br />
-              Been Looking For.
+              Enter to Win a $1,000<br />
+              Shopping Spree on Us!
             </h2>
 
             <p className="text-gray-600 mb-8 max-w-sm mx-auto">
-              Enter our giveaway to win a bag of your choosing from VIA — up to $1,000.
+              Enter our giveaway to win a $1,000 shopping spree on VIA!
             </p>
 
             {/* How It Works */}
@@ -265,7 +265,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
             </form>
 
             <p className="text-[10px] text-gray-400 mt-6 leading-relaxed">
-              By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. No purchase necessary.
+              By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VIA.
             </p>
           </div>
         )}

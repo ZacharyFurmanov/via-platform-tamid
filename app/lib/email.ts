@@ -43,7 +43,7 @@ export async function sendGiveawayConfirmation(email: string, referralCode: stri
     <div class="header"><h1>VIA</h1></div>
     <div class="content">
       <h2>You're entered in the VIA Giveaway.</h2>
-      <p>Thanks for entering. To be officially entered to win a bag of your choosing (up to $1,000), share your unique link with two friends and have them enter too.</p>
+      <p>Thanks for entering. To be officially entered to win a $1,000 shopping spree on VIA, share your unique link with two friends and have them enter too.</p>
       <p><strong>Your unique referral link:</strong></p>
       <div class="link-box">${referralLink}</div>
       <p>Send this link to two friends. Once both enter, you'll be officially in the running.</p>
@@ -77,7 +77,7 @@ export async function sendFriendEnteredEmail(
     : "1 down, 1 to go.";
 
   const body = isComplete
-    ? `<p>Both of your friends have entered the giveaway. You're now officially in the running to win a bag of your choosing from VIA — up to $1,000.</p>
+    ? `<p>Both of your friends have entered the giveaway. You're now officially in the running to win a $1,000 shopping spree on VIA!</p>
        <p>We'll be in touch when we pick a winner. In the meantime, start browsing.</p>
        <a href="${BASE_URL}" class="btn">Start Shopping</a>`
     : `<p>One of your friends just entered the giveaway using your link. One more to go and you'll be officially entered to win.</p>
