@@ -244,7 +244,7 @@ function WaitlistContent() {
                 {pendingPhone ? (
                   <>
                     <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
-                      Step 2 of 3
+                      Enter to Win a $1,000 Giveaway Shopping Spree on Us
                     </p>
 
                     <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
@@ -275,7 +275,7 @@ function WaitlistContent() {
                 ) : (
                   <>
                     <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
-                      Step 2 of 3
+                      Enter to Win a $1,000 Giveaway Shopping Spree on Us
                     </p>
 
                     <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
