@@ -213,7 +213,7 @@ function WaitlistContent() {
                       }}
                       placeholder="Enter your email"
                       required
-                      className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
+                      className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
                       disabled={isSubmitting}
                     />
                     <button
@@ -233,7 +233,7 @@ function WaitlistContent() {
                 </form>
 
                 <p className="text-neutral-500 text-[11px] sm:text-xs mt-5 sm:mt-6 font-light tracking-wide leading-relaxed">
-                  Join the waitlist and you&apos;re automatically entered to win a $1,000 shopping spree on VIA.
+                  Join the waitlist and you&apos;r are eligible to enter the giveaway to win a $1,000 shopping spree on VIA.
                 </p>
               </div>
             )}
@@ -293,14 +293,14 @@ function WaitlistContent() {
                         value={phone1}
                         onChange={(e) => setPhone1(e.target.value)}
                         placeholder="Friend 1's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
                       />
                       <input
                         type="tel"
                         value={phone2}
                         onChange={(e) => setPhone2(e.target.value)}
                         placeholder="Friend 2's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
                       />
                     </div>
 

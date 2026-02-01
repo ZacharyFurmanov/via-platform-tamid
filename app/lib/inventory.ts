@@ -24,7 +24,17 @@ const inferCategoryFromTitle = (title: string): CategorySlug => {
     t.includes("mule") ||
     t.includes("clog") ||
     t.includes("loafer") ||
-    t.includes("sneaker")
+    t.includes("sneaker") ||
+    t.includes("slipper") ||
+    t.includes("espadrille") ||
+    t.includes("stiletto") ||
+    t.includes("wedge") ||
+    t.includes("oxford") ||
+    t.includes("derby") ||
+    t.includes("brogue") ||
+    t.includes("trainer") ||
+    t.includes("slide") ||
+    t.includes("flat")
   ) {
     return "shoes";
   }
