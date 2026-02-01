@@ -28,6 +28,7 @@ function WaitlistContent() {
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<StatusData | null>(null);
+  const [pendingPhone, setPendingPhone] = useState("");
 
   // Check for returning user
   useEffect(() => {
@@ -116,15 +117,30 @@ function WaitlistContent() {
       }
     }
 
-    const phones = [phone1, phone2].filter(Boolean).join(",");
     const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const first = phone1.trim() || phone2.trim();
+    const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
-    if (phones) {
-      window.location.href = `sms:${phones}?&body=${encodeURIComponent(message)}`;
+    if (first) {
+      window.location.href = `sms:${first}?&body=${encodeURIComponent(message)}`;
     }
 
-    setPhase("confirmation");
+    if (second) {
+      setPendingPhone(second);
+    } else {
+      goToConfirmation();
+    }
+  };
 
+  const handleSendSecond = () => {
+    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
+    setPendingPhone("");
+    goToConfirmation();
+  };
+
+  const goToConfirmation = async () => {
+    setPhase("confirmation");
     try {
       const res = await fetch(`/api/giveaway/status/${referralCode}`);
       const data = await res.json();
@@ -225,73 +241,100 @@ function WaitlistContent() {
             {/* Phase: Invite */}
             {phase === "invite" && (
               <div className="animate-[fadeIn_0.4s_ease-out]">
-                <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
-                  Step 2 of 3
-                </p>
+                {pendingPhone ? (
+                  <>
+                    <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
+                      Step 2 of 3
+                    </p>
 
-                <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
-                  Send VIA to<br />Two Friends
-                </h2>
+                    <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
+                      Now Send to<br />Friend 2
+                    </h2>
 
-                <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
-                  Enter their phone numbers to send a text invite, or copy your unique link to share however you&apos;d like.
-                </p>
+                    <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
+                      Tap below to open a message to your second friend.
+                    </p>
 
-                {/* Phone inputs */}
-                <div className="space-y-3 mb-6">
-                  <input
-                    type="tel"
-                    value={phone1}
-                    onChange={(e) => setPhone1(e.target.value)}
-                    placeholder="Friend 1's phone number"
-                    className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
-                  />
-                  <input
-                    type="tel"
-                    value={phone2}
-                    onChange={(e) => setPhone2(e.target.value)}
-                    placeholder="Friend 2's phone number"
-                    className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
-                  />
-                </div>
-
-                {/* Copy link */}
-                <div className="mb-6">
-                  <p className="text-xs text-neutral-500 mb-2 font-light">Or copy your unique link</p>
-                  <div className="flex items-center border border-neutral-700 overflow-hidden">
-                    <span className="flex-1 px-3 py-2.5 text-xs text-neutral-400 truncate text-left font-light">
-                      {referralLink}
-                    </span>
                     <button
-                      onClick={handleCopyLink}
-                      className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
+                      onClick={handleSendSecond}
+                      className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition font-medium"
                     >
-                      {copied ? "Copied!" : "Copy"}
+                      Send to Friend 2
                     </button>
-                  </div>
-                </div>
 
-                <button
-                  onClick={handleSendInvites}
-                  className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition font-medium"
-                >
-                  Send Invites
-                </button>
+                    <button
+                      onClick={() => {
+                        setPendingPhone("");
+                        goToConfirmation();
+                      }}
+                      className="mt-3 text-sm text-neutral-500 hover:text-white transition py-2 block mx-auto"
+                    >
+                      Skip for now
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
+                      Step 2 of 3
+                    </p>
 
-                <button
-                  onClick={() => {
-                    setPhase("confirmation");
-                    fetch(`/api/giveaway/status/${referralCode}`)
-                      .then((res) => res.json())
-                      .then((data) => {
-                        if (!data.error) setStatus(data);
-                      })
-                      .catch(() => {});
-                  }}
-                  className="mt-3 text-sm text-neutral-500 hover:text-white transition py-2 block mx-auto"
-                >
-                  Skip for now
-                </button>
+                    <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
+                      Send VIA to<br />Two Friends
+                    </h2>
+
+                    <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
+                      Enter their phone numbers to send a text invite, or copy your unique link to share however you&apos;d like.
+                    </p>
+
+                    {/* Phone inputs */}
+                    <div className="space-y-3 mb-6">
+                      <input
+                        type="tel"
+                        value={phone1}
+                        onChange={(e) => setPhone1(e.target.value)}
+                        placeholder="Friend 1's phone number"
+                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                      />
+                      <input
+                        type="tel"
+                        value={phone2}
+                        onChange={(e) => setPhone2(e.target.value)}
+                        placeholder="Friend 2's phone number"
+                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-600 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                      />
+                    </div>
+
+                    {/* Copy link */}
+                    <div className="mb-6">
+                      <p className="text-xs text-neutral-500 mb-2 font-light">Or copy your unique link</p>
+                      <div className="flex items-center border border-neutral-700 overflow-hidden">
+                        <span className="flex-1 px-3 py-2.5 text-xs text-neutral-400 truncate text-left font-light">
+                          {referralLink}
+                        </span>
+                        <button
+                          onClick={handleCopyLink}
+                          className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
+                        >
+                          {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleSendInvites}
+                      className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition font-medium"
+                    >
+                      Send Invites
+                    </button>
+
+                    <button
+                      onClick={() => goToConfirmation()}
+                      className="mt-3 text-sm text-neutral-500 hover:text-white transition py-2 block mx-auto"
+                    >
+                      Skip for now
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
