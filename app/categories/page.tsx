@@ -5,8 +5,8 @@ import Link from "next/link";
 import { getActiveCategories } from "@/app/lib/getActiveCategories";
 import Container from "@/app/components/container";
 
-export default function CategoriesPage() {
-  const categories = getActiveCategories();
+export default async function CategoriesPage() {
+  const categories = await getActiveCategories();
   {categories.length === 0 && (
     <p className="text-neutral-500">Categories coming soon.</p>
   )}  

@@ -1,4 +1,4 @@
-import { inventory } from "@/app/lib/inventory";
+import { getInventory } from "@/app/lib/inventory";
 import { categoryMap } from "@/app/lib/categoryMap";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 
@@ -8,11 +8,13 @@ type ActiveCategory = {
   image: string;
 };
 
-export function getActiveCategories(): ActiveCategory[] {
+export async function getActiveCategories(): Promise<ActiveCategory[]> {
+  const items = await getInventory();
+
   // collect unique category slugs that exist in inventory
   const activeSlugs = new Set<CategorySlug>();
 
-  for (const item of inventory) {
+  for (const item of items) {
     activeSlugs.add(item.category);
   }
 
@@ -20,6 +22,6 @@ export function getActiveCategories(): ActiveCategory[] {
   return Array.from(activeSlugs).map((slug) => ({
     slug,
     label: categoryMap[slug],
-    image: `/categories/${slug}.jpg`, // adjust path if needed
+    image: `/categories/${slug}.jpg`,
   }));
 }
