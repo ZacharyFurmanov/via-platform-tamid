@@ -8,7 +8,8 @@ type SquarespaceStore = {
   type: "squarespace";
   name: string;
   slug: string;
-  rssUrl: string;
+  shopUrl?: string;
+  rssUrl?: string;
 };
 
 type ShopifyStore = {
@@ -42,7 +43,7 @@ const SQUARESPACE_STORES: SquarespaceStore[] = [
     type: "squarespace",
     name: "LEI Vintage",
     slug: "lei-vintage",
-    rssUrl: "https://www.leivintage.com/shop?format=rss",
+    shopUrl: "https://www.leivintage.com/shop",
   },
 ];
 
@@ -75,7 +76,11 @@ export default function SyncAdminPage() {
         response = await fetch("/api/sync-squarespace", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ storeName: store.name, rssUrl: store.rssUrl }),
+          body: JSON.stringify({
+            storeName: store.name,
+            shopUrl: store.shopUrl,
+            rssUrl: store.rssUrl,
+          }),
         });
       } else {
         response = await fetch("/api/sync-shopify", {
@@ -184,7 +189,7 @@ export default function SyncAdminPage() {
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg sm:text-xl font-serif mb-1">{store.name}</h3>
                         <p className="text-xs sm:text-sm text-neutral-500 break-all">
-                          {store.rssUrl}
+                          {store.shopUrl || store.rssUrl}
                         </p>
                       </div>
 
@@ -328,15 +333,16 @@ export default function SyncAdminPage() {
               <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Squarespace Setup</h3>
               <div className="text-sm text-neutral-600 space-y-2">
                 <p>
-                  <span className="text-black">Products RSS:</span>{" "}
-                  <code className="text-xs bg-neutral-100 px-1">/products?format=rss</code>
+                  <span className="text-black">Shop URL (recommended):</span>{" "}
+                  <code className="text-xs bg-neutral-100 px-1">/shop</code>
                 </p>
                 <p>
-                  <span className="text-black">Blog RSS:</span>{" "}
-                  <code className="text-xs bg-neutral-100 px-1">/blog?format=rss</code>
+                  <span className="text-black">RSS fallback:</span>{" "}
+                  <code className="text-xs bg-neutral-100 px-1">/shop?format=rss</code>
                 </p>
                 <p className="mt-4 text-neutral-500">
-                  Squarespace stores use RSS feeds which are publicly accessible.
+                  Use the shop URL for stores with Squarespace Commerce (includes prices).
+                  RSS is a fallback for stores with prices in descriptions.
                 </p>
               </div>
             </div>

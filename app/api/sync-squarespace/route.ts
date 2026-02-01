@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
+import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { storeName, rssUrl } = body;
+    const { storeName, rssUrl, shopUrl } = body;
 
     // Validate inputs
     if (!storeName || typeof storeName !== "string") {
@@ -15,19 +16,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!rssUrl || typeof rssUrl !== "string") {
+    const url = shopUrl || rssUrl;
+    if (!url || typeof url !== "string") {
       return NextResponse.json(
-        { error: "Missing or invalid 'rssUrl' parameter" },
+        { error: "Missing or invalid 'shopUrl' or 'rssUrl' parameter" },
         { status: 400 }
       );
     }
 
     // Validate URL format
     try {
-      new URL(rssUrl);
+      new URL(url);
     } catch {
       return NextResponse.json(
-        { error: "Invalid RSS URL format" },
+        { error: "Invalid URL format" },
         { status: 400 }
       );
     }
@@ -35,8 +37,20 @@ export async function POST(request: NextRequest) {
     // Ensure database table exists
     await initDatabase();
 
-    // Parse the RSS feed
-    const { products: rawProducts, skippedCount } = await parseRSSFeed(rssUrl, storeName);
+    let rawProducts;
+    let skippedCount: number;
+
+    if (shopUrl) {
+      // Use JSON API (recommended — includes prices from Squarespace Commerce)
+      const result = await parseSquarespaceJSON(shopUrl, storeName);
+      rawProducts = result.products;
+      skippedCount = result.skippedCount;
+    } else {
+      // Fallback to RSS feed
+      const result = await parseRSSFeed(rssUrl, storeName);
+      rawProducts = result.products;
+      skippedCount = result.skippedCount;
+    }
 
     // Filter out products with null prices and transform for database
     const products = rawProducts
@@ -66,10 +80,10 @@ export async function POST(request: NextRequest) {
       products,
     });
   } catch (error) {
-    console.error("RSS sync error:", error);
+    console.error("Squarespace sync error:", error);
     return NextResponse.json(
       {
-        error: "Failed to sync RSS feed",
+        error: "Failed to sync Squarespace store",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
@@ -79,17 +93,18 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: "RSS Sync API",
+    message: "Squarespace Sync API",
     usage: {
       method: "POST",
       body: {
         storeName: "Store Display Name",
-        rssUrl: "https://example.com/products?format=rss",
+        shopUrl: "https://example.com/shop (recommended — uses JSON API with prices)",
+        rssUrl: "https://example.com/products?format=rss (fallback — may lack prices)",
       },
     },
     example: {
       storeName: "LEI Vintage",
-      rssUrl: "https://www.leivintage.com/products?format=rss",
+      shopUrl: "https://www.leivintage.com/shop",
     },
   });
 }
