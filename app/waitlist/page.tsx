@@ -232,7 +232,7 @@ function WaitlistContent() {
                   )}
                 </form>
 
-                <p className="text-neutral-500 text-[11px] sm:text-xs mt-5 sm:mt-6 font-light tracking-wide leading-relaxed">
+                <p className="text-white text-[15px] sm:text-[17px] mt-6 sm:mt-8 font-light tracking-wide leading-relaxed">
                   Join the waitlist to enter our giveaway. Invite 2 friends to sign up and you&apos;re officially entered to win a $1,000 shopping spree on VIA.
                 </p>
               </div>
@@ -243,7 +243,7 @@ function WaitlistContent() {
               <div className="animate-[fadeIn_0.4s_ease-out]">
                 {pendingPhone ? (
                   <>
-                    <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
+                    <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
                       Enter to Win a $1,000 Giveaway Shopping Spree on Us
                     </p>
 
@@ -251,7 +251,7 @@ function WaitlistContent() {
                       Now Send to<br />Friend 2
                     </h2>
 
-                    <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
+                    <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
                       Tap below to open a message to your second friend. They need to sign up for you to be entered.
                     </p>
 
@@ -267,14 +267,14 @@ function WaitlistContent() {
                         setPendingPhone("");
                         goToConfirmation();
                       }}
-                      className="mt-3 text-sm text-neutral-500 hover:text-white transition py-2 block mx-auto"
+                      className="mt-3 text-sm text-white/70 hover:text-white transition py-2 block mx-auto"
                     >
                       Skip for now
                     </button>
                   </>
                 ) : (
                   <>
-                    <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
+                    <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
                       Enter to Win a $1,000 Giveaway Shopping Spree on Us
                     </p>
 
@@ -282,7 +282,7 @@ function WaitlistContent() {
                       Invite Two Friends<br />to Sign Up
                     </h2>
 
-                    <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
+                    <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
                       Enter your 2 friends&apos; phone numbers below so we can send them an invite. Both friends need to sign up for you to be officially entered in the giveaway.
                     </p>
 
@@ -293,22 +293,22 @@ function WaitlistContent() {
                         value={phone1}
                         onChange={(e) => setPhone1(e.target.value)}
                         placeholder="Friend 1's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                        className="w-full px-5 py-3 bg-transparent border border-white/30 text-white placeholder-white/60 text-[15px] focus:outline-none focus:border-white/60 transition-colors font-light"
                       />
                       <input
                         type="tel"
                         value={phone2}
                         onChange={(e) => setPhone2(e.target.value)}
                         placeholder="Friend 2's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-sm focus:outline-none focus:border-neutral-400 transition-colors font-light"
+                        className="w-full px-5 py-3 bg-transparent border border-white/30 text-white placeholder-white/60 text-[15px] focus:outline-none focus:border-white/60 transition-colors font-light"
                       />
                     </div>
 
                     {/* Copy link */}
                     <div className="mb-6">
-                      <p className="text-xs text-neutral-500 mb-2 font-light">Or copy your unique link</p>
-                      <div className="flex items-center border border-neutral-700 overflow-hidden">
-                        <span className="flex-1 px-3 py-2.5 text-xs text-neutral-400 truncate text-left font-light">
+                      <p className="text-sm text-white/70 mb-2 font-light">Or copy your unique link</p>
+                      <div className="flex items-center border border-white/30 overflow-hidden">
+                        <span className="flex-1 px-3 py-2.5 text-xs text-white/70 truncate text-left font-light">
                           {referralLink}
                         </span>
                         <button
@@ -329,7 +329,7 @@ function WaitlistContent() {
 
                     <button
                       onClick={() => goToConfirmation()}
-                      className="mt-3 text-sm text-neutral-500 hover:text-white transition py-2 block mx-auto"
+                      className="mt-3 text-sm text-white/70 hover:text-white transition py-2 block mx-auto"
                     >
                       Skip for now
                     </button>
@@ -341,7 +341,7 @@ function WaitlistContent() {
             {/* Phase: Confirmation */}
             {phase === "confirmation" && (
               <div className="animate-[fadeIn_0.4s_ease-out]">
-                <p className="text-[12px] sm:text-[14px] uppercase tracking-[0.25em] text-neutral-400 mb-4 sm:mb-5">
+                <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
                   VIA Giveaway
                 </p>
 
@@ -349,7 +349,7 @@ function WaitlistContent() {
                   You&apos;re in the queue
                 </h2>
 
-                <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
+                <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
                   {status?.isComplete
                     ? "Both friends have signed up. You\u2019re officially in the running!"
                     : "You need 2 friends to sign up using your link before you\u2019re officially entered."}
@@ -357,7 +357,7 @@ function WaitlistContent() {
 
                 {/* Progress indicator */}
                 <div className="mb-8 sm:mb-10">
-                  <p className="text-sm text-neutral-400 mb-3 font-light">
+                  <p className="text-[15px] text-white mb-3 font-light">
                     {status?.referralCount || 0} of 2 friends signed up
                   </p>
                   <div className="flex items-center gap-3">
@@ -398,9 +398,9 @@ function WaitlistContent() {
                 {/* Copy link */}
                 {referralLink && (
                   <div className="mb-8">
-                    <p className="text-xs text-neutral-500 mb-2 font-light">Your unique referral link</p>
-                    <div className="flex items-center border border-neutral-700 overflow-hidden">
-                      <span className="flex-1 px-3 py-2.5 text-xs text-neutral-400 truncate text-left font-light">
+                    <p className="text-sm text-white/70 mb-2 font-light">Your unique referral link</p>
+                    <div className="flex items-center border border-white/30 overflow-hidden">
+                      <span className="flex-1 px-3 py-2.5 text-xs text-white/70 truncate text-left font-light">
                         {referralLink}
                       </span>
                       <button
@@ -413,7 +413,7 @@ function WaitlistContent() {
                   </div>
                 )}
 
-                <p className="text-neutral-600 text-[10px] sm:text-[11px] leading-relaxed font-light">
+                <p className="text-white/50 text-[11px] sm:text-[12px] leading-relaxed font-light">
                   By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VIA.
                 </p>
               </div>
