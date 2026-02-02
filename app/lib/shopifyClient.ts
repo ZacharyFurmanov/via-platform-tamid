@@ -17,6 +17,7 @@ export type ShopifyProduct = {
   vendor: string | null;
   productType: string | null;
   availableForSale: boolean;
+  description: string | null;
 };
 
 export type ShopifyFetchResult = {
@@ -43,6 +44,7 @@ type ShopifyProductNode = {
   id: string;
   title: string;
   handle: string;
+  descriptionHtml: string;
   vendor: string;
   productType: string;
   availableForSale: boolean;
@@ -80,6 +82,7 @@ const PRODUCTS_QUERY = `
           id
           title
           handle
+          descriptionHtml
           vendor
           productType
           availableForSale
@@ -230,6 +233,7 @@ export async function fetchShopifyProducts(
         vendor: node.vendor || null,
         productType: node.productType || null,
         availableForSale: node.availableForSale,
+        description: node.descriptionHtml || null,
       });
     }
 
@@ -412,6 +416,7 @@ export async function fetchShopifyProductsPublic(
         vendor: product.vendor || null,
         productType: product.product_type || null,
         availableForSale: isAvailable,
+        description: product.body_html || null,
       });
     }
 
@@ -436,6 +441,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   image: string | null;
   externalUrl: string;
   store: string;
+  description: string | null;
 } {
   return {
     title: product.title,
@@ -443,5 +449,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     image: product.image,
     externalUrl: product.externalUrl,
     store: product.store,
+    description: product.description,
   };
 }

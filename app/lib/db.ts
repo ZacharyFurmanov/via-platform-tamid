@@ -21,6 +21,7 @@ export type DBProduct = {
   currency: string;
   image: string | null;
   external_url: string | null;
+  description: string | null;
   synced_at: Date;
 };
 
@@ -49,6 +50,11 @@ export async function initDatabase() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_products_store_slug ON products(store_slug)
   `;
+
+  // Add description column if it doesn't exist (migration for existing tables)
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT
+  `;
 }
 
 /**
@@ -63,6 +69,7 @@ export async function syncProducts(
     currency?: string;
     image?: string;
     externalUrl?: string;
+    description?: string;
   }>
 ) {
   const sql = neon(getDatabaseUrl());
@@ -73,7 +80,7 @@ export async function syncProducts(
   // Insert new products
   for (const product of products) {
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, external_url, synced_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, external_url, description, synced_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -82,6 +89,7 @@ export async function syncProducts(
         ${product.currency || "USD"},
         ${product.image || null},
         ${product.externalUrl || null},
+        ${product.description || null},
         NOW()
       )
     `;

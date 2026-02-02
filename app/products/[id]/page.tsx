@@ -88,6 +88,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <p className="text-2xl font-medium text-black mb-8">{price}</p>
 
+            {/* Description / product details */}
+            {product.description && (
+              <div
+                className="prose prose-sm max-w-none mb-8 text-black/70 leading-relaxed [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            )}
+
             {/* Checkout */}
             {trackingUrl ? (
               <a

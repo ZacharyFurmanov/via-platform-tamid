@@ -4,6 +4,7 @@ export type SquarespaceProduct = {
   image: string | null;
   externalUrl: string;
   store: string;
+  description: string | null;
 };
 
 export type SquarespaceResult = {
@@ -26,6 +27,8 @@ type SquarespaceItem = {
   assetUrl?: string;
   variants?: SquarespaceVariant[];
   tags?: string[];
+  body?: string;
+  excerpt?: string;
 };
 
 /**
@@ -118,7 +121,10 @@ export async function parseSquarespaceJSON(
     // Image URL
     const image = item.assetUrl || null;
 
-    products.push({ title, price, image, externalUrl, store: storeName });
+    // Product description (HTML body from Squarespace)
+    const description = item.body || item.excerpt || null;
+
+    products.push({ title, price, image, externalUrl, store: storeName, description });
   }
 
   return { products, skippedCount };

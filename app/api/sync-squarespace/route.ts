@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
         price: p.price as number,
         image: p.image ?? undefined,
         externalUrl: p.externalUrl,
+        description: p.description ?? undefined,
       }));
 
     // Create store slug from store name (kebab-case)
