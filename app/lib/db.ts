@@ -103,6 +103,18 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
 }
 
 /**
+ * Get a single product by its database ID
+ */
+export async function getProductById(id: number): Promise<DBProduct | null> {
+  const sql = neon(getDatabaseUrl());
+
+  const result = await sql`
+    SELECT * FROM products WHERE id = ${id} LIMIT 1
+  `;
+  return (result[0] as DBProduct) ?? null;
+}
+
+/**
  * Get all products from all stores
  */
 export async function getAllProducts(): Promise<DBProduct[]> {

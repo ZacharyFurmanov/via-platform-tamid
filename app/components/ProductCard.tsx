@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 
 type ProductCardProps = {
@@ -9,30 +10,18 @@ type ProductCardProps = {
   storeSlug: string;
   externalUrl?: string;
   image: string;
-  onClick?: () => void;
 };
 
 export default function ProductCard({
+  id,
   name,
   price,
   category,
   storeName,
   image,
-  onClick,
 }: ProductCardProps) {
   return (
-    <div
-      onClick={onClick}
-      className="group cursor-pointer text-black block"
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
-    >
+    <Link href={`/products/${id}`} className="group cursor-pointer text-black block">
       {/* Image container with consistent aspect ratio */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
         <img
@@ -59,6 +48,6 @@ export default function ProductCard({
 
         <p className="text-sm sm:text-base mt-1 text-black font-medium">{price}</p>
       </div>
-    </div>
+    </Link>
   );
 }
