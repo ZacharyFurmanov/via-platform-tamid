@@ -1,6 +1,4 @@
-import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
-import { createTrackingUrl } from "@/app/lib/track";
 
 type ProductCardProps = {
   id: string;
@@ -11,20 +9,30 @@ type ProductCardProps = {
   storeSlug: string;
   externalUrl?: string;
   image: string;
+  onClick?: () => void;
 };
 
 export default function ProductCard({
-  id,
   name,
   price,
   category,
   storeName,
-  storeSlug,
-  externalUrl,
   image,
+  onClick,
 }: ProductCardProps) {
-  const CardInner = (
-    <>
+  return (
+    <div
+      onClick={onClick}
+      className="group cursor-pointer text-black block"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       {/* Image container with consistent aspect ratio */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
         <img
@@ -51,35 +59,6 @@ export default function ProductCard({
 
         <p className="text-sm sm:text-base mt-1 text-black font-medium">{price}</p>
       </div>
-    </>
-  );
-
-  // External product with tracking
-  if (externalUrl) {
-    const trackingUrl = createTrackingUrl(
-      id,
-      name,
-      storeName,
-      storeSlug,
-      externalUrl
-    );
-
-    return (
-      <a
-        href={trackingUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group cursor-pointer text-black block"
-      >
-        {CardInner}
-      </a>
-    );
-  }
-
-  // Internal product (future-proofing)
-  return (
-    <Link href="#" className="group cursor-pointer text-black block">
-      {CardInner}
-    </Link>
+    </div>
   );
 }

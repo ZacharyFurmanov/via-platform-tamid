@@ -205,14 +205,14 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
 
       {/* Modal */}
       <div
-        className={`relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto bg-[#f7f6f3] rounded-lg shadow-2xl transition-all duration-300 ease-out ${
+        className={`relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto bg-[#1a1a1a] rounded-lg shadow-2xl transition-all duration-300 ease-out ${
           showModal ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
       >
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-10 p-2 text-gray-500 hover:text-black transition"
+          className="absolute top-4 right-4 z-10 p-2 text-white/60 hover:text-white transition"
           aria-label="Close modal"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,34 +223,34 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
         {/* Screen 1: Entry */}
         {screen === "entry" && (
           <div className="p-8 sm:p-12 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-4">
               VIA Giveaway
             </p>
 
-            <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-black leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-white leading-tight">
               Help Build VIA.<br />
               Enter to Win a $1,000<br />
               Shopping Spree on Us!
             </h2>
 
-            <p className="text-gray-600 mb-8 max-w-sm mx-auto">
-              Enter our giveaway to win a $1,000 shopping spree on VIA!
+            <p className="text-white/70 mb-8 max-w-sm mx-auto">
+              Enter your email, then invite 2 friends to sign up. Once both friends enter, you&apos;re officially in the giveaway!
             </p>
 
             {/* How It Works */}
             <div className="text-left max-w-xs mx-auto mb-8 space-y-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 text-center mb-2">How It Works</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/50 text-center mb-2">How It Works</p>
               <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center mt-0.5">1</span>
-                <p className="text-sm text-gray-700">Enter your email to get a unique referral link.</p>
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center mt-0.5">1</span>
+                <p className="text-sm text-white/80">Enter your email to get a unique referral link.</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center mt-0.5">2</span>
-                <p className="text-sm text-gray-700">Share your link with 2 friends and have them enter.</p>
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center mt-0.5">2</span>
+                <p className="text-sm text-white/80">Enter 2 friends&apos; phone numbers so they can sign up too.</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center mt-0.5">3</span>
-                <p className="text-sm text-gray-700">Once both friends enter, you&apos;re officially in the giveaway.</p>
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white text-black text-xs flex items-center justify-center mt-0.5">3</span>
+                <p className="text-sm text-white/80">Once both friends sign up, you&apos;re officially entered to win.</p>
               </div>
             </div>
 
@@ -264,22 +264,22 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
                   setEmailError("");
                 }}
                 placeholder="Your email address"
-                className="w-full px-4 py-3 border border-gray-300 bg-white text-black text-sm focus:outline-none focus:border-black transition"
+                className="w-full px-4 py-3 border border-white/20 bg-transparent text-white text-sm placeholder-white/40 focus:outline-none focus:border-white/50 transition"
                 disabled={isSubmitting}
               />
               {emailError && (
-                <p className="text-red-600 text-xs text-left">{emailError}</p>
+                <p className="text-red-400 text-xs text-left">{emailError}</p>
               )}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-black text-white py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50"
+                className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition disabled:opacity-50"
               >
                 {isSubmitting ? "Entering..." : "Enter the Giveaway"}
               </button>
             </form>
 
-            <p className="text-[10px] text-gray-400 mt-6 leading-relaxed">
+            <p className="text-[10px] text-white/30 mt-6 leading-relaxed">
               By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VIA.
             </p>
           </div>
@@ -290,21 +290,21 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
           <div className="p-8 sm:p-12 text-center">
             {pendingPhone ? (
               <>
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-4">
                   Step 2 of 3
                 </p>
 
-                <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-black leading-tight">
+                <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-white leading-tight">
                   Now Send to<br />Friend 2
                 </h2>
 
-                <p className="text-gray-600 mb-8 max-w-sm mx-auto text-sm">
-                  Tap below to open a message to your second friend.
+                <p className="text-white/70 mb-8 max-w-sm mx-auto text-sm">
+                  Tap below to open a message to your second friend. They need to sign up for you to be entered.
                 </p>
 
                 <button
                   onClick={handleSendSecond}
-                  className="w-full bg-black text-white py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+                  className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition"
                 >
                   Send to Friend 2
                 </button>
@@ -314,23 +314,23 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
                     setPendingPhone("");
                     goToConfirmation();
                   }}
-                  className="mt-3 text-sm text-gray-500 hover:text-black transition py-2"
+                  className="mt-3 text-sm text-white/50 hover:text-white transition py-2"
                 >
                   Skip for now
                 </button>
               </>
             ) : (
               <>
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-4">
                   Step 2 of 3
                 </p>
 
-                <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-black leading-tight">
-                  Send VIA to<br />Two Friends
+                <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-white leading-tight">
+                  Invite Two Friends<br />to Sign Up
                 </h2>
 
-                <p className="text-gray-600 mb-8 max-w-sm mx-auto text-sm">
-                  Enter their phone numbers to send a text invite, or copy your unique link to share however you&apos;d like.
+                <p className="text-white/70 mb-8 max-w-sm mx-auto text-sm">
+                  Enter your 2 friends&apos; phone numbers below so we can send them an invite. Both friends need to sign up for you to be officially entered in the giveaway.
                 </p>
 
                 {/* Phone inputs */}
@@ -340,27 +340,27 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
                     value={phone1}
                     onChange={(e) => setPhone1(e.target.value)}
                     placeholder="Friend 1's phone number"
-                    className="w-full px-4 py-3 border border-gray-300 bg-white text-black text-sm focus:outline-none focus:border-black transition"
+                    className="w-full px-4 py-3 border border-white/20 bg-transparent text-white text-sm placeholder-white/40 focus:outline-none focus:border-white/50 transition"
                   />
                   <input
                     type="tel"
                     value={phone2}
                     onChange={(e) => setPhone2(e.target.value)}
                     placeholder="Friend 2's phone number"
-                    className="w-full px-4 py-3 border border-gray-300 bg-white text-black text-sm focus:outline-none focus:border-black transition"
+                    className="w-full px-4 py-3 border border-white/20 bg-transparent text-white text-sm placeholder-white/40 focus:outline-none focus:border-white/50 transition"
                   />
                 </div>
 
                 {/* Copy link */}
                 <div className="mb-6">
-                  <p className="text-xs text-gray-500 mb-2">Or copy your unique link</p>
-                  <div className="flex items-center border border-gray-300 bg-white overflow-hidden">
-                    <span className="flex-1 px-3 py-2.5 text-xs text-gray-600 truncate text-left">
+                  <p className="text-xs text-white/50 mb-2">Or copy your unique link</p>
+                  <div className="flex items-center border border-white/20 overflow-hidden">
+                    <span className="flex-1 px-3 py-2.5 text-xs text-white/50 truncate text-left">
                       {referralLink}
                     </span>
                     <button
                       onClick={handleCopyLink}
-                      className="flex-shrink-0 px-4 py-2.5 bg-black text-white text-xs uppercase tracking-wide hover:bg-neutral-800 transition"
+                      className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
                     >
                       {copied ? "Copied!" : "Copy"}
                     </button>
@@ -369,14 +369,14 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
 
                 <button
                   onClick={handleSendInvites}
-                  className="w-full bg-black text-white py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+                  className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition"
                 >
                   Send Invites
                 </button>
 
                 <button
                   onClick={() => goToConfirmation()}
-                  className="mt-3 text-sm text-gray-500 hover:text-black transition py-2"
+                  className="mt-3 text-sm text-white/50 hover:text-white transition py-2"
                 >
                   Skip for now
                 </button>
@@ -388,31 +388,31 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
         {/* Screen 3: Confirmation */}
         {screen === "confirmation" && (
           <div className="p-8 sm:p-12 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-4">
               VIA Giveaway
             </p>
 
-            <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-black leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-white leading-tight">
               You&apos;re in the queue <span role="img" aria-label="heart">&#10084;&#65039;</span>
             </h2>
 
-            <p className="text-gray-600 mb-8 max-w-sm mx-auto text-sm">
+            <p className="text-white/70 mb-8 max-w-sm mx-auto text-sm">
               {status?.isComplete
-                ? "Both friends have entered. You're officially in the running!"
-                : "Share your link with 2 friends to be officially entered."}
+                ? "Both friends have signed up. You\u2019re officially in the running!"
+                : "You need 2 friends to sign up using your link before you\u2019re officially entered."}
             </p>
 
             {/* Progress indicator */}
             <div className="mb-8">
-              <p className="text-sm text-gray-500 mb-3">
-                {status?.referralCount || 0} of 2 friends entered
+              <p className="text-sm text-white/50 mb-3">
+                {status?.referralCount || 0} of 2 friends signed up
               </p>
               <div className="flex items-center justify-center gap-3">
                 <div
                   className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
                     status && status.referralCount >= 1
-                      ? "border-black bg-black text-white"
-                      : "border-gray-300 text-gray-300"
+                      ? "border-white bg-white text-black"
+                      : "border-white/30 text-white/30"
                   }`}
                 >
                   {status && status.referralCount >= 1 ? (
@@ -423,12 +423,12 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
                     <span className="text-sm">1</span>
                   )}
                 </div>
-                <div className={`w-8 h-px ${status && status.referralCount >= 1 ? "bg-black" : "bg-gray-300"}`} />
+                <div className={`w-8 h-px ${status && status.referralCount >= 1 ? "bg-white" : "bg-white/30"}`} />
                 <div
                   className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
                     status && status.referralCount >= 2
-                      ? "border-black bg-black text-white"
-                      : "border-gray-300 text-gray-300"
+                      ? "border-white bg-white text-black"
+                      : "border-white/30 text-white/30"
                   }`}
                 >
                   {status && status.referralCount >= 2 ? (
@@ -445,14 +445,14 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
             {/* Copy link section */}
             {referralLink && (
               <div className="mb-8">
-                <p className="text-xs text-gray-500 mb-2">Your unique referral link</p>
-                <div className="flex items-center border border-gray-300 bg-white overflow-hidden">
-                  <span className="flex-1 px-3 py-2.5 text-xs text-gray-600 truncate text-left">
+                <p className="text-xs text-white/50 mb-2">Your unique referral link</p>
+                <div className="flex items-center border border-white/20 overflow-hidden">
+                  <span className="flex-1 px-3 py-2.5 text-xs text-white/50 truncate text-left">
                     {referralLink}
                   </span>
                   <button
                     onClick={handleCopyLink}
-                    className="flex-shrink-0 px-4 py-2.5 bg-black text-white text-xs uppercase tracking-wide hover:bg-neutral-800 transition"
+                    className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
                   >
                     {copied ? "Copied!" : "Copy"}
                   </button>
@@ -462,7 +462,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
 
             <button
               onClick={handleClose}
-              className="w-full bg-black text-white py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+              className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition"
             >
               Start Shopping
             </button>

@@ -233,7 +233,7 @@ function WaitlistContent() {
                 </form>
 
                 <p className="text-neutral-500 text-[11px] sm:text-xs mt-5 sm:mt-6 font-light tracking-wide leading-relaxed">
-                  Join the waitlist and you&apos;r are eligible to enter the giveaway to win a $1,000 shopping spree on VIA.
+                  Join the waitlist to enter our giveaway. Invite 2 friends to sign up and you&apos;re officially entered to win a $1,000 shopping spree on VIA.
                 </p>
               </div>
             )}
@@ -252,7 +252,7 @@ function WaitlistContent() {
                     </h2>
 
                     <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
-                      Tap below to open a message to your second friend.
+                      Tap below to open a message to your second friend. They need to sign up for you to be entered.
                     </p>
 
                     <button
@@ -279,11 +279,11 @@ function WaitlistContent() {
                     </p>
 
                     <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
-                      Send VIA to<br />Two Friends
+                      Invite Two Friends<br />to Sign Up
                     </h2>
 
                     <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
-                      Enter their phone numbers to send a text invite, or copy your unique link to share however you&apos;d like.
+                      Enter your 2 friends&apos; phone numbers below so we can send them an invite. Both friends need to sign up for you to be officially entered in the giveaway.
                     </p>
 
                     {/* Phone inputs */}
@@ -351,14 +351,14 @@ function WaitlistContent() {
 
                 <p className="text-neutral-300 mb-8 sm:mb-10 text-[14px] sm:text-base font-light leading-relaxed max-w-md">
                   {status?.isComplete
-                    ? "Both friends have entered. You\u2019re officially in the running!"
-                    : "Share your link with 2 friends to be officially entered."}
+                    ? "Both friends have signed up. You\u2019re officially in the running!"
+                    : "You need 2 friends to sign up using your link before you\u2019re officially entered."}
                 </p>
 
                 {/* Progress indicator */}
                 <div className="mb-8 sm:mb-10">
                   <p className="text-sm text-neutral-400 mb-3 font-light">
-                    {status?.referralCount || 0} of 2 friends entered
+                    {status?.referralCount || 0} of 2 friends signed up
                   </p>
                   <div className="flex items-center gap-3">
                     <div

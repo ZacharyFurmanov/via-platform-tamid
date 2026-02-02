@@ -7,6 +7,7 @@ import ProductFilter, {
   SortOption,
 } from "./ProductFilter";
 import ProductCard from "./ProductCard";
+import ProductDetailModal from "./ProductDetailModal";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 
 export type FilterableProduct = {
@@ -77,6 +78,7 @@ export default function FilteredProductGrid({
   showCategoryFilter = false,
   emptyMessage = "No products found.",
 }: FilteredProductGridProps) {
+  const [selectedProduct, setSelectedProduct] = useState<FilterableProduct | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     priceRange: "all",
@@ -199,11 +201,19 @@ export default function FilteredProductGrid({
                 storeSlug={product.storeSlug}
                 externalUrl={product.externalUrl}
                 image={product.image}
+                onClick={() => setSelectedProduct(product)}
               />
             </div>
           ))}
         </div>
       )}
+
+      {/* Product detail modal */}
+      <ProductDetailModal
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        product={selectedProduct}
+      />
     </div>
   );
 }
