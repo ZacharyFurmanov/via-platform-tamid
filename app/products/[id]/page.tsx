@@ -2,35 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductById } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
-import { categoryMap, type CategorySlug } from "@/app/lib/categoryMap";
+import { categoryMap } from "@/app/lib/categoryMap";
 import { createTrackingUrl } from "@/app/lib/track";
-
-const inferCategoryFromTitle = (title: string): CategorySlug => {
-  const t = title.toLowerCase();
-
-  if (
-    t.includes("heel") || t.includes("shoe") || t.includes("boot") ||
-    t.includes("pump") || t.includes("sandal") || t.includes("mule") ||
-    t.includes("clog") || t.includes("loafer") || t.includes("sneaker") ||
-    t.includes("slipper") || t.includes("espadrille") || t.includes("stiletto") ||
-    t.includes("wedge") || t.includes("oxford") || t.includes("derby") ||
-    t.includes("brogue") || t.includes("trainer") || t.includes("slide") ||
-    t.includes("flat")
-  ) return "shoes";
-
-  if (
-    t.includes("bag") || t.includes("clutch") || t.includes("tote") ||
-    t.includes("purse") || t.includes("handbag")
-  ) return "bags";
-
-  if (
-    t.includes("belt") || t.includes("scarf") || t.includes("hat") ||
-    t.includes("sunglasses") || t.includes("jewelry") || t.includes("necklace") ||
-    t.includes("bracelet") || t.includes("earring") || t.includes("watch")
-  ) return "accessories";
-
-  return "clothes";
-};
+import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;

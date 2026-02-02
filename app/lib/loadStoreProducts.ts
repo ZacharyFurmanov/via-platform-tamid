@@ -2,10 +2,11 @@ import type { StoreProduct } from "./types";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 
-const inferCategoryFromTitle = (title: string): CategorySlug => {
+export const inferCategoryFromTitle = (title: string): CategorySlug => {
   const t = title.toLowerCase();
 
   if (
+    // Product types
     t.includes("heel") ||
     t.includes("shoe") ||
     t.includes("boot") ||
@@ -24,7 +25,13 @@ const inferCategoryFromTitle = (title: string): CategorySlug => {
     t.includes("brogue") ||
     t.includes("trainer") ||
     t.includes("slide") ||
-    t.includes("flat")
+    t.includes("flat") ||
+    t.includes("slingback") ||
+    // Shoe-only brands
+    t.includes("blahnik") ||
+    t.includes("louboutin") ||
+    t.includes("stuart weitzman") ||
+    t.includes("roger vivier")
   ) {
     return "shoes";
   }
