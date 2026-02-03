@@ -350,15 +350,15 @@ function WaitlistContent() {
                 </h2>
 
                 <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
-                  {status?.isComplete
-                    ? "Both friends have signed up. You\u2019re officially in the running!"
-                    : "You need 2 friends to sign up using your link before you\u2019re officially entered."}
+                  {status && status.referralCount >= 2
+                    ? "You\u2019re officially entered! Keep sharing \u2014 every referral gives you another chance to win."
+                    : "Get 2 friends to sign up using your link to be entered. The more friends you refer, the more chances you get to win!"}
                 </p>
 
-                {/* Progress indicator */}
+                {/* Referral count */}
                 <div className="mb-8 sm:mb-10">
                   <p className="text-[15px] text-white mb-3 font-light">
-                    {status?.referralCount || 0} of 2 friends signed up
+                    {status?.referralCount || 0} friend{(status?.referralCount || 0) !== 1 ? "s" : ""} referred
                   </p>
                   <div className="flex items-center gap-3">
                     <div
@@ -392,7 +392,20 @@ function WaitlistContent() {
                         <span className="text-sm">2</span>
                       )}
                     </div>
+                    {status && status.referralCount > 2 && (
+                      <>
+                        <div className="w-8 h-px bg-white" />
+                        <div className="h-10 px-4 rounded-full border-2 border-white bg-white text-black flex items-center justify-center transition-colors">
+                          <span className="text-sm font-semibold">+{status.referralCount - 2}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
+                  {status && status.referralCount >= 2 && (
+                    <p className="text-[13px] text-white/60 mt-3 font-light">
+                      You have {status.referralCount} {status.referralCount === 1 ? "entry" : "entries"} in the giveaway
+                    </p>
+                  )}
                 </div>
 
                 {/* Copy link */}
@@ -414,7 +427,7 @@ function WaitlistContent() {
                 )}
 
                 <p className="text-white/50 text-[11px] sm:text-[12px] leading-relaxed font-light">
-                  By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VIA.
+                  By entering, you agree to VIA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random — the more referrals you have, the more chances you get. Giveaway credit must be used on items listed on VIA.
                 </p>
               </div>
             )}
@@ -448,7 +461,7 @@ function WaitlistContent() {
               </a>
             </div>
             <Link
-              href="/admin/login?redirect=/"
+              href="/admin/login?redirect=/admin/sync"
               className="hover:text-neutral-400 transition-colors"
             >
               Staff Access

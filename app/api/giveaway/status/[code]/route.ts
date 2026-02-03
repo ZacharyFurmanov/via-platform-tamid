@@ -24,6 +24,8 @@ export async function GET(
       friend1Entered: !!entry.friend1Email,
       friend2Entered: !!entry.friend2Email,
       isComplete: entry.referralCount >= 2,
+      // Each referral beyond the first 2 gives additional entries
+      totalEntries: Math.max(0, entry.referralCount - 1),
     });
   } catch (error) {
     console.error("Giveaway status error:", error);

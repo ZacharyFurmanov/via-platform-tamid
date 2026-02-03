@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       if (refCode && typeof refCode === "string") {
         try {
           const result = await processReferralEntry(normalizedEmail, refCode);
-          if (result) {
-            // Send progress email to the referrer
+          if (result && result.friendNumber) {
+            // Send progress email to the referrer (only for first 2 friends)
             await sendFriendEnteredEmail(
               result.referrerEntry.email,
               result.referrerEntry.referralCode,

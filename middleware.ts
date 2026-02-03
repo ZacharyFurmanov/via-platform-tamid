@@ -66,7 +66,13 @@ export function middleware(request: NextRequest) {
 
   // All other routes require authentication
   if (!isAuthenticated(request)) {
-    // Redirect unauthenticated users to the waitlist page
+    // Admin routes → redirect to admin login with return URL
+    if (pathname.startsWith("/admin")) {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Everything else → redirect to waitlist
     const waitlistUrl = new URL("/waitlist", request.url);
     return NextResponse.redirect(waitlistUrl);
   }

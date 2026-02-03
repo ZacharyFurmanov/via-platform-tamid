@@ -140,28 +140,28 @@ export async function recordPhoneInvites(
 export async function processReferralEntry(
   newEmail: string,
   referrerCode: string
-): Promise<{ referrerEntry: GiveawayEntry; friendNumber: 1 | 2 } | null> {
+): Promise<{ referrerEntry: GiveawayEntry; friendNumber: 1 | 2 | null } | null> {
   const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
-  // Atomically increment referral_count capped at 2, and set the friend email slot
+  // Atomically increment referral_count (no cap — more referrals = more chances to win)
+  // Still store first two friend emails in the dedicated slots
   const result = await sql`
     UPDATE giveaway_entries
     SET
-      referral_count = LEAST(referral_count + 1, 2),
+      referral_count = referral_count + 1,
       friend_1_email = CASE WHEN referral_count = 0 THEN ${newEmail.toLowerCase()} ELSE friend_1_email END,
       friend_2_email = CASE WHEN referral_count = 1 THEN ${newEmail.toLowerCase()} ELSE friend_2_email END,
       updated_at = NOW()
     WHERE referral_code = ${referrerCode}
-      AND referral_count < 2
     RETURNING *
   `;
 
   if (result.length === 0) return null;
 
   const entry = mapRow(result[0]);
-  const friendNumber = entry.referralCount === 1 ? 1 : 2;
-  return { referrerEntry: entry, friendNumber: friendNumber as 1 | 2 };
+  const friendNumber = entry.referralCount === 1 ? 1 : entry.referralCount === 2 ? 2 : null;
+  return { referrerEntry: entry, friendNumber };
 }
 
 function mapRow(row: Record<string, unknown>): GiveawayEntry {
