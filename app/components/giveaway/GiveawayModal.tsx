@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface GiveawayModalProps {
   isOpen: boolean;
@@ -93,6 +93,31 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
     };
   }, [isOpen]);
 
+  // Poll for status updates on confirmation screen
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+
+    if (screen !== "confirmation" || !referralCode || !isOpen) return;
+
+    const poll = () => {
+      fetch(`/api/giveaway/status/${referralCode}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.error) setStatus(data);
+        })
+        .catch(() => {});
+    };
+
+    pollRef.current = setInterval(poll, 10000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [screen, referralCode, isOpen]);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError("");
@@ -105,6 +130,17 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
     setIsSubmitting(true);
 
     try {
+      // Add to waitlist table
+      try {
+        await fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), source: "giveaway_modal" }),
+        });
+      } catch {
+        // Non-blocking — continue to giveaway entry
+      }
+
       const res = await fetch("/api/giveaway/enter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

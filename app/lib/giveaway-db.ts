@@ -103,7 +103,7 @@ export async function getEntryByCode(code: string): Promise<GiveawayEntry | null
   await initGiveawayDatabase();
 
   const result = await sql`
-    SELECT * FROM giveaway_entries WHERE referral_code = ${code}
+    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${code.toUpperCase()}
   `;
 
   if (result.length === 0) return null;
@@ -146,6 +146,7 @@ export async function processReferralEntry(
 
   // Atomically increment referral_count (no cap — more referrals = more chances to win)
   // Still store first two friend emails in the dedicated slots
+  // Use case-insensitive match on referral_code
   const result = await sql`
     UPDATE giveaway_entries
     SET
@@ -153,7 +154,7 @@ export async function processReferralEntry(
       friend_1_email = CASE WHEN referral_count = 0 THEN ${newEmail.toLowerCase()} ELSE friend_1_email END,
       friend_2_email = CASE WHEN referral_count = 1 THEN ${newEmail.toLowerCase()} ELSE friend_2_email END,
       updated_at = NOW()
-    WHERE referral_code = ${referrerCode}
+    WHERE UPPER(referral_code) = ${referrerCode.toUpperCase()}
     RETURNING *
   `;
 
@@ -162,6 +163,17 @@ export async function processReferralEntry(
   const entry = mapRow(result[0]);
   const friendNumber = entry.referralCount === 1 ? 1 : entry.referralCount === 2 ? 2 : null;
   return { referrerEntry: entry, friendNumber };
+}
+
+export async function setReferredByCode(email: string, refCode: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await initGiveawayDatabase();
+
+  await sql`
+    UPDATE giveaway_entries
+    SET referred_by_code = ${refCode}, updated_at = NOW()
+    WHERE email = ${email.toLowerCase()} AND referred_by_code IS NULL
+  `;
 }
 
 function mapRow(row: Record<string, unknown>): GiveawayEntry {

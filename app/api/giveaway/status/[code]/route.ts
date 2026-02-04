@@ -12,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: "Code is required" }, { status: 400 });
     }
 
-    const entry = await getEntryByCode(code);
+    const entry = await getEntryByCode(code.toUpperCase());
 
     if (!entry) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
@@ -24,8 +24,7 @@ export async function GET(
       friend1Entered: !!entry.friend1Email,
       friend2Entered: !!entry.friend2Email,
       isComplete: entry.referralCount >= 2,
-      // Each referral beyond the first 2 gives additional entries
-      totalEntries: Math.max(0, entry.referralCount - 1),
+      totalEntries: entry.referralCount,
     });
   } catch (error) {
     console.error("Giveaway status error:", error);

@@ -52,6 +52,23 @@ function WaitlistContent() {
     }
   }, []);
 
+  // Poll for status updates on confirmation page
+  useEffect(() => {
+    if (phase !== "confirmation" || !referralCode) return;
+
+    const poll = () => {
+      fetch(`/api/giveaway/status/${referralCode}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.error) setStatus(data);
+        })
+        .catch(() => {});
+    };
+
+    const interval = setInterval(poll, 10000);
+    return () => clearInterval(interval);
+  }, [phase, referralCode]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
