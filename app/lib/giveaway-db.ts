@@ -18,8 +18,16 @@ export interface GiveawayEntry {
   friend2Email: string | null;
   phone1: string | null;
   phone2: string | null;
+  reminderSentAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type ReminderCategory = 'no_activity' | 'invited_no_entries' | 'one_referral';
+
+export interface ReminderCandidate {
+  entry: GiveawayEntry;
+  category: ReminderCategory;
 }
 
 // Characters excluding ambiguous ones (O/0/I/1)
@@ -55,6 +63,9 @@ export async function initGiveawayDatabase() {
   await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_referral_code ON giveaway_entries(referral_code)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_email ON giveaway_entries(email)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_referred_by ON giveaway_entries(referred_by_code)`;
+
+  await sql`ALTER TABLE giveaway_entries ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMP WITH TIME ZONE`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_reminder_candidates ON giveaway_entries(updated_at) WHERE referral_count < 2 AND reminder_sent_at IS NULL`;
 }
 
 export async function createGiveawayEntry(
@@ -187,7 +198,43 @@ function mapRow(row: Record<string, unknown>): GiveawayEntry {
     friend2Email: row.friend_2_email as string | null,
     phone1: row.phone_1 as string | null,
     phone2: row.phone_2 as string | null,
+    reminderSentAt: row.reminder_sent_at ? new Date(row.reminder_sent_at as string) : null,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
   };
+}
+
+export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
+  const sql = neon(getDatabaseUrl());
+  await initGiveawayDatabase();
+
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+  const rows = await sql`
+    SELECT *,
+      CASE
+        WHEN referral_count = 0 AND phone_1 IS NULL THEN 'no_activity'
+        WHEN referral_count = 0 AND phone_1 IS NOT NULL THEN 'invited_no_entries'
+        WHEN referral_count = 1 THEN 'one_referral'
+      END AS reminder_category
+    FROM giveaway_entries
+    WHERE referral_count < 2
+      AND reminder_sent_at IS NULL
+      AND updated_at <= ${twoDaysAgo}
+  `;
+
+  return rows.map(row => ({
+    entry: mapRow(row),
+    category: row.reminder_category as ReminderCategory,
+  }));
+}
+
+export async function markReminderSent(id: number): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+
+  await sql`
+    UPDATE giveaway_entries
+    SET reminder_sent_at = NOW()
+    WHERE id = ${id}
+  `;
 }

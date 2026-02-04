@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import type { ReminderCategory } from "@/app/lib/giveaway-db";
 
 const getResend = () => {
   const apiKey = process.env.RESEND_API_KEY;
@@ -85,6 +86,77 @@ export async function sendFriendEnteredEmail(
        <div class="link-box">${referralLink}</div>
        <p>Send it to one more friend to complete your entry.</p>
        <a href="${referralLink}" class="btn">Share Your Link</a>`;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><style>${baseStyles()}</style></head>
+<body>
+  <div class="container">
+    <div class="header"><h1>VIA</h1></div>
+    <div class="content">
+      <h2>${heading}</h2>
+      ${body}
+    </div>
+    <div class="footer">
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+  });
+}
+
+export async function sendGiveawayReminder(
+  email: string,
+  referralCode: string,
+  category: ReminderCategory
+) {
+  const resend = getResend();
+  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
+
+  let subject: string;
+  let heading: string;
+  let body: string;
+
+  switch (category) {
+    case "no_activity":
+      subject = "Don't forget — share to enter the VIA Giveaway";
+      heading = "You haven't shared your link yet.";
+      body = `
+        <p>You signed up for the VIA Giveaway, but you haven't shared your referral link yet. To be officially entered to win a $1,000 shopping spree, share your link with two friends and have them enter.</p>
+        <p><strong>Your unique referral link:</strong></p>
+        <div class="link-box">${referralLink}</div>
+        <p>Send it to two friends to complete your entry.</p>
+        <a href="${referralLink}" class="btn">Share Your Link</a>`;
+      break;
+
+    case "invited_no_entries":
+      subject = "Your friends haven't entered yet — VIA Giveaway";
+      heading = "Your friends haven't entered yet.";
+      body = `
+        <p>You invited friends to the VIA Giveaway, but none of them have entered yet. Send them a reminder or share your link with others to make sure you're officially in the running.</p>
+        <p><strong>Your unique referral link:</strong></p>
+        <div class="link-box">${referralLink}</div>
+        <p>Share this link with two friends to complete your entry.</p>
+        <a href="${referralLink}" class="btn">Share Your Link</a>`;
+      break;
+
+    case "one_referral":
+      subject = "1 more friend to go — VIA Giveaway";
+      heading = "You're almost there.";
+      body = `
+        <p>One of your friends has entered the giveaway, but you need one more to be officially entered to win a $1,000 shopping spree on VIA.</p>
+        <p><strong>Your referral link:</strong></p>
+        <div class="link-box">${referralLink}</div>
+        <p>Send it to one more friend to complete your entry.</p>
+        <a href="${referralLink}" class="btn">Share Your Link</a>`;
+      break;
+  }
 
   await resend.emails.send({
     from: FROM_EMAIL,
