@@ -328,7 +328,7 @@ export default function SyncAdminPage() {
       {/* Help Section */}
       <section className="border-t border-neutral-200 py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <div>
               <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Squarespace Setup</h3>
               <div className="text-sm text-neutral-600 space-y-2">
@@ -348,9 +348,32 @@ export default function SyncAdminPage() {
             </div>
 
             <div>
-              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Shopify Setup</h3>
+              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Shopify Collabs Setup</h3>
               <div className="text-sm text-neutral-600 space-y-3">
-                <p>To get your Storefront Access Token:</p>
+                <p className="text-black font-medium">What to tell the store owner:</p>
+                <ol className="list-decimal list-inside space-y-2 text-neutral-500 text-sm">
+                  <li>Install the Shopify Collabs app from the Shopify App Store (free)</li>
+                  <li>In Shopify Admin, go to Apps → Collabs → set up a Program with commission rates</li>
+                  <li>Go to Recruiting → Invite Creator</li>
+                  <li>Enter your email address</li>
+                  <li>Attach the program offer to the invite and hit Send</li>
+                </ol>
+                <p className="text-black font-medium mt-5">After you get the invite:</p>
+                <ol className="list-decimal list-inside space-y-2 text-neutral-500 text-sm">
+                  <li>Accept the invite from your email or at <code className="bg-neutral-100 px-1 text-xs">collabs.shopify.com</code></li>
+                  <li>Grab your unique affiliate link from the Collabs dashboard</li>
+                  <li>Ask the store owner for their Storefront Access Token (see Storefront API steps) so VIA can sync their products</li>
+                </ol>
+                <p className="mt-4 text-neutral-400 text-xs">
+                  Invites expire after 30 days. The brand only needs your email to invite you.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Shopify Storefront API</h3>
+              <div className="text-sm text-neutral-600 space-y-3">
+                <p>To sync products, get the store&apos;s Storefront Access Token:</p>
                 <ol className="list-decimal list-inside space-y-1 text-neutral-500 text-sm">
                   <li>Go to Shopify Admin → Settings</li>
                   <li>Click &quot;Apps and sales channels&quot;</li>
