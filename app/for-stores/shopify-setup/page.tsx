@@ -99,13 +99,13 @@ export default function ShopifySetupPage() {
                   <p>Invite VIA to your Collabs program:</p>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
                     <li>Open <strong>Shopify Collabs</strong> from your Apps</li>
-                    <li>Go to <strong>Collaborators → Invite</strong></li>
-                    <li>Enter VIA&apos;s affiliate email:</li>
+                    <li>Go to <strong>Recruiting → Invite Creator</strong></li>
+                    <li>Enter VIA&apos;s email:</li>
                   </ol>
                   <div className="bg-neutral-100 p-3 font-mono text-sm select-all">
                     partnerships@theviaplatform.com
                   </div>
-                  <p className="text-sm">Click <strong>Send Invite</strong>. We&apos;ll accept within 24 hours.</p>
+                  <p className="text-sm">Attach your program offer to the invite and click <strong>Send Invite</strong>. We&apos;ll accept within 24 hours.</p>
                 </div>
               </div>
 
@@ -136,8 +136,8 @@ export default function ShopifySetupPage() {
                   </div>
 
                   <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>In Collabs, go to <strong>Settings → Commission</strong></li>
-                    <li>Set the appropriate commission percentage based on your typical order value</li>
+                    <li>In Collabs, go to <strong>Programs</strong> and create or edit your program</li>
+                    <li>Set the commission percentage based on your typical order value</li>
                     <li>Choose <strong>All products</strong> or select specific collections</li>
                     <li>Set cookie duration (we recommend 30 days)</li>
                   </ol>
