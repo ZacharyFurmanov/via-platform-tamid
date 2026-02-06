@@ -10,6 +10,7 @@ const PUBLIC_ROUTES = [
   "/terms",
   "/privacy",
   "/api/giveaway",
+  "/api/cron",
 ];
 
 // Simple hash function for password comparison
