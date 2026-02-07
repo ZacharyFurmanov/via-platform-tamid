@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { getReminderCandidates, markReminderSent } from "@/app/lib/giveaway-db";
+import { getReminderCandidates, getReminderStats, markReminderSent } from "@/app/lib/giveaway-db";
 import { sendGiveawayReminder } from "@/app/lib/email";
 
 // GET: Preview candidates without sending (dry run)
 export async function GET() {
   try {
-    const candidates = await getReminderCandidates();
+    const [candidates, stats] = await Promise.all([
+      getReminderCandidates(),
+      getReminderStats(),
+    ]);
 
     const byCategory = candidates.reduce((acc, c) => {
       acc[c.category] = (acc[c.category] || 0) + 1;
@@ -15,6 +18,7 @@ export async function GET() {
     return NextResponse.json({
       total: candidates.length,
       categories: byCategory,
+      stats,
       candidates: candidates.map(({ entry, category }) => ({
         id: entry.id,
         email: entry.email,

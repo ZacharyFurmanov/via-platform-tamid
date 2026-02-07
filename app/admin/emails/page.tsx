@@ -8,6 +8,8 @@ type EmailEntry = {
   email: string;
   signupDate: string;
   source?: string;
+  referralCount?: number;
+  reminded?: boolean;
 };
 
 export default function EmailsAdminPage() {
@@ -50,14 +52,17 @@ export default function EmailsAdminPage() {
     });
   };
 
+  const completedCount = emails.filter((e) => (e.referralCount ?? 0) >= 2).length;
+
   const exportToCSV = () => {
     if (emails.length === 0) return;
 
-    const headers = ["Email", "Signup Date", "Source"];
+    const headers = ["Email", "Signup Date", "Referrals", "Reminded"];
     const rows = emails.map((e) => [
       e.email,
       formatDate(e.signupDate),
-      e.source || "website",
+      String(e.referralCount ?? 0),
+      e.reminded ? "Yes" : "No",
     ]);
 
     const csvContent = [
@@ -68,7 +73,7 @@ export default function EmailsAdminPage() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `via-emails-${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `via-giveaway-emails-${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
   };
 
@@ -110,10 +115,10 @@ export default function EmailsAdminPage() {
             </button>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
-            Email Signups
+            Giveaway Emails
           </h1>
           <p className="text-neutral-600 text-base sm:text-lg">
-            Manage newsletter subscribers and waitlist signups.
+            All giveaway entrants from the Neon database.
           </p>
         </div>
       </section>
@@ -124,7 +129,11 @@ export default function EmailsAdminPage() {
           <div className="flex items-center gap-6">
             <div>
               <p className="text-3xl font-serif">{emails.length}</p>
-              <p className="text-sm text-neutral-500">Total signups</p>
+              <p className="text-sm text-neutral-500">Total entries</p>
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-3xl font-serif text-green-700">{completedCount}</p>
+              <p className="text-sm text-neutral-500">Completed (2+ referrals)</p>
             </div>
             {emails.length > 0 && (
               <div className="hidden sm:block">
@@ -157,9 +166,9 @@ export default function EmailsAdminPage() {
       ) : emails.length === 0 ? (
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="border border-dashed border-neutral-300 p-8 text-center">
-            <p className="text-neutral-500 mb-2">No email signups yet.</p>
+            <p className="text-neutral-500 mb-2">No giveaway entries yet.</p>
             <p className="text-sm text-neutral-400">
-              Signups will appear here once visitors subscribe.
+              Entries will appear here once visitors sign up for the giveaway.
             </p>
           </div>
         </div>
@@ -170,9 +179,10 @@ export default function EmailsAdminPage() {
               {/* Desktop Header */}
               <div className="hidden sm:grid grid-cols-12 gap-4 px-4 sm:px-6 py-3 bg-neutral-50 text-sm text-neutral-500 border-b border-neutral-200">
                 <div className="col-span-1">#</div>
-                <div className="col-span-5">Email</div>
-                <div className="col-span-4">Signup Date</div>
-                <div className="col-span-2">Source</div>
+                <div className="col-span-4">Email</div>
+                <div className="col-span-3">Signup Date</div>
+                <div className="col-span-2">Referrals</div>
+                <div className="col-span-2">Reminded</div>
               </div>
 
               <div className="max-h-[600px] overflow-y-auto">
@@ -189,9 +199,7 @@ export default function EmailsAdminPage() {
                         <p className="font-medium truncate">{entry.email}</p>
                         <div className="flex items-center justify-between mt-1 text-xs text-neutral-500">
                           <span>{formatDate(entry.signupDate)}</span>
-                          <span className="capitalize">
-                            {entry.source || "website"}
-                          </span>
+                          <span>{entry.referralCount ?? 0} referrals</span>
                         </div>
                       </div>
                       {/* Desktop Layout */}
@@ -199,12 +207,15 @@ export default function EmailsAdminPage() {
                         <div className="col-span-1 text-neutral-400">
                           {emails.length - index}
                         </div>
-                        <div className="col-span-5 truncate">{entry.email}</div>
-                        <div className="col-span-4 text-neutral-500">
+                        <div className="col-span-4 truncate">{entry.email}</div>
+                        <div className="col-span-3 text-neutral-500">
                           {formatDate(entry.signupDate)}
                         </div>
-                        <div className="col-span-2 text-neutral-500 capitalize">
-                          {entry.source || "website"}
+                        <div className="col-span-2 text-neutral-500">
+                          {entry.referralCount ?? 0}
+                        </div>
+                        <div className="col-span-2 text-neutral-500">
+                          {entry.reminded ? "Yes" : "No"}
                         </div>
                       </div>
                     </div>

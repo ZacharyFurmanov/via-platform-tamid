@@ -14,9 +14,18 @@ type Candidate = {
   updatedAt: string;
 };
 
+type Stats = {
+  total: number;
+  completed: number;
+  alreadyReminded: number;
+  tooRecent: number;
+  eligible: number;
+};
+
 type PreviewData = {
   total: number;
   categories: Record<string, number>;
+  stats: Stats;
   candidates: Candidate[];
   config: {
     hasCronSecret: boolean;
@@ -205,6 +214,37 @@ export default function GiveawayAdminPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Stats breakdown */}
+      {preview && preview.stats && (
+        <section className="border-b border-neutral-200">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <h2 className="text-lg font-serif mb-4">All Entries Breakdown</h2>
+            <div className="flex flex-wrap gap-8">
+              <div>
+                <p className="text-3xl font-serif">{preview.stats.total}</p>
+                <p className="text-sm text-neutral-500">Total entries</p>
+              </div>
+              <div>
+                <p className="text-3xl font-serif text-green-700">{preview.stats.completed}</p>
+                <p className="text-sm text-neutral-500">Completed (2+ referrals)</p>
+              </div>
+              <div>
+                <p className="text-3xl font-serif text-neutral-400">{preview.stats.alreadyReminded}</p>
+                <p className="text-sm text-neutral-500">Already reminded</p>
+              </div>
+              <div>
+                <p className="text-3xl font-serif text-amber-600">{preview.stats.tooRecent}</p>
+                <p className="text-sm text-neutral-500">Too recent (&lt;2 days)</p>
+              </div>
+              <div>
+                <p className="text-3xl font-serif text-black">{preview.stats.eligible}</p>
+                <p className="text-sm text-neutral-500">Eligible for reminder</p>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Send results */}

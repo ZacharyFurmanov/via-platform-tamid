@@ -1,77 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { neon } from "@neondatabase/serverless";
 
-type EmailEntry = {
-  email: string;
-  signupDate: string;
-  source?: string;
-};
+function getDatabaseUrl() {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
+  }
+  return url;
+}
 
-type EmailsData = {
-  emails: EmailEntry[];
-};
-
-// Use absolute path from project root
-const DATA_DIR = path.join(process.cwd(), "app", "data");
-const DATA_FILE = path.join(DATA_DIR, "emails.json");
-
-function ensureDataFile(): EmailsData {
+// GET - Return all giveaway entrants as the email list
+export async function GET() {
   try {
-    // Ensure directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
+    const sql = neon(getDatabaseUrl());
 
-    // Create file if it doesn't exist
-    if (!fs.existsSync(DATA_FILE)) {
-      const initialData: EmailsData = { emails: [] };
-      fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
-      return initialData;
-    }
+    const rows = await sql`
+      SELECT email, created_at, referral_count, reminder_sent_at
+      FROM giveaway_entries
+      ORDER BY created_at ASC
+    `;
 
-    // Read and parse existing file
-    const content = fs.readFileSync(DATA_FILE, "utf-8");
-    const parsed = JSON.parse(content);
+    const emails = rows.map((row) => ({
+      email: row.email as string,
+      signupDate: row.created_at as string,
+      source: "giveaway",
+      referralCount: row.referral_count as number,
+      reminded: !!row.reminder_sent_at,
+    }));
 
-    // Validate structure
-    if (!parsed || !Array.isArray(parsed.emails)) {
-      const initialData: EmailsData = { emails: [] };
-      fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
-      return initialData;
-    }
-
-    return parsed;
-  } catch (err) {
-    console.error("[Newsletter] ensureDataFile error:", err);
-    const initialData: EmailsData = { emails: [] };
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
-    } catch (writeErr) {
-      console.error("[Newsletter] Failed to create file:", writeErr);
-    }
-    return initialData;
+    return NextResponse.json({
+      count: emails.length,
+      emails,
+    });
+  } catch (error) {
+    console.error("[Newsletter] Error fetching emails:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch emails" },
+      { status: 500 }
+    );
   }
 }
 
-function saveData(data: EmailsData): void {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
+// POST - Add email (creates a giveaway entry)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, source } = body;
+    const { email } = body;
 
-    // Validate email presence
     if (!email || typeof email !== "string") {
       return NextResponse.json(
         { error: "Email is required" },
@@ -80,41 +55,44 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-
-    // Validate email format
-    if (!isValidEmail(normalizedEmail)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { error: "Please enter a valid email address" },
         { status: 400 }
       );
     }
 
-    // Load existing data
-    const data = ensureDataFile();
+    const sql = neon(getDatabaseUrl());
 
-    // Check for duplicates
-    const existingEmail = data.emails.find(
-      (entry) => entry.email === normalizedEmail
-    );
+    const existing = await sql`
+      SELECT email FROM giveaway_entries WHERE email = ${normalizedEmail}
+    `;
 
-    if (existingEmail) {
+    if (existing.length > 0) {
       return NextResponse.json(
         { message: "You're already on the list!" },
         { status: 200 }
       );
     }
 
-    // Add new email
-    const newEntry: EmailEntry = {
-      email: normalizedEmail,
-      signupDate: new Date().toISOString(),
-      source: source || "website",
-    };
+    // For newsletter signups that don't go through the giveaway flow,
+    // just add to waitlist instead
+    const existingWaitlist = await sql`
+      SELECT email FROM waitlist WHERE email = ${normalizedEmail}
+    `;
 
-    data.emails.push(newEntry);
-    saveData(data);
+    if (existingWaitlist.length > 0) {
+      return NextResponse.json(
+        { message: "You're already on the list!" },
+        { status: 200 }
+      );
+    }
 
-    console.log(`[Newsletter] New signup: ${normalizedEmail} (total: ${data.emails.length})`);
+    await sql`
+      INSERT INTO waitlist (email, signup_date, source)
+      VALUES (${normalizedEmail}, NOW(), 'newsletter')
+    `;
 
     return NextResponse.json(
       { message: "Welcome to VIA! We'll keep you updated." },
@@ -124,22 +102,6 @@ export async function POST(request: NextRequest) {
     console.error("[Newsletter] Error:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET() {
-  try {
-    const data = ensureDataFile();
-    return NextResponse.json({
-      count: data.emails.length,
-      emails: data.emails,
-    });
-  } catch (error) {
-    console.error("Error fetching emails:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch emails" },
       { status: 500 }
     );
   }

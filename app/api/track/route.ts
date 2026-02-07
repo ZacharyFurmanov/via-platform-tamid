@@ -1,29 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateClickId, ClickRecord } from "@/app/lib/track";
-import fs from "fs/promises";
-import path from "path";
-
-const CLICKS_FILE = path.join(process.cwd(), "app", "data", "clicks.json");
-
-async function loadClicks(): Promise<ClickRecord[]> {
-  try {
-    const data = await fs.readFile(CLICKS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function saveClick(click: ClickRecord): Promise<void> {
-  const clicks = await loadClicks();
-  clicks.push(click);
-
-  // Keep only last 10000 clicks to prevent file bloat
-  const trimmedClicks = clicks.slice(-10000);
-
-  await fs.mkdir(path.dirname(CLICKS_FILE), { recursive: true });
-  await fs.writeFile(CLICKS_FILE, JSON.stringify(trimmedClicks, null, 2));
-}
+import { generateClickId } from "@/app/lib/track";
+import { saveClick } from "@/app/lib/analytics-db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -49,8 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
-  // Log click asynchronously (don't block redirect)
-  const clickRecord: ClickRecord = {
+  // Save click to database (fire and forget)
+  saveClick({
     clickId: generateClickId(),
     timestamp: new Date().toISOString(),
     productId: productId || "unknown",
@@ -59,10 +36,7 @@ export async function GET(request: NextRequest) {
     storeSlug: storeSlug || "unknown",
     externalUrl,
     userAgent: request.headers.get("user-agent") || undefined,
-  };
-
-  // Fire and forget - don't wait for save to complete
-  saveClick(clickRecord).catch(console.error);
+  }).catch(console.error);
 
   // Redirect to the actual product URL
   return NextResponse.redirect(externalUrl, 302);

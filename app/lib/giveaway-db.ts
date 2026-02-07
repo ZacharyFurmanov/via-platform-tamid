@@ -229,6 +229,38 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
   }));
 }
 
+export async function getReminderStats(): Promise<{
+  total: number;
+  completed: number;
+  alreadyReminded: number;
+  tooRecent: number;
+  eligible: number;
+}> {
+  const sql = neon(getDatabaseUrl());
+  await initGiveawayDatabase();
+
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+  const rows = await sql`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE referral_count >= 2)::int AS completed,
+      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NOT NULL)::int AS already_reminded,
+      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NULL AND updated_at > ${twoDaysAgo})::int AS too_recent,
+      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NULL AND updated_at <= ${twoDaysAgo})::int AS eligible
+    FROM giveaway_entries
+  `;
+
+  const row = rows[0];
+  return {
+    total: row.total as number,
+    completed: row.completed as number,
+    alreadyReminded: row.already_reminded as number,
+    tooRecent: row.too_recent as number,
+    eligible: row.eligible as number,
+  };
+}
+
 export async function markReminderSent(id: number): Promise<void> {
   const sql = neon(getDatabaseUrl());
 
