@@ -9,5 +9,15 @@ export const stores = [
     dataSource: "lei-vintage",
     image: "/stores/LEI.jpg",
   },
+  {
+    slug: "vintage-archives-la",
+    name: "Vintage Archives LA",
+    location: "Los Angeles, CA",
+    description:
+      "Vintage Archives LA is a curated collection of vintage designer shoes, from iconic classics to hidden gems. Rooted in sustainability and a love for fashion with history, each piece is hand-selected to offer something unique. Based in LA, the shop is dedicated to giving quality pieces a second life while helping you find something that feels just right.",
+    website: "https://vintagearchivesla.com",
+    dataSource: "vintage-archives-la",
+    image: "/stores/VintageArchivesLA.jpg",
+  },
 ]
   

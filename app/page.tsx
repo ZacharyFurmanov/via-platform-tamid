@@ -85,32 +85,38 @@ export default function HomePage() {
       </Link>
     </div>
 
-    {/* Single store - centered layout */}
-    <div className="px-6 flex justify-center">
-      <Link
-        href="/stores/lei-vintage"
-        className="group block w-full max-w-md"
-      >
-        {/* Image */}
-        <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
-          <Image
-            src="/stores/LEI.jpg"
-            alt="LEI Vintage"
-            fill
-            sizes="(min-width: 768px) 400px, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-        </div>
+    {/* Store grid */}
+    <div className="px-6 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 max-w-3xl mx-auto">
+      {[
+        { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
+        { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
+      ].map((store) => (
+        <Link
+          key={store.slug}
+          href={`/stores/${store.slug}`}
+          className="group block w-full"
+        >
+          {/* Image */}
+          <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+            <Image
+              src={store.image}
+              alt={store.name}
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+          </div>
 
-        {/* Text */}
-        <h3 className="text-lg sm:text-xl font-serif text-black">
-          LEI Vintage
-        </h3>
-        <p className="text-sm text-gray-600">
-          Boston, MA
-        </p>
-      </Link>
+          {/* Text */}
+          <h3 className="text-lg sm:text-xl font-serif text-black">
+            {store.name}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {store.location}
+          </p>
+        </Link>
+      ))}
     </div>
   </div>
 </section>

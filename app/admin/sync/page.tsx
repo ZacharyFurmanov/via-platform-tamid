@@ -49,7 +49,14 @@ const SQUARESPACE_STORES: SquarespaceStore[] = [
 
 // Shopify stores (Storefront API)
 // Add your Shopify stores here with their storefront access tokens
-const SHOPIFY_STORES: ShopifyStore[] = [];
+const SHOPIFY_STORES: ShopifyStore[] = [
+  {
+    type: "shopify",
+    name: "Vintage Archives LA",
+    slug: "vintage-archives-la",
+    storeDomain: "vintagearchivesla.com",
+  },
+];
 
 const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
 
