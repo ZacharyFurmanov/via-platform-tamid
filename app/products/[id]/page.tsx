@@ -5,6 +5,7 @@ import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { createTrackingUrl } from "@/app/lib/track";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import ImageCarousel from "@/app/components/ImageCarousel";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -34,6 +35,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const categoryLabel = categoryMap[categorySlug];
   const price = `$${Number(product.price)}`;
 
+  // Parse images from DB
+  let productImages: string[] = [];
+  if (product.images) {
+    try {
+      const parsed = JSON.parse(product.images);
+      if (Array.isArray(parsed) && parsed.length > 0) productImages = parsed;
+    } catch {}
+  }
+  if (productImages.length === 0 && product.image) {
+    productImages = [product.image];
+  }
+
   const trackingUrl = product.external_url
     ? createTrackingUrl(
         compositeId,
@@ -60,16 +73,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
           {/* Image */}
-          <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
-            <img
-              src={product.image || "/placeholder.jpg"}
-              alt={product.title}
-              className="w-full h-full object-cover object-top"
-            />
-            {!product.image && (
-              <div className="absolute inset-0 bg-neutral-200" />
-            )}
-          </div>
+          <ImageCarousel
+            images={productImages}
+            alt={product.title}
+            variant="detail"
+          />
 
           {/* Details */}
           <div className="flex flex-col justify-center py-4 md:py-8">

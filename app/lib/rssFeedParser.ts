@@ -4,6 +4,7 @@ export type RSSProduct = {
   title: string;
   price: number | null;
   image: string | null;
+  images: string[];
   externalUrl: string;
   store: string;
   description: string | null;
@@ -196,6 +197,7 @@ export async function parseRSSFeed(
       title,
       price,
       image,
+      images: image ? [image] : [],
       externalUrl,
       store: storeName,
       description: description || null,

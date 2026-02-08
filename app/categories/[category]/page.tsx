@@ -36,6 +36,7 @@ export default async function CategoryPage({
       storeSlug: item.storeSlug,
       externalUrl: item.externalUrl,
       image: item.image,
+      images: item.images,
       createdAt: Date.now() - idx * 1000, // Preserve original order for "newest"
     }));
 

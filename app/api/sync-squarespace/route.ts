@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         title: p.title,
         price: p.price as number,
         image: p.image ?? undefined,
+        images: p.images,
         externalUrl: p.externalUrl,
         description: p.description ?? undefined,
       }));

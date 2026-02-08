@@ -19,6 +19,7 @@ export type FilterableProduct = {
   storeSlug: string;
   externalUrl?: string;
   image: string;
+  images?: string[];
   createdAt?: number; // timestamp for sorting by newest
 };
 
@@ -199,6 +200,7 @@ export default function FilteredProductGrid({
                 storeSlug={product.storeSlug}
                 externalUrl={product.externalUrl}
                 image={product.image}
+                images={product.images}
               />
             </div>
           ))}

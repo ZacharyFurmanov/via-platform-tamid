@@ -22,6 +22,7 @@ export default async function BrowsePage() {
     storeSlug: item.storeSlug,
     externalUrl: item.externalUrl,
     image: item.image,
+    images: item.images,
     createdAt: Date.now() - idx * 1000,
   }));
 

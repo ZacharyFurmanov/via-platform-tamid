@@ -20,6 +20,7 @@ export type DBProduct = {
   price: number;
   currency: string;
   image: string | null;
+  images: string | null;
   external_url: string | null;
   description: string | null;
   synced_at: Date;
@@ -55,6 +56,11 @@ export async function initDatabase() {
   await sql`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT
   `;
+
+  // Add images column if it doesn't exist (JSON array of image URLs)
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT
+  `;
 }
 
 /**
@@ -68,6 +74,7 @@ export async function syncProducts(
     price: number;
     currency?: string;
     image?: string;
+    images?: string[];
     externalUrl?: string;
     description?: string;
   }>
@@ -79,8 +86,9 @@ export async function syncProducts(
 
   // Insert new products
   for (const product of products) {
+    const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, external_url, description, synced_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, synced_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -88,6 +96,7 @@ export async function syncProducts(
         ${product.price},
         ${product.currency || "USD"},
         ${product.image || null},
+        ${imagesJson},
         ${product.externalUrl || null},
         ${product.description || null},
         NOW()

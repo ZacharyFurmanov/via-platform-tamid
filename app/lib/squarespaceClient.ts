@@ -2,6 +2,7 @@ export type SquarespaceProduct = {
   title: string;
   price: number;
   image: string | null;
+  images: string[];
   externalUrl: string;
   store: string;
   description: string | null;
@@ -120,11 +121,12 @@ export async function parseSquarespaceJSON(
 
     // Image URL
     const image = item.assetUrl || null;
+    const images = image ? [image] : [];
 
     // Product description (HTML body from Squarespace)
     const description = item.body || item.excerpt || null;
 
-    products.push({ title, price, image, externalUrl, store: storeName, description });
+    products.push({ title, price, image, images, externalUrl, store: storeName, description });
   }
 
   return { products, skippedCount };

@@ -8,4 +8,5 @@ export type StoreProduct = {
   storeSlug: string;
   externalUrl?: string;
   image?: string;
+  images?: string[];
 };

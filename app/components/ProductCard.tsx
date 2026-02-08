@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
+import ImageCarousel from "./ImageCarousel";
 
 type ProductCardProps = {
   id: string;
@@ -10,6 +11,7 @@ type ProductCardProps = {
   storeSlug: string;
   externalUrl?: string;
   image: string;
+  images?: string[];
 };
 
 export default function ProductCard({
@@ -19,20 +21,14 @@ export default function ProductCard({
   category,
   storeName,
   image,
+  images,
 }: ProductCardProps) {
+  const carouselImages =
+    images && images.length > 0 ? images : image ? [image] : [];
+
   return (
     <Link href={`/products/${id}`} className="group cursor-pointer text-black block">
-      {/* Image container with consistent aspect ratio */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100">
-        <img
-          src={image || "/placeholder.jpg"}
-          alt={name}
-          className="w-full h-full object-cover object-top"
-          loading="lazy"
-        />
-        {!image && <div className="absolute inset-0 bg-neutral-200" />}
-        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition" />
-      </div>
+      <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
       {/* Product info with mobile-friendly text sizes */}
       <div className="pt-3 pb-2">

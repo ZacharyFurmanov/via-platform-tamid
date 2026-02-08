@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
+import ImageCarousel from "./ImageCarousel";
 
 type ProductDetailModalProps = {
   isOpen: boolean;
@@ -15,6 +16,7 @@ type ProductDetailModalProps = {
     storeSlug: string;
     externalUrl?: string;
     image: string;
+    images?: string[];
   } | null;
 };
 
@@ -111,13 +113,17 @@ export default function ProductDetailModal({
         </button>
 
         {/* Product Image */}
-        <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-neutral-100">
-          <img
-            src={product.image || "/placeholder.jpg"}
-            alt={product.title}
-            className="w-full h-full object-cover object-top"
-          />
-        </div>
+        <ImageCarousel
+          images={
+            product.images && product.images.length > 0
+              ? product.images
+              : product.image
+                ? [product.image]
+                : []
+          }
+          alt={product.title}
+          variant="detail"
+        />
 
         {/* Product Info */}
         <div className="p-6 sm:p-8">

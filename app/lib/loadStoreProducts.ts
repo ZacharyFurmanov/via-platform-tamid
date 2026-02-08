@@ -64,6 +64,17 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
   return "clothes";
 };
 
+// Parse images JSON from DB, falling back to single image
+function parseImages(product: DBProduct): string[] {
+  if (product.images) {
+    try {
+      const parsed = JSON.parse(product.images);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return product.image ? [product.image] : [];
+}
+
 // Transform database product to StoreProduct format
 function transformDBProduct(product: DBProduct): StoreProduct {
   const priceString = `$${Number(product.price)}`;
@@ -76,6 +87,7 @@ function transformDBProduct(product: DBProduct): StoreProduct {
     storeSlug: product.store_slug,
     externalUrl: product.external_url ?? undefined,
     image: product.image ?? undefined,
+    images: parseImages(product),
   };
 }
 

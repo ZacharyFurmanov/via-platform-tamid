@@ -12,6 +12,7 @@ export type ShopifyProduct = {
   price: number | null;
   currency: string;
   image: string | null;
+  images: string[];
   externalUrl: string;
   store: string;
   vendor: string | null;
@@ -93,7 +94,7 @@ const PRODUCTS_QUERY = `
               currencyCode
             }
           }
-          images(first: 1) {
+          images(first: 10) {
             edges {
               node {
                 url
@@ -221,13 +222,15 @@ export async function fetchShopifyProducts(
 
       const price = parseFloat(node.priceRange.minVariantPrice.amount);
       const currency = node.priceRange.minVariantPrice.currencyCode;
-      const imageUrl = node.images.edges[0]?.node.url || null;
+      const allImageUrls = node.images.edges.map((e) => e.node.url);
+      const imageUrl = allImageUrls[0] || null;
 
       products.push({
         title: node.title,
         price: isNaN(price) ? null : price,
         currency,
         image: imageUrl,
+        images: allImageUrls,
         externalUrl: getProductUrl(normalizedDomain, node.handle),
         store: storeName,
         vendor: node.vendor || null,
@@ -396,7 +399,10 @@ export async function fetchShopifyProductsPublic(
 
       const variant = variants[0];
       const price = variant?.price ? parseFloat(variant.price) : null;
-      const imageUrl = product.images?.[0]?.src || null;
+      const allImageUrls: string[] = (product.images || [])
+        .map((img: { src?: string }) => img.src)
+        .filter(Boolean) as string[];
+      const imageUrl = allImageUrls[0] || null;
 
       // Determine availability for the product record
       // If any variant is available, or if we don't have clear data, assume available
@@ -411,6 +417,7 @@ export async function fetchShopifyProductsPublic(
         price: isNaN(price as number) ? null : price,
         currency: "USD", // Public endpoint doesn't include currency, default to USD
         image: imageUrl,
+        images: allImageUrls,
         externalUrl: `https://${normalizedDomain}/products/${product.handle}`,
         store: storeName,
         vendor: product.vendor || null,
@@ -439,6 +446,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   title: string;
   price: number | null;
   image: string | null;
+  images: string[];
   externalUrl: string;
   store: string;
   description: string | null;
@@ -447,6 +455,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     title: product.title,
     price: product.price,
     image: product.image,
+    images: product.images,
     externalUrl: product.externalUrl,
     store: product.store,
     description: product.description,

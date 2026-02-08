@@ -7,6 +7,7 @@ export type InventoryItem = {
   category: CategorySlug;
   price: number;
   image: string;
+  images: string[];
   store: string;
   storeSlug: string;
   externalUrl?: string;
@@ -67,6 +68,17 @@ const inferCategoryFromTitle = (title: string): CategorySlug => {
   return "clothes";
 };
 
+// Parse images JSON from DB, falling back to single image
+function parseImages(product: DBProduct): string[] {
+  if (product.images) {
+    try {
+      const parsed = JSON.parse(product.images);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return product.image ? [product.image] : [];
+}
+
 // Transform database products to InventoryItem format
 function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
   return {
@@ -75,6 +87,7 @@ function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
     category: inferCategoryFromTitle(product.title),
     price: Number(product.price),
     image: product.image ?? "/placeholder.jpg",
+    images: parseImages(product),
     store: product.store_name,
     storeSlug: product.store_slug,
     externalUrl: product.external_url ?? undefined,

@@ -38,6 +38,7 @@ export default async function StorePage({ params }: StorePageProps) {
     storeSlug: store.slug,
     externalUrl: product.externalUrl,
     image: product.image ?? "",
+    images: product.images ?? [],
     createdAt: Date.now() - idx * 1000,
   }));
 
