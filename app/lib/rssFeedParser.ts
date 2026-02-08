@@ -114,28 +114,32 @@ function extractPrice(text: string): number | null {
 }
 
 /**
- * Extracts image URL from item
- * Checks media:content, enclosure, and description for images
+ * Extracts all image URLs from an RSS item.
+ * Checks media:content, enclosure, and description HTML for images.
  */
-function extractImage(item: RSSItem): string | null {
-  // Check media:content
-  if (item["media:content"]?.[0]?.$?.url) {
-    return item["media:content"][0].$.url;
+function extractImages(item: RSSItem): string[] {
+  const urls: string[] = [];
+
+  // Collect all media:content URLs
+  for (const media of item["media:content"] || []) {
+    if (media.$?.url) urls.push(media.$.url);
   }
 
-  // Check enclosure
-  if (item.enclosure?.[0]?.$?.url) {
-    return item.enclosure[0].$.url;
+  // Collect all enclosure URLs
+  for (const enc of item.enclosure || []) {
+    if (enc.$?.url) urls.push(enc.$.url);
   }
 
-  // Try to extract from description HTML
+  // Extract all <img> src from description HTML
   const description = item.description?.[0] || "";
-  const imgMatch = description.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (imgMatch) {
-    return imgMatch[1];
+  const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+  let match;
+  while ((match = imgRegex.exec(description)) !== null) {
+    urls.push(match[1]);
   }
 
-  return null;
+  // Deduplicate while preserving order
+  return [...new Set(urls)];
 }
 
 /**
@@ -190,14 +194,15 @@ export async function parseRSSFeed(
       continue;
     }
 
-    // Extract image
-    const image = extractImage(item);
+    // Extract images
+    const images = extractImages(item);
+    const image = images[0] || null;
 
     products.push({
       title,
       price,
       image,
-      images: image ? [image] : [],
+      images,
       externalUrl,
       store: storeName,
       description: description || null,

@@ -21,11 +21,16 @@ type SquarespaceVariant = {
   qtyInStock: number;
 };
 
+type SquarespaceGalleryItem = {
+  assetUrl?: string;
+};
+
 type SquarespaceItem = {
   title?: string;
   fullUrl?: string;
   urlId?: string;
   assetUrl?: string;
+  items?: SquarespaceGalleryItem[];
   variants?: SquarespaceVariant[];
   tags?: string[];
   body?: string;
@@ -119,9 +124,17 @@ export async function parseSquarespaceJSON(
     if (!path) continue;
     const externalUrl = path.startsWith("http") ? path : `${baseUrl}${path}`;
 
-    // Image URL
+    // Image URLs — primary asset + gallery sub-items
     const image = item.assetUrl || null;
-    const images = image ? [image] : [];
+    const galleryUrls = (item.items || [])
+      .map((gi) => gi.assetUrl)
+      .filter((url): url is string => !!url);
+    const images =
+      galleryUrls.length > 0
+        ? galleryUrls
+        : image
+          ? [image]
+          : [];
 
     // Product description (HTML body from Squarespace)
     const description = item.body || item.excerpt || null;
