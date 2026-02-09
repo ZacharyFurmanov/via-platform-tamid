@@ -115,6 +115,44 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
                     3
                   </span>
+                  <h3 className="text-lg font-medium">Create a Custom Affiliate Link for VIA</h3>
+                </div>
+                <div className="text-neutral-600 space-y-3">
+                  <p>
+                    Once VIA has been added to your Collabs program, you need to create a
+                    custom affiliate link that we&apos;ll use to send customers to your store.
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>In Shopify Collabs, go to <strong>Affiliates</strong> and find VIA</li>
+                    <li>Click on VIA&apos;s profile and go to <strong>Affiliate links</strong></li>
+                    <li>Create a new custom link with a handle like <strong>VIAPARTNER</strong></li>
+                  </ol>
+                  <p className="text-sm">
+                    This creates a link like:
+                  </p>
+                  <div className="bg-neutral-100 p-3 font-mono text-sm">
+                    https://yourstore.com/VIAPARTNER
+                  </div>
+                  <p className="text-sm">
+                    When a customer clicks a product on VIA, they&apos;ll be routed through this
+                    link so Shopify knows the sale came from us.
+                  </p>
+                  <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
+                    <p className="text-amber-800">
+                      <strong>Important:</strong> Once you&apos;ve created the link, send it to us
+                      at <a href="mailto:partnerships@theviaplatform.com" className="underline">partnerships@theviaplatform.com</a> so
+                      we can connect it to your store on VIA.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="border-l-2 border-black pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                    4
+                  </span>
                   <h3 className="text-lg font-medium">Set Commission Rate</h3>
                 </div>
                 <div className="text-neutral-600 space-y-3">
@@ -150,11 +188,11 @@ export default function ShopifySetupPage() {
                 </div>
               </div>
 
-              {/* Step 4 */}
+              {/* Step 5 */}
               <div className="border-l-2 border-neutral-300 pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-neutral-200 text-neutral-600 flex items-center justify-center text-sm font-medium">
-                    4
+                    5
                   </span>
                   <h3 className="text-lg font-medium text-neutral-600">Done! (That&apos;s it)</h3>
                 </div>
