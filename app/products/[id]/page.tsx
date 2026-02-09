@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getProductById } from "@/app/lib/db";
+import { getProductById, getRecommendedProducts } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { createTrackingUrl } from "@/app/lib/track";
@@ -56,6 +56,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
         product.external_url
       )
     : null;
+
+  // Fetch recommended products from the same category
+  const allCandidates = await getRecommendedProducts(dbId, 30);
+  const recommendations = allCandidates
+    .filter((p) => inferCategoryFromTitle(p.title) === categorySlug)
+    .slice(0, 4);
+
+  // If not enough same-category products, backfill with others
+  if (recommendations.length < 4) {
+    const remaining = allCandidates
+      .filter(
+        (p) =>
+          inferCategoryFromTitle(p.title) !== categorySlug &&
+          !recommendations.some((r) => r.id === p.id)
+      )
+      .slice(0, 4 - recommendations.length);
+    recommendations.push(...remaining);
+  }
 
   return (
     <main className="bg-white min-h-screen">
@@ -129,6 +147,79 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Recommendations section */}
+      {recommendations.length > 0 && (
+        <section className="border-t border-neutral-200 bg-[#f7f6f3]">
+          <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
+            <h2 className="font-serif text-2xl sm:text-3xl text-black text-center mb-10">
+              We think you&apos;d like these too
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {recommendations.map((rec) => {
+                const recId = `${rec.store_slug}-${rec.id}`;
+                const recPrice = `$${Number(rec.price)}`;
+                const recCategory = categoryMap[inferCategoryFromTitle(rec.title)];
+
+                let recImages: string[] = [];
+                if (rec.images) {
+                  try {
+                    const parsed = JSON.parse(rec.images);
+                    if (Array.isArray(parsed) && parsed.length > 0)
+                      recImages = parsed;
+                  } catch {}
+                }
+                if (recImages.length === 0 && rec.image) {
+                  recImages = [rec.image];
+                }
+
+                return (
+                  <Link
+                    key={rec.id}
+                    href={`/products/${recId}`}
+                    className="group block bg-white rounded-sm overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                  >
+                    <div className="relative aspect-[3/4] overflow-hidden">
+                      {recImages.length > 0 ? (
+                        <img
+                          src={recImages[0]}
+                          alt={rec.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-neutral-100 flex items-center justify-center">
+                          <span className="text-neutral-400 text-xs uppercase tracking-wide">
+                            No image
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-black/50 mb-1">
+                        {rec.store_name}
+                      </p>
+                      <h3 className="font-serif text-sm sm:text-base text-black leading-snug line-clamp-2 mb-1">
+                        {rec.title}
+                      </h3>
+                      <p className="text-[11px] sm:text-xs text-black/50 mb-2">
+                        {recCategory}
+                      </p>
+                      <p className="text-sm font-medium text-black mb-3">
+                        {recPrice}
+                      </p>
+                      <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.15em] text-black/60 group-hover:text-black transition-colors duration-300">
+                        View Details &rarr;
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

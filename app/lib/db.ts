@@ -144,6 +144,25 @@ export async function getAllProducts(): Promise<DBProduct[]> {
 }
 
 /**
+ * Get recommended products, excluding a specific product by ID.
+ * Returns a pool of products to filter by category in application code.
+ */
+export async function getRecommendedProducts(
+  excludeId: number,
+  limit: number = 20
+): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+
+  const result = await sql`
+    SELECT * FROM products
+    WHERE id != ${excludeId}
+    ORDER BY RANDOM()
+    LIMIT ${limit}
+  `;
+  return result as DBProduct[];
+}
+
+/**
  * Get list of all synced stores
  */
 export async function getSyncedStores(): Promise<
