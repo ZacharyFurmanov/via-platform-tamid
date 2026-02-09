@@ -8,10 +8,10 @@ export default function ShopifySetupPage() {
         <div className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-4 text-sm">
             <Link
-              href="/"
+              href="/for-stores"
               className="text-neutral-400 hover:text-black transition-colors"
             >
-              ← Back to VIA
+              &larr; Partner with VIA
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">

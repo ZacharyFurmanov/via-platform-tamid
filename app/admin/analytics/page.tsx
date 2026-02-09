@@ -399,7 +399,7 @@ export default function AnalyticsPage() {
                     Shopify Setup Guide
                   </Link>
                   <Link
-                    href="/admin/squarespace-setup"
+                    href="/for-stores/squarespace-setup"
                     className="px-6 py-3 border border-black text-sm hover:bg-neutral-100 transition"
                   >
                     Squarespace Setup Guide
@@ -556,7 +556,7 @@ export default function AnalyticsPage() {
               Shopify (Collabs)
             </Link>
             <Link
-              href="/admin/squarespace-setup"
+              href="/for-stores/squarespace-setup"
               className="px-4 py-2 bg-white border border-neutral-200 text-sm hover:border-black transition"
             >
               Squarespace (Pixel)

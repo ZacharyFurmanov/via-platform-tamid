@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ForStoresPage() {
   return (
     <main className="bg-white min-h-screen">
@@ -12,6 +14,32 @@ export default function ForStoresPage() {
             We work with independent vintage & resale stores to help them reach
             customers nationwide — without changing how they run their business.
           </p>
+        </div>
+      </section>
+
+      {/* Setup Guides */}
+      <section className="border-b border-neutral-200 py-12 sm:py-16">
+        <div className="max-w-xl mx-auto px-6">
+          <h2 className="text-xl sm:text-2xl font-serif mb-3 text-center">
+            Already a partner? Set up your store.
+          </h2>
+          <p className="text-neutral-500 text-sm text-center mb-8">
+            Follow the guide for your platform to connect your store to VIA.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link
+              href="/for-stores/shopify-setup"
+              className="flex-1 border border-black py-4 text-sm uppercase tracking-wide text-center hover:bg-black hover:text-white transition min-h-[52px] flex items-center justify-center"
+            >
+              Shopify Setup Guide
+            </Link>
+            <Link
+              href="/for-stores/squarespace-setup"
+              className="flex-1 border border-black py-4 text-sm uppercase tracking-wide text-center hover:bg-black hover:text-white transition min-h-[52px] flex items-center justify-center"
+            >
+              Squarespace Setup Guide
+            </Link>
+          </div>
         </div>
       </section>
 

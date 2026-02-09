@@ -6,10 +6,14 @@ import { useState } from "react";
 export default function SquarespaceSetupPage() {
   const [storeSlug, setStoreSlug] = useState("");
   const [storeName, setStoreName] = useState("");
+  const [copiedHeader, setCopiedHeader] = useState(false);
+  const [copiedOrder, setCopiedOrder] = useState(false);
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com";
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://theviaplatform.com";
 
-  // Code block 1: goes in Header
+  const isFilled = storeSlug.length > 0 && storeName.length > 0;
+
+  // Code block 1: goes in Header (this one is the same for every store)
   const headerCode = `<!-- VIA Click Tracking -->
 <script>
 (function() {
@@ -21,7 +25,10 @@ export default function SquarespaceSetupPage() {
 })();
 </script>`;
 
-  // Code block 2: goes in Order Confirmation
+  // Code block 2: goes in Order Confirmation (this one is customized with your store info)
+  const displaySlug = storeSlug || "your-store-slug";
+  const displayName = storeName || "Your Store Name";
+
   const orderConfirmationCode = `<!-- VIA Order Tracking -->
 <script>
 (function() {
@@ -49,8 +56,8 @@ export default function SquarespaceSetupPage() {
           };
         }),
         viaClickId: viaClickId,
-        storeSlug: '${storeSlug || "your-store-slug"}',
-        storeName: '${storeName || "Your Store Name"}'
+        storeSlug: '${displaySlug}',
+        storeName: '${displayName}'
       };
 
       fetch('${baseUrl}/api/conversion', {
@@ -63,6 +70,18 @@ export default function SquarespaceSetupPage() {
 })();
 </script>`;
 
+  function copyHeaderCode() {
+    navigator.clipboard.writeText(headerCode);
+    setCopiedHeader(true);
+    setTimeout(() => setCopiedHeader(false), 2000);
+  }
+
+  function copyOrderCode() {
+    navigator.clipboard.writeText(orderConfirmationCode);
+    setCopiedOrder(true);
+    setTimeout(() => setCopiedOrder(false), 2000);
+  }
+
   return (
     <main className="bg-white min-h-screen text-black">
       {/* Header */}
@@ -70,10 +89,10 @@ export default function SquarespaceSetupPage() {
         <div className="max-w-3xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-4 text-sm">
             <Link
-              href="/admin/analytics"
+              href="/for-stores"
               className="text-neutral-400 hover:text-black transition-colors"
             >
-              &larr; Back to Analytics
+              &larr; Partner with VIA
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
@@ -124,7 +143,8 @@ export default function SquarespaceSetupPage() {
               <h2 className="text-xl sm:text-2xl font-serif">Enter Your Store Name</h2>
             </div>
             <p className="text-neutral-600 mb-6">
-              Type in your store details below. This will automatically fill in the code you need to copy.
+              Type in your store details below. The second code block in Step 3 will
+              update automatically with your info.
             </p>
 
             <div className="space-y-4">
@@ -153,6 +173,15 @@ export default function SquarespaceSetupPage() {
                 />
               </div>
             </div>
+
+            {isFilled && (
+              <div className="mt-4 bg-green-50 border border-green-200 p-4">
+                <p className="text-sm text-green-800">
+                  Your store info has been filled in. The code in Step 3 now
+                  includes <strong>&quot;{storeName}&quot;</strong> and <strong>&quot;{storeSlug}&quot;</strong>.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Step 2: Copy Code Block 1 */}
@@ -161,7 +190,7 @@ export default function SquarespaceSetupPage() {
               <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
                 2
               </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Paste the First Code Block</h2>
+              <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the First Code Block</h2>
             </div>
 
             <div className="space-y-6">
@@ -188,15 +217,19 @@ export default function SquarespaceSetupPage() {
                   <code>{headerCode}</code>
                 </pre>
                 <button
-                  onClick={() => navigator.clipboard.writeText(headerCode)}
-                  className="absolute top-3 right-3 px-4 py-2 bg-white text-black text-sm font-medium hover:bg-neutral-200 transition rounded"
+                  onClick={copyHeaderCode}
+                  className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
+                    copiedHeader
+                      ? "bg-green-500 text-white"
+                      : "bg-white text-black hover:bg-neutral-200"
+                  }`}
                 >
-                  Copy
+                  {copiedHeader ? "Copied!" : "Copy"}
                 </button>
               </div>
 
               <p className="text-neutral-400 text-xs">
-                Don&apos;t worry about understanding this code — just copy and paste it exactly as-is.
+                This code is the same for every store — you don&apos;t need to change anything.
               </p>
             </div>
           </div>
@@ -207,10 +240,19 @@ export default function SquarespaceSetupPage() {
               <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
                 3
               </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Paste the Second Code Block</h2>
+              <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the Second Code Block</h2>
             </div>
 
             <div className="space-y-6">
+              {!isFilled && (
+                <div className="bg-amber-50 border border-amber-200 p-4">
+                  <p className="text-sm text-amber-800">
+                    Fill in your store name and store ID in Step 1 first — this code block will
+                    automatically include your store info.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
                 <p className="text-sm font-medium">On the same Code Injection page:</p>
                 <ol className="space-y-3 text-sm text-neutral-600">
@@ -230,10 +272,14 @@ export default function SquarespaceSetupPage() {
                   <code>{orderConfirmationCode}</code>
                 </pre>
                 <button
-                  onClick={() => navigator.clipboard.writeText(orderConfirmationCode)}
-                  className="absolute top-3 right-3 px-4 py-2 bg-white text-black text-sm font-medium hover:bg-neutral-200 transition rounded"
+                  onClick={copyOrderCode}
+                  className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
+                    copiedOrder
+                      ? "bg-green-500 text-white"
+                      : "bg-white text-black hover:bg-neutral-200"
+                  }`}
                 >
-                  Copy
+                  {copiedOrder ? "Copied!" : "Copy"}
                 </button>
               </div>
 
