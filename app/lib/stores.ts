@@ -8,6 +8,7 @@ export const stores = [
     website: "https://www.leivintage.com",
     dataSource: "lei-vintage",
     image: "/stores/LEI.jpg",
+    // No affiliatePath — uses Squarespace pixel for conversion tracking
   },
   {
     slug: "vintage-archives-la",
@@ -18,6 +19,7 @@ export const stores = [
     website: "https://vintagearchivesla.com",
     dataSource: "vintage-archives-la",
     image: "/stores/VintageArchivesLA.jpg",
+    affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
   },
 ]
   

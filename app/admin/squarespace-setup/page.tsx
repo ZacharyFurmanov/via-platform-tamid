@@ -9,31 +9,33 @@ export default function SquarespaceSetupPage() {
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com";
 
-  const pixelCode = `<!-- VIA Conversion Tracking -->
+  // Script 1: Cookie setter — goes in HEADER Code Injection (runs on all pages)
+  const cookieSetterCode = `<!-- VIA Click Tracking (Header) -->
 <script>
 (function() {
-  // Get VIA click ID from URL or cookie
-  var viaClickId = null;
   var urlParams = new URLSearchParams(window.location.search);
-  var clickIdFromUrl = urlParams.get('via_click_id');
+  var clickId = urlParams.get('via_click_id');
+  if (clickId) {
+    document.cookie = 'via_click_id=' + clickId + ';max-age=2592000;path=/;SameSite=Lax';
+  }
+})();
+</script>`;
 
-  if (clickIdFromUrl) {
-    viaClickId = clickIdFromUrl;
-    // Store in cookie for 30 days
-    document.cookie = 'via_click_id=' + clickIdFromUrl + ';max-age=2592000;path=/';
-  } else {
-    // Try to get from cookie
-    var cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      var cookie = cookies[i].trim();
-      if (cookie.indexOf('via_click_id=') === 0) {
-        viaClickId = cookie.substring(13);
-        break;
-      }
+  // Script 2: Conversion tracker — goes in ORDER CONFIRMATION Code Injection
+  const conversionCode = `<!-- VIA Conversion Tracking (Order Confirmation) -->
+<script>
+(function() {
+  // Read via_click_id from cookie (set on landing page)
+  var viaClickId = null;
+  var cookies = document.cookie.split(';');
+  for (var i = 0; i < cookies.length; i++) {
+    var cookie = cookies[i].trim();
+    if (cookie.indexOf('via_click_id=') === 0) {
+      viaClickId = cookie.substring(13);
+      break;
     }
   }
 
-  // Only track if we have order data (on confirmation page)
   if (typeof Squarespace !== 'undefined' && Squarespace.commerce) {
     Squarespace.commerce.onOrderComplete(function(orderData) {
       var payload = {
@@ -152,16 +154,50 @@ export default function SquarespaceSetupPage() {
           {/* Copy the Code */}
           <div className="mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl font-serif mb-6">2. Copy the Tracking Code</h2>
-            <div className="relative">
-              <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                <code>{pixelCode}</code>
-              </pre>
-              <button
-                onClick={() => navigator.clipboard.writeText(pixelCode)}
-                className="absolute top-3 right-3 px-3 py-1.5 bg-white text-black text-xs hover:bg-neutral-200 transition"
-              >
-                Copy
-              </button>
+            <p className="text-neutral-600 mb-6 text-sm">
+              There are two code snippets. Both are required for tracking to work.
+            </p>
+
+            {/* Snippet A: Cookie Setter */}
+            <div className="mb-8">
+              <h3 className="text-base font-medium mb-2">
+                Snippet A — Cookie Setter <span className="text-neutral-400 font-normal">(Header)</span>
+              </h3>
+              <p className="text-neutral-500 text-sm mb-3">
+                This captures the VIA click ID when a customer first lands on your store.
+              </p>
+              <div className="relative">
+                <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
+                  <code>{cookieSetterCode}</code>
+                </pre>
+                <button
+                  onClick={() => navigator.clipboard.writeText(cookieSetterCode)}
+                  className="absolute top-3 right-3 px-3 py-1.5 bg-white text-black text-xs hover:bg-neutral-200 transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            {/* Snippet B: Conversion Tracker */}
+            <div>
+              <h3 className="text-base font-medium mb-2">
+                Snippet B — Conversion Tracker <span className="text-neutral-400 font-normal">(Order Confirmation)</span>
+              </h3>
+              <p className="text-neutral-500 text-sm mb-3">
+                This fires when an order completes and sends conversion data back to VIA.
+              </p>
+              <div className="relative">
+                <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
+                  <code>{conversionCode}</code>
+                </pre>
+                <button
+                  onClick={() => navigator.clipboard.writeText(conversionCode)}
+                  className="absolute top-3 right-3 px-3 py-1.5 bg-white text-black text-xs hover:bg-neutral-200 transition"
+                >
+                  Copy
+                </button>
+              </div>
             </div>
           </div>
 
@@ -180,7 +216,6 @@ export default function SquarespaceSetupPage() {
                   <p>In your Squarespace admin:</p>
                   <ol className="list-decimal list-inside space-y-1">
                     <li>Go to <strong>Settings → Advanced → Code Injection</strong></li>
-                    <li>Scroll down to the <strong>Order Confirmation Page</strong> section</li>
                   </ol>
                 </div>
               </div>
@@ -190,14 +225,27 @@ export default function SquarespaceSetupPage() {
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
                     B
                   </span>
-                  <h3 className="text-lg font-medium">Paste the Code</h3>
+                  <h3 className="text-lg font-medium">Paste Snippet A in the Header</h3>
                 </div>
                 <div className="text-neutral-600 text-sm space-y-2">
-                  <p>Paste the tracking code from Step 2 into the <strong>Order Confirmation Page</strong> box.</p>
+                  <p>Paste <strong>Snippet A</strong> (Cookie Setter) into the <strong>Header</strong> section.</p>
+                  <p>This runs on every page so the click ID is captured when a customer first arrives from VIA.</p>
+                </div>
+              </div>
+
+              <div className="border-l-2 border-black pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                    C
+                  </span>
+                  <h3 className="text-lg font-medium">Paste Snippet B in Order Confirmation</h3>
+                </div>
+                <div className="text-neutral-600 text-sm space-y-2">
+                  <p>Paste <strong>Snippet B</strong> (Conversion Tracker) into the <strong>Order Confirmation Page</strong> section.</p>
                   <div className="bg-amber-50 border border-amber-200 p-3">
                     <p className="text-amber-800">
-                      <strong>Important:</strong> Make sure to paste it in the Order Confirmation section,
-                      not the Header or Footer sections.
+                      <strong>Important:</strong> Snippet A goes in <strong>Header</strong>, Snippet B goes in <strong>Order Confirmation Page</strong>.
+                      Don&apos;t mix them up.
                     </p>
                   </div>
                 </div>
@@ -206,7 +254,7 @@ export default function SquarespaceSetupPage() {
               <div className="border-l-2 border-black pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    C
+                    D
                   </span>
                   <h3 className="text-lg font-medium">Save</h3>
                 </div>
