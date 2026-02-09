@@ -9,8 +9,8 @@ export default function SquarespaceSetupPage() {
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com";
 
-  // Script 1: Cookie setter — goes in HEADER Code Injection (runs on all pages)
-  const cookieSetterCode = `<!-- VIA Click Tracking (Header) -->
+  // Code block 1: goes in Header
+  const headerCode = `<!-- VIA Click Tracking -->
 <script>
 (function() {
   var urlParams = new URLSearchParams(window.location.search);
@@ -21,11 +21,10 @@ export default function SquarespaceSetupPage() {
 })();
 </script>`;
 
-  // Script 2: Conversion tracker — goes in ORDER CONFIRMATION Code Injection
-  const conversionCode = `<!-- VIA Conversion Tracking (Order Confirmation) -->
+  // Code block 2: goes in Order Confirmation
+  const orderConfirmationCode = `<!-- VIA Order Tracking -->
 <script>
 (function() {
-  // Read via_click_id from cookie (set on landing page)
   var viaClickId = null;
   var cookies = document.cookie.split(';');
   for (var i = 0; i < cookies.length; i++) {
@@ -68,288 +67,238 @@ export default function SquarespaceSetupPage() {
     <main className="bg-white min-h-screen text-black">
       {/* Header */}
       <section className="border-b border-neutral-200">
-        <div className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-3xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-4 text-sm">
             <Link
               href="/admin/analytics"
               className="text-neutral-400 hover:text-black transition-colors"
             >
-              ← Back to Analytics
+              &larr; Back to Analytics
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
-            Squarespace Store Setup
+            Connect Your Squarespace Store
           </h1>
           <p className="text-neutral-600 text-base sm:text-lg">
-            Add simple conversion tracking to your Squarespace store.
+            Follow these steps to connect your Squarespace store to VIA.
+            No coding knowledge needed — just copy, paste, and save.
           </p>
         </div>
       </section>
 
       {/* Time Estimate */}
       <section className="border-b border-neutral-200 bg-neutral-50">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <p className="text-sm">
-            <span className="font-medium">⏱ Setup time:</span>{" "}
-            <span className="text-neutral-600">~5 minutes</span>
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <p className="text-sm text-neutral-600">
+            This takes about <strong className="text-black">5 minutes</strong>. You&apos;ll just be copying and pasting
+            two blocks of text into your Squarespace settings.
           </p>
         </div>
       </section>
 
       {/* Content */}
       <section className="py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-6">
-          {/* How It Works */}
+        <div className="max-w-3xl mx-auto px-6">
+
+          {/* Before you start */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-4">How It Works</h2>
+            <h2 className="text-xl sm:text-2xl font-serif mb-4">Before You Start</h2>
             <p className="text-neutral-600 mb-4">
-              When a customer clicks from VIA to your store, we add a tracking ID to the URL.
-              The pixel below captures this ID and sends conversion data back to VIA when
-              an order is completed.
+              You&apos;ll need access to your Squarespace website settings.
+              Make sure you&apos;re logged in as an admin on your Squarespace site.
             </p>
-            <div className="bg-green-50 border border-green-200 p-4 text-sm">
-              <p className="text-green-800">
-                <strong>Privacy-friendly:</strong> We only track orders that originated from VIA clicks.
-                No personal customer data is collected—just order totals and product names for
-                commission calculation.
+            <div className="bg-neutral-50 border border-neutral-200 p-5">
+              <p className="text-sm text-neutral-600">
+                <strong className="text-black">Note:</strong> This requires a Squarespace Business plan or higher.
+                If you&apos;re on a Personal plan, you&apos;ll need to upgrade first.
               </p>
             </div>
           </div>
 
-          {/* Configure Your Pixel */}
+          {/* Step 1: Enter store info */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6">1. Configure Your Pixel</h2>
-            <p className="text-neutral-600 mb-4 text-sm">
-              Enter your store details below to generate your custom tracking code:
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+                1
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif">Enter Your Store Name</h2>
+            </div>
+            <p className="text-neutral-600 mb-6">
+              Type in your store details below. This will automatically fill in the code you need to copy.
             </p>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store Slug <span className="text-neutral-400 font-normal">(lowercase, no spaces)</span>
-                </label>
-                <input
-                  type="text"
-                  value={storeSlug}
-                  onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                  placeholder="my-vintage-store"
-                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Store Name <span className="text-neutral-400 font-normal">(as shown on VIA)</span>
+                  Store Name <span className="text-neutral-400 font-normal">(how it appears on VIA)</span>
                 </label>
                 <input
                   type="text"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  placeholder="My Vintage Store"
-                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none"
+                  placeholder="e.g. My Vintage Store"
+                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none text-base"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Store ID <span className="text-neutral-400 font-normal">(lowercase, use dashes instead of spaces)</span>
+                </label>
+                <input
+                  type="text"
+                  value={storeSlug}
+                  onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                  placeholder="e.g. my-vintage-store"
+                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none text-base"
                 />
               </div>
             </div>
           </div>
 
-          {/* Copy the Code */}
+          {/* Step 2: Copy Code Block 1 */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6">2. Copy the Tracking Code</h2>
-            <p className="text-neutral-600 mb-6 text-sm">
-              There are two code snippets. Both are required for tracking to work.
-            </p>
-
-            {/* Snippet A: Cookie Setter */}
-            <div className="mb-8">
-              <h3 className="text-base font-medium mb-2">
-                Snippet A — Cookie Setter <span className="text-neutral-400 font-normal">(Header)</span>
-              </h3>
-              <p className="text-neutral-500 text-sm mb-3">
-                This captures the VIA click ID when a customer first lands on your store.
-              </p>
-              <div className="relative">
-                <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                  <code>{cookieSetterCode}</code>
-                </pre>
-                <button
-                  onClick={() => navigator.clipboard.writeText(cookieSetterCode)}
-                  className="absolute top-3 right-3 px-3 py-1.5 bg-white text-black text-xs hover:bg-neutral-200 transition"
-                >
-                  Copy
-                </button>
-              </div>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+                2
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif">Paste the First Code Block</h2>
             </div>
 
-            {/* Snippet B: Conversion Tracker */}
-            <div>
-              <h3 className="text-base font-medium mb-2">
-                Snippet B — Conversion Tracker <span className="text-neutral-400 font-normal">(Order Confirmation)</span>
-              </h3>
-              <p className="text-neutral-500 text-sm mb-3">
-                This fires when an order completes and sends conversion data back to VIA.
-              </p>
+            <div className="space-y-6">
+              <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
+                <p className="text-sm font-medium">Here&apos;s what to do:</p>
+                <ol className="space-y-3 text-sm text-neutral-600">
+                  <li className="flex gap-3">
+                    <span className="font-medium text-black flex-shrink-0">a.</span>
+                    <span>In your Squarespace admin, go to <strong className="text-black">Settings</strong> &rarr; <strong className="text-black">Advanced</strong> &rarr; <strong className="text-black">Code Injection</strong></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-medium text-black flex-shrink-0">b.</span>
+                    <span>You&apos;ll see a box labeled <strong className="text-black">Header</strong> at the top of the page</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-medium text-black flex-shrink-0">c.</span>
+                    <span>Click the <strong className="text-black">Copy</strong> button below, then paste it into that Header box</span>
+                  </li>
+                </ol>
+              </div>
+
               <div className="relative">
                 <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                  <code>{conversionCode}</code>
+                  <code>{headerCode}</code>
                 </pre>
                 <button
-                  onClick={() => navigator.clipboard.writeText(conversionCode)}
-                  className="absolute top-3 right-3 px-3 py-1.5 bg-white text-black text-xs hover:bg-neutral-200 transition"
+                  onClick={() => navigator.clipboard.writeText(headerCode)}
+                  className="absolute top-3 right-3 px-4 py-2 bg-white text-black text-sm font-medium hover:bg-neutral-200 transition rounded"
                 >
                   Copy
                 </button>
               </div>
+
+              <p className="text-neutral-400 text-xs">
+                Don&apos;t worry about understanding this code — just copy and paste it exactly as-is.
+              </p>
             </div>
           </div>
 
-          {/* Add to Squarespace */}
+          {/* Step 3: Copy Code Block 2 */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6">3. Add to Squarespace</h2>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+                3
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif">Paste the Second Code Block</h2>
+            </div>
+
             <div className="space-y-6">
-              <div className="border-l-2 border-black pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    A
-                  </span>
-                  <h3 className="text-lg font-medium">Go to Code Injection</h3>
-                </div>
-                <div className="text-neutral-600 text-sm space-y-2">
-                  <p>In your Squarespace admin:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>Go to <strong>Settings → Advanced → Code Injection</strong></li>
-                  </ol>
-                </div>
+              <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
+                <p className="text-sm font-medium">On the same Code Injection page:</p>
+                <ol className="space-y-3 text-sm text-neutral-600">
+                  <li className="flex gap-3">
+                    <span className="font-medium text-black flex-shrink-0">a.</span>
+                    <span>Scroll down until you see a box labeled <strong className="text-black">Order Confirmation Page</strong></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-medium text-black flex-shrink-0">b.</span>
+                    <span>Click the <strong className="text-black">Copy</strong> button below, then paste it into that Order Confirmation Page box</span>
+                  </li>
+                </ol>
               </div>
 
-              <div className="border-l-2 border-black pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    B
-                  </span>
-                  <h3 className="text-lg font-medium">Paste Snippet A in the Header</h3>
-                </div>
-                <div className="text-neutral-600 text-sm space-y-2">
-                  <p>Paste <strong>Snippet A</strong> (Cookie Setter) into the <strong>Header</strong> section.</p>
-                  <p>This runs on every page so the click ID is captured when a customer first arrives from VIA.</p>
-                </div>
+              <div className="relative">
+                <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
+                  <code>{orderConfirmationCode}</code>
+                </pre>
+                <button
+                  onClick={() => navigator.clipboard.writeText(orderConfirmationCode)}
+                  className="absolute top-3 right-3 px-4 py-2 bg-white text-black text-sm font-medium hover:bg-neutral-200 transition rounded"
+                >
+                  Copy
+                </button>
               </div>
 
-              <div className="border-l-2 border-black pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    C
-                  </span>
-                  <h3 className="text-lg font-medium">Paste Snippet B in Order Confirmation</h3>
-                </div>
-                <div className="text-neutral-600 text-sm space-y-2">
-                  <p>Paste <strong>Snippet B</strong> (Conversion Tracker) into the <strong>Order Confirmation Page</strong> section.</p>
-                  <div className="bg-amber-50 border border-amber-200 p-3">
-                    <p className="text-amber-800">
-                      <strong>Important:</strong> Snippet A goes in <strong>Header</strong>, Snippet B goes in <strong>Order Confirmation Page</strong>.
-                      Don&apos;t mix them up.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-l-2 border-black pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    D
-                  </span>
-                  <h3 className="text-lg font-medium">Save</h3>
-                </div>
-                <p className="text-neutral-600 text-sm">
-                  Click <strong>Save</strong>. The tracking is now active!
+              <div className="bg-amber-50 border border-amber-200 p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>Quick recap:</strong> The first code block goes in the <strong>Header</strong> box.
+                  The second code block goes in the <strong>Order Confirmation Page</strong> box.
+                  They&apos;re on the same page in Squarespace, just scroll down.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* What Gets Tracked */}
+          {/* Step 4: Save */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-4">What Data Is Tracked</h2>
-            <div className="bg-neutral-50 p-6">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-200">
-                    <th className="text-left py-2 font-medium">Data</th>
-                    <th className="text-left py-2 font-medium">Purpose</th>
-                  </tr>
-                </thead>
-                <tbody className="text-neutral-600">
-                  <tr className="border-b border-neutral-100">
-                    <td className="py-2">Order ID</td>
-                    <td className="py-2">Prevent duplicate tracking</td>
-                  </tr>
-                  <tr className="border-b border-neutral-100">
-                    <td className="py-2">Order Total</td>
-                    <td className="py-2">Calculate commission</td>
-                  </tr>
-                  <tr className="border-b border-neutral-100">
-                    <td className="py-2">Product Names</td>
-                    <td className="py-2">Match to VIA catalog</td>
-                  </tr>
-                  <tr className="border-b border-neutral-100">
-                    <td className="py-2">VIA Click ID</td>
-                    <td className="py-2">Attribute sale to VIA referral</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2">Store Slug</td>
-                    <td className="py-2">Identify your store</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+                4
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif">Hit Save</h2>
             </div>
-            <p className="text-neutral-500 text-xs mt-3">
-              We do not collect: customer names, emails, addresses, payment info, or any personal data.
+            <p className="text-neutral-600">
+              Click the <strong>Save</strong> button at the top of the Squarespace Code Injection page.
+              That&apos;s it — you&apos;re all set!
             </p>
+            <div className="bg-green-50 border border-green-200 p-4 mt-4">
+              <p className="text-sm text-green-800">
+                Once saved, VIA will automatically know when a customer we send to your store makes a purchase.
+                You don&apos;t need to do anything else.
+              </p>
+            </div>
           </div>
 
-          {/* Testing */}
-          <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-4">Testing Your Setup</h2>
-            <p className="text-neutral-600 text-sm mb-4">
-              To verify the tracking is working:
-            </p>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-neutral-600">
-              <li>
-                Visit your store with a test click ID:{" "}
-                <code className="bg-neutral-100 px-1">yourstore.com?via_click_id=test123</code>
-              </li>
-              <li>Complete a test purchase</li>
-              <li>Check the VIA Analytics dashboard for the conversion</li>
-            </ol>
-          </div>
+          {/* Divider */}
+          <hr className="border-neutral-200 my-12 sm:my-16" />
 
           {/* FAQ */}
           <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6">Common Questions</h2>
+            <h2 className="text-xl sm:text-2xl font-serif mb-6">Questions</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-medium mb-2">Will this slow down my checkout?</h3>
+                <h3 className="font-medium mb-2">Will this affect my website speed or checkout?</h3>
                 <p className="text-neutral-600 text-sm">
-                  No. The tracking code runs after the order is complete and doesn&apos;t affect
-                  checkout speed. It&apos;s less than 1KB of code.
+                  No. It&apos;s a tiny piece of code that runs in the background. Your customers won&apos;t notice anything different.
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-2">What if a customer doesn&apos;t come from VIA?</h3>
+                <h3 className="font-medium mb-2">Does this track all my customers?</h3>
                 <p className="text-neutral-600 text-sm">
-                  The pixel only sends data when a VIA click ID is present. Regular customers
-                  without VIA referrals are not tracked.
+                  No — only customers who came from VIA. If someone finds your store on their own,
+                  nothing happens. We never collect customer names, emails, or personal info.
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-2">How long is the attribution window?</h3>
+                <h3 className="font-medium mb-2">What if a customer browses other products after clicking from VIA?</h3>
                 <p className="text-neutral-600 text-sm">
-                  30 days. If a customer clicks from VIA and purchases within 30 days, it&apos;s
-                  attributed to VIA.
+                  If a customer clicks through from VIA and ends up buying a different item on your store,
+                  VIA still gets credit. The tracking lasts for 30 days from their first click.
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-2">Do I need a Squarespace Business plan?</h3>
+                <h3 className="font-medium mb-2">Can I remove this later?</h3>
                 <p className="text-neutral-600 text-sm">
-                  Yes. Code Injection requires a Business plan or higher on Squarespace.
+                  Yes. Just go back to Code Injection and delete the code from both boxes. No changes
+                  to your site will remain.
                 </p>
               </div>
             </div>
@@ -358,10 +307,11 @@ export default function SquarespaceSetupPage() {
           {/* Support */}
           <div className="border-t border-neutral-200 pt-8">
             <p className="text-neutral-600 text-sm">
-              Need help? Email us at{" "}
-              <a href="mailto:stores@viaplatform.com" className="text-black underline">
-                stores@viaplatform.com
+              Stuck or have questions? Email us at{" "}
+              <a href="mailto:partnerships@theviaplatform.com" className="text-black underline">
+                partnerships@theviaplatform.com
               </a>
+              {" "}and we&apos;ll walk you through it.
             </p>
           </div>
         </div>
