@@ -23,11 +23,23 @@ export default async function AccountPage() {
     redirect("/login");
   }
 
-  const [favProducts, favStoreSlugs, notificationsEnabled] = await Promise.all([
-    getUserFavoritedProducts(session.user.id!),
-    getUserStoreFavoriteIds(session.user.id!),
-    getNotificationPreference(session.user.id!),
-  ]);
+  const userId = session.user.id;
+
+  let favProducts: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
+  let favStoreSlugs: string[] = [];
+  let notificationsEnabled = true;
+
+  if (userId) {
+    try {
+      [favProducts, favStoreSlugs, notificationsEnabled] = await Promise.all([
+        getUserFavoritedProducts(userId),
+        getUserStoreFavoriteIds(userId),
+        getNotificationPreference(userId),
+      ]);
+    } catch (err) {
+      console.error("Failed to load account data:", err);
+    }
+  }
 
   const favStores = favStoreSlugs
     .map((slug) => stores.find((s) => s.slug === slug))

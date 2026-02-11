@@ -112,12 +112,21 @@ export const neonAdapter: Adapter = {
   async updateUser(user) {
     await ensureTables();
     const sql = neon(getDatabaseUrl());
+
+    // Build update fields dynamically to avoid COALESCE issues with undefined
+    const name = user.name !== undefined ? user.name : null;
+    const email = user.email !== undefined ? user.email : null;
+    const emailVerified = user.emailVerified !== undefined
+      ? (user.emailVerified ? user.emailVerified.toISOString() : null)
+      : null;
+    const image = user.image !== undefined ? user.image : null;
+
     const rows = await sql`
       UPDATE users SET
-        name = COALESCE(${user.name ?? null}, name),
-        email = COALESCE(${user.email ?? null}, email),
-        email_verified = COALESCE(${user.emailVerified?.toISOString() ?? null}, email_verified),
-        image = COALESCE(${user.image ?? null}, image),
+        name = COALESCE(${name}, name),
+        email = COALESCE(${email}, email),
+        email_verified = COALESCE(${emailVerified}::timestamptz, email_verified),
+        image = COALESCE(${image}, image),
         updated_at = NOW()
       WHERE id = ${user.id!}
       RETURNING *
