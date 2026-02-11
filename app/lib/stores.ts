@@ -24,7 +24,7 @@ export const stores = [
   {
     slug: "scarz-vintage",
     name: "SCARZ Vintage",
-    location: "",
+    location: "London, UK",
     description: "",
     website: "https://scarzvintage.com",
     dataSource: "scarz-vintage",
