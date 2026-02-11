@@ -111,9 +111,23 @@ export async function GET(request: Request) {
 
   console.log(`[Sync Stores] Done — ${succeeded} succeeded, ${failed} failed`);
 
+  // Run favorite notifications after sync
+  let notificationResult = null;
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+    const res = await fetch(`${baseUrl}/api/cron/favorite-notifications`, {
+      headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+    notificationResult = await res.json();
+    console.log("[Sync Stores] Favorite notifications:", notificationResult);
+  } catch (err) {
+    console.error("[Sync Stores] Favorite notifications failed:", err);
+  }
+
   return NextResponse.json({
     success: failed === 0,
     stores: results,
     summary: { total: results.length, succeeded, failed },
+    notifications: notificationResult,
   });
 }

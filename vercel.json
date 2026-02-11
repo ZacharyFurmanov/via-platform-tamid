@@ -7,10 +7,6 @@
     {
       "path": "/api/cron/sync-stores",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/favorite-notifications",
-      "schedule": "0 */2 * * *"
     }
   ]
 }
