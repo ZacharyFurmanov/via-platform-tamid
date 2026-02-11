@@ -18,6 +18,8 @@ export default async function BrowsePage() {
     price: item.price,
     category: item.category,
     categoryLabel: categoryMap[item.category as keyof typeof categoryMap],
+    brand: item.brand,
+    brandLabel: item.brandLabel,
     store: item.store,
     storeSlug: item.storeSlug,
     externalUrl: item.externalUrl,
@@ -66,6 +68,12 @@ export default async function BrowsePage() {
                 Shop by Category
               </Link>
               <Link
+                href="/brands"
+                className="text-sm uppercase tracking-wide underline hover:no-underline"
+              >
+                Shop by Brand
+              </Link>
+              <Link
                 href="/stores"
                 className="text-sm uppercase tracking-wide underline hover:no-underline"
               >
@@ -79,6 +87,7 @@ export default async function BrowsePage() {
             stores={storeList}
             categories={categoryList}
             showCategoryFilter={true}
+            showBrandFilter={true}
             emptyMessage="No products found. Check back soon for new arrivals."
           />
         </div>

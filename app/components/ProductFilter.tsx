@@ -11,16 +11,19 @@ export type FilterState = {
   priceRange: PriceRange;
   selectedStores: string[];
   selectedCategories: string[];
+  selectedBrands: string[];
   sort: SortOption;
 };
 
 type ProductFilterProps = {
   stores: { slug: string; name: string }[];
   categories?: { slug: string; label: string }[];
+  brands?: { slug: string; label: string }[];
   onFilterChange: (filters: FilterState) => void;
   initialFilters?: Partial<FilterState>;
   productCount?: number;
   showCategoryFilter?: boolean;
+  showBrandFilter?: boolean;
 };
 
 const priceRangeLabels: Record<PriceRange, string> = {
@@ -40,16 +43,19 @@ const sortLabels: Record<SortOption, string> = {
 export default function ProductFilter({
   stores,
   categories = [],
+  brands = [],
   onFilterChange,
   initialFilters,
   productCount,
   showCategoryFilter = false,
+  showBrandFilter = false,
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
     priceRange: initialFilters?.priceRange ?? "all",
     selectedStores: initialFilters?.selectedStores ?? [],
     selectedCategories: initialFilters?.selectedCategories ?? [],
+    selectedBrands: initialFilters?.selectedBrands ?? [],
     sort: initialFilters?.sort ?? "newest",
   });
 
@@ -88,12 +94,24 @@ export default function ProductFilter({
     [filters.selectedCategories, updateFilters]
   );
 
+  const toggleBrand = useCallback(
+    (brandSlug: string) => {
+      const current = filters.selectedBrands;
+      const updated = current.includes(brandSlug)
+        ? current.filter((b) => b !== brandSlug)
+        : [...current, brandSlug];
+      updateFilters({ selectedBrands: updated });
+    },
+    [filters.selectedBrands, updateFilters]
+  );
+
   const clearFilters = useCallback(() => {
     const cleared: FilterState = {
       search: "",
       priceRange: "all",
       selectedStores: [],
       selectedCategories: [],
+      selectedBrands: [],
       sort: "newest",
     };
     setFilters(cleared);
@@ -104,13 +122,15 @@ export default function ProductFilter({
     filters.search ||
     filters.priceRange !== "all" ||
     filters.selectedStores.length > 0 ||
-    filters.selectedCategories.length > 0;
+    filters.selectedCategories.length > 0 ||
+    filters.selectedBrands.length > 0;
 
   const activeFilterCount =
     (filters.search ? 1 : 0) +
     (filters.priceRange !== "all" ? 1 : 0) +
     filters.selectedStores.length +
-    filters.selectedCategories.length;
+    filters.selectedCategories.length +
+    filters.selectedBrands.length;
 
   return (
     <div className="mb-8">
@@ -203,6 +223,28 @@ export default function ProductFilter({
                   }`}
                 >
                   {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Brand Filters */}
+          {showBrandFilter && brands.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs uppercase tracking-wide text-neutral-500">
+                Brand:
+              </span>
+              {brands.map((brand) => (
+                <button
+                  key={brand.slug}
+                  onClick={() => toggleBrand(brand.slug)}
+                  className={`px-3 py-1.5 text-sm border transition ${
+                    filters.selectedBrands.includes(brand.slug)
+                      ? "border-black bg-black text-white"
+                      : "border-neutral-200 hover:border-black"
+                  }`}
+                >
+                  {brand.label}
                 </button>
               ))}
             </div>
@@ -390,6 +432,31 @@ export default function ProductFilter({
                         className="w-4 h-4 border-neutral-300 rounded focus:ring-black accent-black"
                       />
                       <span className="text-sm">{cat.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Brands */}
+            {showBrandFilter && brands.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs uppercase tracking-wide text-neutral-500 mb-3">
+                  Brands
+                </h4>
+                <div className="space-y-2">
+                  {brands.map((brand) => (
+                    <label
+                      key={brand.slug}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.selectedBrands.includes(brand.slug)}
+                        onChange={() => toggleBrand(brand.slug)}
+                        className="w-4 h-4 border-neutral-300 rounded focus:ring-black accent-black"
+                      />
+                      <span className="text-sm">{brand.label}</span>
                     </label>
                   ))}
                 </div>

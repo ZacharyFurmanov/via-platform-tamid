@@ -1,11 +1,14 @@
 import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
-import { inferCategoryFromTitle } from "./loadStoreProducts";
+import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
+import { brandMap } from "./brandData";
 
 export type InventoryItem = {
   id: string;
   title: string;
   category: CategorySlug;
+  brand: string | null;
+  brandLabel: string | null;
   price: number;
   image: string;
   images: string[];
@@ -27,10 +30,13 @@ function parseImages(product: DBProduct): string[] {
 
 // Transform database products to InventoryItem format
 function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
+  const brandSlug = inferBrandFromTitle(product.title);
   return {
     id: `${product.store_slug}-${product.id}`,
     title: product.title,
     category: inferCategoryFromTitle(product.title),
+    brand: brandSlug,
+    brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
     price: Number(product.price),
     image: product.image ?? "/placeholder.jpg",
     images: parseImages(product),

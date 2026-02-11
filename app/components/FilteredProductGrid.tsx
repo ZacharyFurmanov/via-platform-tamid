@@ -16,6 +16,8 @@ export type FilterableProduct = {
   price: number;
   category: string;
   categoryLabel: CategoryLabel;
+  brand?: string | null;
+  brandLabel?: string | null;
   store: string;
   storeSlug: string;
   externalUrl?: string;
@@ -29,6 +31,7 @@ type FilteredProductGridProps = {
   stores: { slug: string; name: string }[];
   categories?: { slug: string; label: string }[];
   showCategoryFilter?: boolean;
+  showBrandFilter?: boolean;
   emptyMessage?: string;
 };
 
@@ -77,6 +80,7 @@ export default function FilteredProductGrid({
   stores,
   categories = [],
   showCategoryFilter = false,
+  showBrandFilter = false,
   emptyMessage = "No products found.",
 }: FilteredProductGridProps) {
   const [filters, setFilters] = useState<FilterState>({
@@ -84,6 +88,7 @@ export default function FilteredProductGrid({
     priceRange: "all",
     selectedStores: [],
     selectedCategories: [],
+    selectedBrands: [],
     sort: "newest",
   });
 
@@ -125,6 +130,13 @@ export default function FilteredProductGrid({
       );
     }
 
+    // Brand filter
+    if (filters.selectedBrands.length > 0) {
+      result = result.filter(
+        (p) => p.brand && filters.selectedBrands.includes(p.brand)
+      );
+    }
+
     // Sort
     result = sortProducts(result, filters.sort);
 
@@ -153,6 +165,17 @@ export default function FilteredProductGrid({
     return Array.from(catMap.values());
   }, [products]);
 
+  // Get unique brands from products for the filter
+  const availableBrands = useMemo(() => {
+    const bMap = new Map<string, { slug: string; label: string }>();
+    products.forEach((p) => {
+      if (p.brand && p.brandLabel && !bMap.has(p.brand)) {
+        bMap.set(p.brand, { slug: p.brand, label: p.brandLabel });
+      }
+    });
+    return Array.from(bMap.values());
+  }, [products]);
+
   return (
     <div>
       <ProductFilter
@@ -160,7 +183,9 @@ export default function FilteredProductGrid({
         categories={
           availableCategories.length > 0 ? availableCategories : categories
         }
+        brands={availableBrands}
         showCategoryFilter={showCategoryFilter}
+        showBrandFilter={showBrandFilter}
         onFilterChange={handleFilterChange}
         productCount={filteredProducts.length}
       />
@@ -171,7 +196,8 @@ export default function FilteredProductGrid({
           {filters.search ||
           filters.priceRange !== "all" ||
           filters.selectedStores.length > 0 ||
-          filters.selectedCategories.length > 0 ? (
+          filters.selectedCategories.length > 0 ||
+          filters.selectedBrands.length > 0 ? (
             <button
               onClick={() =>
                 handleFilterChange({
@@ -179,6 +205,7 @@ export default function FilteredProductGrid({
                   priceRange: "all",
                   selectedStores: [],
                   selectedCategories: [],
+                  selectedBrands: [],
                   sort: filters.sort,
                 })
               }

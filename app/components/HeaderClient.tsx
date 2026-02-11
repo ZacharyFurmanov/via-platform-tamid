@@ -21,8 +21,10 @@ type SearchResult =
 
 export default function HeaderClient({
   categories,
+  brands,
 }: {
   categories: { slug: string; label: string }[];
+  brands: { slug: string; label: string }[];
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,13 +32,16 @@ export default function HeaderClient({
   const [activeIndex, setActiveIndex] = useState(0);
   const [storesDropdownOpen, setStoresDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [brandsDropdownOpen, setBrandsDropdownOpen] = useState(false);
   const [mobileStoresExpanded, setMobileStoresExpanded] = useState(false);
   const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
+  const [mobileBrandsExpanded, setMobileBrandsExpanded] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
+  const brandsDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -46,6 +51,9 @@ export default function HeaderClient({
       }
       if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(e.target as Node)) {
         setCategoriesDropdownOpen(false);
+      }
+      if (brandsDropdownRef.current && !brandsDropdownRef.current.contains(e.target as Node)) {
+        setBrandsDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -162,6 +170,7 @@ export default function HeaderClient({
                   onClick={() => {
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
+                    setBrandsDropdownOpen(false);
                   }}
                   className="flex items-center gap-1 hover:text-white transition-colors"
                 >
@@ -212,10 +221,11 @@ export default function HeaderClient({
                   onClick={() => {
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
+                    setBrandsDropdownOpen(false);
                   }}
                   className="flex items-center gap-1 hover:text-white transition-colors"
                 >
-                  Shop All
+                  Shop Category
                   <ChevronDown
                     size={14}
                     className={`transition-transform duration-200 ${categoriesDropdownOpen ? 'rotate-180' : ''}`}
@@ -249,6 +259,56 @@ export default function HeaderClient({
                         className="block px-6 py-3 text-xs uppercase tracking-wide text-neutral-500 hover:text-black hover:bg-neutral-50 transition-colors"
                       >
                         All Categories
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* BRANDS DROPDOWN */}
+              <div className="relative" ref={brandsDropdownRef}>
+                <button
+                  onClick={() => {
+                    setBrandsDropdownOpen(!brandsDropdownOpen);
+                    setStoresDropdownOpen(false);
+                    setCategoriesDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-1 hover:text-white transition-colors"
+                >
+                  Shop by Brand
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${brandsDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                <div
+                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-200 ease-out ${
+                    brandsDropdownOpen
+                      ? 'opacity-100 visible translate-y-0'
+                      : 'opacity-0 invisible -translate-y-2'
+                  }`}
+                >
+                  <div className="bg-white text-black min-w-[200px] shadow-xl">
+                    <div className="py-2">
+                      {brands.slice(0, 10).map((brand) => (
+                        <Link
+                          key={brand.slug}
+                          href={`/brands/${brand.slug}`}
+                          onClick={() => setBrandsDropdownOpen(false)}
+                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-neutral-50 transition-colors"
+                        >
+                          {brand.label}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="border-t border-neutral-100">
+                      <Link
+                        href="/brands"
+                        onClick={() => setBrandsDropdownOpen(false)}
+                        className="block px-6 py-3 text-xs uppercase tracking-wide text-neutral-500 hover:text-black hover:bg-neutral-50 transition-colors"
+                      >
+                        All Brands
                       </Link>
                     </div>
                   </div>
@@ -357,7 +417,7 @@ export default function HeaderClient({
                     onClick={() => setMobileCategoriesExpanded(!mobileCategoriesExpanded)}
                     className="w-full flex items-center justify-between py-4 text-lg text-white"
                   >
-                    Shop All
+                    Shop Category
                     <ChevronDown
                       size={20}
                       className={`transition-transform duration-200 ${mobileCategoriesExpanded ? 'rotate-180' : ''}`}
@@ -385,6 +445,44 @@ export default function HeaderClient({
                         className="block py-2 text-xs uppercase tracking-wide text-white/50 hover:text-white transition-colors"
                       >
                         All Categories
+                      </Link>
+                    </div>
+                  </div>
+                </li>
+                {/* Mobile Brands Accordion */}
+                <li className="border-b border-white/10">
+                  <button
+                    onClick={() => setMobileBrandsExpanded(!mobileBrandsExpanded)}
+                    className="w-full flex items-center justify-between py-4 text-lg text-white"
+                  >
+                    Shop by Brand
+                    <ChevronDown
+                      size={20}
+                      className={`transition-transform duration-200 ${mobileBrandsExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-200 ease-out ${
+                      mobileBrandsExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="pb-4 pl-4 space-y-1">
+                      {brands.slice(0, 10).map((brand) => (
+                        <Link
+                          key={brand.slug}
+                          href={`/brands/${brand.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block py-2 text-white/70 hover:text-white transition-colors"
+                        >
+                          {brand.label}
+                        </Link>
+                      ))}
+                      <Link
+                        href="/brands"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block py-2 text-xs uppercase tracking-wide text-white/50 hover:text-white transition-colors"
+                      >
+                        All Brands
                       </Link>
                     </div>
                   </div>

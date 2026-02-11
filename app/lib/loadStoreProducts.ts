@@ -1,6 +1,7 @@
 import type { StoreProduct } from "./types";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
+import { brands as brandDefs } from "./brandData";
 
 export const inferCategoryFromTitle = (title: string): CategorySlug => {
   const t = title.toLowerCase();
@@ -62,6 +63,18 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
 
   // Default to clothes for everything else
   return "clothes";
+};
+
+export const inferBrandFromTitle = (title: string): string | null => {
+  const t = title.toLowerCase();
+  for (const brand of brandDefs) {
+    for (const keyword of brand.keywords) {
+      if (t.includes(keyword)) {
+        return brand.slug;
+      }
+    }
+  }
+  return null;
 };
 
 // Parse images JSON from DB, falling back to single image
