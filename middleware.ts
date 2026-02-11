@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Routes accessible without any authentication
+const PUBLIC_ROUTES = [
+  "/waitlist",
+  "/api/waitlist",
+  "/admin/login",
+  "/api/admin/auth",
+  "/terms",
+  "/privacy",
+  "/api/giveaway",
+  "/api/cron",
+  "/for-stores",
+  "/login",
+  "/api/auth",
+  "/api/newsletter",
+  "/api/track",
+  "/api/conversion",
+];
+
 // Routes that require user authentication (Auth.js session)
-const USER_AUTH_ROUTES = ["/account"];
+const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account"];
 
 // Simple hash function for admin password comparison
 function hashPassword(password: string): string {
@@ -24,11 +42,21 @@ function isAdminAuthenticated(request: NextRequest): boolean {
 }
 
 function hasUserSession(request: NextRequest): boolean {
-  // Auth.js v5 stores JWT session in a cookie named authjs.session-token (or __Secure- prefix in production)
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ||
     request.cookies.get("__Secure-authjs.session-token")?.value;
   return !!sessionToken;
+}
+
+function isPublicRoute(pathname: string): boolean {
+  const normalizedPath =
+    pathname.endsWith("/") && pathname !== "/"
+      ? pathname.slice(0, -1)
+      : pathname;
+
+  return PUBLIC_ROUTES.some(
+    (route) => normalizedPath === route || normalizedPath.startsWith(route + "/")
+  );
 }
 
 function isUserAuthRoute(pathname: string): boolean {
@@ -53,15 +81,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(waitlistUrl);
   }
 
+  // Allow public routes without auth
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
   // Admin routes: require admin cookie
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  if (pathname.startsWith("/admin")) {
     if (!isAdminAuthenticated(request)) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Redirect /admin to the default admin page
     if (pathname === "/admin" || pathname === "/admin/") {
       return NextResponse.redirect(new URL("/admin/sync", request.url));
     }
@@ -79,7 +111,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Everything else is public (browsing, API routes, auth routes, etc.)
+  // All other routes: require admin auth, otherwise redirect to waitlist
+  if (!isAdminAuthenticated(request)) {
+    const waitlistUrl = new URL("/waitlist", request.url);
+    return NextResponse.redirect(waitlistUrl);
+  }
+
   return NextResponse.next();
 }
 
