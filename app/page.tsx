@@ -29,13 +29,13 @@ export default function HomePage() {
           Curated Vintage & Resale
         </p>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight">
-          Shop the best vintage and resale stores
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight max-w-xl">
+          Shop the best vintage & resale stores
         </h1>
 
         <p className="max-w-xl mb-10 text-lg text-gray-200">
           Discover and browse independent vintage and resale stores worldwide.
-          Find what you love, then checkout directly with the store.
+          The pieces you've been looking for, without the hunt.
         </p>
 
         {/* CTA buttons */}
