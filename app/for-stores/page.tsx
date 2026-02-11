@@ -12,7 +12,7 @@ export default function ForStoresPage() {
           </h1>
           <p className="text-base sm:text-lg text-black max-w-2xl mx-auto">
             We work with independent vintage & resale stores to help them reach
-            customers nationwide — without changing how they run their business.
+            customers worldwide — without changing how they run their business.
           </p>
         </div>
       </section>

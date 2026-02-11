@@ -15,7 +15,7 @@ export default function Footer() {
               Join the Inner Circle
             </h3>
             <p className="text-neutral-400 text-sm sm:text-base mb-8 leading-relaxed">
-              Be the first to discover new stores, rare finds, and exclusive drops from independent sellers nationwide.
+              Be the first to discover new stores, rare finds, and exclusive drops from independent sellers worldwide.
             </p>
             <NewsletterSignup variant="hero" />
           </div>

@@ -21,5 +21,15 @@ export const stores = [
     image: "/stores/VintageArchivesLA.jpg",
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
   },
+  {
+    slug: "scarz-vintage",
+    name: "SCARZ Vintage",
+    location: "",
+    description: "",
+    website: "https://scarzvintage.com",
+    dataSource: "scarz-vintage",
+    image: "/stores/placeholder.svg",
+    affiliatePath: "VIAXSCARZ",
+  },
 ]
   

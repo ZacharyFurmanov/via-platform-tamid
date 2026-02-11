@@ -51,7 +51,7 @@ export async function sendGiveawayConfirmation(email: string, referralCode: stri
       <a href="${referralLink}" class="btn">Share Your Link</a>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, worldwide.</p>
     </div>
   </div>
 </body>
@@ -103,7 +103,7 @@ export async function sendFriendEnteredEmail(
       ${body}
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, worldwide.</p>
     </div>
   </div>
 </body>
@@ -174,7 +174,7 @@ export async function sendGiveawayReminder(
       ${body}
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, worldwide.</p>
     </div>
   </div>
 </body>
@@ -216,7 +216,7 @@ export async function sendFavoriteActivityNotification(
       <a href="${productUrl}" class="btn">Shop Now</a>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, worldwide.</p>
     </div>
   </div>
 </body>

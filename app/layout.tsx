@@ -17,7 +17,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: "VIA",
-  description: "Curated vintage & resale, nationwide.",
+  description: "Curated vintage & resale, worldwide.",
   other: {
     "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",
   },

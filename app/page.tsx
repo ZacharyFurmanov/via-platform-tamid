@@ -29,15 +29,12 @@ export default function HomePage() {
           Curated Vintage & Resale
         </p>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight max-w-5xl">
-  Shop the best vintage<br />
-  <span className="whitespace-nowrap">
-    and resale stores 
-  </span>
-</h1>
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight">
+          Shop the best vintage and resale stores
+        </h1>
 
         <p className="max-w-xl mb-10 text-lg text-gray-200">
-          Discover and browse independent vintage and resale stores nationwide.
+          Discover and browse independent vintage and resale stores worldwide.
           Find what you love, then checkout directly with the store.
         </p>
 
@@ -213,7 +210,7 @@ export default function HomePage() {
               },
               {
                 q: "Where do you ship?",
-                a: "Stores on VIA ship nationwide, and some offer international shipping.",
+                a: "Stores on VIA ship worldwide, and some offer international shipping.",
               },
             ]}
           />
