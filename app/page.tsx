@@ -29,7 +29,7 @@ export default function HomePage() {
           Curated Vintage & Resale
         </p>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif mb-8 text-white leading-tight max-w-xl">
+        <h1 className="text-5xl sm:text-6xl md:text-[4.25rem] font-serif mb-8 text-white leading-tight">
           Shop the best vintage & resale stores
         </h1>
 
@@ -83,10 +83,11 @@ export default function HomePage() {
     </div>
 
     {/* Store grid */}
-    <div className="px-6 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 max-w-3xl mx-auto">
+    <div className="px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12">
       {[
         { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
         { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
+        { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/placeholder.svg", location: "London, UK" },
       ].map((store) => (
         <Link
           key={store.slug}
