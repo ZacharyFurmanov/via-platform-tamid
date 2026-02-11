@@ -3,24 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-type SquarespaceStore = {
-  type: "squarespace";
-  name: string;
-  slug: string;
-  shopUrl?: string;
-  rssUrl?: string;
-};
-
-type ShopifyStore = {
-  type: "shopify";
-  name: string;
-  slug: string;
-  storeDomain: string;
-  storefrontAccessToken?: string; // Optional - will try public endpoint first
-};
-
-type Store = SquarespaceStore | ShopifyStore;
+import {
+  SQUARESPACE_STORES,
+  SHOPIFY_STORES,
+  ALL_STORES,
+  type Store,
+} from "@/app/lib/storeConfig";
 
 type SyncResult = {
   success?: boolean;
@@ -36,29 +24,6 @@ type StoreStatus = {
   loading: boolean;
   result: SyncResult | null;
 };
-
-// Squarespace stores (RSS-based)
-const SQUARESPACE_STORES: SquarespaceStore[] = [
-  {
-    type: "squarespace",
-    name: "LEI Vintage",
-    slug: "lei-vintage",
-    shopUrl: "https://www.leivintage.com/shop",
-  },
-];
-
-// Shopify stores (Storefront API)
-// Add your Shopify stores here with their storefront access tokens
-const SHOPIFY_STORES: ShopifyStore[] = [
-  {
-    type: "shopify",
-    name: "Vintage Archives LA",
-    slug: "vintage-archives-la",
-    storeDomain: "vintagearchivesla.com",
-  },
-];
-
-const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
 
 export default function SyncAdminPage() {
   const [statuses, setStatuses] = useState<Record<string, StoreStatus>>({});

@@ -1,5 +1,6 @@
 import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
+import { inferCategoryFromTitle } from "./loadStoreProducts";
 
 export type InventoryItem = {
   id: string;
@@ -11,61 +12,6 @@ export type InventoryItem = {
   store: string;
   storeSlug: string;
   externalUrl?: string;
-};
-
-const inferCategoryFromTitle = (title: string): CategorySlug => {
-  const t = title.toLowerCase();
-
-  if (
-    t.includes("heel") ||
-    t.includes("shoe") ||
-    t.includes("boot") ||
-    t.includes("pump") ||
-    t.includes("sandal") ||
-    t.includes("mule") ||
-    t.includes("clog") ||
-    t.includes("loafer") ||
-    t.includes("sneaker") ||
-    t.includes("slipper") ||
-    t.includes("espadrille") ||
-    t.includes("stiletto") ||
-    t.includes("wedge") ||
-    t.includes("oxford") ||
-    t.includes("derby") ||
-    t.includes("brogue") ||
-    t.includes("trainer") ||
-    t.includes("slide") ||
-    t.includes("flat")
-  ) {
-    return "shoes";
-  }
-
-  if (
-    t.includes("bag") ||
-    t.includes("clutch") ||
-    t.includes("tote") ||
-    t.includes("purse") ||
-    t.includes("handbag")
-  ) {
-    return "bags";
-  }
-
-  if (
-    t.includes("belt") ||
-    t.includes("scarf") ||
-    t.includes("hat") ||
-    t.includes("sunglasses") ||
-    t.includes("jewelry") ||
-    t.includes("necklace") ||
-    t.includes("bracelet") ||
-    t.includes("earring") ||
-    t.includes("watch")
-  ) {
-    return "accessories";
-  }
-
-  // Default to clothes for everything else
-  return "clothes";
 };
 
 // Parse images JSON from DB, falling back to single image
