@@ -11,6 +11,7 @@ import type { CategoryLabel } from "@/app/lib/categoryMap";
 
 export type FilterableProduct = {
   id: string;
+  dbId?: number;
   title: string;
   price: number;
   category: string;
@@ -193,6 +194,7 @@ export default function FilteredProductGrid({
             <div key={product.id} className="group">
               <ProductCard
                 id={product.id}
+                dbId={product.dbId}
                 name={product.title}
                 price={`$${product.price}`}
                 category={product.categoryLabel}

@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Menu, X, ChevronDown } from "lucide-react";
+import { Search, Menu, X, ChevronDown, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { stores } from "@/app/lib/stores";
 import { products } from "@/app/stores/productData";
@@ -32,6 +33,7 @@ export default function HeaderClient({
   const [mobileStoresExpanded, setMobileStoresExpanded] = useState(false);
   const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
@@ -267,6 +269,23 @@ export default function HeaderClient({
               <Search size={20} />
             </button>
 
+            {/* Account Button */}
+            <Link
+              href={session ? "/account" : "/login"}
+              className="p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
+              aria-label={session ? "Account" : "Sign in"}
+            >
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="w-6 h-6 rounded-full"
+                />
+              ) : (
+                <User size={20} />
+              )}
+            </Link>
+
             {/* Mobile Menu Button */}
             <button
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -380,6 +399,13 @@ export default function HeaderClient({
                   className="block py-3 text-white/80 hover:text-white"
                 >
                   Partner With VIA
+                </Link>
+                <Link
+                  href={session ? "/account" : "/login"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block py-3 text-white/80 hover:text-white"
+                >
+                  {session ? "My Account" : "Sign In"}
                 </Link>
               </div>
             </div>

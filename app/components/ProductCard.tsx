@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
+import FavoriteButton from "./FavoriteButton";
 
 type ProductCardProps = {
   id: string;
+  dbId?: number;
   name: string;
   price: string;
   category: CategoryLabel;
@@ -16,6 +18,7 @@ type ProductCardProps = {
 
 export default function ProductCard({
   id,
+  dbId,
   name,
   price,
   category,
@@ -26,24 +29,39 @@ export default function ProductCard({
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
 
+  // Parse dbId from composite id if not provided (e.g. "lei-vintage-42" -> 42)
+  const numericId = dbId ?? (() => {
+    const match = id.match(/-(\d+)$/);
+    return match ? parseInt(match[1], 10) : null;
+  })();
+
   return (
-    <Link href={`/products/${id}`} className="group cursor-pointer text-black block">
-      <ImageCarousel images={carouselImages} alt={name} variant="card" />
+    <div className="relative group">
+      <Link href={`/products/${id}`} className="cursor-pointer text-black block">
+        <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
-      {/* Product info with mobile-friendly text sizes */}
-      <div className="pt-3 pb-2">
-        <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/60 mb-1">
-          {storeName}
-        </p>
+        {/* Product info with mobile-friendly text sizes */}
+        <div className="pt-3 pb-2">
+          <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/60 mb-1">
+            {storeName}
+          </p>
 
-        <h3 className="font-serif text-base sm:text-lg text-black leading-snug line-clamp-2">
-          {name}
-        </h3>
+          <h3 className="font-serif text-base sm:text-lg text-black leading-snug line-clamp-2">
+            {name}
+          </h3>
 
-        <p className="text-xs sm:text-sm text-black/70 mt-0.5">{category}</p>
+          <p className="text-xs sm:text-sm text-black/70 mt-0.5">{category}</p>
 
-        <p className="text-sm sm:text-base mt-1 text-black font-medium">{price}</p>
-      </div>
-    </Link>
+          <p className="text-sm sm:text-base mt-1 text-black font-medium">{price}</p>
+        </div>
+      </Link>
+
+      {/* Favorite button overlay */}
+      {numericId != null && (
+        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
+          <FavoriteButton type="product" targetId={numericId} size="sm" />
+        </div>
+      )}
+    </div>
   );
 }

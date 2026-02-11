@@ -6,6 +6,7 @@ import { categoryMap } from "@/app/lib/categoryMap";
 import { createTrackingUrl } from "@/app/lib/track";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
+import FavoriteButton from "@/app/components/FavoriteButton";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -112,7 +113,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <p className="text-sm text-black/50 mb-1">{categoryLabel}</p>
 
-            <p className="text-2xl font-medium text-black mb-8">{price}</p>
+            <div className="flex items-center gap-4 mb-8">
+              <p className="text-2xl font-medium text-black">{price}</p>
+              <FavoriteButton type="product" targetId={dbId} size="md" />
+            </div>
 
             {/* Description / product details */}
             {product.description && (

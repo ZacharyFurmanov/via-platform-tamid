@@ -6,6 +6,7 @@ import { StoreProduct } from "@/app/lib/types";
 import { categoryMap } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import FavoriteButton from "@/app/components/FavoriteButton";
 
 type StorePageProps = {
   params: Promise<{
@@ -54,7 +55,10 @@ export default async function StorePage({ params }: StorePageProps) {
             ← All Stores
           </Link>
 
-          <h1 className="text-4xl sm:text-5xl font-serif mb-4">{store.name}</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <h1 className="text-4xl sm:text-5xl font-serif">{store.name}</h1>
+            <FavoriteButton type="store" targetId={store.slug} size="md" />
+          </div>
 
           <p className="text-sm text-neutral-600 mb-6">{store.location}</p>
 

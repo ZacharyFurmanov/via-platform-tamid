@@ -64,7 +64,8 @@ export async function initDatabase() {
 }
 
 /**
- * Sync products for a store - replaces all existing products for that store
+ * Sync products for a store using upsert to preserve stable product IDs.
+ * Products no longer in the feed are removed; existing ones are updated in place.
  */
 export async function syncProducts(
   storeSlug: string,
@@ -81,11 +82,10 @@ export async function syncProducts(
 ) {
   const sql = neon(getDatabaseUrl());
 
-  // Delete existing products for this store
-  await sql`DELETE FROM products WHERE store_slug = ${storeSlug}`;
-
-  // Insert new products
+  // Upsert each product (preserves id for existing rows)
+  const titles: string[] = [];
   for (const product of products) {
+    titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
       INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, synced_at)
@@ -101,7 +101,27 @@ export async function syncProducts(
         ${product.description || null},
         NOW()
       )
+      ON CONFLICT (store_slug, title) DO UPDATE SET
+        store_name = EXCLUDED.store_name,
+        price = EXCLUDED.price,
+        currency = EXCLUDED.currency,
+        image = EXCLUDED.image,
+        images = EXCLUDED.images,
+        external_url = EXCLUDED.external_url,
+        description = EXCLUDED.description,
+        synced_at = NOW()
     `;
+  }
+
+  // Remove products that are no longer in the feed
+  if (titles.length > 0) {
+    await sql`
+      DELETE FROM products
+      WHERE store_slug = ${storeSlug}
+        AND title != ALL(${titles})
+    `;
+  } else {
+    await sql`DELETE FROM products WHERE store_slug = ${storeSlug}`;
   }
 
   return products.length;

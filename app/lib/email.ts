@@ -181,3 +181,45 @@ export async function sendGiveawayReminder(
 </html>`,
   });
 }
+
+export async function sendFavoriteActivityNotification(
+  email: string,
+  productTitle: string,
+  productImage: string | null,
+  storeName: string,
+  productUrl: string,
+) {
+  const resend = getResend();
+
+  const imageBlock = productImage
+    ? `<div style="text-align: center; margin: 20px 0;">
+         <img src="${productImage}" alt="${productTitle}" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px;" />
+       </div>`
+    : "";
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "Your loved item is getting attention",
+    html: `
+<!DOCTYPE html>
+<html>
+<head><style>${baseStyles()}</style></head>
+<body>
+  <div class="container">
+    <div class="header"><h1>VIA</h1></div>
+    <div class="content">
+      <h2>Your favorite piece is trending.</h2>
+      ${imageBlock}
+      <p><strong>${productTitle}</strong> from ${storeName}</p>
+      <p>This item has been getting a lot of attention lately. If you love it, don't wait &mdash; vintage is one-of-a-kind, and once it's gone, it's gone forever.</p>
+      <a href="${productUrl}" class="btn">Shop Now</a>
+    </div>
+    <div class="footer">
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, nationwide.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+  });
+}

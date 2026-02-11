@@ -7,6 +7,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Script from "next/script";
 import { GiveawayProvider } from "./components/GiveawayProvider";
+import { AuthProvider } from "./components/AuthProvider";
+import { FavoritesProvider } from "./components/FavoritesProvider";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -60,11 +62,15 @@ export default function RootLayout({
       </Script>
 
       <body className={`${cormorant.className} bg-white text-black`}>
-        <GiveawayProvider>
-          <Header />
-          <main className="pt-20">{children}</main>
-          <Footer />
-        </GiveawayProvider>
+        <AuthProvider>
+          <FavoritesProvider>
+            <GiveawayProvider>
+              <Header />
+              <main className="pt-20">{children}</main>
+              <Footer />
+            </GiveawayProvider>
+          </FavoritesProvider>
+        </AuthProvider>
       </body>
     </html>
   );
