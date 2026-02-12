@@ -65,6 +65,12 @@ export default async function StorePage({ params }: StorePageProps) {
           {store.description && (
             <p className="text-sm sm:text-base text-neutral-600 max-w-xl">{store.description}</p>
           )}
+
+          {"perk" in store && store.perk && (
+            <p className="mt-4 text-sm font-medium text-black">
+              {store.perk}
+            </p>
+          )}
         </div>
       </section>
 
