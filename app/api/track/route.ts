@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick } from "@/app/lib/analytics-db";
-import { stores } from "@/app/lib/stores";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -45,18 +44,6 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect URL with tracking parameters
   let redirectUrl = new URL(externalUrl);
-
-  // Check if this store has a Shopify Collabs affiliate path
-  const storeConfig = storeSlug
-    ? stores.find((s) => s.slug === storeSlug)
-    : null;
-
-  if (storeConfig && "affiliatePath" in storeConfig && storeConfig.affiliatePath) {
-    // Rewrite URL to go through the Shopify Collabs affiliate path
-    // e.g. /products/shoe-xyz → /VIAPARTNER/products/shoe-xyz
-    const affiliatePath = storeConfig.affiliatePath;
-    redirectUrl.pathname = `/${affiliatePath}${parsedUrl.pathname}`;
-  }
 
   // Always append via_click_id for our own conversion attribution
   redirectUrl.searchParams.set("via_click_id", clickId);

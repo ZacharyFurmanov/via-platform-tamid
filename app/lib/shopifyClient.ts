@@ -445,6 +445,7 @@ export async function fetchShopifyProductsPublic(
 export function toRSSProductFormat(product: ShopifyProduct): {
   title: string;
   price: number | null;
+  currency: string;
   image: string | null;
   images: string[];
   externalUrl: string;
@@ -454,6 +455,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   return {
     title: product.title,
     price: product.price,
+    currency: product.currency,
     image: product.image,
     images: product.images,
     externalUrl: product.externalUrl,
