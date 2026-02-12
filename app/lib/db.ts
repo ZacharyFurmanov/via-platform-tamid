@@ -23,6 +23,7 @@ export type DBProduct = {
   images: string | null;
   external_url: string | null;
   description: string | null;
+  variant_id: string | null;
   synced_at: Date;
 };
 
@@ -61,6 +62,11 @@ export async function initDatabase() {
   await sql`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT
   `;
+
+  // Add variant_id column for Shopify direct checkout URLs
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS variant_id TEXT
+  `;
 }
 
 /**
@@ -78,6 +84,7 @@ export async function syncProducts(
     images?: string[];
     externalUrl?: string;
     description?: string;
+    variantId?: string;
   }>
 ) {
   const sql = neon(getDatabaseUrl());
@@ -88,7 +95,7 @@ export async function syncProducts(
     titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, synced_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, synced_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -99,6 +106,7 @@ export async function syncProducts(
         ${imagesJson},
         ${product.externalUrl || null},
         ${product.description || null},
+        ${product.variantId || null},
         NOW()
       )
       ON CONFLICT (store_slug, title) DO UPDATE SET
@@ -109,6 +117,7 @@ export async function syncProducts(
         images = EXCLUDED.images,
         external_url = EXCLUDED.external_url,
         description = EXCLUDED.description,
+        variant_id = EXCLUDED.variant_id,
         synced_at = NOW()
     `;
   }

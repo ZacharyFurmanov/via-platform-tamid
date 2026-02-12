@@ -10,6 +10,7 @@ export type CartItem = {
   storeName: string;
   storeSlug: string;
   externalUrl: string;
+  checkoutUrl: string;
 };
 
 type CartContextType = {

@@ -19,6 +19,7 @@ export type ShopifyProduct = {
   productType: string | null;
   availableForSale: boolean;
   description: string | null;
+  variantId: string | null;
 };
 
 export type ShopifyFetchResult = {
@@ -37,6 +38,7 @@ type ShopifyPriceV2 = {
 };
 
 type ShopifyVariantNode = {
+  id: string;
   priceV2: ShopifyPriceV2;
   availableForSale: boolean;
 };
@@ -105,6 +107,7 @@ const PRODUCTS_QUERY = `
           variants(first: 1) {
             edges {
               node {
+                id
                 priceV2 {
                   amount
                   currencyCode
@@ -225,6 +228,10 @@ export async function fetchShopifyProducts(
       const allImageUrls = node.images.edges.map((e) => e.node.url);
       const imageUrl = allImageUrls[0] || null;
 
+      // Extract numeric variant ID from GID (e.g. "gid://shopify/ProductVariant/12345" -> "12345")
+      const variantGid = node.variants?.edges?.[0]?.node?.id;
+      const variantId = variantGid?.match(/(\d+)$/)?.[1] ?? null;
+
       products.push({
         title: node.title,
         price: isNaN(price) ? null : price,
@@ -237,6 +244,7 @@ export async function fetchShopifyProducts(
         productType: node.productType || null,
         availableForSale: node.availableForSale,
         description: node.descriptionHtml || null,
+        variantId,
       });
     }
 
@@ -399,6 +407,7 @@ export async function fetchShopifyProductsPublic(
 
       const variant = variants[0];
       const price = variant?.price ? parseFloat(variant.price) : null;
+      const variantId = variant?.id ? String(variant.id) : null;
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];
@@ -424,6 +433,7 @@ export async function fetchShopifyProductsPublic(
         productType: product.product_type || null,
         availableForSale: isAvailable,
         description: product.body_html || null,
+        variantId,
       });
     }
 
@@ -451,6 +461,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   externalUrl: string;
   store: string;
   description: string | null;
+  variantId: string | null;
 } {
   return {
     title: product.title,
@@ -461,5 +472,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     externalUrl: product.externalUrl,
     store: product.store,
     description: product.description,
+    variantId: product.variantId,
   };
 }

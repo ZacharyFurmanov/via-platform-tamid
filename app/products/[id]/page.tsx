@@ -48,6 +48,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     productImages = [product.image];
   }
 
+  // Build direct checkout URL for Shopify stores (uses variant ID)
+  let checkoutUrl = product.external_url || "";
+  if (product.variant_id && product.external_url) {
+    try {
+      const productUrl = new URL(product.external_url);
+      checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1`;
+    } catch {}
+  }
+
   // Fetch recommended products from the same category
   const allCandidates = await getRecommendedProducts(dbId, 30);
   const recommendations = allCandidates
@@ -127,6 +136,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   storeName: store.name,
                   storeSlug: store.slug,
                   externalUrl: product.external_url,
+                  checkoutUrl,
                 }}
               />
             ) : (

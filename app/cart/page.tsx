@@ -91,16 +91,6 @@ export default function CartPage() {
                 {/* Items */}
                 <div className="space-y-4">
                   {group.items.map((item) => {
-                    const params = new URLSearchParams({
-                      pid: item.compositeId,
-                      pn: item.title,
-                      s: item.storeName,
-                      ss: item.storeSlug,
-                      url: item.externalUrl,
-                      affiliate: "1",
-                    });
-                    const checkoutUrl = `/api/track?${params.toString()}`;
-
                     return (
                       <div
                         key={item.compositeId}
@@ -140,7 +130,7 @@ export default function CartPage() {
 
                           {/* Per-item checkout */}
                           <a
-                            href={checkoutUrl}
+                            href={item.checkoutUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-block mt-3 text-xs uppercase tracking-wide underline text-neutral-600 hover:text-black transition"

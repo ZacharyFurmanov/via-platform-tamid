@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
           images: p.images,
           externalUrl: p.externalUrl,
           description: p.description ?? undefined,
+          variantId: p.variantId ?? undefined,
         };
       });
     const skippedCount = fetchResult.skippedCount;
