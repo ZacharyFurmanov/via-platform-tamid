@@ -129,50 +129,63 @@ export default function HomePage() {
 
     {/* ================= SHOP BY CATEGORY ================= */}
 <section className="bg-[#f1f1ee] py-20 sm:py-32">
-  <div className="max-w-7xl mx-auto px-6">
+  <div className="max-w-7xl mx-auto">
     <ScrollReveal>
-      <h2 className="text-3xl sm:text-5xl md:text-6xl font-serif mb-8 sm:mb-12 text-black">
-        Shop by Category
-      </h2>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
+            Curated Collections
+          </p>
+          <h2 className="text-3xl sm:text-5xl font-serif text-black">
+            Shop by Category
+          </h2>
+        </div>
+
+        <Link
+          href="/categories"
+          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+        >
+          View all categories
+        </Link>
+      </div>
     </ScrollReveal>
 
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-      {[
-        { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },
-        { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
-        { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
-        { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },
-      ].map((category, i) => (
-        <ScrollReveal key={category.slug} delay={i * 100}>
-          <Link
-            href={`/categories/${category.slug}`}
-            className="group relative block overflow-hidden"
-          >
-            {/* Image */}
-            <div className="aspect-[3/4] relative">
-              <Image
-                src={category.image}
-                alt={category.label}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+    <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide">
+      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-12">
+        {[
+          { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },
+          { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
+          { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
+          { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },
+        ].map((category, i) => (
+          <ScrollReveal key={category.slug} delay={i * 150}>
+            <Link
+              href={`/categories/${category.slug}`}
+              className="group block w-[72vw] flex-shrink-0 sm:w-auto"
+            >
+              <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+                <Image
+                  src={category.image}
+                  alt={category.label}
+                  fill
+                  sizes="(min-width: 768px) 25vw, 72vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
 
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
-
-              {/* Text */}
-              <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
-                <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
-                  {category.label}
-                </h3>
-                <p className="text-[10px] sm:text-xs uppercase tracking-wide text-white/80">
-                  Explore
-                </p>
+                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
+                  <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
+                    {category.label}
+                  </h3>
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wide text-white/80">
+                    Explore
+                  </p>
+                </div>
               </div>
-            </div>
-          </Link>
-        </ScrollReveal>
-      ))}
+            </Link>
+          </ScrollReveal>
+        ))}
+      </div>
     </div>
   </div>
 </section>
