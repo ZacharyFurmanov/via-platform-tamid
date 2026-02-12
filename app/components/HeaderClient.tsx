@@ -157,7 +157,7 @@ export default function HeaderClient({
 
           <div className="flex items-center gap-4 md:gap-10">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-wide text-white/80">
+            <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-wide text-white">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -165,7 +165,7 @@ export default function HeaderClient({
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white transition-colors"
+                  className="flex items-center gap-1 hover:text-white/70 transition-colors"
                 >
                   Stores
                   <ChevronDown
@@ -215,7 +215,7 @@ export default function HeaderClient({
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white transition-colors"
+                  className="flex items-center gap-1 hover:text-white/70 transition-colors"
                 >
                   Shop Category
                   <ChevronDown
@@ -257,9 +257,6 @@ export default function HeaderClient({
                 </div>
               </div>
 
-              <Link href="/for-stores" className="hover:text-white transition-colors normal-case">
-                Partner with VIA
-              </Link>
             </nav>
 
             {/* Search Button */}
@@ -407,15 +404,7 @@ export default function HeaderClient({
                 </li>
               </ul>
 
-              {/* Partner Link */}
               <div className="mt-8 pt-8 border-t border-white/10">
-                <Link
-                  href="/for-stores"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-white/80 hover:text-white"
-                >
-                  Partner With VIA
-                </Link>
                 <Link
                   href={session ? "/account" : "/login"}
                   onClick={() => setMobileMenuOpen(false)}
