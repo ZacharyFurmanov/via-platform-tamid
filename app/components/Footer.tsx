@@ -89,14 +89,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/brands"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  Brands
-                </Link>
-              </li>
-              <li>
                 <GiveawayFooterLink />
               </li>
             </ul>

@@ -68,12 +68,6 @@ export default async function BrowsePage() {
                 Shop by Category
               </Link>
               <Link
-                href="/brands"
-                className="text-sm uppercase tracking-wide underline hover:no-underline"
-              >
-                Shop by Brand
-              </Link>
-              <Link
                 href="/stores"
                 className="text-sm uppercase tracking-wide underline hover:no-underline"
               >
