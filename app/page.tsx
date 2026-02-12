@@ -88,39 +88,41 @@ export default function HomePage() {
     </ScrollReveal>
 
     {/* Store grid — horizontal scroll on mobile, 3-col on desktop */}
-    <div className="px-6 flex gap-5 overflow-x-auto snap-x snap-mandatory sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-12 sm:overflow-visible pb-4 sm:pb-0 -mx-6 px-6 sm:mx-0">
-      {[
-        { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
-        { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
-        { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/placeholder.svg", location: "London, UK" },
-      ].map((store, i) => (
-        <ScrollReveal key={store.slug} delay={i * 150}>
-          <Link
-            href={`/stores/${store.slug}`}
-            className="group block w-[70vw] flex-shrink-0 snap-start sm:w-auto"
-          >
-            {/* Image */}
-            <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
-              <Image
-                src={store.image}
-                alt={store.name}
-                fill
-                sizes="(min-width: 768px) 50vw, 70vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-            </div>
+    <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide">
+      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-12">
+        {[
+          { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
+          { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
+          { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/placeholder.svg", location: "London, UK" },
+        ].map((store, i) => (
+          <ScrollReveal key={store.slug} delay={i * 150}>
+            <Link
+              href={`/stores/${store.slug}`}
+              className="group block w-[72vw] flex-shrink-0 sm:w-auto"
+            >
+              {/* Image */}
+              <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  fill
+                  sizes="(min-width: 768px) 50vw, 72vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+              </div>
 
-            {/* Text */}
-            <h3 className="text-lg sm:text-xl font-serif text-black">
-              {store.name}
-            </h3>
-            <p className="text-sm text-gray-600">
-              {store.location}
-            </p>
-          </Link>
-        </ScrollReveal>
-      ))}
+              {/* Text */}
+              <h3 className="text-lg sm:text-xl font-serif text-black">
+                {store.name}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {store.location}
+              </p>
+            </Link>
+          </ScrollReveal>
+        ))}
+      </div>
     </div>
   </div>
 </section>
