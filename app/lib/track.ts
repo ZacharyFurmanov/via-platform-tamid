@@ -36,7 +36,8 @@ export function createTrackingUrl(
   productName: string,
   store: string,
   storeSlug: string,
-  externalUrl: string
+  externalUrl: string,
+  affiliate?: boolean
 ): string {
   const params = new URLSearchParams({
     pid: productId,
@@ -45,5 +46,6 @@ export function createTrackingUrl(
     ss: storeSlug,
     url: externalUrl,
   });
+  if (affiliate) params.set("affiliate", "1");
   return `/api/track?${params.toString()}`;
 }

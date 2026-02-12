@@ -3,10 +3,10 @@ import Link from "next/link";
 import { getProductById, getRecommendedProducts } from "@/app/lib/db";
 import { stores, convertToUSD } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
-import { createTrackingUrl } from "@/app/lib/track";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
+import AddToCartButton from "@/app/components/AddToCartButton";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -47,16 +47,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (productImages.length === 0 && product.image) {
     productImages = [product.image];
   }
-
-  const trackingUrl = product.external_url
-    ? createTrackingUrl(
-        compositeId,
-        product.title,
-        product.store_name,
-        product.store_slug,
-        product.external_url
-      )
-    : null;
 
   // Fetch recommended products from the same category
   const allCandidates = await getRecommendedProducts(dbId, 30);
@@ -126,16 +116,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
               />
             )}
 
-            {/* Checkout */}
-            {trackingUrl ? (
-              <a
-                href={trackingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-black text-white py-4 text-sm uppercase tracking-wide text-center hover:bg-neutral-800 transition"
-              >
-                Checkout
-              </a>
+            {/* Add to Cart */}
+            {product.external_url ? (
+              <AddToCartButton
+                item={{
+                  compositeId,
+                  title: product.title,
+                  price: convertToUSD(Number(product.price), product.store_slug),
+                  image: productImages[0] || "",
+                  storeName: store.name,
+                  storeSlug: store.slug,
+                  externalUrl: product.external_url,
+                }}
+              />
             ) : (
               <button
                 disabled

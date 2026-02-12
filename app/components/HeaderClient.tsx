@@ -3,9 +3,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Menu, X, ChevronDown, User } from "lucide-react";
+import { Search, Menu, X, ChevronDown, User, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useCart } from "./CartProvider";
 
 import { stores } from "@/app/lib/stores";
 import { products } from "@/app/stores/productData";
@@ -34,6 +35,7 @@ export default function HeaderClient({
   const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+  const { itemCount } = useCart();
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
@@ -268,6 +270,20 @@ export default function HeaderClient({
             >
               <Search size={20} />
             </button>
+
+            {/* Cart Button */}
+            <Link
+              href="/cart"
+              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
+              aria-label="Cart"
+            >
+              <ShoppingBag size={20} />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
 
             {/* Account Button */}
             <Link

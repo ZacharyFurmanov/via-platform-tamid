@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick } from "@/app/lib/analytics-db";
+import { stores } from "@/app/lib/stores";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -44,6 +45,20 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect URL with tracking parameters
   let redirectUrl = new URL(externalUrl);
+
+  // Conditional affiliate path rewriting for cart checkout
+  const isAffiliate = searchParams.get("affiliate") === "1";
+  if (isAffiliate && storeSlug) {
+    const storeConfig = stores.find((s) => s.slug === storeSlug);
+    if (storeConfig && "affiliatePath" in storeConfig && storeConfig.affiliatePath) {
+      // Extract the product handle (last path segment)
+      const pathSegments = redirectUrl.pathname.split("/").filter(Boolean);
+      const handle = pathSegments[pathSegments.length - 1];
+      if (handle) {
+        redirectUrl.pathname = `/${storeConfig.affiliatePath}/products/${handle}`;
+      }
+    }
+  }
 
   // Always append via_click_id for our own conversion attribution
   redirectUrl.searchParams.set("via_click_id", clickId);
