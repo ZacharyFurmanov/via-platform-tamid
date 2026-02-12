@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Menu, X, ChevronDown, User, ShoppingBag } from "lucide-react";
+import { Search, Menu, X, ChevronDown, User, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCart } from "./CartProvider";
@@ -277,7 +277,7 @@ export default function HeaderClient({
               className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
               aria-label="Cart"
             >
-              <ShoppingBag size={20} />
+              <ShoppingCart size={20} />
               {itemCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
                   {itemCount}

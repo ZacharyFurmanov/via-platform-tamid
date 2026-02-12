@@ -2,8 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { X, ShoppingBag } from "lucide-react";
+import { X, ShoppingCart } from "lucide-react";
 import { useCart } from "@/app/components/CartProvider";
 
 export default function CartPage() {
@@ -34,7 +33,7 @@ export default function CartPage() {
     return (
       <main className="bg-white min-h-screen text-black">
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-          <ShoppingBag size={48} className="mx-auto mb-6 text-neutral-300" />
+          <ShoppingCart size={48} className="mx-auto mb-6 text-neutral-300" />
           <h1 className="text-2xl sm:text-3xl font-serif mb-4">
             Your cart is empty
           </h1>
@@ -112,14 +111,12 @@ export default function CartPage() {
                           href={`/products/${item.compositeId}`}
                           className="flex-shrink-0"
                         >
-                          <div className="relative w-20 h-24 sm:w-24 sm:h-32 bg-neutral-100 overflow-hidden">
+                          <div className="w-20 h-24 sm:w-24 sm:h-32 bg-neutral-100 overflow-hidden">
                             {item.image ? (
-                              <Image
+                              <img
                                 src={item.image}
                                 alt={item.title}
-                                fill
-                                sizes="96px"
-                                className="object-cover"
+                                className="w-full h-full object-cover"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-neutral-400 text-xs">
