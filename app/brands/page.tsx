@@ -36,17 +36,14 @@ export default async function BrandsPage() {
                   href={`/brands/${brand.slug}`}
                   className="group"
                 >
-                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden mb-6 flex items-center justify-center">
-                    <span className="text-xl sm:text-2xl font-serif text-neutral-400 group-hover:text-neutral-600 transition-colors duration-300 text-center px-4">
+                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden flex flex-col items-center justify-center px-4 group-hover:bg-neutral-200/70 transition-colors duration-300">
+                    <span className="text-xl sm:text-2xl font-serif text-black text-center leading-snug">
                       {brand.label}
                     </span>
+                    <span className="text-xs text-neutral-500 mt-2">
+                      {brand.productCount} piece{brand.productCount !== 1 ? "s" : ""}
+                    </span>
                   </div>
-                  <h2 className="text-lg font-serif group-hover:underline underline-offset-4">
-                    {brand.label}
-                  </h2>
-                  <p className="text-sm text-neutral-500 mt-1">
-                    {brand.productCount} piece{brand.productCount !== 1 ? "s" : ""}
-                  </p>
                 </Link>
               ))}
             </div>
