@@ -9,7 +9,6 @@ import Script from "next/script";
 import { GiveawayProvider } from "./components/GiveawayProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { FavoritesProvider } from "./components/FavoritesProvider";
-import SmoothScroll from "./components/SmoothScroll";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -63,7 +62,6 @@ export default function RootLayout({
       </Script>
 
       <body className={`${cormorant.className} bg-white text-black`}>
-        <SmoothScroll />
         <AuthProvider>
           <FavoritesProvider>
             <GiveawayProvider>

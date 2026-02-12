@@ -2,10 +2,12 @@ import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
 import ScrollReveal from "./components/ScrollReveal";
+import SmoothScroll from "./components/SmoothScroll";
 
 export default function HomePage() {
   return (
     <main className="w-full">
+      <SmoothScroll />
 {/* ================= HERO ================= */}
 <section className="relative min-h-screen flex items-center overflow-hidden">
 
