@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
+import ScrollReveal from "./components/ScrollReveal";
 
 export default function HomePage() {
   return (
@@ -64,23 +65,25 @@ export default function HomePage() {
 <section className="bg-neutral-100 py-20 sm:py-32">
   <div className="max-w-7xl mx-auto">
     {/* Header */}
-    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-          Selected by VIA
-        </p>
-        <h2 className="text-3xl sm:text-5xl font-serif text-black">
-          Shop by Store
-        </h2>
-      </div>
+    <ScrollReveal>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
+            Selected by VIA
+          </p>
+          <h2 className="text-3xl sm:text-5xl font-serif text-black">
+            Shop by Store
+          </h2>
+        </div>
 
-      <Link
-        href="/stores"
-        className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
-      >
-        View all stores
-      </Link>
-    </div>
+        <Link
+          href="/stores"
+          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+        >
+          View all stores
+        </Link>
+      </div>
+    </ScrollReveal>
 
     {/* Store grid */}
     <div className="px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12">
@@ -88,32 +91,33 @@ export default function HomePage() {
         { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
         { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
         { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/placeholder.svg", location: "London, UK" },
-      ].map((store) => (
-        <Link
-          key={store.slug}
-          href={`/stores/${store.slug}`}
-          className="group block w-full"
-        >
-          {/* Image */}
-          <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
-            <Image
-              src={store.image}
-              alt={store.name}
-              fill
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-          </div>
+      ].map((store, i) => (
+        <ScrollReveal key={store.slug} delay={i * 150}>
+          <Link
+            href={`/stores/${store.slug}`}
+            className="group block w-full"
+          >
+            {/* Image */}
+            <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+              <Image
+                src={store.image}
+                alt={store.name}
+                fill
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+            </div>
 
-          {/* Text */}
-          <h3 className="text-lg sm:text-xl font-serif text-black">
-            {store.name}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {store.location}
-          </p>
-        </Link>
+            {/* Text */}
+            <h3 className="text-lg sm:text-xl font-serif text-black">
+              {store.name}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {store.location}
+            </p>
+          </Link>
+        </ScrollReveal>
       ))}
     </div>
   </div>
@@ -122,9 +126,11 @@ export default function HomePage() {
     {/* ================= SHOP BY CATEGORY ================= */}
 <section className="bg-[#f1f1ee] py-20 sm:py-32">
   <div className="max-w-7xl mx-auto px-6">
-    <h2 className="text-3xl sm:text-5xl md:text-6xl font-serif mb-8 sm:mb-12 text-black">
-      Shop by Category
-    </h2>
+    <ScrollReveal>
+      <h2 className="text-3xl sm:text-5xl md:text-6xl font-serif mb-8 sm:mb-12 text-black">
+        Shop by Category
+      </h2>
+    </ScrollReveal>
 
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
       {[
@@ -132,35 +138,36 @@ export default function HomePage() {
         { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
         { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
         { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },
-      ].map((category) => (
-        <Link
-          key={category.slug}
-          href={`/categories/${category.slug}`}
-          className="group relative block overflow-hidden"
-        >
-          {/* Image */}
-          <div className="aspect-[3/4] relative">
-            <Image
-              src={category.image}
-              alt={category.label}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+      ].map((category, i) => (
+        <ScrollReveal key={category.slug} delay={i * 100}>
+          <Link
+            href={`/categories/${category.slug}`}
+            className="group relative block overflow-hidden"
+          >
+            {/* Image */}
+            <div className="aspect-[3/4] relative">
+              <Image
+                src={category.image}
+                alt={category.label}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
 
-            {/* Text */}
-            <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
-              <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
-                {category.label}
-              </h3>
-              <p className="text-[10px] sm:text-xs uppercase tracking-wide text-white/80">
-                Explore
-              </p>
+              {/* Text */}
+              <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
+                <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
+                  {category.label}
+                </h3>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wide text-white/80">
+                  Explore
+                </p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </ScrollReveal>
       ))}
     </div>
   </div>
@@ -169,32 +176,35 @@ export default function HomePage() {
       {/* ================= FAQ TEASER ================= */}
       <section className="bg-[#f7f6f3] py-20 sm:py-32">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12 sm:mb-20">
-            <div className="max-w-xl">
-              <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-                Have questions?
-              </p>
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12 sm:mb-20">
+              <div className="max-w-xl">
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
+                  Have questions?
+                </p>
 
-              <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
-                Frequently Asked Questions
-              </h2>
+                <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
+                  Frequently Asked Questions
+                </h2>
 
-              <p className="text-gray-700 text-sm sm:text-base">
-                Everything you need to know about shopping, shipping,
-                and how VIA works.
-              </p>
+                <p className="text-gray-700 text-sm sm:text-base">
+                  Everything you need to know about shopping, shipping,
+                  and how VIA works.
+                </p>
+              </div>
+
+              <div className="mt-6 md:mt-2">
+                <Link
+                  href="/faqs"
+                  className="inline-flex items-center justify-center border border-black px-6 py-3 min-h-[48px] text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
+                >
+                  Explore FAQs
+                </Link>
+              </div>
             </div>
+          </ScrollReveal>
 
-            <div className="mt-6 md:mt-2">
-              <Link
-                href="/faqs"
-                className="inline-flex items-center justify-center border border-black px-6 py-3 min-h-[48px] text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
-              >
-                Explore FAQs
-              </Link>
-            </div>
-          </div>
-
+          <ScrollReveal delay={150}>
           <FAQAccordion
             faqs={[
               {
@@ -215,47 +225,50 @@ export default function HomePage() {
               },
             ]}
           />
+          </ScrollReveal>
         </div>
       </section>
 
       {/* ================= VIA EXPERIENCE / WAITLIST ================= */}
       <section className="bg-black py-20 sm:py-32 text-white">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-400 mb-3 sm:mb-4">
-            The VIA Experience
-          </p>
+          <ScrollReveal>
+            <p className="text-xs uppercase tracking-[0.25em] text-gray-400 mb-3 sm:mb-4">
+              The VIA Experience
+            </p>
 
-          <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
-            A better way to shop vintage
-          </h2>
+            <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
+              A better way to shop vintage
+            </h2>
 
-          <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-gray-300 text-sm sm:text-base">
-            VIA brings together the best independent vintage and resale stores
-            into one seamless browsing experience, while keeping checkout
-            with the store you love.
-          </p>
+            <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-gray-300 text-sm sm:text-base">
+              VIA brings together the best independent vintage and resale stores
+              into one seamless browsing experience, while keeping checkout
+              with the store you love.
+            </p>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
-            <div>
+            <ScrollReveal delay={0}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Browse across stores</h3>
               <p className="text-gray-300 text-sm sm:text-base">
                 Explore curated inventory from multiple stores at once.
               </p>
-            </div>
+            </ScrollReveal>
 
-            <div>
+            <ScrollReveal delay={150}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Discover rare pieces</h3>
               <p className="text-gray-300 text-sm sm:text-base">
                 Find one-of-a-kind items you won't see everywhere else.
               </p>
-            </div>
+            </ScrollReveal>
 
-            <div>
+            <ScrollReveal delay={300}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Checkout with confidence</h3>
               <p className="text-gray-300 text-sm sm:text-base">
                 Purchase directly from the original store, no middlemen.
               </p>
-            </div>
+            </ScrollReveal>
           </div>
 
         </div>
