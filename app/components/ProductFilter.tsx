@@ -61,7 +61,18 @@ export default function ProductFilter({
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
+  const closeAllDropdowns = useCallback(() => {
+    setPriceDropdownOpen(false);
+    setCategoryDropdownOpen(false);
+    setBrandDropdownOpen(false);
+    setStoreDropdownOpen(false);
+    setSortDropdownOpen(false);
+  }, []);
 
   const updateFilters = useCallback(
     (update: Partial<FilterState>) => {
@@ -164,8 +175,9 @@ export default function ProductFilter({
           <div className="relative">
             <button
               onClick={() => {
-                setPriceDropdownOpen(!priceDropdownOpen);
-                setSortDropdownOpen(false);
+                const wasOpen = priceDropdownOpen;
+                closeAllDropdowns();
+                setPriceDropdownOpen(!wasOpen);
               }}
               className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
                 filters.priceRange !== "all"
@@ -206,69 +218,150 @@ export default function ProductFilter({
             )}
           </div>
 
-          {/* Category Filters */}
+          {/* Category Dropdown */}
           {showCategoryFilter && categories.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wide text-neutral-500">
-                Category:
-              </span>
-              {categories.map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => toggleCategory(cat.slug)}
-                  className={`px-3 py-1.5 text-sm border transition ${
-                    filters.selectedCategories.includes(cat.slug)
-                      ? "border-black bg-black text-white"
-                      : "border-neutral-200 hover:border-black"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = categoryDropdownOpen;
+                  closeAllDropdowns();
+                  setCategoryDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                  filters.selectedCategories.length > 0
+                    ? "border-black bg-black text-white"
+                    : "border-neutral-200 hover:border-black"
+                }`}
+              >
+                {filters.selectedCategories.length > 0
+                  ? `Category (${filters.selectedCategories.length})`
+                  : "Category"}
+                <ChevronDown size={16} />
+              </button>
+              {categoryDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setCategoryDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px]">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        onClick={() => toggleCategory(cat.slug)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                          filters.selectedCategories.includes(cat.slug)
+                            ? "bg-neutral-100 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {cat.label}
+                        {filters.selectedCategories.includes(cat.slug) && (
+                          <span className="text-black">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          {/* Brand Filters */}
+          {/* Brand Dropdown */}
           {showBrandFilter && brands.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs uppercase tracking-wide text-neutral-500">
-                Brand:
-              </span>
-              {brands.map((brand) => (
-                <button
-                  key={brand.slug}
-                  onClick={() => toggleBrand(brand.slug)}
-                  className={`px-3 py-1.5 text-sm border transition ${
-                    filters.selectedBrands.includes(brand.slug)
-                      ? "border-black bg-black text-white"
-                      : "border-neutral-200 hover:border-black"
-                  }`}
-                >
-                  {brand.label}
-                </button>
-              ))}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = brandDropdownOpen;
+                  closeAllDropdowns();
+                  setBrandDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                  filters.selectedBrands.length > 0
+                    ? "border-black bg-black text-white"
+                    : "border-neutral-200 hover:border-black"
+                }`}
+              >
+                {filters.selectedBrands.length > 0
+                  ? `Brand (${filters.selectedBrands.length})`
+                  : "Brand"}
+                <ChevronDown size={16} />
+              </button>
+              {brandDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setBrandDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto">
+                    {brands.map((brand) => (
+                      <button
+                        key={brand.slug}
+                        onClick={() => toggleBrand(brand.slug)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                          filters.selectedBrands.includes(brand.slug)
+                            ? "bg-neutral-100 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {brand.label}
+                        {filters.selectedBrands.includes(brand.slug) && (
+                          <span className="text-black">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          {/* Store Filters */}
+          {/* Store Dropdown */}
           {stores.length > 1 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-wide text-neutral-500">
-                Store:
-              </span>
-              {stores.map((store) => (
-                <button
-                  key={store.slug}
-                  onClick={() => toggleStore(store.slug)}
-                  className={`px-3 py-1.5 text-sm border transition ${
-                    filters.selectedStores.includes(store.slug)
-                      ? "border-black bg-black text-white"
-                      : "border-neutral-200 hover:border-black"
-                  }`}
-                >
-                  {store.name}
-                </button>
-              ))}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = storeDropdownOpen;
+                  closeAllDropdowns();
+                  setStoreDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                  filters.selectedStores.length > 0
+                    ? "border-black bg-black text-white"
+                    : "border-neutral-200 hover:border-black"
+                }`}
+              >
+                {filters.selectedStores.length > 0
+                  ? `Store (${filters.selectedStores.length})`
+                  : "Store"}
+                <ChevronDown size={16} />
+              </button>
+              {storeDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setStoreDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px]">
+                    {stores.map((store) => (
+                      <button
+                        key={store.slug}
+                        onClick={() => toggleStore(store.slug)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                          filters.selectedStores.includes(store.slug)
+                            ? "bg-neutral-100 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {store.name}
+                        {filters.selectedStores.includes(store.slug) && (
+                          <span className="text-black">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -276,8 +369,9 @@ export default function ProductFilter({
           <div className="relative ml-auto">
             <button
               onClick={() => {
-                setSortDropdownOpen(!sortDropdownOpen);
-                setPriceDropdownOpen(false);
+                const wasOpen = sortDropdownOpen;
+                closeAllDropdowns();
+                setSortDropdownOpen(!wasOpen);
               }}
               className="flex items-center gap-2 px-4 py-2.5 border border-neutral-200 text-sm hover:border-black transition"
             >
