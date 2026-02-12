@@ -31,15 +31,12 @@ export default async function CategoriesPage() {
 
   return (
     <main className="bg-white min-h-screen text-black">
-      <section className="bg-[#f7f6f3] py-24 sm:py-32">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-            Explore
-          </p>
-          <h1 className="text-5xl sm:text-6xl font-serif mb-6">
+      <section className="border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
             Shop by Category
           </h1>
-          <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             Browse curated vintage and resale across our most-loved categories.
           </p>
         </div>

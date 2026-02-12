@@ -45,18 +45,19 @@ export default async function CategoryPage({
 
   return (
     <main className="bg-white min-h-screen text-black">
-      {/* ================= CATEGORY HERO ================= */}
-      <section className="bg-[#f7f6f3] py-24 sm:py-32">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-            Category
-          </p>
-
-          <h1 className="text-5xl sm:text-6xl font-serif mb-6">
+      {/* ================= CATEGORY HEADER ================= */}
+      <section className="border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+          <Link
+            href="/categories"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+          >
+            &larr; All Categories
+          </Link>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
             {categoryMeta.label}
           </h1>
-
-          <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             Curated {categoryMeta.label.toLowerCase()} from independent vintage
             and resale stores.
           </p>
@@ -66,17 +67,6 @@ export default async function CategoryPage({
       {/* ================= PRODUCTS WITH FILTERS ================= */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-end justify-between mb-8">
-            <h2 className="text-3xl font-serif">Available pieces</h2>
-
-            <Link
-              href="/categories"
-              className="text-sm uppercase tracking-wide underline hover:no-underline"
-            >
-              Back to categories
-            </Link>
-          </div>
-
           <FilteredProductGrid
             products={filteredProducts}
             stores={storeList}

@@ -87,8 +87,8 @@ export default function HomePage() {
       </div>
     </ScrollReveal>
 
-    {/* Store grid */}
-    <div className="px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12">
+    {/* Store grid — horizontal scroll on mobile, 3-col on desktop */}
+    <div className="px-6 flex gap-5 overflow-x-auto snap-x snap-mandatory sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-12 sm:overflow-visible pb-4 sm:pb-0 -mx-6 px-6 sm:mx-0">
       {[
         { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
         { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
@@ -97,7 +97,7 @@ export default function HomePage() {
         <ScrollReveal key={store.slug} delay={i * 150}>
           <Link
             href={`/stores/${store.slug}`}
-            className="group block w-full"
+            className="group block w-[70vw] flex-shrink-0 snap-start sm:w-auto"
           >
             {/* Image */}
             <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
@@ -105,7 +105,7 @@ export default function HomePage() {
                 src={store.image}
                 alt={store.name}
                 fill
-                sizes="(min-width: 768px) 50vw, 100vw"
+                sizes="(min-width: 768px) 50vw, 70vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />

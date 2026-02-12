@@ -8,11 +8,11 @@ export default function StoresPage() {
 
       {/* ================= HEADER ================= */}
       <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-16 sm:py-28">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif mb-4 sm:mb-6">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
             Explore Our Stores
           </h1>
-          <p className="text-neutral-600 text-base sm:text-lg max-w-2xl">
+          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             A curated selection of independent vintage and resale stores,
             each with a distinct point of view.
           </p>
@@ -22,7 +22,7 @@ export default function StoresPage() {
       {/* ================= STORES GRID ================= */}
       <section className="py-16 sm:py-28">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-12 sm:gap-y-24">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-24">
 
             {stores.map((store) => (
               <div key={store.slug} className="group">

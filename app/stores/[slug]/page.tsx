@@ -47,23 +47,23 @@ export default async function StorePage({ params }: StorePageProps) {
     <main className="bg-white min-h-screen">
       {/* ================= STORE HEADER ================= */}
       <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-28">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <Link
             href="/stores"
-            className="inline-block mb-12 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
           >
-            ← All Stores
+            &larr; All Stores
           </Link>
 
-          <div className="flex items-center gap-4 mb-4">
-            <h1 className="text-4xl sm:text-5xl font-serif">{store.name}</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-serif">{store.name}</h1>
             <FavoriteButton type="store" targetId={store.slug} size="md" />
           </div>
 
-          <p className="text-sm text-neutral-600 mb-6">{store.location}</p>
+          <p className="text-sm text-neutral-500 mb-3">{store.location}</p>
 
           {store.description && (
-            <p className="text-neutral-700 max-w-xl">{store.description}</p>
+            <p className="text-sm sm:text-base text-neutral-600 max-w-xl">{store.description}</p>
           )}
         </div>
       </section>
