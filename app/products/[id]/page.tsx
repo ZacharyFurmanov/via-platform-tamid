@@ -48,19 +48,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     productImages = [product.image];
   }
 
-  // Build direct checkout URL for Shopify stores (uses variant ID + affiliate path + discount)
+  // Build direct checkout URL for Shopify stores (uses variant ID + discount code)
   let checkoutUrl = product.external_url || "";
   if (product.variant_id && product.external_url) {
     try {
       const productUrl = new URL(product.external_url);
       const storeConfig = stores.find((s) => s.slug === product.store_slug);
-      const affiliatePath = storeConfig && "affiliatePath" in storeConfig ? storeConfig.affiliatePath : null;
       const discountCode = storeConfig && "discountCode" in storeConfig ? storeConfig.discountCode : null;
-      const cartPath = affiliatePath
-        ? `/${affiliatePath}/cart/${product.variant_id}:1`
-        : `/cart/${product.variant_id}:1`;
       const discountParam = discountCode ? `?discount=${discountCode}` : "";
-      checkoutUrl = `${productUrl.origin}${cartPath}${discountParam}`;
+      checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1${discountParam}`;
     } catch {}
   }
 
