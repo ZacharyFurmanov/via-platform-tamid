@@ -91,6 +91,16 @@ export default function CartPage() {
                 {/* Items */}
                 <div className="space-y-4">
                   {group.items.map((item) => {
+                    // Route through /api/track for click logging + via_click_id attribution
+                    const trackingParams = new URLSearchParams({
+                      pid: item.compositeId,
+                      pn: item.title,
+                      s: item.storeName,
+                      ss: item.storeSlug,
+                      url: item.checkoutUrl,
+                    });
+                    const trackingUrl = `/api/track?${trackingParams.toString()}`;
+
                     return (
                       <div
                         key={item.compositeId}
@@ -130,7 +140,7 @@ export default function CartPage() {
 
                           {/* Per-item checkout */}
                           <a
-                            href={item.checkoutUrl}
+                            href={trackingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-block mt-3 text-xs uppercase tracking-wide underline text-neutral-600 hover:text-black transition"
