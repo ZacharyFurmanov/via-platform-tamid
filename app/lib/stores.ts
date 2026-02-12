@@ -33,6 +33,7 @@ export const stores = [
     image: "/stores/placeholder.svg",
     currency: "GBP",
     affiliatePath: "VIAXSCARZ",
+    discountCode: "VIAXSCARZ",
     perk: "VIA customers get free shipping",
   },
 ];
