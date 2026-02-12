@@ -1,63 +1,62 @@
-
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
-import { getActiveCategories } from "@/app/lib/getActiveCategories";
-import Container from "@/app/components/container";
+import { getInventory } from "@/app/lib/inventory";
+import { stores } from "@/app/lib/stores";
+import { categories } from "@/app/lib/categories";
+import { categoryMap } from "@/app/lib/categoryMap";
+import FilteredProductGrid from "@/app/components/FilteredProductGrid";
+import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 
 export default async function CategoriesPage() {
-  const categories = await getActiveCategories();
-  {categories.length === 0 && (
-    <p className="text-neutral-500">Categories coming soon.</p>
-  )}  
+  const inventory = await getInventory();
+
+  const products: FilterableProduct[] = inventory.map((item, idx) => ({
+    id: item.id,
+    title: item.title,
+    price: item.price,
+    category: item.category,
+    categoryLabel: categoryMap[item.category as keyof typeof categoryMap],
+    brand: item.brand,
+    brandLabel: item.brandLabel,
+    store: item.store,
+    storeSlug: item.storeSlug,
+    externalUrl: item.externalUrl,
+    image: item.image,
+    images: item.images,
+    createdAt: Date.now() - idx * 1000,
+  }));
+
+  const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
+  const categoryList = categories.map((c) => ({ slug: c.slug, label: c.label }));
 
   return (
-    <main className="bg-white min-h-screen">
-
-      {/* ================= HEADER ================= */}
-      <section className="border-b border-neutral-200">
-        <Container>
-          <div className="py-28">
-            <h1 className="text-5xl sm:text-6xl font-serif mb-6">
-              Shop by Category
-            </h1>
-
-            <p className="text-neutral-600 text-lg max-w-2xl">
-              Browse curated vintage and resale across our most-loved categories.
-            </p>
-          </div>
-        </Container>
+    <main className="bg-white min-h-screen text-black">
+      <section className="bg-[#f7f6f3] py-24 sm:py-32">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
+            Explore
+          </p>
+          <h1 className="text-5xl sm:text-6xl font-serif mb-6">
+            Shop by Category
+          </h1>
+          <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
+            Browse curated vintage and resale across our most-loved categories.
+          </p>
+        </div>
       </section>
 
-      {/* ================= CATEGORY GRID ================= */}
-      <section className="py-32">
-        <Container>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-10 gap-y-28">
-            {categories.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/categories/${cat.slug}`}
-                className="group"
-              >
-                {/* IMAGE */}
-                <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden mb-6">
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                  />
-                </div>
-
-                {/* TEXT */}
-                <h2 className="text-xl font-serif group-hover:underline underline-offset-4">
-                  {cat.label}
-                </h2>
-              </Link>
-            ))}
-          </div>
-        </Container>
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <FilteredProductGrid
+            products={products}
+            stores={storeList}
+            categories={categoryList}
+            showCategoryFilter={true}
+            showBrandFilter={true}
+            emptyMessage="No products found. Check back soon for new arrivals."
+          />
+        </div>
       </section>
-
     </main>
   );
 }
