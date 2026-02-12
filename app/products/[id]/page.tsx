@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductById, getRecommendedProducts } from "@/app/lib/db";
-import { stores } from "@/app/lib/stores";
+import { stores, convertToUSD } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { createTrackingUrl } from "@/app/lib/track";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
@@ -34,7 +34,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const categorySlug = inferCategoryFromTitle(product.title);
   const categoryLabel = categoryMap[categorySlug];
-  const price = `$${Number(product.price)}`;
+  const price = `$${convertToUSD(Number(product.price), product.store_slug)}`;
 
   // Parse images from DB
   let productImages: string[] = [];
@@ -163,7 +163,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {recommendations.map((rec) => {
                 const recId = `${rec.store_slug}-${rec.id}`;
-                const recPrice = `$${Number(rec.price)}`;
+                const recPrice = `$${convertToUSD(Number(rec.price), rec.store_slug)}`;
                 const recCategory = categoryMap[inferCategoryFromTitle(rec.title)];
 
                 let recImages: string[] = [];

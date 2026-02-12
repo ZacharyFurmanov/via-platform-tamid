@@ -2,6 +2,7 @@ import type { StoreProduct } from "./types";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
+import { convertToUSD } from "./stores";
 
 export const inferCategoryFromTitle = (title: string): CategorySlug => {
   const t = title.toLowerCase();
@@ -90,7 +91,7 @@ function parseImages(product: DBProduct): string[] {
 
 // Transform database product to StoreProduct format
 function transformDBProduct(product: DBProduct): StoreProduct {
-  const priceString = `$${Number(product.price)}`;
+  const priceString = `$${convertToUSD(Number(product.price), product.store_slug)}`;
 
   return {
     id: `${product.store_slug}-${product.id}`,
