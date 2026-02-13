@@ -91,6 +91,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
         <Link
           href={from || `/stores/${store.slug}`}
+          scroll={false}
           className="inline-block text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
         >
           &larr; {from?.startsWith("/categories/")
