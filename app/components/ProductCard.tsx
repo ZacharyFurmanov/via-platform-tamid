@@ -15,6 +15,7 @@ type ProductCardProps = {
   image: string;
   images?: string[];
   favoriteCount?: number;
+  from?: string;
 };
 
 export default function ProductCard({
@@ -27,6 +28,7 @@ export default function ProductCard({
   image,
   images,
   favoriteCount,
+  from,
 }: ProductCardProps) {
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
@@ -39,7 +41,7 @@ export default function ProductCard({
 
   return (
     <div className="relative group">
-      <Link href={`/products/${id}`} className="cursor-pointer text-black block">
+      <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-black block">
         <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
         {/* Product info with mobile-friendly text sizes */}

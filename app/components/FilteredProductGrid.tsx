@@ -33,6 +33,7 @@ type FilteredProductGridProps = {
   showCategoryFilter?: boolean;
   showBrandFilter?: boolean;
   emptyMessage?: string;
+  from?: string;
 };
 
 function matchesPriceRange(price: number, range: PriceRange): boolean {
@@ -82,6 +83,7 @@ export default function FilteredProductGrid({
   showCategoryFilter = false,
   showBrandFilter = false,
   emptyMessage = "No products found.",
+  from,
 }: FilteredProductGridProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: "",
@@ -252,6 +254,7 @@ export default function FilteredProductGrid({
                 externalUrl={product.externalUrl}
                 image={product.image}
                 images={product.images}
+                from={from}
                 favoriteCount={
                   favCounts[
                     product.dbId ??

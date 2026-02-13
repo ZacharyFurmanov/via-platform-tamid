@@ -67,7 +67,7 @@ export default async function StorePage({ params }: StorePageProps) {
           )}
 
           {"perk" in store && store.perk && (
-            <p className="mt-4 text-sm font-medium text-black">
+            <p className="mt-4 text-sm font-medium text-black italic">
               {store.perk}
             </p>
           )}

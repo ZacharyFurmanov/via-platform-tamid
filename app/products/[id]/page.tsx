@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getProductById, getRecommendedProducts } from "@/app/lib/db";
 import { stores, convertToUSD } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
+import { categories } from "@/app/lib/categories";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
@@ -11,10 +12,12 @@ import { getProductFavoriteCount } from "@/app/lib/favorites-db";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 };
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { id: compositeId } = await params;
+  const { from } = await searchParams;
 
   // Parse the DB integer ID from composite format: "store-slug-123"
   const match = compositeId.match(/^(.+)-(\d+)$/);
@@ -87,10 +90,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
         <Link
-          href={`/stores/${store.slug}`}
+          href={from || `/stores/${store.slug}`}
           className="inline-block text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
         >
-          &larr; {store.name}
+          &larr; {from?.startsWith("/categories/")
+            ? categories.find((c) => `/categories/${c.slug}` === from)?.label ?? "Category"
+            : from === "/browse"
+            ? "Browse"
+            : store.name}
         </Link>
       </div>
 

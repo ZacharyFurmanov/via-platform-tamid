@@ -27,7 +27,8 @@ export const stores = [
     slug: "scarz-vintage",
     name: "SCARZ Vintage",
     location: "London, UK",
-    description: "",
+    description:
+      "Scarz Vintage is a curated collection of archival clothing and accessories founded by Scarlett, rooted in a love for timeless design and intentional sourcing. Each piece is hand-selected for its character and story, from rare finds to standout runway pieces, offering distinctive vintage you won't see everywhere else. Guided by sustainability and individuality, Scarz gives exceptional pieces a second life.",
     website: "https://scarzvintage.com",
     dataSource: "scarz-vintage",
     image: "/stores/scarz-vintage.jpg",

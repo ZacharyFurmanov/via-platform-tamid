@@ -70,6 +70,7 @@ export default async function CategoryPage({
           <FilteredProductGrid
             products={filteredProducts}
             stores={storeList}
+            from={`/categories/${category}`}
             emptyMessage="No products found in this category."
           />
         </div>

@@ -82,6 +82,7 @@ export default async function BrowsePage() {
             categories={categoryList}
             showCategoryFilter={true}
             showBrandFilter={true}
+            from="/browse"
             emptyMessage="No products found. Check back soon for new arrivals."
           />
         </div>
