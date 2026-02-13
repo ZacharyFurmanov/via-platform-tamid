@@ -7,6 +7,7 @@ import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
+import { getProductFavoriteCount } from "@/app/lib/favorites-db";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -59,6 +60,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1${discountParam}`;
     } catch {}
   }
+
+  // Fetch favorite count for this product
+  const favoriteCount = await getProductFavoriteCount(dbId);
 
   // Fetch recommended products from the same category
   const allCandidates = await getRecommendedProducts(dbId, 30);
@@ -117,7 +121,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <div className="flex items-center gap-4 mb-8">
               <p className="text-2xl font-medium text-black">{price}</p>
-              <FavoriteButton type="product" targetId={dbId} size="md" />
+              <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />
             </div>
 
             {/* Description / product details */}

@@ -34,7 +34,7 @@ export async function sendGiveawayConfirmation(email: string, referralCode: stri
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: "You're in — VIA Giveaway",
+    subject: "You're almost there — VIA Giveaway",
     html: `
 <!DOCTYPE html>
 <html>
@@ -43,8 +43,8 @@ export async function sendGiveawayConfirmation(email: string, referralCode: stri
   <div class="container">
     <div class="header"><h1>VIA</h1></div>
     <div class="content">
-      <h2>You're entered in the VIA Giveaway.</h2>
-      <p>Thanks for entering. To be officially entered to win a $1,000 shopping spree on VIA, share your unique link with two friends and have them enter too.</p>
+      <h2>You're almost there.</h2>
+      <p>Thanks for signing up! You're just a few steps away from being officially entered to win a $1,000 shopping spree on VIA. Share your unique link with two friends and have them enter too.</p>
       <p><strong>Your unique referral link:</strong></p>
       <div class="link-box">${referralLink}</div>
       <p>Send this link to two friends. Once both enter, you'll be officially in the running.</p>

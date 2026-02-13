@@ -126,6 +126,37 @@ export async function getUserFavoritedProducts(userId: string): Promise<DBProduc
 }
 
 /**
+ * Get the total number of users who favorited a given product.
+ */
+export async function getProductFavoriteCount(productId: number): Promise<number> {
+  await initFavoritesTables();
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`SELECT COUNT(*)::int as count FROM product_favorites WHERE product_id = ${productId}`;
+  return rows[0]?.count ?? 0;
+}
+
+/**
+ * Get favorite counts for multiple products at once.
+ * Returns a map of productId -> count.
+ */
+export async function getProductFavoriteCounts(productIds: number[]): Promise<Record<number, number>> {
+  if (productIds.length === 0) return {};
+  await initFavoritesTables();
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`
+    SELECT product_id, COUNT(*)::int as count
+    FROM product_favorites
+    WHERE product_id = ANY(${productIds})
+    GROUP BY product_id
+  `;
+  const counts: Record<number, number> = {};
+  for (const row of rows) {
+    counts[row.product_id as number] = row.count as number;
+  }
+  return counts;
+}
+
+/**
  * Get all users who favorited a given product (for notifications).
  */
 export async function getUsersWhoFavoritedProduct(

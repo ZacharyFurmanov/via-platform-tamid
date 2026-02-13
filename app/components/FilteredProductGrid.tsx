@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import ProductFilter, {
   FilterState,
   PriceRange,
@@ -176,6 +176,28 @@ export default function FilteredProductGrid({
     return Array.from(bMap.values());
   }, [products]);
 
+  // Fetch favorite counts for all products
+  const [favCounts, setFavCounts] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    const dbIds = products
+      .map((p) => {
+        if (p.dbId) return p.dbId;
+        const match = p.id.match(/-(\d+)$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((id): id is number => id != null);
+
+    if (dbIds.length === 0) return;
+
+    fetch(`/api/favorites/counts?ids=${dbIds.join(",")}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.counts) setFavCounts(data.counts);
+      })
+      .catch(() => {});
+  }, [products]);
+
   return (
     <div>
       <ProductFilter
@@ -230,6 +252,15 @@ export default function FilteredProductGrid({
                 externalUrl={product.externalUrl}
                 image={product.image}
                 images={product.images}
+                favoriteCount={
+                  favCounts[
+                    product.dbId ??
+                      (() => {
+                        const m = product.id.match(/-(\d+)$/);
+                        return m ? parseInt(m[1], 10) : 0;
+                      })()
+                  ]
+                }
               />
             </div>
           ))}

@@ -246,6 +246,64 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ================= STORY BEHIND THE SELECTION ================= */}
+      <section className="bg-neutral-100 py-20 sm:py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <ScrollReveal>
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
+                  The Story Behind the Selection
+                </p>
+                <h2 className="text-3xl sm:text-5xl font-serif text-black">
+                  Why we chose them
+                </h2>
+              </div>
+
+              <Link
+                href="/stories"
+                className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+              >
+                View all stories
+              </Link>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={150}>
+            <Link
+              href="/stories/lei-vintage"
+              className="group block md:grid md:grid-cols-2 md:gap-12 items-center"
+            >
+              <div className="aspect-[4/5] relative overflow-hidden mb-6 md:mb-0 rounded-sm">
+                <Image
+                  src="/stores/LEI.jpg"
+                  alt="LEI Vintage"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
+              </div>
+
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-serif text-black mb-4">
+                  LEI Vintage
+                </h3>
+                <p className="text-neutral-600 leading-relaxed mb-4">
+                  Some brands start with a new collection. LEI started with a
+                  realization. When Leila began dreaming about building her own
+                  clothing line, she hit a truth she couldn&apos;t ignore&mdash;the world
+                  doesn&apos;t need more clothes. It needs better choices.
+                </p>
+                <span className="inline-block text-sm uppercase tracking-[0.15em] text-neutral-500 group-hover:text-black transition">
+                  Read the full story &rarr;
+                </span>
+              </div>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ================= VIA EXPERIENCE / WAITLIST ================= */}
       <section className="bg-black py-20 sm:py-32 text-white">
         <div className="max-w-7xl mx-auto px-6 text-center">

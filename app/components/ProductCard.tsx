@@ -14,6 +14,7 @@ type ProductCardProps = {
   externalUrl?: string;
   image: string;
   images?: string[];
+  favoriteCount?: number;
 };
 
 export default function ProductCard({
@@ -25,6 +26,7 @@ export default function ProductCard({
   storeName,
   image,
   images,
+  favoriteCount,
 }: ProductCardProps) {
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
@@ -59,7 +61,7 @@ export default function ProductCard({
       {/* Favorite button overlay */}
       {numericId != null && (
         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
-          <FavoriteButton type="product" targetId={numericId} size="sm" />
+          <FavoriteButton type="product" targetId={numericId} size="sm" favoriteCount={favoriteCount} />
         </div>
       )}
     </div>

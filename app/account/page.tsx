@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
-import { getUserFavoritedProducts } from "@/app/lib/favorites-db";
+import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
@@ -28,6 +28,7 @@ export default async function AccountPage() {
   let favProducts: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
   let favStoreSlugs: string[] = [];
   let notificationsEnabled = true;
+  let favCounts: Record<number, number> = {};
 
   if (userId) {
     try {
@@ -36,6 +37,9 @@ export default async function AccountPage() {
         getUserStoreFavoriteIds(userId),
         getNotificationPreference(userId),
       ]);
+      if (favProducts.length > 0) {
+        favCounts = await getProductFavoriteCounts(favProducts.map((p) => p.id));
+      }
     } catch (err) {
       console.error("Failed to load account data:", err);
     }
@@ -111,6 +115,7 @@ export default async function AccountPage() {
                   storeSlug={product.store_slug}
                   image={product.image || ""}
                   images={images}
+                  favoriteCount={favCounts[product.id]}
                 />
               );
             })}
