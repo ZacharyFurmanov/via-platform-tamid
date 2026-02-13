@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import StoriesHero from "./StoriesHero";
 
 export const metadata = {
   title: "The Story Behind the Selection | VIA",
@@ -27,21 +28,8 @@ const stories = [
 export default function StoriesPage() {
   return (
     <main className="bg-white min-h-screen text-black">
-      {/* Header */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-16 sm:py-24">
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-500 mb-4">
-            The Story Behind the Selection
-          </p>
-          <h1 className="text-3xl sm:text-5xl font-serif mb-4">
-            Why we chose them
-          </h1>
-          <p className="max-w-2xl text-neutral-600 text-base sm:text-lg">
-            Every store on VIA has a story worth telling. Here&apos;s why we selected
-            each one.
-          </p>
-        </div>
-      </section>
+      {/* Scrolling hero */}
+      <StoriesHero stories={stories} />
 
       {/* Stories grid */}
       <section className="py-16 sm:py-24">
