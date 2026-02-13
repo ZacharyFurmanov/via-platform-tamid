@@ -28,7 +28,7 @@ export default function FAQsPage() {
     },
     {
       q: "Where do stores on VIA ship?",
-      a: "Most stores ship worldwide, and some offer international shipping. Shipping availability and costs are determined by each store.",
+      a: "Stores decide where they ship, but most stores ship worldwide.",
     },
     {
       q: "How are stores selected for VIA?",

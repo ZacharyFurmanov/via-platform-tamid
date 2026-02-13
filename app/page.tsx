@@ -238,7 +238,7 @@ export default function HomePage() {
               },
               {
                 q: "Where do you ship?",
-                a: "Stores on VIA ship worldwide, and some offer international shipping.",
+                a: "Stores decide where they ship, but most stores ship worldwide.",
               },
             ]}
           />
