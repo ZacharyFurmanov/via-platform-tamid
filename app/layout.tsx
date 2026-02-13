@@ -10,6 +10,7 @@ import { GiveawayProvider } from "./components/GiveawayProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { FavoritesProvider } from "./components/FavoritesProvider";
 import { CartProvider } from "./components/CartProvider";
+import ScrollToTop from "./components/ScrollToTop";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -67,6 +68,7 @@ export default function RootLayout({
           <FavoritesProvider>
             <CartProvider>
               <GiveawayProvider>
+                <ScrollToTop />
                 <Header />
                 <main className="pt-20">{children}</main>
                 <Footer />
