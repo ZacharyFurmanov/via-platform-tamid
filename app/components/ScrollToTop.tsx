@@ -17,7 +17,7 @@ export default function ScrollToTop() {
       ) {
         return;
       }
-      return originalScrollTo.apply(window, args);
+      return originalScrollTo.apply(window, args as [number, number]);
     };
 
     return () => {
