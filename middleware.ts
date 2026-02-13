@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = [
 ];
 
 // Routes that require user authentication (Auth.js session)
+// Now all non-public, non-admin routes require auth
 const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account"];
 
 // Simple hash function for admin password comparison
@@ -49,6 +50,8 @@ function hasUserSession(request: NextRequest): boolean {
 }
 
 function isPublicRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
+
   const normalizedPath =
     pathname.endsWith("/") && pathname !== "/"
       ? pathname.slice(0, -1)
@@ -111,10 +114,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // All other routes: require admin auth, otherwise redirect to waitlist
-  if (!isAdminAuthenticated(request)) {
-    const waitlistUrl = new URL("/waitlist", request.url);
-    return NextResponse.redirect(waitlistUrl);
+  // All other routes: require user session (or admin auth) to browse
+  if (!hasUserSession(request) && !isAdminAuthenticated(request)) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

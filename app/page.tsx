@@ -93,7 +93,7 @@ export default function HomePage() {
         {[
           { slug: "lei-vintage", name: "LEI Vintage", image: "/stores/LEI.jpg", location: "Boston, MA" },
           { slug: "vintage-archives-la", name: "Vintage Archives LA", image: "/stores/VintageArchivesLA.jpg", location: "Los Angeles, CA" },
-          { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/placeholder.svg", location: "London, UK" },
+          { slug: "scarz-vintage", name: "SCARZ Vintage", image: "/stores/scarz-vintage.jpg", location: "London, UK" },
         ].map((store, i) => (
           <ScrollReveal key={store.slug} delay={i * 150}>
             <Link

@@ -13,7 +13,7 @@ export default function TermsPage() {
             Terms &amp; Conditions
           </h1>
           <p className="text-sm text-gray-500">
-            Last updated: January 29, 2026
+            Last updated: February 13, 2026
           </p>
         </div>
 
@@ -73,7 +73,31 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              5. Products and Purchases
+              5. Email Communications
+            </h2>
+            <p className="mb-3">
+              By creating an account, you consent to receive the following types
+              of email communications from VIA:
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong>Transactional emails</strong> — sign-in links, order
+                notifications, and other messages required for account
+                functionality. These cannot be opted out of while your account
+                is active.
+              </li>
+              <li>
+                <strong>Marketing and promotional emails</strong> — updates
+                about new stores, products, features, and curated picks. You
+                can unsubscribe from these at any time via your account
+                settings or the unsubscribe link included in each email.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-serif mb-4 text-black">
+              6. Products and Purchases
             </h2>
             <p className="mb-3">
               VIA acts as an intermediary platform connecting buyers with
@@ -90,7 +114,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              6. Intellectual Property
+              7. Intellectual Property
             </h2>
             <p>
               The Service and its original content, features, and functionality
@@ -104,7 +128,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              7. User-Generated Content
+              8. User-Generated Content
             </h2>
             <p>
               By submitting content to the Service, including but not limited to
@@ -118,7 +142,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              8. Third-Party Links
+              9. Third-Party Links
             </h2>
             <p>
               Our Service may contain links to third-party websites or services
@@ -133,7 +157,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              9. Disclaimer of Warranties
+              10. Disclaimer of Warranties
             </h2>
             <p>
               The Service is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS
@@ -148,7 +172,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              10. Limitation of Liability
+              11. Limitation of Liability
             </h2>
             <p>
               In no event shall VIA Platform, nor its directors, employees,
@@ -162,7 +186,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              11. Indemnification
+              12. Indemnification
             </h2>
             <p>
               You agree to defend, indemnify, and hold harmless VIA Platform and
@@ -175,7 +199,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              12. Governing Law
+              13. Governing Law
             </h2>
             <p>
               These Terms shall be governed and construed in accordance with the
@@ -187,7 +211,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              13. Changes to Terms
+              14. Changes to Terms
             </h2>
             <p>
               We reserve the right, at our sole discretion, to modify or replace
@@ -202,7 +226,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-serif mb-4 text-black">
-              14. Contact Us
+              15. Contact Us
             </h2>
             <p>
               If you have any questions about these Terms, please contact us at{" "}

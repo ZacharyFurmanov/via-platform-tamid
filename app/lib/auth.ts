@@ -21,7 +21,14 @@ function baseStyles() {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: neonAdapter,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  cookies: {
+    sessionToken: {
+      options: {
+        maxAge: 30 * 24 * 60 * 60,
+      },
+    },
+  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

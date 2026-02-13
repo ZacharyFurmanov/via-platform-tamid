@@ -2,17 +2,20 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    await signIn("resend", { email, callbackUrl: "/account" });
+    await signIn("resend", { email, callbackUrl });
   }
 
   return (
@@ -22,12 +25,12 @@ export default function LoginPage() {
           Sign in to VIA
         </h1>
         <p className="text-sm text-black/50 text-center mb-10">
-          Save your favorite pieces and get notified when they&apos;re trending.
+          Create an account to start shopping.
         </p>
 
         {/* Google */}
         <button
-          onClick={() => signIn("google", { callbackUrl: "/account" })}
+          onClick={() => signIn("google", { callbackUrl })}
           className="w-full flex items-center justify-center gap-3 bg-black text-white py-3.5 text-sm uppercase tracking-wide hover:bg-neutral-800 transition mb-3"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -65,10 +68,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-[11px] text-black/40 text-center mt-8">
+        <p className="text-[11px] text-black/40 text-center mt-8 leading-relaxed">
           By signing in, you agree to our{" "}
           <Link href="/terms" className="underline">Terms</Link> and{" "}
-          <Link href="/privacy" className="underline">Privacy Policy</Link>.
+          <Link href="/privacy" className="underline">Privacy Policy</Link>, and
+          to receive email updates from VIA. You can unsubscribe at any time.
         </p>
       </div>
     </main>

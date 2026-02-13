@@ -30,7 +30,7 @@ export const stores = [
     description: "",
     website: "https://scarzvintage.com",
     dataSource: "scarz-vintage",
-    image: "/stores/placeholder.svg",
+    image: "/stores/scarz-vintage.jpg",
     currency: "GBP",
     affiliatePath: "VIAXSCARZ",
     discountCode: "VIAXSCARZ",
