@@ -3,6 +3,7 @@ import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
 import ScrollReveal from "./components/ScrollReveal";
 import SmoothScroll from "./components/SmoothScroll";
+import StoriesHero from "./components/StoriesHero";
 
 export default function HomePage() {
   return (
@@ -270,36 +271,22 @@ export default function HomePage() {
           </ScrollReveal>
 
           <ScrollReveal delay={150}>
-            <Link
-              href="/stories/lei-vintage"
-              className="group block md:grid md:grid-cols-2 md:gap-12 items-center"
-            >
-              <div className="aspect-[4/5] relative overflow-hidden mb-6 md:mb-0 rounded-sm">
-                <Image
-                  src="/stores/LEI.jpg"
-                  alt="LEI Vintage"
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-              </div>
-
-              <div>
-                <h3 className="text-2xl sm:text-3xl font-serif text-black mb-4">
-                  LEI Vintage
-                </h3>
-                <p className="text-neutral-600 leading-relaxed mb-4">
-                  Some brands start with a new collection. LEI started with a
-                  realization. When Leila began dreaming about building her own
-                  clothing line, she hit a truth she couldn&apos;t ignore&mdash;the world
-                  doesn&apos;t need more clothes. It needs better choices.
-                </p>
-                <span className="inline-block text-sm uppercase tracking-[0.15em] text-neutral-500 group-hover:text-black transition">
-                  Read the full story &rarr;
-                </span>
-              </div>
-            </Link>
+            <StoriesHero
+              stories={[
+                {
+                  slug: "lei-vintage",
+                  store: "LEI Vintage",
+                  teaser: "Some brands start with a new collection. LEI started with a realization — the world doesn't need more clothes. It needs better choices.",
+                  image: "/stores/LEI.jpg",
+                },
+                {
+                  slug: "vintage-archives-la",
+                  store: "Vintage Archives LA",
+                  teaser: "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
+                  image: "/stores/VintageArchivesLA.jpg",
+                },
+              ]}
+            />
           </ScrollReveal>
         </div>
       </section>
