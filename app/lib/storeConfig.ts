@@ -40,6 +40,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "scarz-vintage",
     storeDomain: "scarzvintage.com",
   },
+  {
+    type: "shopify",
+    name: "Missi Archives",
+    slug: "missi-archives",
+    storeDomain: "www.missiarchives.com",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];

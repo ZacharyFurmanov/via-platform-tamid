@@ -37,6 +37,20 @@ export const stores = [
     discountCode: "VIAXSCARZ",
     perk: "VIA customers get free shipping",
   },
+  {
+    slug: "missi-archives",
+    name: "Missi Archives",
+    location: "New York, NY",
+    description:
+      "Missi Archives is a curated vintage collection inspired by early 2000s fashion, street style, and model off-duty looks. Based in New York, each piece is hand-selected to feel both nostalgic and current — from standout clothing and bags to shoes and accessories, all chosen with an eye for individuality and timeless cool.",
+    website: "https://www.missiarchives.com",
+    dataSource: "missi-archives",
+    image: "/stores/missi-archives.jpg",
+    currency: "USD",
+    affiliatePath: "0001",
+    discountCode: "0001",
+    perk: "VIA customers get free shipping",
+  },
 ];
 
 // Approximate exchange rates to USD (update periodically)
