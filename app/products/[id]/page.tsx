@@ -4,6 +4,7 @@ import { getProductById, getRecommendedProducts } from "@/app/lib/db";
 import { stores, convertToUSD } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
+import BackButton from "@/app/components/BackButton";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
@@ -89,17 +90,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     <main className="bg-white min-h-screen">
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
-        <Link
-          href={from || `/stores/${store.slug}`}
-          scroll={false}
-          className="inline-block text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
-        >
-          &larr; {from?.startsWith("/categories/")
+        <BackButton
+          label={from?.startsWith("/categories/")
             ? categories.find((c) => `/categories/${c.slug}` === from)?.label ?? "Category"
             : from === "/browse"
             ? "Browse"
             : store.name}
-        </Link>
+        />
       </div>
 
       {/* Product layout */}
