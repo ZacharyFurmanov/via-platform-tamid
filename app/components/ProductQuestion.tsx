@@ -55,7 +55,7 @@ export default function ProductQuestion({
         onClick={() => setOpen(!open)}
         className="text-[11px] uppercase tracking-[0.15em] text-black/50 hover:text-black transition cursor-pointer"
       >
-        {open ? "− Close" : "+ Ask a Question"}
+        {open ? "− Close" : "+ Want more information on this item?"}
       </button>
 
       {open && (
