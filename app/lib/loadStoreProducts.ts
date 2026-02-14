@@ -66,6 +66,34 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
   return "clothes";
 };
 
+export const inferItemTypeFromTitle = (title: string): string | null => {
+  const t = title.toLowerCase();
+  const types = [
+    "jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers",
+    "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit",
+    "jumpsuit", "romper", "shorts", "cape", "poncho", "boot", "heel",
+    "sandal", "sneaker", "bag", "clutch", "tote", "top",
+  ];
+  for (const type of types) {
+    if (t.includes(type)) return type;
+  }
+  return null;
+};
+
+export const inferColorFromTitle = (title: string): string | null => {
+  const t = title.toLowerCase();
+  const colors = [
+    "multicolor", "burgundy", "maroon", "navy", "cream", "beige",
+    "ivory", "coral", "teal", "khaki", "camel", "olive", "silver",
+    "gold", "orange", "yellow", "purple", "brown", "green", "pink",
+    "grey", "gray", "black", "white", "red", "blue", "tan",
+  ];
+  for (const color of colors) {
+    if (t.includes(color)) return color;
+  }
+  return null;
+};
+
 export const inferBrandFromTitle = (title: string): string | null => {
   const t = title.toLowerCase();
   for (const brand of brandDefs) {

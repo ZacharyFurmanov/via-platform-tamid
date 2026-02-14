@@ -5,7 +5,7 @@ import { stores, convertToUSD } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
 import BackButton from "@/app/components/BackButton";
-import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
@@ -29,7 +29,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const dbId = parseInt(match[2], 10);
   if (isNaN(dbId)) return notFound();
 
-  const product = await getProductById(dbId);
+  // Run all three DB queries in parallel to minimize load time
+  const [product, favoriteCount, allCandidates] = await Promise.all([
+    getProductById(dbId),
+    getProductFavoriteCount(dbId),
+    getRecommendedProducts(dbId, 50),
+  ]);
   if (!product) return notFound();
 
   const store = stores.find((s) => s.slug === storeSlug) ?? {
@@ -65,27 +70,20 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1${discountParam}`;
     } catch {}
   }
+  const currentItemType = inferItemTypeFromTitle(product.title);
+  const currentColor = inferColorFromTitle(product.title);
+  const currentBrand = inferBrandFromTitle(product.title);
 
-  // Fetch favorite count for this product
-  const favoriteCount = await getProductFavoriteCount(dbId);
+  const scored = allCandidates.map((p) => {
+    let score = 0;
+    if (currentItemType && inferItemTypeFromTitle(p.title) === currentItemType) score += 4;
+    if (currentColor && inferColorFromTitle(p.title) === currentColor) score += 2;
+    if (currentBrand && inferBrandFromTitle(p.title) === currentBrand) score += 1;
+    return { product: p, score };
+  });
 
-  // Fetch recommended products from the same category
-  const allCandidates = await getRecommendedProducts(dbId, 30);
-  const recommendations = allCandidates
-    .filter((p) => inferCategoryFromTitle(p.title) === categorySlug)
-    .slice(0, 4);
-
-  // If not enough same-category products, backfill with others
-  if (recommendations.length < 4) {
-    const remaining = allCandidates
-      .filter(
-        (p) =>
-          inferCategoryFromTitle(p.title) !== categorySlug &&
-          !recommendations.some((r) => r.id === p.id)
-      )
-      .slice(0, 4 - recommendations.length);
-    recommendations.push(...remaining);
-  }
+  scored.sort((a, b) => b.score - a.score);
+  const recommendations = scored.slice(0, 4).map((s) => s.product);
 
   return (
     <main className="bg-white min-h-screen">

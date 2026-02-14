@@ -39,7 +39,7 @@ export default function HomePage() {
 
         <p className="max-w-xl mb-10 text-lg text-gray-200">
           Discover and browse independent vintage and resale stores worldwide.
-          The pieces you've been looking for, without the hunt. All verified by each store.
+          The pieces you've been looking for, without the hunt. All trusted and verified stores.
         </p>
 
         {/* CTA buttons */}

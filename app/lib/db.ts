@@ -174,7 +174,7 @@ export async function getAllProducts(): Promise<DBProduct[]> {
 
 /**
  * Get recommended products, excluding a specific product by ID.
- * Returns a pool of products to filter by category in application code.
+ * Uses random row sampling (no full-table sort) for speed, then limits.
  */
 export async function getRecommendedProducts(
   excludeId: number,
@@ -183,9 +183,8 @@ export async function getRecommendedProducts(
   const sql = neon(getDatabaseUrl());
 
   const result = await sql`
-    SELECT * FROM products
+    SELECT * FROM products TABLESAMPLE BERNOULLI(50)
     WHERE id != ${excludeId}
-    ORDER BY RANDOM()
     LIMIT ${limit}
   `;
   return result as DBProduct[];
