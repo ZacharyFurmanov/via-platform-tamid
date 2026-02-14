@@ -10,6 +10,7 @@ import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
 import { getProductFavoriteCount } from "@/app/lib/favorites-db";
+import ProductQuestion from "@/app/components/ProductQuestion";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -163,6 +164,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <p className="text-[11px] text-black/40 mt-4">
               You&apos;ll complete your purchase on {store.name}&apos;s website.
             </p>
+            <p className="text-[11px] text-black/40 mt-1">
+              All sales are final.
+            </p>
+
+            <ProductQuestion
+              productTitle={product.title}
+              storeName={store.name}
+              productUrl={`https://theviaplatform.com/products/${compositeId}`}
+            />
           </div>
         </div>
       </div>
