@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
+import { formatPrice } from "@/app/lib/stores";
 
 type ProductDetailModalProps = {
   isOpen: boolean;
@@ -138,7 +139,7 @@ export default function ProductDetailModal({
           <p className="text-sm text-black/60 mb-1">{product.categoryLabel}</p>
 
           <p className="text-xl font-medium text-black mb-6">
-            ${product.price}
+            {formatPrice(product.price, product.storeSlug)}
           </p>
 
           {/* Checkout button */}

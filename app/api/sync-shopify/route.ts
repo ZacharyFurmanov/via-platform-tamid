@@ -82,38 +82,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Approximate exchange rates to USD (update periodically)
-    const exchangeRatesToUSD: Record<string, number> = {
-      USD: 1,
-      GBP: 1.26,
-      EUR: 1.08,
-      CAD: 0.74,
-      AUD: 0.65,
-    };
-
     // Convert to standard format for storage, filtering out null prices
     const rawProducts = fetchResult.products.map(toRSSProductFormat);
     const products = rawProducts
       .filter((p) => p.price !== null)
-      .map((p) => {
-        let priceUSD = p.price as number;
-        if (p.currency && p.currency !== "USD") {
-          const rate = exchangeRatesToUSD[p.currency];
-          if (rate) {
-            priceUSD = Math.round(priceUSD * rate * 100) / 100;
-          }
-        }
-        return {
-          title: p.title,
-          price: priceUSD,
-          currency: "USD",
-          image: p.image ?? undefined,
-          images: p.images,
-          externalUrl: p.externalUrl,
-          description: p.description ?? undefined,
-          variantId: p.variantId ?? undefined,
-        };
-      });
+      .map((p) => ({
+        title: p.title,
+        price: p.price as number,
+        currency: p.currency || "USD",
+        image: p.image ?? undefined,
+        images: p.images,
+        externalUrl: p.externalUrl,
+        description: p.description ?? undefined,
+        variantId: p.variantId ?? undefined,
+      }));
     const skippedCount = fetchResult.skippedCount;
 
     // Create store slug from store name (kebab-case)

@@ -9,14 +9,6 @@ import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 
-// Approximate exchange rates to USD (update periodically)
-const exchangeRatesToUSD: Record<string, number> = {
-  USD: 1,
-  GBP: 1.26,
-  EUR: 1.08,
-  CAD: 0.74,
-  AUD: 0.65,
-};
 
 export async function GET(request: Request) {
   console.log("[Sync Stores] Cron job triggered");
@@ -67,25 +59,16 @@ export async function GET(request: Request) {
         const products = fetchResult.products
           .map(toRSSProductFormat)
           .filter((p) => p.price !== null)
-          .map((p) => {
-            let priceUSD = p.price as number;
-            if (p.currency && p.currency !== "USD") {
-              const rate = exchangeRatesToUSD[p.currency];
-              if (rate) {
-                priceUSD = Math.round(priceUSD * rate * 100) / 100;
-              }
-            }
-            return {
-              title: p.title,
-              price: priceUSD,
-              currency: "USD",
-              image: p.image ?? undefined,
-              images: p.images,
-              externalUrl: p.externalUrl,
-              description: p.description ?? undefined,
-              variantId: p.variantId ?? undefined,
-            };
-          });
+          .map((p) => ({
+            title: p.title,
+            price: p.price as number,
+            currency: p.currency || "USD",
+            image: p.image ?? undefined,
+            images: p.images,
+            externalUrl: p.externalUrl,
+            description: p.description ?? undefined,
+            variantId: p.variantId ?? undefined,
+          }));
 
         const productCount = await syncProducts(storeSlug, store.name, products);
         results.push({ store: store.name, success: true, productCount });

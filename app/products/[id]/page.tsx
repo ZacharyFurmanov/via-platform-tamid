@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductById, getRecommendedProducts } from "@/app/lib/db";
-import { stores, convertToUSD } from "@/app/lib/stores";
+import { stores, formatPrice } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
 import BackButton from "@/app/components/BackButton";
@@ -45,7 +45,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   const categorySlug = inferCategoryFromTitle(product.title);
   const categoryLabel = categoryMap[categorySlug];
-  const price = `$${convertToUSD(Number(product.price), product.store_slug)}`;
+  const price = formatPrice(Number(product.price), product.store_slug);
 
   // Parse images from DB
   let productImages: string[] = [];
@@ -142,7 +142,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 item={{
                   compositeId,
                   title: product.title,
-                  price: convertToUSD(Number(product.price), product.store_slug),
+                  price: Number(product.price),
                   image: productImages[0] || "",
                   storeName: store.name,
                   storeSlug: store.slug,
@@ -186,7 +186,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {recommendations.map((rec) => {
                 const recId = `${rec.store_slug}-${rec.id}`;
-                const recPrice = `$${convertToUSD(Number(rec.price), rec.store_slug)}`;
+                const recPrice = formatPrice(Number(rec.price), rec.store_slug);
                 const recCategory = categoryMap[inferCategoryFromTitle(rec.title)];
 
                 let recImages: string[] = [];

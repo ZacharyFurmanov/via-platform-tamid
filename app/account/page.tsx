@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
 import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
-import { stores } from "@/app/lib/stores";
+import { stores, formatPrice } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ProductCard from "@/app/components/ProductCard";
@@ -109,7 +109,7 @@ export default async function AccountPage() {
                   id={compositeId}
                   dbId={product.id}
                   name={product.title}
-                  price={`$${Number(product.price)}`}
+                  price={formatPrice(Number(product.price), product.store_slug)}
                   category={categoryLabel}
                   storeName={product.store_name}
                   storeSlug={product.store_slug}

@@ -2,7 +2,6 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
-import { convertToUSD } from "./stores";
 
 export type InventoryItem = {
   id: string;
@@ -38,7 +37,7 @@ function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
     category: inferCategoryFromTitle(product.title),
     brand: brandSlug,
     brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
-    price: convertToUSD(Number(product.price), product.store_slug),
+    price: Number(product.price),
     image: product.image ?? "/placeholder.jpg",
     images: parseImages(product),
     store: product.store_name,

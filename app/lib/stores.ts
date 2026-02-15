@@ -77,6 +77,7 @@ const exchangeRatesToUSD: Record<string, number> = {
 /**
  * Convert a price to USD based on the store's currency.
  * Uses the store slug to determine the source currency.
+ * Used internally for price filtering/sorting across currencies.
  */
 export function convertToUSD(price: number, storeSlug: string): number {
   const store = stores.find((s) => s.slug === storeSlug);
@@ -84,5 +85,24 @@ export function convertToUSD(price: number, storeSlug: string): number {
   if (currency === "USD") return price;
   const rate = exchangeRatesToUSD[currency] ?? 1;
   return Math.round(price * rate * 100) / 100;
+}
+
+const currencySymbols: Record<string, string> = {
+  USD: "$",
+  GBP: "£",
+  EUR: "€",
+  CAD: "CA$",
+  AUD: "A$",
+};
+
+/**
+ * Format a price with the correct currency symbol for a store.
+ * Shows the actual price the customer will pay at checkout.
+ */
+export function formatPrice(price: number, storeSlug: string): string {
+  const store = stores.find((s) => s.slug === storeSlug);
+  const currency = store?.currency ?? "USD";
+  const symbol = currencySymbols[currency] ?? "$";
+  return `${symbol}${price}`;
 }
   
