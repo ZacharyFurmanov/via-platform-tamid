@@ -8,6 +8,8 @@ export const stores = [
     website: "https://www.leivintage.com",
     dataSource: "lei-vintage",
     image: "/stores/LEI.jpg",
+    logo: "/stores/lei-vintage-logo.jpg",
+    logoBg: "#ffffff",
     currency: "USD",
     // No affiliatePath — uses Squarespace pixel for conversion tracking
   },
@@ -20,6 +22,8 @@ export const stores = [
     website: "https://vintagearchivesla.com",
     dataSource: "vintage-archives-la",
     image: "/stores/VintageArchivesLA.jpg",
+    logo: "/stores/vintage-archives-la-logo.jpg",
+    logoBg: "#fdf8d8",
     currency: "USD",
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
   },
@@ -32,6 +36,8 @@ export const stores = [
     website: "https://scarzvintage.com",
     dataSource: "scarz-vintage",
     image: "/stores/scarz-vintage.jpg",
+    logo: "/stores/scarz-vintage-logo.jpg",
+    logoBg: "#ffffff",
     currency: "GBP",
     affiliatePath: "VIAXSCARZ",
     discountCode: "VIAXSCARZ",
@@ -46,6 +52,9 @@ export const stores = [
     website: "https://www.missiarchives.com",
     dataSource: "missi-archives",
     image: "/stores/missi-archives.jpg",
+    logo: "/stores/missi-archives-logo.jpg",
+    logoBg: "#722f37",
+    logoDark: true,
     currency: "USD",
     affiliatePath: "0001",
     discountCode: "0001",
@@ -60,6 +69,8 @@ export const stores = [
     website: "https://ascensiovintage.com",
     dataSource: "ascensio-vintage",
     image: "/stores/ascensio-vintage.jpg",
+    logo: "/stores/ascensio-vintage-logo.jpg",
+    logoBg: "#ffffff",
     currency: "GBP",
     affiliatePath: "1234",
   },
@@ -77,7 +88,6 @@ const exchangeRatesToUSD: Record<string, number> = {
 /**
  * Convert a price to USD based on the store's currency.
  * Uses the store slug to determine the source currency.
- * Used internally for price filtering/sorting across currencies.
  */
 export function convertToUSD(price: number, storeSlug: string): number {
   const store = stores.find((s) => s.slug === storeSlug);
@@ -86,23 +96,3 @@ export function convertToUSD(price: number, storeSlug: string): number {
   const rate = exchangeRatesToUSD[currency] ?? 1;
   return Math.round(price * rate * 100) / 100;
 }
-
-const currencySymbols: Record<string, string> = {
-  USD: "$",
-  GBP: "£",
-  EUR: "€",
-  CAD: "CA$",
-  AUD: "A$",
-};
-
-/**
- * Format a price with the correct currency symbol for a store.
- * Shows the actual price the customer will pay at checkout.
- */
-export function formatPrice(price: number, storeSlug: string): string {
-  const store = stores.find((s) => s.slug === storeSlug);
-  const currency = store?.currency ?? "USD";
-  const symbol = currencySymbols[currency] ?? "$";
-  return `${symbol}${price}`;
-}
-  

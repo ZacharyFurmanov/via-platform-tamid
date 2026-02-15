@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { X, ShoppingCart } from "lucide-react";
 import { useCart } from "@/app/components/CartProvider";
-import { formatPrice } from "@/app/lib/stores";
 
 export default function CartPage() {
   const { items, removeItem, clearCart, itemCount } = useCart();
@@ -136,7 +135,7 @@ export default function CartPage() {
                             {item.title}
                           </Link>
                           <p className="text-sm font-medium text-black mt-1">
-                            {formatPrice(item.price, item.storeSlug)}
+                            ${item.price}
                           </p>
 
                           {/* Per-item checkout */}

@@ -6,6 +6,7 @@ import {
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
+import { convertToUSD } from "@/app/lib/stores";
 
 export async function POST(request: NextRequest) {
   try {
@@ -82,14 +83,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Create store slug from store name (kebab-case)
+    const storeSlug = storeName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
     // Convert to standard format for storage, filtering out null prices
     const rawProducts = fetchResult.products.map(toRSSProductFormat);
     const products = rawProducts
       .filter((p) => p.price !== null)
       .map((p) => ({
         title: p.title,
-        price: p.price as number,
-        currency: p.currency || "USD",
+        price: convertToUSD(p.price as number, storeSlug),
+        currency: "USD",
         image: p.image ?? undefined,
         images: p.images,
         externalUrl: p.externalUrl,
@@ -97,12 +104,6 @@ export async function POST(request: NextRequest) {
         variantId: p.variantId ?? undefined,
       }));
     const skippedCount = fetchResult.skippedCount;
-
-    // Create store slug from store name (kebab-case)
-    const storeSlug = storeName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
 
     // Sync products to database
     const productCount = await syncProducts(storeSlug, storeName, products);

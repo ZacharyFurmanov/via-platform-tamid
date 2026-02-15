@@ -8,7 +8,7 @@ import {
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-
+import { convertToUSD } from "@/app/lib/stores";
 
 export async function GET(request: Request) {
   console.log("[Sync Stores] Cron job triggered");
@@ -56,13 +56,14 @@ export async function GET(request: Request) {
           );
         }
 
+        const storeSlug = store.slug;
         const products = fetchResult.products
           .map(toRSSProductFormat)
           .filter((p) => p.price !== null)
           .map((p) => ({
             title: p.title,
-            price: p.price as number,
-            currency: p.currency || "USD",
+            price: convertToUSD(p.price as number, storeSlug),
+            currency: "USD",
             image: p.image ?? undefined,
             images: p.images,
             externalUrl: p.externalUrl,

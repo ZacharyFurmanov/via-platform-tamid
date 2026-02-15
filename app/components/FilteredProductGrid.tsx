@@ -8,7 +8,6 @@ import ProductFilter, {
 } from "./ProductFilter";
 import ProductCard from "./ProductCard";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
-import { formatPrice, convertToUSD } from "@/app/lib/stores";
 
 export type FilterableProduct = {
   id: string;
@@ -61,9 +60,9 @@ function sortProducts(
   const sorted = [...products];
   switch (sort) {
     case "price-asc":
-      return sorted.sort((a, b) => convertToUSD(a.price, a.storeSlug) - convertToUSD(b.price, b.storeSlug));
+      return sorted.sort((a, b) => a.price - b.price);
     case "price-desc":
-      return sorted.sort((a, b) => convertToUSD(b.price, b.storeSlug) - convertToUSD(a.price, a.storeSlug));
+      return sorted.sort((a, b) => b.price - a.price);
     case "newest":
     default:
       // Sort by createdAt if available, otherwise by id (which often contains index)
@@ -115,7 +114,7 @@ export default function FilteredProductGrid({
     // Price range filter
     if (filters.priceRange !== "all") {
       result = result.filter((p) =>
-        matchesPriceRange(convertToUSD(p.price, p.storeSlug), filters.priceRange)
+        matchesPriceRange(p.price, filters.priceRange)
       );
     }
 
@@ -248,7 +247,7 @@ export default function FilteredProductGrid({
                 id={product.id}
                 dbId={product.dbId}
                 name={product.title}
-                price={formatPrice(product.price, product.storeSlug)}
+                price={`$${product.price}`}
                 category={product.categoryLabel}
                 storeName={product.store}
                 storeSlug={product.storeSlug}
