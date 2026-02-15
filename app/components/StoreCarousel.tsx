@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { stores } from "../lib/stores";
@@ -16,6 +16,7 @@ export default function StoreCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const [paused, setPaused] = useState(false);
 
   // After the CSS transition ends, snap back to the middle copy if needed
   const handleTransitionEnd = useCallback(
@@ -43,6 +44,16 @@ export default function StoreCarousel() {
     setIndex((i) => i - 1);
   }, [animating]);
 
+  // Auto-play: advance every 4 seconds, pause on hover
+  useEffect(() => {
+    if (paused) return;
+    const timer = setInterval(() => {
+      setAnimating(true);
+      setIndex((i) => i + 1);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [paused]);
+
   // Touch / swipe support
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -62,7 +73,11 @@ export default function StoreCarousel() {
   const translatePercent = (index / total) * 100;
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       {/* Carousel viewport */}
       <div
         className="overflow-hidden"

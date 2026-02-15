@@ -77,25 +77,31 @@ export default function ImageCarousel({
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
-        <img
-          src={safeImages[current]}
-          alt={alt}
-          className="w-full h-full object-cover object-top"
-          loading="lazy"
-        />
+        {/* Render all images stacked to eliminate lag on switch */}
+        {safeImages.map((src, idx) => (
+          <img
+            key={idx}
+            src={src}
+            alt={alt}
+            className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${
+              idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+            loading="lazy"
+          />
+        ))}
 
         {safeImages[0] === "/placeholder.jpg" && (
-          <div className="absolute inset-0 bg-neutral-200" />
+          <div className="absolute inset-0 bg-neutral-200 z-10" />
         )}
 
-        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition pointer-events-none" />
+        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition pointer-events-none z-20" />
 
         {hasMultiple && (
           <>
             {/* Left arrow */}
             <button
               onClick={prev}
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
               aria-label="Previous image"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +112,7 @@ export default function ImageCarousel({
             {/* Right arrow */}
             <button
               onClick={next}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
               aria-label="Next image"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +121,7 @@ export default function ImageCarousel({
             </button>
 
             {/* Dots */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30">
               {safeImages.map((_, idx) => (
                 <button
                   key={idx}

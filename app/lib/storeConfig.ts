@@ -46,6 +46,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "missi-archives",
     storeDomain: "www.missiarchives.com",
   },
+  {
+    type: "shopify",
+    name: "Ascensio Vintage",
+    slug: "ascensio-vintage",
+    storeDomain: "ascensiovintage.com",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
