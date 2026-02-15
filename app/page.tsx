@@ -243,12 +243,16 @@ export default function HomePage() {
                   store: "LEI Vintage",
                   teaser: "Some brands start with a new collection. LEI started with a realization — the world doesn't need more clothes. It needs better choices.",
                   image: "/stores/LEI.jpg",
+                  logo: "/stores/lei-vintage-logo.jpg",
+                  logoBg: "#ffffff",
                 },
                 {
                   slug: "vintage-archives-la",
                   store: "Vintage Archives LA",
                   teaser: "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
                   image: "/stores/VintageArchivesLA.jpg",
+                  logo: "/stores/vintage-archives-la-logo.jpg",
+                  logoBg: "#fdf8d8",
                 },
               ]}
             />

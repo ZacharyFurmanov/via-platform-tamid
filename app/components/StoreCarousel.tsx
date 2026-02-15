@@ -116,37 +116,34 @@ export default function StoreCarousel() {
               <Link
                 href={`/stores/${store.slug}`}
                 className="block w-full h-full relative rounded-2xl overflow-hidden group"
-                style={{ backgroundColor: store.logoBg || "#ffffff" }}
               >
-                {/* Logo centered on background color */}
-                <div className="absolute inset-0 flex items-center justify-center p-8 sm:p-12">
-                  <Image
-                    src={store.logo || store.image}
-                    alt={store.name}
-                    fill
-                    sizes="(min-width: 768px) 38vw, 80vw"
-                    className="object-contain p-8 sm:p-12"
-                    priority={Math.abs(offset) <= 1}
-                  />
-                </div>
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  fill
+                  sizes="(min-width: 768px) 38vw, 80vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  priority={Math.abs(offset) <= 1}
+                />
 
-                {/* Subtle hover overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition duration-300" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                {/* Location + View button at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-center">
-                  <p className={`mb-2 ${
+                {/* Text + View button */}
+                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                  <h3 className={`font-serif text-white leading-snug mb-1 ${
+                    isCenter ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+                  }`}>
+                    {store.name}
+                  </h3>
+                  <p className={`text-white/70 mb-3 ${
                     isCenter ? "text-sm" : "text-xs"
-                  } ${"logoDark" in store && store.logoDark ? "text-white/60" : "text-black/50"}`}>
+                  }`}>
                     {store.location}
                   </p>
                   {isCenter && (
-                    <span className={`inline-block text-xs font-medium px-5 py-2 rounded-full transition ${
-                      "logoDark" in store && store.logoDark
-                        ? "bg-white text-black hover:bg-white/90"
-                        : "bg-black text-white hover:bg-neutral-800"
-                    }`}>
-                      View Store
+                    <span className="inline-block bg-white text-black text-xs font-medium px-5 py-2 rounded-full hover:bg-white/90 transition">
+                      View
                     </span>
                   )}
                 </div>
