@@ -56,7 +56,7 @@ export const stores = [
     name: "Ascensio Vintage",
     location: "Shropshire, England",
     description:
-      "Ascensio Vintage is a curated collection of a handpicked selection of vintage designer clothing and accessories. Launched by our founder Sian Alexandra in 2023, we are based in the rolling hills of Shropshire, England, but are proud to ship worldwide. Ascensio's goal is to push away from fast-moving trends and unethically produced fast fashion, championing timeless style that transcends the decades. Our ethos centers on delivering authentic brands while promoting sustainable shopping, celebrating the beauty of pre-loved and archival pieces from the most well-known and loved brands. Each item is thoroughly checked by our team, ensuring quality and authenticity.",
+      "Ascensio's goal is to push away from fast-moving trends and unethically produced fast fashion, championing timeless style that transcends the decades. Our ethos centers on delivering authentic brands while promoting sustainable shopping, celebrating the beauty of pre-loved and archival pieces from the most well-known and loved brands. Each item is thoroughly checked by our team, ensuring quality and authenticity.",
     website: "https://ascensiovintage.com",
     dataSource: "ascensio-vintage",
     image: "/stores/ascensio-vintage.jpg",

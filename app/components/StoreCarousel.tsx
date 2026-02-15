@@ -7,52 +7,25 @@ import { stores } from "../lib/stores";
 
 export default function StoreCarousel() {
   const n = stores.length;
-  // Triple the array so we can loop seamlessly in both directions
-  const extended = [...stores, ...stores, ...stores];
-  const total = extended.length;
-
-  const [index, setIndex] = useState(n); // start at the middle copy
-  const [animating, setAnimating] = useState(false);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
-  const [paused, setPaused] = useState(false);
-
-  // After the CSS transition ends, snap back to the middle copy if needed
-  const handleTransitionEnd = useCallback(
-    (e: React.TransitionEvent) => {
-      if (e.target !== trackRef.current) return;
-      setAnimating(false);
-      setIndex((i) => {
-        if (i >= n * 2) return i - n;
-        if (i < n) return i + n;
-        return i;
-      });
-    },
-    [n]
-  );
 
   const next = useCallback(() => {
-    if (animating) return;
-    setAnimating(true);
-    setIndex((i) => i + 1);
-  }, [animating]);
+    setActive((i) => (i + 1) % n);
+  }, [n]);
 
   const prev = useCallback(() => {
-    if (animating) return;
-    setAnimating(true);
-    setIndex((i) => i - 1);
-  }, [animating]);
+    setActive((i) => (i - 1 + n) % n);
+  }, [n]);
 
-  // Auto-play: advance every 4 seconds, pause on hover
+  // Auto-play every 3 seconds, pause on hover
   useEffect(() => {
     if (paused) return;
-    const timer = setInterval(() => {
-      setAnimating(true);
-      setIndex((i) => i + 1);
-    }, 4000);
+    const timer = setInterval(next, 3000);
     return () => clearInterval(timer);
-  }, [paused]);
+  }, [paused, next]);
 
   // Touch / swipe support
   const onTouchStart = (e: React.TouchEvent) => {
@@ -68,83 +41,137 @@ export default function StoreCarousel() {
     }
   };
 
-  // translateX is a percentage of the track's own width.
-  // Each card is 1/total of the track, so shifting by (1/total)*100% moves one card.
-  const translatePercent = (index / total) * 100;
+  // Get position offset from active card (-2, -1, 0, 1, 2, etc.)
+  const getOffset = (idx: number) => {
+    let diff = idx - active;
+    // Wrap around for seamless looping
+    if (diff > n / 2) diff -= n;
+    if (diff < -n / 2) diff += n;
+    return diff;
+  };
+
+  // Style each card based on its offset from center
+  const getCardStyle = (offset: number): React.CSSProperties => {
+    const absOffset = Math.abs(offset);
+
+    if (absOffset > 2) {
+      return { opacity: 0, pointerEvents: "none", transform: "scale(0.6) translateX(0px)", zIndex: 0 };
+    }
+
+    // Center card
+    if (offset === 0) {
+      return {
+        opacity: 1,
+        zIndex: 30,
+        transform: "scale(1) translateX(0px)",
+      };
+    }
+
+    // Immediate neighbors
+    if (absOffset === 1) {
+      const tx = offset * 280;
+      return {
+        opacity: 1,
+        zIndex: 20,
+        transform: `scale(0.85) translateX(${tx}px)`,
+      };
+    }
+
+    // Far cards
+    const tx = offset * 320;
+    return {
+      opacity: 0.6,
+      zIndex: 10,
+      transform: `scale(0.7) translateX(${tx}px)`,
+    };
+  };
 
   return (
     <div
       className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
-      {/* Carousel viewport */}
-      <div
-        className="overflow-hidden"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
+      {/* Coverflow viewport */}
+      <div className="relative flex items-center justify-center overflow-hidden"
+        style={{ height: "clamp(400px, 55vw, 600px)" }}
       >
-        <div
-          ref={trackRef}
-          className={`flex ${animating ? "transition-transform duration-500 ease-in-out" : ""}`}
-          style={{ transform: `translateX(-${translatePercent}%)` }}
-          onTransitionEnd={handleTransitionEnd}
-        >
-          {extended.map((store, i) => (
+        {stores.map((store, i) => {
+          const offset = getOffset(i);
+          const style = getCardStyle(offset);
+          const isCenter = offset === 0;
+
+          return (
             <div
-              key={`${store.slug}-${i}`}
-              className="flex-shrink-0 w-full md:w-1/3"
+              key={store.slug}
+              className="absolute transition-all duration-700 ease-in-out"
+              style={{
+                width: "clamp(280px, 38vw, 480px)",
+                height: "100%",
+                ...style,
+              }}
             >
-              <div className="px-6">
-                <Link href={`/stores/${store.slug}`} className="group block">
-                  <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
-                    <Image
-                      src={store.image}
-                      alt={store.name}
-                      fill
-                      sizes="(min-width: 768px) 33vw, 100vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-serif text-black">
+              <Link
+                href={`/stores/${store.slug}`}
+                className="block w-full h-full relative rounded-2xl overflow-hidden group"
+              >
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  fill
+                  sizes="(min-width: 768px) 38vw, 80vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  priority={Math.abs(offset) <= 1}
+                />
+
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                {/* Text + View button */}
+                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                  <h3 className={`font-serif text-white leading-snug mb-1 ${
+                    isCenter ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
+                  }`}>
                     {store.name}
                   </h3>
-                  <p className="text-sm text-gray-600">{store.location}</p>
-                </Link>
-              </div>
+                  <p className={`text-white/70 mb-3 ${
+                    isCenter ? "text-sm" : "text-xs"
+                  }`}>
+                    {store.location}
+                  </p>
+                  {isCenter && (
+                    <span className="inline-block bg-white text-black text-xs font-medium px-5 py-2 rounded-full hover:bg-white/90 transition">
+                      View
+                    </span>
+                  )}
+                </div>
+              </Link>
             </div>
-          ))}
-        </div>
-      </div>
+          );
+        })}
 
-      {/* Navigation arrows + indicators */}
-      <div className="flex items-center gap-4 mt-6 px-6">
+        {/* Left arrow */}
         <button
           onClick={prev}
           aria-label="Previous store"
-          className="text-black/40 hover:text-black transition text-sm"
+          className="absolute left-4 sm:left-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
         >
-          &larr;
+          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
-        <div className="flex gap-2">
-          {stores.map((_, i) => (
-            <span
-              key={i}
-              className={`h-[2px] transition-all duration-500 ${
-                index % n === i
-                  ? "w-8 bg-black"
-                  : "w-4 bg-black/20"
-              }`}
-            />
-          ))}
-        </div>
+
+        {/* Right arrow */}
         <button
           onClick={next}
           aria-label="Next store"
-          className="text-black/40 hover:text-black transition text-sm"
+          className="absolute right-4 sm:right-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
         >
-          &rarr;
+          <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>
