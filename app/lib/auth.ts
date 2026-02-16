@@ -33,6 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     Resend({
       from: "VIA <hana@theviaplatform.com>",
@@ -90,8 +91,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   debug: true,
   logger: {
-    error(error) {
-      console.error("AUTH ERROR:", error);
+    error(error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error("AUTH ERROR:", {
+        message: err.message,
+        name: err.name,
+        type: (err as unknown as Record<string, unknown>).type,
+        cause: err.cause instanceof Error
+          ? { message: err.cause.message, name: err.cause.name }
+          : err.cause,
+        stack: err.stack,
+      });
     },
     warn(code) {
       console.warn("AUTH WARN:", code);

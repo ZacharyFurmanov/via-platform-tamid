@@ -76,14 +76,19 @@ function mapUser(row: Record<string, unknown>): AdapterUser {
 
 export const neonAdapter: Adapter = {
   async createUser(user) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      INSERT INTO users (name, email, email_verified, image)
-      VALUES (${user.name ?? null}, ${user.email}, ${user.emailVerified?.toISOString() ?? null}, ${user.image ?? null})
-      RETURNING *
-    `;
-    return mapUser(rows[0]);
+    try {
+      await ensureTables();
+      const sql = neon(getDatabaseUrl());
+      const rows = await sql`
+        INSERT INTO users (name, email, email_verified, image)
+        VALUES (${user.name ?? null}, ${user.email}, ${user.emailVerified?.toISOString() ?? null}, ${user.image ?? null})
+        RETURNING *
+      `;
+      return mapUser(rows[0]);
+    } catch (error) {
+      console.error("ADAPTER createUser ERROR:", error);
+      throw error;
+    }
   },
 
   async getUser(id) {
@@ -94,21 +99,31 @@ export const neonAdapter: Adapter = {
   },
 
   async getUserByEmail(email) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
-    return rows[0] ? mapUser(rows[0]) : null;
+    try {
+      await ensureTables();
+      const sql = neon(getDatabaseUrl());
+      const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
+      return rows[0] ? mapUser(rows[0]) : null;
+    } catch (error) {
+      console.error("ADAPTER getUserByEmail ERROR:", error);
+      throw error;
+    }
   },
 
   async getUserByAccount({ provider, providerAccountId }) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      SELECT u.* FROM users u
-      JOIN accounts a ON a.user_id = u.id
-      WHERE a.provider = ${provider} AND a.provider_account_id = ${providerAccountId}
-    `;
-    return rows[0] ? mapUser(rows[0]) : null;
+    try {
+      await ensureTables();
+      const sql = neon(getDatabaseUrl());
+      const rows = await sql`
+        SELECT u.* FROM users u
+        JOIN accounts a ON a.user_id = u.id
+        WHERE a.provider = ${provider} AND a.provider_account_id = ${providerAccountId}
+      `;
+      return rows[0] ? mapUser(rows[0]) : null;
+    } catch (error) {
+      console.error("ADAPTER getUserByAccount ERROR:", error);
+      throw error;
+    }
   },
 
   async updateUser(user) {
@@ -137,24 +152,29 @@ export const neonAdapter: Adapter = {
   },
 
   async linkAccount(account) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    await sql`
-      INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
-      VALUES (
-        ${account.userId},
-        ${account.type},
-        ${account.provider},
-        ${account.providerAccountId},
-        ${account.refresh_token ?? null},
-        ${account.access_token ?? null},
-        ${account.expires_at ?? null},
-        ${account.token_type ?? null},
-        ${account.scope ?? null},
-        ${account.id_token ?? null}
-      )
-    `;
-    return account as AdapterAccount;
+    try {
+      await ensureTables();
+      const sql = neon(getDatabaseUrl());
+      await sql`
+        INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
+        VALUES (
+          ${account.userId},
+          ${account.type},
+          ${account.provider},
+          ${account.providerAccountId},
+          ${account.refresh_token ?? null},
+          ${account.access_token ?? null},
+          ${account.expires_at ?? null},
+          ${account.token_type ?? null},
+          ${account.scope ?? null},
+          ${account.id_token ?? null}
+        )
+      `;
+      return account as AdapterAccount;
+    } catch (error) {
+      console.error("ADAPTER linkAccount ERROR:", error);
+      throw error;
+    }
   },
 
   async createVerificationToken(token) {
