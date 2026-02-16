@@ -88,4 +88,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   trustHost: true,
+  debug: true,
+  logger: {
+    error(error) {
+      console.error("AUTH ERROR:", error);
+    },
+    warn(code) {
+      console.warn("AUTH WARN:", code);
+    },
+  },
 });
