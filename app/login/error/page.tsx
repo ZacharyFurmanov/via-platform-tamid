@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, Suspense } from "react";
 
 // OAuth errors that happen from back-button / stale state - safe to auto-retry
-const AUTO_RETRY_ERRORS = ["OAuthCallback", "OAuthSignin", "Callback"];
+const AUTO_RETRY_ERRORS = ["OAuthCallback", "OAuthSignin", "Callback", "OAuthAccountNotLinked", "AccountNotLinked"];
 
 function AuthErrorContent() {
   const searchParams = useSearchParams();
