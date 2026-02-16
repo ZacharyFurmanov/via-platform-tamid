@@ -204,9 +204,9 @@ function WaitlistContent() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto">
+    <div className="h-full overflow-y-auto">
       {/* Hero background image */}
-      <div className="absolute inset-0">
+      <div className="fixed inset-0">
         <Image
           src="/hero-v3.jpeg"
           alt="VIA curated vintage"

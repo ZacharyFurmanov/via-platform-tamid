@@ -3,5 +3,5 @@ export default function WaitlistLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="fixed inset-0 z-[200] bg-black">{children}</div>;
+  return <div className="fixed inset-0 z-[200] bg-black !pt-0">{children}</div>;
 }
