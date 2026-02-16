@@ -504,6 +504,38 @@ function WaitlistContent() {
                 <p className="text-white/50 text-[11px] sm:text-[12px] leading-relaxed font-light">
                   By entering, you agree to VIA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random — the more referrals you have, the more chances you get. Giveaway credit must be used on items listed on VIA.
                 </p>
+
+                {/* Access Code */}
+                <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/20">
+                  <p className="text-[13px] sm:text-[14px] text-white/70 font-light tracking-wide mb-3">
+                    Have an access code?
+                  </p>
+                  <form onSubmit={handleAccessCode}>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <input
+                        type="text"
+                        value={accessCode}
+                        onChange={(e) => {
+                          setAccessCode(e.target.value);
+                          setAccessError("");
+                        }}
+                        placeholder="Enter code"
+                        className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
+                        disabled={accessLoading}
+                      />
+                      <button
+                        type="submit"
+                        disabled={accessLoading || !accessCode.trim()}
+                        className="h-12 sm:h-14 px-6 sm:px-7 bg-white text-black text-[11px] sm:text-[12px] uppercase tracking-[0.25rem] sm:tracking-[0.4rem] font-semibold rounded-full hover:scale-[1.04] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {accessLoading ? "Checking..." : "Enter"}
+                      </button>
+                    </div>
+                    {accessError && (
+                      <p className="text-red-400 text-sm mt-3 tracking-wide">{accessError}</p>
+                    )}
+                  </form>
+                </div>
               </div>
             )}
 
