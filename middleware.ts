@@ -12,12 +12,15 @@ const PUBLIC_ROUTES = [
   "/api/giveaway",
   "/api/cron",
   "/for-stores",
-  "/login",
   "/api/auth",
   "/api/newsletter",
   "/api/track",
   "/api/conversion",
+  "/api/access-code",
 ];
+
+// Routes that require the access code cookie but not a full user session
+const ACCESS_CODE_ROUTES = ["/login"];
 
 // Routes that require user authentication (Auth.js session)
 // Now all non-public, non-admin routes require auth
@@ -49,9 +52,21 @@ function hasUserSession(request: NextRequest): boolean {
   return !!sessionToken;
 }
 
-function isPublicRoute(pathname: string): boolean {
-  if (pathname === "/") return true;
+function hasAccessCode(request: NextRequest): boolean {
+  return request.cookies.get("via_access")?.value === "1";
+}
 
+function isAccessCodeRoute(pathname: string): boolean {
+  const normalizedPath =
+    pathname.endsWith("/") && pathname !== "/"
+      ? pathname.slice(0, -1)
+      : pathname;
+  return ACCESS_CODE_ROUTES.some(
+    (route) => normalizedPath === route || normalizedPath.startsWith(route + "/")
+  );
+}
+
+function isPublicRoute(pathname: string): boolean {
   const normalizedPath =
     pathname.endsWith("/") && pathname !== "/"
       ? pathname.slice(0, -1)
@@ -104,9 +119,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Access code routes (e.g. /login): require access cookie or session
+  if (isAccessCodeRoute(pathname)) {
+    if (!hasAccessCode(request) && !hasUserSession(request) && !isAdminAuthenticated(request)) {
+      return NextResponse.redirect(new URL("/waitlist", request.url));
+    }
+    return NextResponse.next();
+  }
+
   // User-auth routes: require Auth.js session
   if (isUserAuthRoute(pathname)) {
     if (!hasUserSession(request)) {
+      if (!hasAccessCode(request)) {
+        return NextResponse.redirect(new URL("/waitlist", request.url));
+      }
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
@@ -115,7 +141,11 @@ export function middleware(request: NextRequest) {
   }
 
   // All other routes: require user session (or admin auth) to browse
+  // Without access code, go to waitlist. With access code but no session, go to login.
   if (!hasUserSession(request) && !isAdminAuthenticated(request)) {
+    if (!hasAccessCode(request)) {
+      return NextResponse.redirect(new URL("/waitlist", request.url));
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
