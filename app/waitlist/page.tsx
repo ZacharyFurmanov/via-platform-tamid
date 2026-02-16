@@ -220,7 +220,7 @@ function WaitlistContent() {
       {/* Content */}
       <div className="relative z-10 min-h-full flex flex-col justify-between px-6 sm:px-16 py-10 sm:py-16 text-white">
         {/* Main Content */}
-        <div className="flex-1 flex items-center">
+        <div className="flex-1 flex items-start pt-6 sm:pt-12">
           <div className="w-full max-w-xl text-left">
 
             {/* Phase: Waitlist */}
@@ -280,8 +280,8 @@ function WaitlistContent() {
                 </p>
 
                 {/* Access Code */}
-                <div className="mt-10 sm:mt-12 pt-8 sm:pt-10 border-t border-white/20">
-                  <p className="text-[13px] sm:text-[14px] text-white/70 font-light tracking-wide mb-4">
+                <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/20">
+                  <p className="text-[13px] sm:text-[14px] text-white/70 font-light tracking-wide mb-3">
                     Have an access code?
                   </p>
                   <form onSubmit={handleAccessCode}>
