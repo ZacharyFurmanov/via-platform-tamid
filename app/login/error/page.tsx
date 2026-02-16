@@ -1,6 +1,28 @@
-import Link from "next/link";
+"use client";
 
-export default function AuthErrorPage() {
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+
+// OAuth errors that happen from back-button / stale state - safe to auto-retry
+const AUTO_RETRY_ERRORS = ["OAuthCallback", "OAuthSignin", "Callback"];
+
+function AuthErrorContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const error = searchParams.get("error") || "";
+
+  useEffect(() => {
+    if (AUTO_RETRY_ERRORS.includes(error)) {
+      router.replace("/login");
+    }
+  }, [error, router]);
+
+  // Show nothing briefly while redirecting for OAuth errors
+  if (AUTO_RETRY_ERRORS.includes(error)) {
+    return null;
+  }
+
   return (
     <main className="bg-white min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm text-center">
@@ -16,5 +38,13 @@ export default function AuthErrorPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
