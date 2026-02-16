@@ -7,6 +7,7 @@ import { Search, Menu, X, ChevronDown, User, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCart } from "./CartProvider";
+import { useFriends } from "./FriendsProvider";
 
 import { stores } from "@/app/lib/stores";
 import { products } from "@/app/stores/productData";
@@ -36,6 +37,7 @@ export default function HeaderClient({
   const router = useRouter();
   const { data: session } = useSession();
   const { itemCount } = useCart();
+  const { pendingCount } = useFriends();
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
@@ -285,7 +287,7 @@ export default function HeaderClient({
             {/* Account Button */}
             <Link
               href={session ? "/account" : "/login"}
-              className="p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
+              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
               aria-label={session ? "Account" : "Sign in"}
             >
               {session?.user?.image ? (
@@ -296,6 +298,9 @@ export default function HeaderClient({
                 />
               ) : (
                 <User size={20} />
+              )}
+              {pendingCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
               )}
             </Link>
 

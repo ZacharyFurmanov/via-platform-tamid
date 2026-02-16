@@ -21,7 +21,7 @@ const PUBLIC_ROUTES = [
 
 // Routes that require user authentication (Auth.js session)
 // Now all non-public, non-admin routes require auth
-const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account"];
+const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends"];
 
 // Simple hash function for admin password comparison
 function hashPassword(password: string): string {

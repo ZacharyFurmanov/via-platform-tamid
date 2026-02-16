@@ -20,11 +20,13 @@ export async function initAuthTables() {
       email_verified TIMESTAMP WITH TIME ZONE,
       image TEXT,
       notification_emails_enabled BOOLEAN DEFAULT TRUE,
+      phone VARCHAR(20) UNIQUE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS accounts (

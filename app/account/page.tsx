@@ -9,12 +9,15 @@ import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
 import { neon } from "@neondatabase/serverless";
 
-async function getNotificationPreference(userId: string): Promise<boolean> {
+async function getUserSettings(userId: string): Promise<{ notificationsEnabled: boolean; phone: string }> {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) return true;
+  if (!url) return { notificationsEnabled: true, phone: "" };
   const sql = neon(url);
-  const rows = await sql`SELECT notification_emails_enabled FROM users WHERE id = ${userId}`;
-  return rows[0]?.notification_emails_enabled !== false;
+  const rows = await sql`SELECT notification_emails_enabled, phone FROM users WHERE id = ${userId}`;
+  return {
+    notificationsEnabled: rows[0]?.notification_emails_enabled !== false,
+    phone: (rows[0]?.phone as string) || "",
+  };
 }
 
 export default async function AccountPage() {
@@ -28,15 +31,20 @@ export default async function AccountPage() {
   let favProducts: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
   let favStoreSlugs: string[] = [];
   let notificationsEnabled = true;
+  let userPhone = "";
   let favCounts: Record<number, number> = {};
 
   if (userId) {
     try {
-      [favProducts, favStoreSlugs, notificationsEnabled] = await Promise.all([
+      const [products, storeSlugs, settings] = await Promise.all([
         getUserFavoritedProducts(userId),
         getUserStoreFavoriteIds(userId),
-        getNotificationPreference(userId),
+        getUserSettings(userId),
       ]);
+      favProducts = products;
+      favStoreSlugs = storeSlugs;
+      notificationsEnabled = settings.notificationsEnabled;
+      userPhone = settings.phone;
       if (favProducts.length > 0) {
         favCounts = await getProductFavoriteCounts(favProducts.map((p) => p.id));
       }
@@ -146,9 +154,31 @@ export default async function AccountPage() {
         )}
       </section>
 
+      {/* Friends */}
+      <section className="max-w-5xl mx-auto px-6 py-12 border-t border-neutral-100">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="font-serif text-2xl">Friends</h2>
+          <a
+            href="/account/friends"
+            className="text-sm uppercase tracking-wide text-black/50 hover:text-black transition"
+          >
+            Manage Friends
+          </a>
+        </div>
+        <p className="text-black/50 text-sm">
+          Find friends by phone number, see what they&apos;re hearting and shopping.
+        </p>
+        <a
+          href="/account/friends"
+          className="inline-block mt-4 text-sm uppercase tracking-wide px-5 py-2.5 border border-black hover:bg-black hover:text-white transition"
+        >
+          Go to Friends
+        </a>
+      </section>
+
       {/* Settings & Sign Out */}
       <section className="max-w-5xl mx-auto px-6 py-12 border-t border-neutral-100">
-        <AccountActions notificationsEnabled={notificationsEnabled} />
+        <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
       </section>
     </main>
   );

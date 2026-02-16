@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/lib/auth";
 import { toggleStoreFavorite, getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
+import { logActivity } from "@/app/lib/friends-db";
 
 export async function GET() {
   const session = await auth();
@@ -24,5 +25,10 @@ export async function POST(request: Request) {
   }
 
   const isFavorited = await toggleStoreFavorite(session.user.id, storeSlug);
+
+  if (isFavorited) {
+    logActivity(session.user.id, "favorite_store", { storeSlug }).catch(() => {});
+  }
+
   return NextResponse.json({ favorited: isFavorited });
 }

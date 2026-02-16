@@ -9,6 +9,7 @@ import Script from "next/script";
 import { GiveawayProvider } from "./components/GiveawayProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { FavoritesProvider } from "./components/FavoritesProvider";
+import { FriendsProvider } from "./components/FriendsProvider";
 import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className={`${cormorant.className} bg-white text-black`}>
         <AuthProvider>
           <FavoritesProvider>
+            <FriendsProvider>
             <CartProvider>
               <GiveawayProvider>
                 <ScrollToTop />
@@ -74,6 +76,7 @@ export default function RootLayout({
                 <Footer />
               </GiveawayProvider>
             </CartProvider>
+            </FriendsProvider>
           </FavoritesProvider>
         </AuthProvider>
       </body>
