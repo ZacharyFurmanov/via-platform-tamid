@@ -33,7 +33,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
     }),
     Resend({
       from: "VIA <hana@theviaplatform.com>",
@@ -75,6 +74,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/login/error",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // Allow sign-in even if account email already exists from another provider
+      if (account?.provider === "google" && user.email) {
+        return true;
+      }
+      return true;
+    },
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
