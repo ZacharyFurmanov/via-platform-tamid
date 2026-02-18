@@ -153,9 +153,24 @@ export default function HeaderClient({
         e.preventDefault();
         setActiveIndex((i) => Math.max(i - 1, 0));
       }
-      if (e.key === "Enter" && results[activeIndex]) {
-        setSearchOpen(false);
-        router.push(results[activeIndex].href);
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (results[activeIndex]) {
+          setSearchOpen(false);
+          router.push(results[activeIndex].href);
+        } else if (query.trim()) {
+          // Check if query matches a store name
+          const q = query.trim().toLowerCase();
+          const matchedStore = stores.find(
+            (s) => s.name.toLowerCase() === q || s.slug === q
+          );
+          setSearchOpen(false);
+          if (matchedStore) {
+            router.push(`/stores/${matchedStore.slug}`);
+          } else {
+            router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+          }
+        }
       }
     };
 
@@ -455,7 +470,7 @@ export default function HeaderClient({
       {/* SEARCH OVERLAY */}
       {searchOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center md:pt-24">
-          <div className="bg-white w-full h-full md:h-auto md:max-w-2xl p-6 relative">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
             <button
               onClick={() => setSearchOpen(false)}
               className="absolute top-4 right-4 text-xs uppercase"
@@ -468,10 +483,10 @@ export default function HeaderClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items or stores..."
-              className="w-full border-b border-black pb-3 text-lg outline-none"
+              className="w-full border-b border-black pb-3 text-lg outline-none flex-shrink-0"
             />
 
-            <div className="mt-6">
+            <div className="mt-4 overflow-y-auto flex-1 min-h-0">
               {searchLoading && results.length === 0 && (
                 <p className="text-sm text-black/40 px-3 py-2">Searching...</p>
               )}

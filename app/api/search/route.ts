@@ -81,7 +81,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) LIKE ANY(${patterns})
         ORDER BY title
-        LIMIT 20
+        LIMIT 50
       `;
     } else {
       // Direct title search
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) LIKE ${pattern}
         ORDER BY title
-        LIMIT 20
+        LIMIT 50
       `;
     }
 
