@@ -212,7 +212,7 @@ export default function HeaderClient({
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/70 transition-colors"
+                  className="flex items-center gap-1 hover:text-white/70 transition-colors duration-300"
                 >
                   Stores
                   <ChevronDown
@@ -222,7 +222,7 @@ export default function HeaderClient({
                 </button>
 
                 <div
-                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-200 ease-out ${
+                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                     storesDropdownOpen
                       ? 'opacity-100 visible translate-y-0'
                       : 'opacity-0 invisible -translate-y-2'
@@ -262,7 +262,7 @@ export default function HeaderClient({
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/70 transition-colors"
+                  className="flex items-center gap-1 hover:text-white/70 transition-colors duration-300"
                 >
                   Shop Category
                   <ChevronDown
@@ -272,7 +272,7 @@ export default function HeaderClient({
                 </button>
 
                 <div
-                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-200 ease-out ${
+                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                     categoriesDropdownOpen
                       ? 'opacity-100 visible translate-y-0'
                       : 'opacity-0 invisible -translate-y-2'
@@ -384,11 +384,11 @@ export default function HeaderClient({
                     Stores
                     <ChevronDown
                       size={20}
-                      className={`transition-transform duration-200 ${mobileStoresExpanded ? 'rotate-180' : ''}`}
+                      className={`transition-transform duration-300 ${mobileStoresExpanded ? 'rotate-180' : ''}`}
                     />
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-200 ease-out ${
+                    className={`overflow-hidden transition-all duration-300 ease-out ${
                       mobileStoresExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
@@ -423,11 +423,11 @@ export default function HeaderClient({
                     Shop Category
                     <ChevronDown
                       size={20}
-                      className={`transition-transform duration-200 ${mobileCategoriesExpanded ? 'rotate-180' : ''}`}
+                      className={`transition-transform duration-300 ${mobileCategoriesExpanded ? 'rotate-180' : ''}`}
                     />
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-200 ease-out ${
+                    className={`overflow-hidden transition-all duration-300 ease-out ${
                       mobileCategoriesExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
@@ -470,7 +470,7 @@ export default function HeaderClient({
 
       {/* SEARCH OVERLAY */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center md:pt-24">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center md:pt-24">
           <div className="bg-white w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
             <button
               onClick={() => setSearchOpen(false)}

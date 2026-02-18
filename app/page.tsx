@@ -47,14 +47,14 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-hero delay-150">
           <Link
             href="/stores"
-            className="bg-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition text-black text-center"
+            className="bg-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 hover:scale-[1.02] transition-all duration-300 text-black text-center"
           >
             Explore Stores
           </Link>
 
           <Link
             href="/categories"
-            className="border border-white text-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-white hover:text-black transition text-center"
+            className="border border-white text-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
           >
             Browse Categories
           </Link>
@@ -66,7 +66,7 @@ export default function HomePage() {
 </section>
 
      {/* ================= SHOP BY STORE ================= */}
-<section className="bg-neutral-100 py-20 sm:py-32">
+<section className="bg-neutral-100 py-24 sm:py-40">
   <div className="max-w-7xl mx-auto">
     {/* Header */}
     <ScrollReveal>
@@ -82,7 +82,7 @@ export default function HomePage() {
 
         <Link
           href="/stores"
-          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
         >
           View all stores
         </Link>
@@ -94,7 +94,7 @@ export default function HomePage() {
 </section>
 
     {/* ================= SHOP BY CATEGORY ================= */}
-<section className="bg-[#f1f1ee] py-20 sm:py-32">
+<section className="bg-[#f1f0ed] py-24 sm:py-40">
   <div className="max-w-7xl mx-auto">
     <ScrollReveal>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
@@ -109,7 +109,7 @@ export default function HomePage() {
 
         <Link
           href="/categories"
-          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
         >
           View all categories
         </Link>
@@ -129,15 +129,15 @@ export default function HomePage() {
               href={`/categories/${category.slug}`}
               className="group block w-[72vw] flex-shrink-0 sm:w-auto"
             >
-              <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+              <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm shadow-sm group-hover:shadow-lg transition-shadow duration-500">
                 <Image
                   src={category.image}
                   alt={category.label}
                   fill
                   sizes="(min-width: 768px) 25vw, 72vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition" />
+                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors duration-500" />
 
                 <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
                   <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
@@ -157,7 +157,7 @@ export default function HomePage() {
 </section>
 
       {/* ================= FAQ TEASER ================= */}
-      <section className="bg-[#f7f6f3] py-20 sm:py-32">
+      <section className="bg-[#f7f6f3] py-24 sm:py-40">
         <div className="max-w-6xl mx-auto px-6">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12 sm:mb-20">
@@ -213,7 +213,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= STORY BEHIND THE SELECTION ================= */}
-      <section className="bg-neutral-100 py-20 sm:py-32">
+      <section className="bg-neutral-100 py-24 sm:py-40">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16">
@@ -228,7 +228,7 @@ export default function HomePage() {
 
               <Link
                 href="/stories"
-                className="mt-4 sm:mt-0 text-sm uppercase tracking-wide underline min-h-[44px] flex items-center"
+                className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
               >
                 View all stories
               </Link>
@@ -257,7 +257,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= VIA EXPERIENCE / WAITLIST ================= */}
-      <section className="bg-black py-20 sm:py-32 text-white">
+      <section className="bg-black py-24 sm:py-40 text-white">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <ScrollReveal>
             <p className="text-xs uppercase tracking-[0.25em] text-gray-400 mb-3 sm:mb-4">

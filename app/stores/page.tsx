@@ -20,7 +20,7 @@ export default function StoresPage() {
       </section>
 
       {/* ================= STORES GRID ================= */}
-      <section className="py-16 sm:py-28">
+      <section className="py-20 sm:py-36">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-24">
 
@@ -29,14 +29,14 @@ export default function StoresPage() {
 
                 {/* IMAGE (CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block mb-6">
-                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
+                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden shadow-sm group-hover:shadow-lg transition-shadow duration-500">
                     {store.image && (
                       <Image
                         src={store.image}
                         alt={store.name}
                         fill
                         sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
                     )}
                   </div>
@@ -44,7 +44,7 @@ export default function StoresPage() {
 
                 {/* TEXT (ALSO CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block">
-                  <h2 className="text-xl font-serif mb-1 group-hover:underline underline-offset-4">
+                  <h2 className="text-xl font-serif mb-1 link-underline">
                     {store.name}
                   </h2>
                 </Link>

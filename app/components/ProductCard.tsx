@@ -46,7 +46,7 @@ export default function ProductCard({
 
         {/* Product info with mobile-friendly text sizes */}
         <div className="pt-3 pb-2">
-          <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/60 mb-1">
+          <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/50 mb-1 transition-colors duration-300 group-hover:text-black/80">
             {storeName}
           </p>
 

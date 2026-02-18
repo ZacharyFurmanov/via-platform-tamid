@@ -180,7 +180,7 @@ export default function ProductFilter({
                 closeAllDropdowns();
                 setPriceDropdownOpen(!wasOpen);
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+              className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                 filters.priceRange !== "all"
                   ? "border-black bg-black text-white"
                   : "border-neutral-200 hover:border-black"
@@ -195,7 +195,7 @@ export default function ProductFilter({
                   className="fixed inset-0 z-10"
                   onClick={() => setPriceDropdownOpen(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[160px]">
+                <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[160px] animate-fade-in">
                   {(Object.keys(priceRangeLabels) as PriceRange[]).map(
                     (range) => (
                       <button
@@ -228,7 +228,7 @@ export default function ProductFilter({
                   closeAllDropdowns();
                   setCategoryDropdownOpen(!wasOpen);
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedCategories.length > 0
                     ? "border-black bg-black text-white"
                     : "border-neutral-200 hover:border-black"
@@ -245,7 +245,7 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setCategoryDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px]">
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px] animate-fade-in">
                     {categories.map((cat) => (
                       <button
                         key={cat.slug}
@@ -277,7 +277,7 @@ export default function ProductFilter({
                   closeAllDropdowns();
                   setBrandDropdownOpen(!wasOpen);
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedBrands.length > 0
                     ? "border-black bg-black text-white"
                     : "border-neutral-200 hover:border-black"
@@ -294,7 +294,7 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setBrandDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto">
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {brands.map((brand) => (
                       <button
                         key={brand.slug}
@@ -326,7 +326,7 @@ export default function ProductFilter({
                   closeAllDropdowns();
                   setStoreDropdownOpen(!wasOpen);
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition ${
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedStores.length > 0
                     ? "border-black bg-black text-white"
                     : "border-neutral-200 hover:border-black"
@@ -343,7 +343,7 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setStoreDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px]">
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] animate-fade-in">
                     {stores.map((store) => (
                       <button
                         key={store.slug}
@@ -374,7 +374,7 @@ export default function ProductFilter({
                 closeAllDropdowns();
                 setSortDropdownOpen(!wasOpen);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 border border-neutral-200 text-sm hover:border-black transition"
+              className="flex items-center gap-2 px-4 py-2.5 border border-neutral-200 text-sm hover:border-black transition-all duration-200"
             >
               Sort: {sortLabels[filters.sort]}
               <ChevronDown size={16} />
@@ -385,7 +385,7 @@ export default function ProductFilter({
                   className="fixed inset-0 z-10"
                   onClick={() => setSortDropdownOpen(false)}
                 />
-                <div className="absolute top-full right-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px]">
+                <div className="absolute top-full right-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px] animate-fade-in">
                   {(Object.keys(sortLabels) as SortOption[]).map((option) => (
                     <button
                       key={option}

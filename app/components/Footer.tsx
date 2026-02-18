@@ -9,7 +9,7 @@ export default function Footer() {
     <footer className="bg-neutral-950 text-white">
       {/* Newsletter Section */}
       <div className="border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-6 py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-20 sm:py-24">
           <div className="max-w-xl mx-auto text-center">
             <h3 className="text-2xl sm:text-3xl font-serif mb-3">
               Join the Inner Circle
@@ -67,7 +67,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/browse"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Browse All
                 </Link>
@@ -75,7 +75,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/stores"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Our Stores
                 </Link>
@@ -83,7 +83,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/categories"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Categories
                 </Link>
@@ -103,7 +103,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/stories"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Stories
                 </Link>
@@ -111,7 +111,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/for-stores"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Partner With Us
                 </Link>
@@ -119,7 +119,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/faqs"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   FAQs
                 </Link>
@@ -127,7 +127,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Terms &amp; Conditions
                 </Link>
@@ -135,7 +135,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/privacy"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm link-underline link-underline-light"
                 >
                   Privacy Policy
                 </Link>
@@ -154,7 +154,7 @@ export default function Footer() {
                   href="https://www.instagram.com/theviaplatform/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm inline-flex items-center gap-2"
+                  className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline link-underline-light"
                 >
                   <span>Instagram</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +174,7 @@ export default function Footer() {
             <p className="text-neutral-500 text-xs tracking-wide">
               {currentYear} VIA. All rights reserved.
             </p>
-            <p className="text-neutral-600 text-xs">
+            <p className="text-neutral-500 text-xs tracking-wide">
               Curated with care in the USA
             </p>
           </div>
