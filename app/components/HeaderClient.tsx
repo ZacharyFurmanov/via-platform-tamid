@@ -28,7 +28,7 @@ export default function HeaderClient({
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [storesDropdownOpen, setStoresDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [mobileStoresExpanded, setMobileStoresExpanded] = useState(false);
@@ -86,6 +86,8 @@ export default function HeaderClient({
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    setActiveIndex(-1);
+
     if (!query.trim()) {
       setResults([]);
       return;
@@ -151,20 +153,19 @@ export default function HeaderClient({
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setActiveIndex((i) => Math.max(i - 1, 0));
+        setActiveIndex((i) => Math.max(i - 1, -1));
       }
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && query.trim()) {
         e.preventDefault();
-        if (results[activeIndex]) {
-          setSearchOpen(false);
+        setSearchOpen(false);
+        if (activeIndex >= 0 && results[activeIndex]) {
           router.push(results[activeIndex].href);
-        } else if (query.trim()) {
-          // Check if query matches a store name
+        } else {
+          // Check if query is an exact store name match
           const q = query.trim().toLowerCase();
           const matchedStore = stores.find(
             (s) => s.name.toLowerCase() === q || s.slug === q
           );
-          setSearchOpen(false);
           if (matchedStore) {
             router.push(`/stores/${matchedStore.slug}`);
           } else {
@@ -181,7 +182,7 @@ export default function HeaderClient({
   useEffect(() => {
     if (!searchOpen) {
       setQuery("");
-      setActiveIndex(0);
+      setActiveIndex(-1);
     }
   }, [searchOpen]);
 
