@@ -24,6 +24,7 @@ export type FilterableProduct = {
   image: string;
   images?: string[];
   createdAt?: number; // timestamp for sorting by newest
+  popularityScore?: number;
 };
 
 type FilteredProductGridProps = {
@@ -59,6 +60,8 @@ function sortProducts(
 ): FilterableProduct[] {
   const sorted = [...products];
   switch (sort) {
+    case "popular":
+      return sorted.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
     case "price-asc":
       return sorted.sort((a, b) => a.price - b.price);
     case "price-desc":
@@ -91,7 +94,7 @@ export default function FilteredProductGrid({
     selectedStores: [],
     selectedCategories: [],
     selectedBrands: [],
-    sort: "newest",
+    sort: "popular",
   });
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {

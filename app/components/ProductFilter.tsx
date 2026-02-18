@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 
 export type PriceRange = "all" | "under100" | "100to250" | "250to500" | "over500";
-export type SortOption = "newest" | "price-asc" | "price-desc";
+export type SortOption = "popular" | "newest" | "price-asc" | "price-desc";
 
 export type FilterState = {
   search: string;
@@ -35,6 +35,7 @@ const priceRangeLabels: Record<PriceRange, string> = {
 };
 
 const sortLabels: Record<SortOption, string> = {
+  popular: "Popular",
   newest: "Newest",
   "price-asc": "Price: Low to High",
   "price-desc": "Price: High to Low",
@@ -56,7 +57,7 @@ export default function ProductFilter({
     selectedStores: initialFilters?.selectedStores ?? [],
     selectedCategories: initialFilters?.selectedCategories ?? [],
     selectedBrands: initialFilters?.selectedBrands ?? [],
-    sort: initialFilters?.sort ?? "newest",
+    sort: initialFilters?.sort ?? "popular",
   });
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -123,7 +124,7 @@ export default function ProductFilter({
       selectedStores: [],
       selectedCategories: [],
       selectedBrands: [],
-      sort: "newest",
+      sort: "popular",
     };
     setFilters(cleared);
     onFilterChange(cleared);

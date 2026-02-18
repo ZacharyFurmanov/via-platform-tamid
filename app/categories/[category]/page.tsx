@@ -7,6 +7,7 @@ import { categories } from "@/app/lib/categories";
 import { stores } from "@/app/lib/stores";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
 
 export default async function CategoryPage({
   params,
@@ -23,22 +24,34 @@ export default async function CategoryPage({
 
   const inventory = await getInventory();
 
-  // Filter inventory by category and transform for FilteredProductGrid
-  const filteredProducts: FilterableProduct[] = inventory
-    .filter((item) => item.category === category)
-    .map((item, idx) => ({
-      id: item.id,
-      title: item.title,
-      price: item.price,
-      category: item.category,
-      categoryLabel: categoryMeta.label,
-      store: item.store,
-      storeSlug: item.storeSlug,
-      externalUrl: item.externalUrl,
-      image: item.image,
-      images: item.images,
-      createdAt: Date.now() - idx * 1000, // Preserve original order for "newest"
-    }));
+  // Filter inventory by category
+  const categoryItems = inventory.filter((item) => item.category === category);
+
+  // Extract DB IDs and fetch popularity scores
+  const dbIdMap = new Map<string, number>();
+  for (const item of categoryItems) {
+    const match = item.id.match(/-(\d+)$/);
+    if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
+  }
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
+  // Transform for FilteredProductGrid
+  const filteredProducts: FilterableProduct[] = categoryItems.map((item, idx) => ({
+    id: item.id,
+    dbId: dbIdMap.get(item.id),
+    title: item.title,
+    price: item.price,
+    category: item.category,
+    categoryLabel: categoryMeta.label,
+    store: item.store,
+    storeSlug: item.storeSlug,
+    externalUrl: item.externalUrl,
+    image: item.image,
+    images: item.images,
+    createdAt: Date.now() - idx * 1000,
+    popularityScore: popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0,
+  }));
 
   // Get stores for the filter
   const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));

@@ -86,100 +86,122 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      {/* Favorited Products */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="font-serif text-2xl mb-8">Favorite Products</h2>
-        {favProducts.length === 0 ? (
-          <p className="text-black/50 text-sm">
-            You haven&apos;t favorited any products yet. Browse and tap the heart to save pieces you love.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {favProducts.map((product) => {
-              const compositeId = `${product.store_slug}-${product.id}`;
-              const categorySlug = inferCategoryFromTitle(product.title);
-              const categoryLabel = categoryMap[categorySlug];
+      <div className="max-w-5xl mx-auto px-6">
+        {/* Refer a Friend + Friends — side by side on desktop */}
+        <section className="py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Refer a Friend */}
+            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col">
+              <h2 className="font-serif text-xl mb-2">Refer a Friend</h2>
+              <p className="text-sm text-black/50 mb-6 leading-relaxed">
+                Share VIA with friends and help us grow the community of independent vintage and resale lovers.
+              </p>
+              <div className="mt-auto flex flex-col gap-3">
+                <a
+                  href="/waitlist"
+                  className="block text-center text-sm uppercase tracking-wide px-5 py-3 bg-black text-white hover:bg-black/85 transition"
+                >
+                  Get Your Referral Link
+                </a>
+                <p className="text-xs text-black/40 text-center">
+                  Invite 2 friends to enter the $1,000 giveaway
+                </p>
+              </div>
+            </div>
 
-              let images: string[] = [];
-              if (product.images) {
-                try {
-                  const parsed = JSON.parse(product.images);
-                  if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
-                } catch {}
-              }
-              if (images.length === 0 && product.image) {
-                images = [product.image];
-              }
-
-              return (
-                <ProductCard
-                  key={product.id}
-                  id={compositeId}
-                  dbId={product.id}
-                  name={product.title}
-                  price={`$${Number(product.price)}`}
-                  category={categoryLabel}
-                  storeName={product.store_name}
-                  storeSlug={product.store_slug}
-                  image={product.image || ""}
-                  images={images}
-                  favoriteCount={favCounts[product.id]}
-                />
-              );
-            })}
+            {/* Friends */}
+            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="font-serif text-xl">Friends</h2>
+              </div>
+              <p className="text-sm text-black/50 mb-6 leading-relaxed">
+                Find friends by phone number, see what they&apos;re hearting and shopping.
+              </p>
+              <div className="mt-auto">
+                <a
+                  href="/account/friends"
+                  className="block text-center text-sm uppercase tracking-wide px-5 py-3 border border-black hover:bg-black hover:text-white transition"
+                >
+                  Manage Friends
+                </a>
+              </div>
+            </div>
           </div>
-        )}
-      </section>
+        </section>
 
-      {/* Favorited Stores */}
-      <section className="max-w-5xl mx-auto px-6 py-12 border-t border-neutral-100">
-        <h2 className="font-serif text-2xl mb-8">Favorite Stores</h2>
-        {favStores.length === 0 ? (
-          <p className="text-black/50 text-sm">
-            You haven&apos;t favorited any stores yet.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {favStores.map((store) => store && (
-              <a
-                key={store.slug}
-                href={`/stores/${store.slug}`}
-                className="block p-6 border border-neutral-200 hover:border-black transition"
-              >
-                <h3 className="font-serif text-lg mb-1">{store.name}</h3>
-                <p className="text-sm text-black/50">{store.location}</p>
-              </a>
-            ))}
-          </div>
-        )}
-      </section>
+        {/* Favorited Products */}
+        <section className="py-12 border-t border-neutral-100">
+          <h2 className="font-serif text-2xl mb-8">Favorite Products</h2>
+          {favProducts.length === 0 ? (
+            <p className="text-black/50 text-sm">
+              You haven&apos;t favorited any products yet. Browse and tap the heart to save pieces you love.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+              {favProducts.map((product) => {
+                const compositeId = `${product.store_slug}-${product.id}`;
+                const categorySlug = inferCategoryFromTitle(product.title);
+                const categoryLabel = categoryMap[categorySlug];
 
-      {/* Friends */}
-      <section className="max-w-5xl mx-auto px-6 py-12 border-t border-neutral-100">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-serif text-2xl">Friends</h2>
-          <a
-            href="/account/friends"
-            className="text-sm uppercase tracking-wide text-black/50 hover:text-black transition"
-          >
-            Manage Friends
-          </a>
-        </div>
-        <p className="text-black/50 text-sm">
-          Find friends by phone number, see what they&apos;re hearting and shopping.
-        </p>
-        <a
-          href="/account/friends"
-          className="inline-block mt-4 text-sm uppercase tracking-wide px-5 py-2.5 border border-black hover:bg-black hover:text-white transition"
-        >
-          Go to Friends
-        </a>
-      </section>
+                let images: string[] = [];
+                if (product.images) {
+                  try {
+                    const parsed = JSON.parse(product.images);
+                    if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
+                  } catch {}
+                }
+                if (images.length === 0 && product.image) {
+                  images = [product.image];
+                }
 
-      {/* Settings & Sign Out */}
-      <section className="max-w-5xl mx-auto px-6 py-12 border-t border-neutral-100">
-        <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
-      </section>
+                return (
+                  <ProductCard
+                    key={product.id}
+                    id={compositeId}
+                    dbId={product.id}
+                    name={product.title}
+                    price={`$${Number(product.price)}`}
+                    category={categoryLabel}
+                    storeName={product.store_name}
+                    storeSlug={product.store_slug}
+                    image={product.image || ""}
+                    images={images}
+                    favoriteCount={favCounts[product.id]}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Favorited Stores */}
+        <section className="py-12 border-t border-neutral-100">
+          <h2 className="font-serif text-2xl mb-8">Favorite Stores</h2>
+          {favStores.length === 0 ? (
+            <p className="text-black/50 text-sm">
+              You haven&apos;t favorited any stores yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {favStores.map((store) => store && (
+                <a
+                  key={store.slug}
+                  href={`/stores/${store.slug}`}
+                  className="block p-6 border border-neutral-200 hover:border-black transition"
+                >
+                  <h3 className="font-serif text-lg mb-1">{store.name}</h3>
+                  <p className="text-sm text-black/50">{store.location}</p>
+                </a>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Settings & Sign Out */}
+        <section className="py-12 border-t border-neutral-100 mb-8">
+          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
+        </section>
+      </div>
     </main>
   );
 }

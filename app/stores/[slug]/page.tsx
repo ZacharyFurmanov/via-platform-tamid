@@ -7,6 +7,7 @@ import { categoryMap } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import FavoriteButton from "@/app/components/FavoriteButton";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
 
 type StorePageProps = {
   params: Promise<{
@@ -28,9 +29,21 @@ export default async function StorePage({ params }: StorePageProps) {
 
   const storeProducts: StoreProduct[] = await loadStoreProducts(slug);
 
+  // Extract DB IDs from composite IDs (format: store_slug-dbId)
+  const dbIdMap = new Map<string, number>();
+  for (const product of storeProducts) {
+    const match = product.id.match(/-(\d+)$/);
+    if (match) dbIdMap.set(product.id, parseInt(match[1], 10));
+  }
+
+  // Fetch popularity scores
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
   // Transform to FilterableProduct format
   const products: FilterableProduct[] = storeProducts.map((product, idx) => ({
     id: product.id,
+    dbId: dbIdMap.get(product.id),
     title: product.name,
     price: parsePrice(product.price),
     category: product.category,
@@ -41,6 +54,7 @@ export default async function StorePage({ params }: StorePageProps) {
     image: product.image ?? "",
     images: product.images ?? [],
     createdAt: Date.now() - idx * 1000,
+    popularityScore: popularityScores[dbIdMap.get(product.id) ?? 0] ?? 0,
   }));
 
   return (

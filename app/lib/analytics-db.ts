@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { getProductFavoriteCounts } from "./favorites-db";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -234,6 +235,85 @@ export async function getConversionAnalytics(range: string) {
     recentConversions,
     range,
   };
+}
+
+/**
+ * Compute popularity scores for a set of products.
+ * Returns a map of dbId -> score.
+ */
+export async function getProductPopularityScores(
+  dbIds: number[]
+): Promise<Record<number, number>> {
+  if (dbIds.length === 0) return {};
+
+  const sql = neon(getDatabaseUrl());
+
+  // Look up composite IDs (store_slug-id) for these DB IDs
+  const productRows = await sql`
+    SELECT id, store_slug FROM products WHERE id = ANY(${dbIds})
+  `;
+  const compositeIdMap = new Map<string, number>(); // compositeId -> dbId
+  for (const row of productRows) {
+    const compositeId = `${row.store_slug}-${row.id}`;
+    compositeIdMap.set(compositeId, row.id as number);
+  }
+
+  const compositeIds = Array.from(compositeIdMap.keys());
+  if (compositeIds.length === 0) return {};
+
+  const now = Date.now();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const ninetyDaysAgo = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [clickRows, favCounts, conversionRows] = await Promise.all([
+    // Clicks with recency weighting
+    sql`
+      SELECT product_id,
+        SUM(CASE WHEN timestamp >= ${sevenDaysAgo}::timestamptz THEN 3
+                 WHEN timestamp >= ${thirtyDaysAgo}::timestamptz THEN 2
+                 ELSE 1 END)::int AS score
+      FROM clicks
+      WHERE product_id = ANY(${compositeIds})
+      GROUP BY product_id
+    `,
+    // Favorites
+    getProductFavoriteCounts(dbIds),
+    // Conversions (items JSONB contains productId field)
+    sql`
+      SELECT item->>'productId' AS product_id, COUNT(*)::int AS count
+      FROM conversions, jsonb_array_elements(items) AS item
+      WHERE timestamp >= ${ninetyDaysAgo}::timestamptz
+        AND item->>'productId' = ANY(${compositeIds})
+      GROUP BY item->>'productId'
+    `,
+  ]);
+
+  const scores: Record<number, number> = {};
+
+  // Click scores
+  for (const row of clickRows) {
+    const dbId = compositeIdMap.get(row.product_id as string);
+    if (dbId != null) {
+      scores[dbId] = (scores[dbId] ?? 0) + (row.score as number);
+    }
+  }
+
+  // Favorite scores (3 pts each)
+  for (const [dbId, count] of Object.entries(favCounts)) {
+    const id = Number(dbId);
+    scores[id] = (scores[id] ?? 0) + count * 3;
+  }
+
+  // Conversion scores (5 pts each)
+  for (const row of conversionRows) {
+    const dbId = compositeIdMap.get(row.product_id as string);
+    if (dbId != null) {
+      scores[dbId] = (scores[dbId] ?? 0) + (row.count as number) * 5;
+    }
+  }
+
+  return scores;
 }
 
 function mapClickRow(row: Record<string, unknown>): ClickRecord {
