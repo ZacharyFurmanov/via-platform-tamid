@@ -3,89 +3,141 @@ import { brands } from "./brandData";
 /**
  * Compute a composite ranking score for a product.
  *
- * Mirrors how major resale platforms (The RealReal, Vestiaire Collective, SSENSE)
- * surface the best products first — blending engagement signals with product
- * quality indicators so that even products with zero clicks still sort
- * meaningfully.
+ * Designed for a curated vintage/resale platform where engagement data
+ * is sparse. When clicks/favorites exist they dominate, but for zero-
+ * engagement products the score is driven by listing quality (images),
+ * moderate brand recognition, and price attractiveness — NOT just brand
+ * name alone.
  *
- * Score components:
- *   1. Engagement  — clicks, favorites, conversions (from analytics DB)
- *   2. Recency     — newer inventory gets a decay-based boost
- *   3. Image count — more images = higher-quality listing
- *   4. Brand       — recognized luxury/designer brands get a boost
- *   5. Price sweet spot — mid-range items convert better in resale
+ * Score components (with max contribution):
+ *   1. Engagement  — clicks, favorites, conversions       (uncapped, ×5)
+ *   2. Images      — more photos = better listing          (0–25)
+ *   3. Recency     — small freshness nudge                 (0–12)
+ *   4. Brand       — light boost, not dominant              (0–8)
+ *   5. Price       — mid-range vintage sweet spot           (0–8)
  */
 
-// Tier 1 luxury brands get the highest boost
 const TIER1_BRANDS = new Set([
   "chanel", "hermes", "louis-vuitton", "dior", "prada",
   "bottega-veneta", "celine", "saint-laurent",
 ]);
 
-// Tier 2 designer brands get a moderate boost
 const TIER2_BRANDS = new Set([
   "gucci", "fendi", "balenciaga", "valentino", "givenchy",
   "loewe", "miu-miu", "burberry", "versace",
 ]);
 
-// Tier 3 known brands get a small boost
 const TIER3_BRANDS = new Set(
   brands.map((b) => b.slug).filter((s) => !TIER1_BRANDS.has(s) && !TIER2_BRANDS.has(s))
 );
 
 export type RankingInput = {
-  engagementScore: number;   // from getProductPopularityScores()
-  syncedAt: Date | string;   // product.synced_at from DB
-  imageCount: number;        // number of images
-  brandSlug: string | null;  // inferred brand slug
-  price: number;             // numeric price
+  engagementScore: number;
+  syncedAt: Date | string;
+  imageCount: number;
+  brandSlug: string | null;
+  price: number;
 };
 
 export function computeProductScore(input: RankingInput): number {
   let score = 0;
 
-  // ── 1. Engagement (0–∞, typically 0–100) ──
-  // This is the strongest signal when available. Amplify it so engaged
-  // products clearly surface, but cap contribution so quality signals
-  // still matter for zero-engagement products.
-  score += input.engagementScore * 10;
+  // ── 1. Engagement (strongest signal when available) ──
+  score += input.engagementScore * 5;
 
-  // ── 2. Recency boost (0–40) ──
-  // Exponential decay: full 40 pts for items synced today,
-  // ~20 pts at 14 days, ~10 pts at 30 days, ~0 at 90+ days.
+  // ── 2. Image quality (0–25) ──
+  // This is the biggest quality signal for zero-engagement products.
+  // Items with more photos are better-curated listings and look better
+  // when browsing. Heavily reward 3+ images.
+  if (input.imageCount >= 5) score += 25;
+  else if (input.imageCount >= 4) score += 22;
+  else if (input.imageCount >= 3) score += 18;
+  else if (input.imageCount >= 2) score += 10;
+  else if (input.imageCount >= 1) score += 3;
+
+  // ── 3. Recency (0–12) ──
+  // Small nudge for fresh inventory. Kept low because synced_at
+  // updates on every sync cycle, so it's not true "new arrival" date.
   const msAge = Date.now() - new Date(input.syncedAt).getTime();
   const daysOld = msAge / (1000 * 60 * 60 * 24);
-  const recencyScore = 40 * Math.exp(-daysOld / 20);
-  score += Math.max(0, recencyScore);
+  score += Math.max(0, 12 * Math.exp(-daysOld / 14));
 
-  // ── 3. Image quality (0–15) ──
-  // 1 image = 0, 2 = 5, 3 = 10, 4+ = 15
-  if (input.imageCount >= 4) score += 15;
-  else if (input.imageCount >= 3) score += 10;
-  else if (input.imageCount >= 2) score += 5;
-
-  // ── 4. Brand recognition (0–25) ──
+  // ── 4. Brand recognition (0–8) ──
+  // Light touch — brand is a signal but shouldn't dominate.
+  // A great unbranded piece should rank close to a branded one.
   if (input.brandSlug) {
-    if (TIER1_BRANDS.has(input.brandSlug)) score += 25;
-    else if (TIER2_BRANDS.has(input.brandSlug)) score += 18;
-    else if (TIER3_BRANDS.has(input.brandSlug)) score += 10;
+    if (TIER1_BRANDS.has(input.brandSlug)) score += 8;
+    else if (TIER2_BRANDS.has(input.brandSlug)) score += 5;
+    else if (TIER3_BRANDS.has(input.brandSlug)) score += 3;
   }
 
-  // ── 5. Price sweet spot (0–10) ──
-  // In vintage/resale, $75–$500 is the conversion sweet spot.
-  // Very cheap (<$30) may signal damage; very expensive (>$1000) has
-  // lower conversion rates.
-  if (input.price >= 75 && input.price <= 500) {
-    score += 10;
-  } else if (input.price >= 40 && input.price < 75) {
-    score += 6;
-  } else if (input.price > 500 && input.price <= 1000) {
-    score += 6;
-  } else if (input.price >= 30 && input.price < 40) {
-    score += 3;
-  } else if (input.price > 1000) {
-    score += 3;
+  // ── 5. Price sweet spot (0–8) ──
+  if (input.price >= 50 && input.price <= 600) {
+    score += 8;
+  } else if (input.price >= 30 && input.price < 50) {
+    score += 5;
+  } else if (input.price > 600 && input.price <= 1200) {
+    score += 5;
+  } else if (input.price > 1200) {
+    score += 2;
   }
 
   return Math.round(score * 100) / 100;
+}
+
+/**
+ * Diversity-aware reordering.
+ *
+ * After scoring, pure score-sort clusters items from the same store
+ * together (because they share similar brand/image/recency traits).
+ * This interleave ensures variety — no more than `maxConsecutive` items
+ * from the same store appear in a row, while still respecting score
+ * order as much as possible.
+ */
+export function diversityInterleave<T>(
+  items: T[],
+  getGroup: (item: T) => string,
+  maxConsecutive: number = 2,
+): T[] {
+  if (items.length <= 1) return items;
+
+  const result: T[] = [];
+  const remaining = [...items]; // already sorted by score
+  const recentGroups: string[] = []; // track last N groups added
+
+  while (remaining.length > 0) {
+    // Find the highest-scored item whose group hasn't appeared
+    // too many times consecutively
+    let picked = -1;
+    for (let i = 0; i < remaining.length; i++) {
+      const group = getGroup(remaining[i]);
+      const consecutiveCount = countTrailing(recentGroups, group);
+      if (consecutiveCount < maxConsecutive) {
+        picked = i;
+        break;
+      }
+    }
+
+    // If all remaining items are from the same group, just take the top one
+    if (picked === -1) picked = 0;
+
+    const item = remaining.splice(picked, 1)[0];
+    result.push(item);
+    recentGroups.push(getGroup(item));
+    // Only track the last few to keep it efficient
+    if (recentGroups.length > maxConsecutive * 2) {
+      recentGroups.shift();
+    }
+  }
+
+  return result;
+}
+
+function countTrailing(arr: string[], value: string): number {
+  let count = 0;
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] === value) count++;
+    else break;
+  }
+  return count;
 }

@@ -8,6 +8,7 @@ import ProductFilter, {
 } from "./ProductFilter";
 import ProductCard from "./ProductCard";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
+import { diversityInterleave } from "@/app/lib/productRanking";
 
 export type FilterableProduct = {
   id: string;
@@ -60,20 +61,22 @@ function sortProducts(
 ): FilterableProduct[] {
   const sorted = [...products];
   switch (sort) {
-    case "popular":
-      return sorted.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
+    case "popular": {
+      // Sort by composite score, then interleave by store so items
+      // from different stores alternate (prevents clustering)
+      sorted.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
+      return diversityInterleave(sorted, (p) => p.storeSlug, 2);
+    }
     case "price-asc":
       return sorted.sort((a, b) => a.price - b.price);
     case "price-desc":
       return sorted.sort((a, b) => b.price - a.price);
     case "newest":
     default:
-      // Sort by createdAt if available, otherwise by id (which often contains index)
       return sorted.sort((a, b) => {
         if (a.createdAt && b.createdAt) {
           return b.createdAt - a.createdAt;
         }
-        // Fallback: reverse order to show newest first
         return b.id.localeCompare(a.id);
       });
   }
