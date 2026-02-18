@@ -8,6 +8,7 @@ import { stores } from "@/app/lib/stores";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
 
 export default async function CategoryPage({
   params,
@@ -36,22 +37,35 @@ export default async function CategoryPage({
   const dbIds = Array.from(dbIdMap.values());
   const popularityScores = await getProductPopularityScores(dbIds);
 
-  // Transform for FilteredProductGrid
-  const filteredProducts: FilterableProduct[] = categoryItems.map((item, idx) => ({
-    id: item.id,
-    dbId: dbIdMap.get(item.id),
-    title: item.title,
-    price: item.price,
-    category: item.category,
-    categoryLabel: categoryMeta.label,
-    store: item.store,
-    storeSlug: item.storeSlug,
-    externalUrl: item.externalUrl,
-    image: item.image,
-    images: item.images,
-    createdAt: Date.now() - idx * 1000,
-    popularityScore: popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0,
-  }));
+  // Transform for FilteredProductGrid with composite ranking
+  const filteredProducts: FilterableProduct[] = categoryItems.map((item) => {
+    const engagementScore = popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0;
+    const syncedAt = item.syncedAt ?? new Date().toISOString();
+
+    return {
+      id: item.id,
+      dbId: dbIdMap.get(item.id),
+      title: item.title,
+      price: item.price,
+      category: item.category,
+      categoryLabel: categoryMeta.label,
+      brand: item.brand,
+      brandLabel: item.brandLabel,
+      store: item.store,
+      storeSlug: item.storeSlug,
+      externalUrl: item.externalUrl,
+      image: item.image,
+      images: item.images,
+      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt,
+        imageCount: item.images.length,
+        brandSlug: item.brand,
+        price: item.price,
+      }),
+    };
+  });
 
   // Get stores for the filter
   const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));

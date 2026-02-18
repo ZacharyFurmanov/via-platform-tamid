@@ -8,6 +8,8 @@ import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 
 type StorePageProps = {
   params: Promise<{
@@ -40,22 +42,37 @@ export default async function StorePage({ params }: StorePageProps) {
   const dbIds = Array.from(dbIdMap.values());
   const popularityScores = await getProductPopularityScores(dbIds);
 
-  // Transform to FilterableProduct format
-  const products: FilterableProduct[] = storeProducts.map((product, idx) => ({
-    id: product.id,
-    dbId: dbIdMap.get(product.id),
-    title: product.name,
-    price: parsePrice(product.price),
-    category: product.category,
-    categoryLabel: categoryMap[product.category as keyof typeof categoryMap],
-    store: store.name,
-    storeSlug: store.slug,
-    externalUrl: product.externalUrl,
-    image: product.image ?? "",
-    images: product.images ?? [],
-    createdAt: Date.now() - idx * 1000,
-    popularityScore: popularityScores[dbIdMap.get(product.id) ?? 0] ?? 0,
-  }));
+  // Transform to FilterableProduct format with composite ranking
+  const products: FilterableProduct[] = storeProducts.map((product) => {
+    const price = parsePrice(product.price);
+    const images = product.images ?? [];
+    const brandSlug = inferBrandFromTitle(product.name);
+    const engagementScore = popularityScores[dbIdMap.get(product.id) ?? 0] ?? 0;
+    const syncedAt = product.syncedAt ?? new Date().toISOString();
+
+    return {
+      id: product.id,
+      dbId: dbIdMap.get(product.id),
+      title: product.name,
+      price,
+      category: product.category,
+      categoryLabel: categoryMap[product.category as keyof typeof categoryMap],
+      brand: brandSlug,
+      store: store.name,
+      storeSlug: store.slug,
+      externalUrl: product.externalUrl,
+      image: product.image ?? "",
+      images,
+      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt,
+        imageCount: images.length,
+        brandSlug,
+        price,
+      }),
+    };
+  });
 
   return (
     <main className="bg-white min-h-screen">

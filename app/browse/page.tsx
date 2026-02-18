@@ -7,26 +7,50 @@ import { categories } from "@/app/lib/categories";
 import { categoryMap } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
 
 export default async function BrowsePage() {
   const inventory = await getInventory();
 
-  // Transform inventory to FilterableProduct format
-  const products: FilterableProduct[] = inventory.map((item, idx) => ({
-    id: item.id,
-    title: item.title,
-    price: item.price,
-    category: item.category,
-    categoryLabel: categoryMap[item.category as keyof typeof categoryMap],
-    brand: item.brand,
-    brandLabel: item.brandLabel,
-    store: item.store,
-    storeSlug: item.storeSlug,
-    externalUrl: item.externalUrl,
-    image: item.image,
-    images: item.images,
-    createdAt: Date.now() - idx * 1000,
-  }));
+  // Extract DB IDs and fetch popularity scores
+  const dbIdMap = new Map<string, number>();
+  for (const item of inventory) {
+    const match = item.id.match(/-(\d+)$/);
+    if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
+  }
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
+  // Transform inventory with composite ranking scores
+  const products: FilterableProduct[] = inventory.map((item) => {
+    const engagementScore = popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0;
+    const syncedAt = item.syncedAt ?? new Date().toISOString();
+
+    return {
+      id: item.id,
+      dbId: dbIdMap.get(item.id),
+      title: item.title,
+      price: item.price,
+      category: item.category,
+      categoryLabel: categoryMap[item.category as keyof typeof categoryMap],
+      brand: item.brand,
+      brandLabel: item.brandLabel,
+      store: item.store,
+      storeSlug: item.storeSlug,
+      externalUrl: item.externalUrl,
+      image: item.image,
+      images: item.images,
+      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt,
+        imageCount: item.images.length,
+        brandSlug: item.brand,
+        price: item.price,
+      }),
+    };
+  });
 
   // Get stores for the filter
   const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));

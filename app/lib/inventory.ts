@@ -15,6 +15,7 @@ export type InventoryItem = {
   store: string;
   storeSlug: string;
   externalUrl?: string;
+  syncedAt?: string;
 };
 
 // Parse images JSON from DB, falling back to single image
@@ -29,7 +30,7 @@ function parseImages(product: DBProduct): string[] {
 }
 
 // Transform database products to InventoryItem format
-function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
+function transformDBProduct(product: DBProduct): InventoryItem {
   const brandSlug = inferBrandFromTitle(product.title);
   return {
     id: `${product.store_slug}-${product.id}`,
@@ -43,6 +44,9 @@ function transformDBProduct(product: DBProduct, idx: number): InventoryItem {
     store: product.store_name,
     storeSlug: product.store_slug,
     externalUrl: product.external_url ?? undefined,
+    syncedAt: product.synced_at instanceof Date
+      ? product.synced_at.toISOString()
+      : String(product.synced_at),
   };
 }
 

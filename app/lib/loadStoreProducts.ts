@@ -129,6 +129,9 @@ function transformDBProduct(product: DBProduct): StoreProduct {
     externalUrl: product.external_url ?? undefined,
     image: product.image ?? undefined,
     images: parseImages(product),
+    syncedAt: product.synced_at instanceof Date
+      ? product.synced_at.toISOString()
+      : String(product.synced_at),
   };
 }
 
