@@ -129,47 +129,61 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        {/* Favorited Products */}
+        {/* Favorited Products — horizontal scroll preview */}
         <section className="py-12 border-t border-neutral-100">
-          <h2 className="font-serif text-2xl mb-8">Favorite Products</h2>
+          <div className="flex items-end justify-between mb-8">
+            <h2 className="font-serif text-2xl">Favorite Products</h2>
+            {favProducts.length > 0 && (
+              <a
+                href="/account/favorites"
+                className="text-sm uppercase tracking-wide link-underline"
+              >
+                View all ({favProducts.length})
+              </a>
+            )}
+          </div>
           {favProducts.length === 0 ? (
             <p className="text-black/50 text-sm">
               You haven&apos;t favorited any products yet. Browse and tap the heart to save pieces you love.
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {favProducts.map((product) => {
-                const compositeId = `${product.store_slug}-${product.id}`;
-                const categorySlug = inferCategoryFromTitle(product.title);
-                const categoryLabel = categoryMap[categorySlug];
+            <div className="overflow-x-auto scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-4" style={{ width: "max-content" }}>
+                {favProducts.map((product) => {
+                  const compositeId = `${product.store_slug}-${product.id}`;
+                  const categorySlug = inferCategoryFromTitle(product.title);
+                  const categoryLabel = categoryMap[categorySlug];
 
-                let images: string[] = [];
-                if (product.images) {
-                  try {
-                    const parsed = JSON.parse(product.images);
-                    if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
-                  } catch {}
-                }
-                if (images.length === 0 && product.image) {
-                  images = [product.image];
-                }
+                  let images: string[] = [];
+                  if (product.images) {
+                    try {
+                      const parsed = JSON.parse(product.images);
+                      if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
+                    } catch {}
+                  }
+                  if (images.length === 0 && product.image) {
+                    images = [product.image];
+                  }
 
-                return (
-                  <ProductCard
-                    key={product.id}
-                    id={compositeId}
-                    dbId={product.id}
-                    name={product.title}
-                    price={`$${Number(product.price)}`}
-                    category={categoryLabel}
-                    storeName={product.store_name}
-                    storeSlug={product.store_slug}
-                    image={product.image || ""}
-                    images={images}
-                    favoriteCount={favCounts[product.id]}
-                  />
-                );
-              })}
+                  return (
+                    <div key={product.id} className="w-[160px] sm:w-[200px] flex-shrink-0">
+                      <ProductCard
+                        id={compositeId}
+                        dbId={product.id}
+                        name={product.title}
+                        price={`$${Number(product.price)}`}
+                        category={categoryLabel}
+                        storeName={product.store_name}
+                        storeSlug={product.store_slug}
+                        image={product.image || ""}
+                        images={images}
+                        favoriteCount={favCounts[product.id]}
+                        from="/account/favorites"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </section>
