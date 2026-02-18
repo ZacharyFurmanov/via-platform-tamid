@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Menu, X, ChevronDown, User, ShoppingCart } from "lucide-react";
@@ -10,7 +10,6 @@ import { useCart } from "./CartProvider";
 import { useFriends } from "./FriendsProvider";
 
 import { stores } from "@/app/lib/stores";
-import { products } from "@/app/stores/productData";
 
 type Category = {
   slug: string;
@@ -19,7 +18,7 @@ type Category = {
 
 type SearchResult =
   | { type: "store"; name: string; href: string }
-  | { type: "product"; name: string; href: string; meta: string };
+  | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 export default function HeaderClient({
   categories,
@@ -82,30 +81,60 @@ export default function HeaderClient({
   // -----------------------------
   // SEARCH RESULTS
   // -----------------------------
-  const results: SearchResult[] = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const storeResults = stores
-      .filter((s) => s.name.toLowerCase().includes(q))
-      .slice(0, 5)
-      .map((s) => ({
-        type: "store" as const,
-        name: s.name,
-        href: `/stores/${s.slug}`,
-      }));
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
 
-    const productResults = products
-      .filter((p) => p.name.toLowerCase().includes(q))
-      .slice(0, 5)
-      .map((p) => ({
-        type: "product" as const,
-        name: p.name,
-        href: `/stores/${p.storeSlug}`,
-        meta: p.category,
-      }));
+    // Debounce API calls by 250ms
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      const q = query.toLowerCase();
 
-    return [...storeResults, ...productResults];
+      // Store results (client-side, instant)
+      const storeResults: SearchResult[] = stores
+        .filter((s) => s.name.toLowerCase().includes(q))
+        .slice(0, 5)
+        .map((s) => ({
+          type: "store" as const,
+          name: s.name,
+          href: `/stores/${s.slug}`,
+        }));
+
+      // Product results from API
+      setSearchLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          const productResults: SearchResult[] = (data.products || []).map(
+            (p: { name: string; storeSlug: string; storeName: string; price: string; image?: string }) => ({
+              type: "product" as const,
+              name: p.name,
+              href: `/stores/${p.storeSlug}`,
+              meta: p.storeName,
+              image: p.image,
+            })
+          );
+          setResults([...storeResults, ...productResults]);
+        } else {
+          setResults(storeResults);
+        }
+      } catch {
+        setResults(storeResults);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
   }, [query]);
 
   // -----------------------------
@@ -443,6 +472,12 @@ export default function HeaderClient({
             />
 
             <div className="mt-6">
+              {searchLoading && results.length === 0 && (
+                <p className="text-sm text-black/40 px-3 py-2">Searching...</p>
+              )}
+              {!searchLoading && query.trim().length >= 2 && results.length === 0 && (
+                <p className="text-sm text-black/40 px-3 py-2">No results found</p>
+              )}
               {results.map((r, i) => (
                 <button
                   key={i}
@@ -450,17 +485,24 @@ export default function HeaderClient({
                     setSearchOpen(false);
                     router.push(r.href);
                   }}
-                  className={`w-full text-left px-3 py-2 rounded ${
+                  className={`w-full text-left px-3 py-2 rounded flex items-center gap-3 ${
                     i === activeIndex
                       ? "bg-black text-white"
                       : "hover:bg-gray-100"
                   }`}
                 >
-                  <div className="flex justify-between">
-                    <span>{r.name}</span>
-                    {r.type === "product" && (
-                      <span className="text-xs opacity-70">{r.meta}</span>
-                    )}
+                  {r.type === "product" && r.image && (
+                    <img
+                      src={r.image}
+                      alt=""
+                      className="w-10 h-10 object-cover rounded flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 flex justify-between items-center min-w-0">
+                    <span className="truncate">{r.name}</span>
+                    <span className="text-xs opacity-70 flex-shrink-0 ml-2">
+                      {r.type === "store" ? "Store" : r.meta}
+                    </span>
                   </div>
                 </button>
               ))}
