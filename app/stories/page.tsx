@@ -22,6 +22,13 @@ const stories = [
       "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
     image: "/stores/VintageArchivesLA.jpg",
   },
+  {
+    slug: "ascensio-vintage",
+    store: "Ascensio Vintage",
+    teaser:
+      "Championing timeless style that transcends the decades — authentic, high-quality vintage designer clothes sourced with intention.",
+    image: "/stores/ascensio-vintage.jpg",
+  },
 ];
 
 export default function StoriesPage() {
