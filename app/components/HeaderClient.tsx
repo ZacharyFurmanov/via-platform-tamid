@@ -188,23 +188,28 @@ export default function HeaderClient({
 
   return (
     <>
-      <header className="fixed top-0 z-50 w-full bg-black">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      {/* Announcement bar */}
+      <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase">
+        Curated Vintage &amp; Resale — Free to Browse
+      </div>
+
+      <header className="fixed top-8 z-50 w-full bg-black">
+        <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
             <Image
               src="/via-logo-white.png"
               alt="VIA"
-              width={72}
-              height={28}
+              width={80}
+              height={32}
               priority
             />
           </Link>
 
-          <div className="flex items-center gap-4 md:gap-10">
+          <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-wide text-white">
+            <nav className="hidden md:flex items-center gap-12 text-[13px] uppercase tracking-[0.15em] text-white">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -228,7 +233,7 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-white text-black min-w-[220px] shadow-xl">
+                  <div className="bg-white text-black min-w-[220px] shadow-xl rounded-sm border border-neutral-100">
                     <div className="py-2">
                       {stores.map((store) => (
                         <Link
@@ -278,7 +283,7 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-white text-black min-w-[200px] shadow-xl">
+                  <div className="bg-white text-black min-w-[200px] shadow-xl rounded-sm border border-neutral-100">
                     <div className="py-2">
                       {categories.map((cat) => (
                         <Link
@@ -371,7 +376,7 @@ export default function HeaderClient({
           />
 
           {/* Menu Panel */}
-          <nav className="absolute top-20 left-0 right-0 bottom-0 bg-black overflow-y-auto">
+          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-black overflow-y-auto">
             <div className="px-6 py-8">
               {/* Main Links */}
               <ul className="space-y-1">

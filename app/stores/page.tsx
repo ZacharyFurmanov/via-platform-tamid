@@ -29,7 +29,7 @@ export default function StoresPage() {
 
                 {/* IMAGE (CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block mb-6">
-                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden shadow-sm group-hover:shadow-lg transition-shadow duration-500">
+                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
                     {store.image && (
                       <Image
                         src={store.image}
@@ -44,16 +44,16 @@ export default function StoresPage() {
 
                 {/* TEXT (ALSO CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block">
-                  <h2 className="text-xl font-serif mb-1 link-underline">
+                  <h2 className="text-lg font-serif mb-1 link-underline">
                     {store.name}
                   </h2>
                 </Link>
 
-                <p className="text-sm text-neutral-500 mb-3">
+                <p className="text-sm text-neutral-500 mb-4">
                   {store.location}
                 </p>
 
-                <p className="text-neutral-700 leading-relaxed line-clamp-3">
+                <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">
                   {store.description}
                 </p>
 

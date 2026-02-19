@@ -72,7 +72,7 @@ export default function RootLayout({
               <GiveawayProvider>
                 <ScrollToTop />
                 <Header />
-                <main className="pt-20">{children}</main>
+                <main className="pt-[104px]">{children}</main>
                 <Footer />
               </GiveawayProvider>
             </CartProvider>

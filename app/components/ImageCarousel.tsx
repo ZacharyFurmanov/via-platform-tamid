@@ -73,7 +73,7 @@ export default function ImageCarousel({
   if (variant === "card") {
     return (
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 group/carousel shadow-sm hover:shadow-md transition-shadow duration-500"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 group/carousel"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
@@ -94,7 +94,6 @@ export default function ImageCarousel({
           <div className="absolute inset-0 bg-neutral-200 z-10" />
         )}
 
-        <div className="absolute inset-0 bg-black/[0.03] group-hover:bg-black/[0.08] transition-all duration-500 pointer-events-none z-20" />
 
         {hasMultiple && (
           <>

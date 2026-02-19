@@ -11,7 +11,7 @@ export default function HomePage() {
     <main className="w-full">
       <SmoothScroll />
 {/* ================= HERO ================= */}
-<section className="relative min-h-screen flex items-center overflow-hidden">
+<section className="relative min-h-screen flex items-end overflow-hidden">
 
   {/* Background image */}
   <div className="absolute inset-0">
@@ -22,11 +22,11 @@ export default function HomePage() {
       priority
       className="object-cover object-top md:object-center"
     />
-    <div className="absolute inset-0 bg-black/60" />
+    <div className="absolute inset-0 bg-black/40" />
   </div>
 
   {/* Content wrapper */}
-  <div className="relative z-10 w-full">
+  <div className="relative z-10 w-full pb-20 sm:pb-32">
     <div className="max-w-7xl mx-auto px-6">
       <div className="max-w-2xl animate-hero">
 
@@ -38,7 +38,7 @@ export default function HomePage() {
           Shop the best vintage & resale stores
         </h1>
 
-        <p className="max-w-xl mb-10 text-lg text-gray-200">
+        <p className="max-w-xl mb-10 text-base text-gray-200">
           Discover and browse independent vintage and resale stores worldwide.
           The pieces you've been looking for, without the hunt. All trusted and verified stores.
         </p>
@@ -99,9 +99,6 @@ export default function HomePage() {
     <ScrollReveal>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-            Curated Collections
-          </p>
           <h2 className="text-3xl sm:text-5xl font-serif text-black">
             Shop by Category
           </h2>
@@ -117,7 +114,7 @@ export default function HomePage() {
     </ScrollReveal>
 
     <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide">
-      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-12">
+      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 sm:gap-6">
         {[
           { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },
           { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
@@ -129,23 +126,20 @@ export default function HomePage() {
               href={`/categories/${category.slug}`}
               className="group block w-[72vw] flex-shrink-0 sm:w-auto"
             >
-              <div className="aspect-[4/5] relative overflow-hidden mb-3 sm:mb-4 rounded-sm shadow-sm group-hover:shadow-lg transition-shadow duration-500">
+              <div className="aspect-[3/4] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
                 <Image
                   src={category.image}
                   alt={category.label}
                   fill
-                  sizes="(min-width: 768px) 25vw, 72vw"
+                  sizes="(min-width: 768px) 50vw, 72vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-black/15 group-hover:bg-black/25 transition-colors duration-500" />
 
-                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
-                  <h3 className="text-lg sm:text-2xl font-serif text-white mb-0.5 sm:mb-1">
+                <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
+                  <h3 className="text-xl sm:text-3xl font-serif text-white">
                     {category.label}
                   </h3>
-                  <p className="text-[10px] sm:text-xs uppercase tracking-wide text-white/80">
-                    Explore
-                  </p>
                 </div>
               </div>
             </Link>
@@ -256,19 +250,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= VIA EXPERIENCE / WAITLIST ================= */}
-      <section className="bg-black py-24 sm:py-40 text-white">
+      {/* ================= VIA EXPERIENCE ================= */}
+      <section className="bg-[#f7f6f3] py-24 sm:py-36 border-t border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <ScrollReveal>
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-400 mb-3 sm:mb-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-neutral-400 mb-3 sm:mb-4">
               The VIA Experience
             </p>
 
-            <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
+            <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6 text-black">
               A better way to shop vintage
             </h2>
 
-            <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-gray-300 text-sm sm:text-base">
+            <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-neutral-600 text-sm sm:text-base">
               VIA brings together the best independent vintage and resale stores
               into one seamless browsing experience, while keeping checkout
               with the store you love.
@@ -277,22 +271,22 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <ScrollReveal delay={0}>
-              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Browse across stores</h3>
-              <p className="text-gray-300 text-sm sm:text-base">
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Browse across stores</h3>
+              <p className="text-neutral-600 text-sm sm:text-base">
                 Explore curated inventory from multiple stores at once.
               </p>
             </ScrollReveal>
 
             <ScrollReveal delay={150}>
-              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Discover rare pieces</h3>
-              <p className="text-gray-300 text-sm sm:text-base">
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Discover rare pieces</h3>
+              <p className="text-neutral-600 text-sm sm:text-base">
                 Find one-of-a-kind items you won't see everywhere else.
               </p>
             </ScrollReveal>
 
             <ScrollReveal delay={300}>
-              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3">Checkout with confidence</h3>
-              <p className="text-gray-300 text-sm sm:text-base">
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Checkout with confidence</h3>
+              <p className="text-neutral-600 text-sm sm:text-base">
                 Purchase directly from the original store, no middlemen.
               </p>
             </ScrollReveal>

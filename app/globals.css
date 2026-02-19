@@ -22,7 +22,7 @@ html.lenis, html.lenis body {
 }
 
 html {
-  scroll-padding-top: 72px; /* header height */
+  scroll-padding-top: 104px; /* announcement bar (32px) + header (72px) */
 }
 
 body {
@@ -121,7 +121,39 @@ body {
    Heading letter-spacing
 ================================ */
 h1, h2, h3 {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+}
+
+/* ================================
+   RL-style utility classes
+================================ */
+.section-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgb(163 163 163); /* neutral-400 */
+  margin-bottom: 1rem;
+}
+@media (min-width: 640px) {
+  .section-eyebrow {
+    margin-bottom: 1.25rem;
+  }
+}
+
+.editorial-heading {
+  font-family: var(--font-cormorant);
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+@media (min-width: 640px) {
+  .editorial-heading {
+    font-size: 3rem;
+  }
+}
+@media (min-width: 1024px) {
+  .editorial-heading {
+    font-size: 3.75rem;
+  }
 }
 
 /* ================================

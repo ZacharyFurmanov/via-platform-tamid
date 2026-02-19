@@ -50,13 +50,11 @@ export default function ProductCard({
             {storeName}
           </p>
 
-          <h3 className="font-serif text-base sm:text-lg text-black leading-snug line-clamp-2">
+          <h3 className="font-serif text-sm sm:text-base text-black leading-snug line-clamp-2">
             {name}
           </h3>
 
-          <p className="text-xs sm:text-sm text-black/70 mt-0.5">{category}</p>
-
-          <p className="text-sm sm:text-base mt-1 text-black font-medium">{price}</p>
+          <p className="text-sm mt-1 text-black/80">{price}</p>
         </div>
       </Link>
 
