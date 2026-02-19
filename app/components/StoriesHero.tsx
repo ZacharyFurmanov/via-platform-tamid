@@ -45,14 +45,14 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
             className="animate-fade-in mb-6 sm:mb-8"
           >
             <div
-              className="relative w-48 h-24 sm:w-56 sm:h-28 mx-auto rounded-sm overflow-hidden flex items-center justify-center"
+              className="relative w-56 h-28 sm:w-64 sm:h-32 mx-auto rounded-sm overflow-hidden"
               style={{ backgroundColor: story.logoBg }}
             >
               <Image
                 src={story.logo}
                 alt={story.store}
                 fill
-                className={story.logoBg === "#ffffff" ? "object-contain p-3" : "object-cover"}
+                className="object-contain p-2"
               />
             </div>
           </div>
