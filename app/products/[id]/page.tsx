@@ -11,6 +11,7 @@ import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
 import { getProductFavoriteCount } from "@/app/lib/favorites-db";
 import ProductQuestion from "@/app/components/ProductQuestion";
+import ProductAccordion from "@/app/components/ProductAccordion";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -128,13 +129,61 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />
             </div>
 
-            {/* Description / product details */}
-            {product.description && (
-              <div
-                className="prose prose-sm max-w-none mb-8 text-black/70 leading-relaxed [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+            {/* Accordion details */}
+            <div className="mb-8">
+              <ProductAccordion
+                sections={[
+                  {
+                    title: "Product Details",
+                    content: product.description ? (
+                      <div
+                        className="prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
+                        dangerouslySetInnerHTML={{ __html: product.description }}
+                      />
+                    ) : (
+                      <p>Details not available for this item. Visit {store.name} for more information.</p>
+                    ),
+                  },
+                  {
+                    title: "Sizing & Measurements",
+                    content: (
+                      <div>
+                        <p className="mb-3">
+                          This is a vintage or secondhand item. Sizing may vary from modern standards.
+                          We recommend checking measurements carefully before purchasing.
+                        </p>
+                        <p>
+                          For specific measurements or sizing questions, contact{" "}
+                          <a href={`/stores/${store.slug}`} className="underline hover:text-black transition">
+                            {store.name}
+                          </a>{" "}
+                          directly.
+                        </p>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: "Shipping & Returns",
+                    content: (
+                      <div>
+                        {"perk" in store && store.perk && (
+                          <p className="mb-3 font-medium text-black">{store.perk}</p>
+                        )}
+                        <p className="mb-3">
+                          This item ships directly from {store.name}
+                          {"location" in store && store.location ? ` (${store.location})` : ""}.
+                          Shipping rates and delivery times are determined by the store at checkout.
+                        </p>
+                        <p>
+                          Returns and exchanges are subject to {store.name}&apos;s policies.
+                          Please review their return policy before purchasing.
+                        </p>
+                      </div>
+                    ),
+                  },
+                ]}
               />
-            )}
+            </div>
 
             {/* Add to Cart */}
             {product.external_url ? (
