@@ -160,12 +160,35 @@ export default function CartPage() {
                   <a
                     href={(() => {
                       const firstItem = group.items[0];
+
+                      // Aggregate all items into a single Shopify cart URL
+                      // Format: /cart/VARIANT1:1,VARIANT2:1?discount=CODE
+                      let aggregatedUrl = firstItem.checkoutUrl;
+                      try {
+                        const isShopifyCart = firstItem.checkoutUrl.includes("/cart/");
+                        if (isShopifyCart && group.items.length > 1) {
+                          const variantParts: string[] = [];
+                          for (const item of group.items) {
+                            const m = item.checkoutUrl.match(/\/cart\/([^?,]+)/);
+                            if (m) variantParts.push(m[1]);
+                          }
+                          const url = new URL(firstItem.checkoutUrl);
+                          const discount = url.searchParams.get("discount");
+                          const discountParam = discount ? `?discount=${discount}` : "";
+                          aggregatedUrl = `${url.origin}/cart/${variantParts.join(",")}${discountParam}`;
+                        }
+                      } catch {
+                        // For non-Shopify stores or invalid URLs, fall back to first item
+                      }
+
                       const params = new URLSearchParams({
                         pid: firstItem.compositeId,
-                        pn: firstItem.title,
+                        pn: group.items.length > 1
+                          ? `${group.items.length} items from ${group.storeName}`
+                          : firstItem.title,
                         s: firstItem.storeName,
                         ss: firstItem.storeSlug,
-                        url: firstItem.checkoutUrl,
+                        url: aggregatedUrl,
                       });
                       return `/api/track?${params.toString()}`;
                     })()}
