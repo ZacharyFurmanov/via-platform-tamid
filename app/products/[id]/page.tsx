@@ -38,7 +38,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   ]);
   if (!product) return notFound();
 
-  const store = stores.find((s) => s.slug === storeSlug) ?? {
+  const storeConfig = stores.find((s) => s.slug === storeSlug);
+  const store = storeConfig ?? {
     slug: product.store_slug,
     name: product.store_name,
     location: "",
@@ -137,7 +138,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     title: "Product Details",
                     content: product.description ? (
                       <div
-                        className="prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
+                        className="product-description prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
                         dangerouslySetInnerHTML={{ __html: product.description }}
                       />
                     ) : (
@@ -166,17 +167,18 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     title: "Shipping & Returns",
                     content: (
                       <div>
-                        {"perk" in store && store.perk && (
-                          <p className="mb-3 font-medium text-black">{store.perk}</p>
+                        {storeConfig?.perk && (
+                          <p className="mb-3 font-medium text-black">{storeConfig.perk}</p>
                         )}
-                        <p className="mb-3">
-                          This item ships directly from {store.name}
-                          {"location" in store && store.location ? ` (${store.location})` : ""}.
-                          Shipping rates and delivery times are determined by the store at checkout.
+                        <p className="mb-1 font-medium text-black text-xs uppercase tracking-wide">Shipping</p>
+                        <p className="mb-4">
+                          {storeConfig?.shippingPolicy ??
+                            `This item ships directly from ${store.name}${storeConfig?.location ? ` (${storeConfig.location})` : ""}. Shipping rates and delivery times are determined by the store at checkout.`}
                         </p>
+                        <p className="mb-1 font-medium text-black text-xs uppercase tracking-wide">Returns</p>
                         <p>
-                          Returns and exchanges are subject to {store.name}&apos;s policies.
-                          Please review their return policy before purchasing.
+                          {storeConfig?.returnPolicy ??
+                            `All sales are final. Please review all item details carefully before purchasing.`}
                         </p>
                       </div>
                     ),

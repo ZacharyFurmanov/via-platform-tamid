@@ -11,6 +11,10 @@ export const stores = [
     logo: "/stores/lei-vintage-logo.jpg",
     logoBg: "#ffffff",
     currency: "USD",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout. Orders ship to the address provided at checkout.",
+    returnPolicy:
+      "All sales are final. If your item arrives significantly damaged or materially different from its description, contact info@shoplei.com within 48 hours of delivery with photos for review.",
     // No affiliatePath — uses Squarespace pixel for conversion tracking
   },
   {
@@ -26,6 +30,10 @@ export const stores = [
     logoBg: "#fdf8d8",
     currency: "USD",
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
+    shippingPolicy:
+      "Orders are processed within 3–7 business days. Delivery takes an additional 3–7 business days depending on location. Shipping rates are calculated at checkout based on destination and package weight. US shipping only.",
+    returnPolicy:
+      "All sales are final — no refunds, exchanges, or returns. Please review all item details carefully before purchasing.",
   },
   {
     slug: "scarz-vintage",
@@ -42,6 +50,10 @@ export const stores = [
     affiliatePath: "VIAXSCARZ",
     discountCode: "VIAXSCARZ",
     perk: "VIA customers get free shipping",
+    shippingPolicy:
+      "Orders are processed within 1–2 business days. UK Standard: £4 (2–4 days). EU International: £15 (2–11 days). Rest of World: £30 (3–17 days). Free shipping on orders over £500. International customers are responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Refunds or exchanges are only issued if the wrong item was sent or if there is a significant discrepancy from the product description. Contact contact@scarzvintage.com within 7 days of receiving your order.",
   },
   {
     slug: "missi-archives",
@@ -59,6 +71,10 @@ export const stores = [
     affiliatePath: "0001",
     discountCode: "0001",
     perk: "VIA customers get free shipping",
+    shippingPolicy:
+      "Orders are processed within 2–5 business days. Delivery times vary by destination and chosen shipping service. A confirmation email with tracking details is sent once your order is dispatched.",
+    returnPolicy:
+      "All sales are final — no returns or refunds. If you experience any issues with your order, email missiarchives@gmail.com and the team will do their best to help.",
   },
   {
     slug: "ascensio-vintage",
@@ -73,6 +89,10 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "GBP",
     affiliatePath: "1234",
+    shippingPolicy:
+      "Ships from Shropshire, England. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. As a vintage and pre-loved retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
   },
   {
     slug: "lover-girl-vintage",
@@ -87,6 +107,10 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     affiliatePath: "VIAPARTNER",
+    shippingPolicy:
+      "Ships from Newport Beach, CA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final — no returns under any circumstances. All vintage items may show signs of wear consistent with age. Any notable wear is disclosed in the item description. Please review carefully before purchasing.",
   },
 ];
 

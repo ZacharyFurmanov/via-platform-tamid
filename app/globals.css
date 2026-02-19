@@ -192,3 +192,14 @@ h1, h2, h3 {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ================================
+   Product description font override
+   Strips inline font styles from Shopify/Squarespace HTML
+================================ */
+.product-description * {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  line-height: inherit !important;
+}
