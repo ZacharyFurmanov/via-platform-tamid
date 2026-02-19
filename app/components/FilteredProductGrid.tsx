@@ -253,7 +253,7 @@ export default function FilteredProductGrid({
                 id={product.id}
                 dbId={product.dbId}
                 name={product.title}
-                price={`$${product.price}`}
+                price={`$${Math.round(product.price)}`}
                 category={product.categoryLabel}
                 storeName={product.store}
                 storeSlug={product.storeSlug}

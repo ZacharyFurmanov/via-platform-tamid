@@ -141,7 +141,7 @@ export async function GET(request: Request) {
         name: p.title,
         storeSlug: p.store_slug,
         storeName: p.store_name,
-        price: `$${Number(p.price)}`,
+        price: `$${Math.round(Number(p.price))}`,
         image: p.image,
       })),
     });

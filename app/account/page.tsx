@@ -171,7 +171,7 @@ export default async function AccountPage() {
                         id={compositeId}
                         dbId={product.id}
                         name={product.title}
-                        price={`$${Number(product.price)}`}
+                        price={`$${Math.round(Number(product.price))}`}
                         category={categoryLabel}
                         storeName={product.store_name}
                         storeSlug={product.store_slug}

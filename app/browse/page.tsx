@@ -48,6 +48,7 @@ export default async function BrowsePage() {
         imageCount: item.images.length,
         brandSlug: item.brand,
         price: item.price,
+        title: item.title,
       }),
     };
   });

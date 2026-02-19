@@ -45,7 +45,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   const categorySlug = inferCategoryFromTitle(product.title);
   const categoryLabel = categoryMap[categorySlug];
-  const price = `$${Number(product.price)}`;
+  const price = `$${Math.round(Number(product.price))}`;
 
   // Parse images from DB
   let productImages: string[] = [];
@@ -186,7 +186,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {recommendations.map((rec) => {
                 const recId = `${rec.store_slug}-${rec.id}`;
-                const recPrice = `$${Number(rec.price)}`;
+                const recPrice = `$${Math.round(Number(rec.price))}`;
                 const recCategory = categoryMap[inferCategoryFromTitle(rec.title)];
 
                 let recImages: string[] = [];

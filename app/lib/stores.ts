@@ -108,5 +108,5 @@ export function convertToUSD(price: number, storeSlug: string): number {
   const currency = store?.currency ?? "USD";
   if (currency === "USD") return price;
   const rate = exchangeRatesToUSD[currency] ?? 1;
-  return Math.round(price * rate * 100) / 100;
+  return Math.ceil(price * rate);
 }

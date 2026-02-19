@@ -63,6 +63,7 @@ export default async function CategoryPage({
         imageCount: item.images.length,
         brandSlug: item.brand,
         price: item.price,
+        title: item.title,
       }),
     };
   });

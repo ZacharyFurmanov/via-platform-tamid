@@ -118,7 +118,7 @@ function parseImages(product: DBProduct): string[] {
 
 // Transform database product to StoreProduct format
 function transformDBProduct(product: DBProduct): StoreProduct {
-  const priceString = `$${Number(product.price)}`;
+  const priceString = `$${Math.round(Number(product.price))}`;
 
   return {
     id: `${product.store_slug}-${product.id}`,

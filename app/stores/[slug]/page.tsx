@@ -70,6 +70,7 @@ export default async function StorePage({ params }: StorePageProps) {
         imageCount: images.length,
         brandSlug,
         price,
+        title: product.name,
       }),
     };
   });

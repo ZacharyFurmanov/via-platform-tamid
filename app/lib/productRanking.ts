@@ -37,6 +37,7 @@ export type RankingInput = {
   imageCount: number;
   brandSlug: string | null;
   price: number;
+  title?: string;
 };
 
 export function computeProductScore(input: RankingInput): number {
@@ -80,6 +81,16 @@ export function computeProductScore(input: RankingInput): number {
     score += 5;
   } else if (input.price > 1200) {
     score += 2;
+  }
+
+  // ── 6. Men's item penalty ──
+  // VIA's audience is primarily women's vintage/resale. Demote
+  // items with men's keywords so they appear further down.
+  if (input.title) {
+    const t = input.title.toLowerCase();
+    if (/\bmen'?s?\b/.test(t) || /\bhomme\b/.test(t)) {
+      score -= 30;
+    }
   }
 
   return Math.round(score * 100) / 100;
