@@ -74,6 +74,20 @@ export const stores = [
     currency: "GBP",
     affiliatePath: "1234",
   },
+  {
+    slug: "lover-girl-vintage",
+    name: "Lover Girl Vintage",
+    location: "Newport Beach, CA",
+    description:
+      "Lover Girl Vintage is a curated collection of vintage and pre-loved fashion, hand-selected with a feminine, romantic eye. Based in Newport Beach, each piece is chosen for its charm, character, and timeless appeal.",
+    website: "https://lovergirlvintage.com",
+    dataSource: "lover-girl-vintage",
+    image: "/stores/lover-girl-vintage.jpg",
+    logo: "/stores/lover-girl-vintage-logo.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "VIAPARTNER",
+  },
 ];
 
 // Approximate exchange rates to USD (update periodically)

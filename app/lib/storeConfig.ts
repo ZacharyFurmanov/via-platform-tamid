@@ -52,6 +52,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "ascensio-vintage",
     storeDomain: "ascensiovintage.com",
   },
+  {
+    type: "shopify",
+    name: "Lover Girl Vintage",
+    slug: "lover-girl-vintage",
+    storeDomain: "lovergirlvintage.com",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
