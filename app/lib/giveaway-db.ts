@@ -113,12 +113,35 @@ export async function getEntryByCode(code: string): Promise<GiveawayEntry | null
   const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
+  const upperCode = code.toUpperCase();
+
   const result = await sql`
-    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${code.toUpperCase()}
+    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
   `;
 
   if (result.length === 0) return null;
-  return mapRow(result[0]);
+
+  // Compute the true referral count from the actual referred entries
+  // (the referral_count column can drift due to race conditions)
+  const countResult = await sql`
+    SELECT COUNT(*)::int AS real_count
+    FROM giveaway_entries
+    WHERE UPPER(referred_by_code) = ${upperCode}
+  `;
+  const realCount = countResult[0]?.real_count ?? 0;
+
+  // Sync the column if it drifted
+  if (realCount !== result[0].referral_count) {
+    await sql`
+      UPDATE giveaway_entries
+      SET referral_count = ${realCount}
+      WHERE UPPER(referral_code) = ${upperCode}
+    `;
+  }
+
+  const entry = mapRow(result[0]);
+  entry.referralCount = realCount as number;
+  return entry;
 }
 
 export async function getEntryByEmail(email: string): Promise<GiveawayEntry | null> {
@@ -130,7 +153,27 @@ export async function getEntryByEmail(email: string): Promise<GiveawayEntry | nu
   `;
 
   if (result.length === 0) return null;
-  return mapRow(result[0]);
+
+  // Compute the true referral count from actual referred entries
+  const upperCode = (result[0].referral_code as string).toUpperCase();
+  const countResult = await sql`
+    SELECT COUNT(*)::int AS real_count
+    FROM giveaway_entries
+    WHERE UPPER(referred_by_code) = ${upperCode}
+  `;
+  const realCount = countResult[0]?.real_count ?? 0;
+
+  if (realCount !== result[0].referral_count) {
+    await sql`
+      UPDATE giveaway_entries
+      SET referral_count = ${realCount}
+      WHERE UPPER(referral_code) = ${upperCode}
+    `;
+  }
+
+  const entry = mapRow(result[0]);
+  entry.referralCount = realCount as number;
+  return entry;
 }
 
 export async function recordPhoneInvites(
@@ -155,17 +198,39 @@ export async function processReferralEntry(
   const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
-  // Atomically increment referral_count (no cap — more referrals = more chances to win)
-  // Still store first two friend emails in the dedicated slots
-  // Use case-insensitive match on referral_code
+  const upperCode = referrerCode.toUpperCase();
+  const lowerEmail = newEmail.toLowerCase();
+
+  // Prevent duplicate: check if this email was already counted as a referral for this code
+  const alreadyCounted = await sql`
+    SELECT 1 FROM giveaway_entries
+    WHERE email = ${lowerEmail} AND UPPER(referred_by_code) = ${upperCode}
+  `;
+  if (alreadyCounted.length > 0) {
+    // Already processed — just return the referrer's current state
+    const existing = await sql`
+      SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
+    `;
+    if (existing.length === 0) return null;
+    return { referrerEntry: mapRow(existing[0]), friendNumber: null };
+  }
+
+  // Compute the true count from actual referred entries, then set it + 1
+  const countResult = await sql`
+    SELECT COUNT(*)::int AS real_count
+    FROM giveaway_entries
+    WHERE UPPER(referred_by_code) = ${upperCode}
+  `;
+  const realCount = (countResult[0]?.real_count ?? 0) as number;
+
   const result = await sql`
     UPDATE giveaway_entries
     SET
-      referral_count = referral_count + 1,
-      friend_1_email = CASE WHEN referral_count = 0 THEN ${newEmail.toLowerCase()} ELSE friend_1_email END,
-      friend_2_email = CASE WHEN referral_count = 1 THEN ${newEmail.toLowerCase()} ELSE friend_2_email END,
+      referral_count = ${realCount + 1},
+      friend_1_email = CASE WHEN ${realCount} = 0 THEN ${lowerEmail} ELSE friend_1_email END,
+      friend_2_email = CASE WHEN ${realCount} = 1 THEN ${lowerEmail} ELSE friend_2_email END,
       updated_at = NOW()
-    WHERE UPPER(referral_code) = ${referrerCode.toUpperCase()}
+    WHERE UPPER(referral_code) = ${upperCode}
     RETURNING *
   `;
 
