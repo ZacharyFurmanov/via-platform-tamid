@@ -37,7 +37,7 @@ export default function TermsPage() {
             </h2>
             <p>
               VIA is a curated marketplace that connects shoppers with independent
-              vintage and resale stores across the United States. We aggregate and
+              vintage and secondhand stores across the United States. We aggregate and
               display product listings from partner stores, allowing users to
               browse, discover, and purchase items. VIA does not directly sell
               products; purchases are completed through our partner stores.

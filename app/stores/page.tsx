@@ -13,7 +13,7 @@ export default function StoresPage() {
             Explore Our Stores
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
-            A curated selection of independent vintage and resale stores,
+            A curated selection of independent vintage and secondhand stores,
             each with a distinct point of view.
           </p>
         </div>

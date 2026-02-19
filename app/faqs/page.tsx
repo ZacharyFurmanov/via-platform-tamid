@@ -4,7 +4,7 @@ export default function FAQsPage() {
   const faqs = [
     {
       q: "What is VIA?",
-      a: "VIA is a curated platform that brings together independent vintage and resale stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
+      a: "VIA is a curated platform that brings together independent vintage and secondhand stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
     },
     {
       q: "How does shopping on VIA work?",
@@ -16,7 +16,7 @@ export default function FAQsPage() {
     },
     {
       q: "Is everything on VIA authentic?",
-      a: "Yes. We partner with vetted vintage and resale stores known for authenticity, quality, and expertise in their categories.",
+      a: "Yes. We partner with vetted vintage and secondhand stores known for authenticity, quality, and expertise in their categories.",
     },
     {
       q: "Who handles shipping?",

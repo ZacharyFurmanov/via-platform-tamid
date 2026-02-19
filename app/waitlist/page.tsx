@@ -160,7 +160,7 @@ function WaitlistContent() {
       }
     }
 
-    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     const first = phone1.trim() || phone2.trim();
     const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
@@ -176,7 +176,7 @@ function WaitlistContent() {
   };
 
   const handleSendSecond = () => {
-    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
     setPendingPhone("");
     goToConfirmation();
@@ -240,7 +240,7 @@ function WaitlistContent() {
                 />
 
                 <p className="text-[15px] sm:text-[17px] leading-[1.9] sm:leading-[2] font-light tracking-normal sm:tracking-wide mb-10 sm:mb-12">
-                  VIA lets you shop independent resale and vintage stores across the
+                  VIA lets you shop independent secondhand and vintage stores across the
                   country, all in one place. Browse multiple stores at once and
                   discover unique pieces you won&apos;t find anywhere else.
                 </p>

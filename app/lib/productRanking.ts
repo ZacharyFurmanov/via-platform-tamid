@@ -3,7 +3,7 @@ import { brands } from "./brandData";
 /**
  * Compute a composite ranking score for a product.
  *
- * Designed for a curated vintage/resale platform where engagement data
+ * Designed for a curated vintage/secondhand platform where engagement data
  * is sparse. When clicks/favorites exist they dominate, but for zero-
  * engagement products the score is driven by listing quality (images),
  * moderate brand recognition, and price attractiveness — NOT just brand
@@ -84,7 +84,7 @@ export function computeProductScore(input: RankingInput): number {
   }
 
   // ── 6. Men's item penalty ──
-  // VIA's audience is primarily women's vintage/resale. Demote
+  // VIA's audience is primarily women's vintage/secondhand. Demote
   // items with men's keywords so they appear further down.
   if (input.title) {
     const t = input.title.toLowerCase();

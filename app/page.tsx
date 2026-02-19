@@ -31,15 +31,15 @@ export default function HomePage() {
       <div className="max-w-2xl animate-hero">
 
         <p className="text-xs tracking-[0.25em] text-gray-300 mb-6 uppercase">
-          Curated Vintage & Resale
+          Curated Vintage & Secondhand
         </p>
 
         <h1 className="text-5xl sm:text-6xl md:text-[4.25rem] font-serif mb-8 text-white leading-tight">
-          Shop the best vintage & resale stores
+          Shop the best vintage & secondhand stores
         </h1>
 
         <p className="max-w-xl mb-10 text-base text-gray-200">
-          Discover and browse independent vintage and resale stores worldwide.
+          Discover and browse independent vintage and secondhand stores worldwide.
           The pieces you've been looking for, without the hunt. All trusted and verified stores.
         </p>
 
@@ -263,7 +263,7 @@ export default function HomePage() {
             </h2>
 
             <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-neutral-600 text-sm sm:text-base">
-              VIA brings together the best independent vintage and resale stores
+              VIA brings together the best independent vintage and secondhand stores
               into one seamless browsing experience, while keeping checkout
               with the store you love.
             </p>

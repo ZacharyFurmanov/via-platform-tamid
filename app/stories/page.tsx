@@ -4,7 +4,7 @@ import Image from "next/image";
 export const metadata = {
   title: "The Story Behind the Selection | VIA",
   description:
-    "Why we chose each store on VIA. Read the stories behind the independent vintage and resale sellers we partner with.",
+    "Why we chose each store on VIA. Read the stories behind the independent vintage and secondhand sellers we partner with.",
 };
 
 const stories = [

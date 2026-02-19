@@ -11,7 +11,7 @@ export default function ForStoresPage() {
             Partner with VIA
           </h1>
           <p className="text-base sm:text-lg text-black max-w-2xl mx-auto">
-            We work with independent vintage & resale stores to help them reach
+            We work with independent vintage & secondhand stores to help them reach
             customers worldwide — without changing how they run their business.
           </p>
         </div>

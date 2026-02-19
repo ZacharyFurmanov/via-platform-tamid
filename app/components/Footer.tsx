@@ -31,7 +31,7 @@ export default function Footer() {
               <span className="text-3xl font-serif tracking-wide">VIA</span>
             </Link>
             <p className="text-neutral-400 text-sm leading-relaxed mb-6 max-w-xs">
-              Curated vintage and resale from independent stores across the country. Discover pieces with stories.
+              Curated vintage and secondhand from independent stores across the country. Discover pieces with stories.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-4">

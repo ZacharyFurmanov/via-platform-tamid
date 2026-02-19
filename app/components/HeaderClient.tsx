@@ -203,7 +203,7 @@ export default function HeaderClient({
     <>
       {/* Announcement bar */}
       <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase">
-        Curated Vintage &amp; Resale
+        Curated Vintage &amp; Secondhand
       </div>
 
       <header className="fixed top-8 z-50 w-full bg-black">

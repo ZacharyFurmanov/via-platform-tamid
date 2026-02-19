@@ -184,7 +184,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
       }
     }
 
-    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     const first = phone1.trim() || phone2.trim();
     const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
@@ -200,7 +200,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
   };
 
   const handleSendSecond = () => {
-    const message = `Check out VIA — curated vintage & resale. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
     setPendingPhone("");
     goToConfirmation();

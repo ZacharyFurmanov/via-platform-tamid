@@ -60,7 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       <p style="font-size: 13px; color: #999; margin-top: 24px;">If you didn't request this email, you can safely ignore it.</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & resale, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>

@@ -87,7 +87,7 @@ export default async function CategoryPage({
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             Curated {categoryMeta.label.toLowerCase()} from independent vintage
-            and resale stores.
+            and secondhand stores.
           </p>
         </div>
       </section>

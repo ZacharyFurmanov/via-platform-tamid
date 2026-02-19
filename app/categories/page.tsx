@@ -37,7 +37,7 @@ export default async function CategoriesPage() {
             Shop by Category
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
-            Browse curated vintage and resale across our most-loved categories.
+            Browse curated vintage and secondhand across our most-loved categories.
           </p>
         </div>
       </section>

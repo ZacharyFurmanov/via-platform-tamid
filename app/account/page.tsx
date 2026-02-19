@@ -94,7 +94,7 @@ export default async function AccountPage() {
             <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col">
               <h2 className="font-serif text-xl mb-2">Refer a Friend</h2>
               <p className="text-sm text-black/50 mb-6 leading-relaxed">
-                Share VIA with friends and help us grow the community of independent vintage and resale lovers.
+                Share VIA with friends and help us grow the community of independent vintage and secondhand lovers.
               </p>
               <div className="mt-auto flex flex-col gap-3">
                 <a

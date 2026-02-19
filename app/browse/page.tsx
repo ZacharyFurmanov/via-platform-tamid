@@ -73,7 +73,7 @@ export default async function BrowsePage() {
           </h1>
 
           <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
-            Discover curated vintage and resale from our network of independent
+            Discover curated vintage and secondhand from our network of independent
             stores.
           </p>
         </div>
