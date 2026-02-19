@@ -17,7 +17,9 @@ type Category = {
 };
 
 type SearchResult =
-  | { type: "store"; name: string; href: string }
+  | { type: "designer"; name: string; href: string }
+  | { type: "category"; name: string; href: string }
+  | { type: "store"; name: string; href: string; meta?: string }
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 export default function HeaderClient({
@@ -96,39 +98,50 @@ export default function HeaderClient({
     // Debounce API calls by 250ms
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
-      const q = query.toLowerCase();
-
-      // Store results (client-side, instant)
-      const storeResults: SearchResult[] = stores
-        .filter((s) => s.name.toLowerCase().includes(q))
-        .slice(0, 5)
-        .map((s) => ({
-          type: "store" as const,
-          name: s.name,
-          href: `/stores/${s.slug}`,
-        }));
-
-      // Product results from API
       setSearchLoading(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
         if (res.ok) {
           const data = await res.json();
-          const productResults: SearchResult[] = (data.products || []).map(
-            (p: { name: string; storeSlug: string; storeName: string; price: string; image?: string }) => ({
-              type: "product" as const,
-              name: p.name,
-              href: `/stores/${p.storeSlug}`,
-              meta: p.storeName,
-              image: p.image,
-            })
-          );
-          setResults([...storeResults, ...productResults]);
+          const allResults: SearchResult[] = [
+            ...(data.designers || []).map(
+              (d: { slug: string; label: string }) => ({
+                type: "designer" as const,
+                name: d.label,
+                href: `/brands/${d.slug}`,
+              })
+            ),
+            ...(data.categories || []).map(
+              (c: { slug: string; label: string }) => ({
+                type: "category" as const,
+                name: c.label,
+                href: `/categories/${c.slug}`,
+              })
+            ),
+            ...(data.stores || []).map(
+              (s: { slug: string; name: string; location: string }) => ({
+                type: "store" as const,
+                name: s.name,
+                href: `/stores/${s.slug}`,
+                meta: s.location,
+              })
+            ),
+            ...(data.products || []).slice(0, 8).map(
+              (p: { name: string; storeSlug: string; id: number; storeName: string; price: string; image?: string }) => ({
+                type: "product" as const,
+                name: p.name,
+                href: `/products/${p.storeSlug}-${p.id}`,
+                meta: `${p.storeName} · ${p.price}`,
+                image: p.image,
+              })
+            ),
+          ];
+          setResults(allResults);
         } else {
-          setResults(storeResults);
+          setResults([]);
         }
       } catch {
-        setResults(storeResults);
+        setResults([]);
       } finally {
         setSearchLoading(false);
       }
@@ -499,34 +512,90 @@ export default function HeaderClient({
               {!searchLoading && query.trim().length >= 2 && results.length === 0 && (
                 <p className="text-sm text-black/40 px-3 py-2">No results found</p>
               )}
-              {results.map((r, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setSearchOpen(false);
-                    router.push(r.href);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded flex items-center gap-3 ${
-                    i === activeIndex
-                      ? "bg-black text-white"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  {r.type === "product" && r.image && (
-                    <img
-                      src={r.image}
-                      alt=""
-                      className="w-10 h-10 object-cover rounded flex-shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 flex justify-between items-center min-w-0">
-                    <span className="truncate">{r.name}</span>
-                    <span className="text-xs opacity-70 flex-shrink-0 ml-2">
-                      {r.type === "store" ? "Store" : r.meta}
-                    </span>
-                  </div>
-                </button>
-              ))}
+
+              {/* Grouped results */}
+              {(() => {
+                const designers = results.filter((r) => r.type === "designer");
+                const categories = results.filter((r) => r.type === "category");
+                const storeResults = results.filter((r) => r.type === "store");
+                const products = results.filter((r) => r.type === "product");
+                let flatIndex = -1;
+
+                const renderItem = (r: SearchResult) => {
+                  flatIndex++;
+                  const idx = flatIndex;
+                  return (
+                    <button
+                      key={`${r.type}-${idx}`}
+                      onClick={() => {
+                        setSearchOpen(false);
+                        router.push(r.href);
+                      }}
+                      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 ${
+                        idx === activeIndex
+                          ? "bg-black text-white"
+                          : "hover:bg-neutral-50"
+                      }`}
+                    >
+                      {r.type === "product" && r.image && (
+                        <img
+                          src={r.image}
+                          alt=""
+                          className="w-10 h-13 object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 flex justify-between items-center min-w-0">
+                        <span className="truncate">{r.name}</span>
+                        {"meta" in r && r.meta && (
+                          <span className="text-xs opacity-50 flex-shrink-0 ml-2">
+                            {r.meta}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                };
+
+                return (
+                  <>
+                    {designers.length > 0 && (
+                      <div className="mb-2">
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Designers</p>
+                        {designers.map(renderItem)}
+                      </div>
+                    )}
+                    {categories.length > 0 && (
+                      <div className="mb-2">
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Categories</p>
+                        {categories.map(renderItem)}
+                      </div>
+                    )}
+                    {storeResults.length > 0 && (
+                      <div className="mb-2">
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Stores</p>
+                        {storeResults.map(renderItem)}
+                      </div>
+                    )}
+                    {products.length > 0 && (
+                      <div className="mb-2">
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Products</p>
+                        {products.map(renderItem)}
+                      </div>
+                    )}
+                    {results.length > 0 && query.trim() && (
+                      <button
+                        onClick={() => {
+                          setSearchOpen(false);
+                          router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+                        }}
+                        className="w-full text-left px-3 py-3 mt-2 border-t border-neutral-100 text-sm text-black/60 hover:text-black transition-colors"
+                      >
+                        See all results for &ldquo;{query.trim()}&rdquo;
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>

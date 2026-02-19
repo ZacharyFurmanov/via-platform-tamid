@@ -114,7 +114,7 @@ export default function HomePage() {
     </ScrollReveal>
 
     <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide">
-      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 sm:gap-6">
+      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
         {[
           { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },
           { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
@@ -131,7 +131,7 @@ export default function HomePage() {
                   src={category.image}
                   alt={category.label}
                   fill
-                  sizes="(min-width: 768px) 50vw, 72vw"
+                  sizes="(min-width: 768px) 25vw, 72vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/15 group-hover:bg-black/25 transition-colors duration-500" />

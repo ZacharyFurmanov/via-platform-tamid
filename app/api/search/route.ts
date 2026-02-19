@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { stores } from "@/app/lib/stores";
+import { brands } from "@/app/lib/brandData";
+import { categoryMap } from "@/app/lib/categoryMap";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -58,13 +61,49 @@ export async function GET(request: Request) {
   const q = searchParams.get("q")?.trim().toLowerCase();
 
   if (!q || q.length < 2) {
-    return NextResponse.json({ products: [] });
+    return NextResponse.json({ products: [], designers: [], categories: [], stores: [] });
   }
 
   try {
     const sql = neon(getDatabaseUrl());
 
-    // Check if the query matches a category
+    // 1. Match designers/brands
+    const matchedDesigners = brands
+      .filter((b) =>
+        b.label.toLowerCase().includes(q) ||
+        b.keywords.some((kw) => kw.includes(q) || q.includes(kw))
+      )
+      .slice(0, 6)
+      .map((b) => ({ slug: b.slug, label: b.label }));
+
+    // 2. Match categories
+    const matchedCategories: { slug: string; label: string }[] = [];
+    for (const [slug, label] of Object.entries(categoryMap)) {
+      if (
+        slug.includes(q) ||
+        label.toLowerCase().includes(q) ||
+        categoryAliases[q] === slug
+      ) {
+        matchedCategories.push({ slug, label });
+      }
+    }
+    // Also check if query matches a category keyword
+    for (const [slug, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some((kw) => kw.includes(q) || q.includes(kw))) {
+        const label = categoryMap[slug as keyof typeof categoryMap];
+        if (label && !matchedCategories.find((c) => c.slug === slug)) {
+          matchedCategories.push({ slug, label });
+        }
+      }
+    }
+
+    // 3. Match stores
+    const matchedStores = stores
+      .filter((s) => s.name.toLowerCase().includes(q) || s.location.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((s) => ({ slug: s.slug, name: s.name, location: s.location }));
+
+    // 4. Product search
     const categorySlug = categoryKeywords[q]
       ? q
       : categoryAliases[q] || null;
@@ -73,7 +112,6 @@ export async function GET(request: Request) {
 
     if (categorySlug && categoryKeywords[categorySlug]) {
       const keywords = categoryKeywords[categorySlug];
-      // Build a pattern like '%bag%|%clutch%|%tote%' for ILIKE ANY
       const patterns = keywords.map((k) => `%${k}%`);
 
       products = await sql`
@@ -84,7 +122,6 @@ export async function GET(request: Request) {
         LIMIT 50
       `;
     } else {
-      // Direct title search
       const pattern = `%${q}%`;
       products = await sql`
         SELECT id, store_slug, store_name, title, price, currency, image
@@ -96,6 +133,9 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({
+      designers: matchedDesigners,
+      categories: matchedCategories,
+      stores: matchedStores,
       products: products.map((p) => ({
         id: p.id,
         name: p.title,
@@ -107,6 +147,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Search API error:", error);
-    return NextResponse.json({ products: [] }, { status: 500 });
+    return NextResponse.json({ products: [], designers: [], categories: [], stores: [] }, { status: 500 });
   }
 }
