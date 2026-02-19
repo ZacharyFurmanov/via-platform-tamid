@@ -64,15 +64,14 @@ export default function StoriesPage() {
                 className="group block text-center"
               >
                 <div
-                  className="relative w-44 h-24 sm:w-48 sm:h-28 mx-auto mb-5 rounded-sm overflow-hidden"
-                  style={{ backgroundColor: story.logoBg }}
+                  className="relative w-48 h-24 sm:w-56 sm:h-28 mx-auto mb-5 overflow-hidden"
                 >
                   <Image
                     src={story.logo}
                     alt={story.store}
                     fill
-                    sizes="192px"
-                    className="object-contain p-2"
+                    sizes="224px"
+                    className="object-cover"
                   />
                 </div>
                 <p className="text-sm text-neutral-600 leading-relaxed mb-3">

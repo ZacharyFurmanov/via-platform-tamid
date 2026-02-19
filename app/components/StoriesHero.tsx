@@ -45,14 +45,13 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
             className="animate-fade-in mb-6 sm:mb-8"
           >
             <div
-              className="relative w-56 h-28 sm:w-64 sm:h-32 mx-auto rounded-sm overflow-hidden"
-              style={{ backgroundColor: story.logoBg }}
+              className="relative w-64 h-32 sm:w-72 sm:h-36 mx-auto overflow-hidden"
             >
               <Image
                 src={story.logo}
                 alt={story.store}
                 fill
-                className="object-contain p-2"
+                className="object-cover"
               />
             </div>
           </div>
