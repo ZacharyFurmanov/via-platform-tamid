@@ -10,6 +10,7 @@ import FavoriteButton from "@/app/components/FavoriteButton";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
+import { brandMap } from "@/app/lib/brandData";
 
 type StorePageProps = {
   params: Promise<{
@@ -58,6 +59,7 @@ export default async function StorePage({ params }: StorePageProps) {
       category: product.category,
       categoryLabel: categoryMap[product.category as keyof typeof categoryMap],
       brand: brandSlug,
+      brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
       store: store.name,
       storeSlug: store.slug,
       externalUrl: product.externalUrl,
@@ -112,6 +114,8 @@ export default async function StorePage({ params }: StorePageProps) {
           <FilteredProductGrid
             products={products}
             stores={[{ slug: store.slug, name: store.name }]}
+            showCategoryFilter
+            showBrandFilter
             emptyMessage="Products coming soon."
           />
         </div>
