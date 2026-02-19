@@ -52,7 +52,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
                 src={story.logo}
                 alt={story.store}
                 fill
-                className="object-contain p-3"
+                className={story.logoBg === "#ffffff" ? "object-contain p-3" : "object-cover"}
               />
             </div>
           </div>

@@ -13,21 +13,24 @@ const stories = [
     store: "LEI Vintage",
     teaser:
       "Some brands start with a new collection. LEI started with a realization.",
-    image: "/stores/LEI.jpg",
+    logo: "/stores/lei-vintage-logo.jpg",
+    logoBg: "#ffffff",
   },
   {
     slug: "vintage-archives-la",
     store: "Vintage Archives LA",
     teaser:
       "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
-    image: "/stores/VintageArchivesLA.jpg",
+    logo: "/stores/vintage-archives-la-logo.jpg",
+    logoBg: "#fdf8d8",
   },
   {
     slug: "ascensio-vintage",
     store: "Ascensio Vintage",
     teaser:
       "Championing timeless style that transcends the decades — authentic, high-quality vintage designer clothes sourced with intention.",
-    image: "/stores/ascensio-vintage.jpg",
+    logo: "/stores/ascensio-vintage-logo.jpg",
+    logoBg: "#ffffff",
   },
 ];
 
@@ -52,31 +55,30 @@ export default function StoriesPage() {
 
       {/* Stories grid */}
       <section className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12">
             {stories.map((story) => (
               <Link
                 key={story.slug}
                 href={`/stories/${story.slug}`}
-                className="group block"
+                className="group block text-center"
               >
-                <div className="aspect-[4/5] relative overflow-hidden mb-4 rounded-sm">
+                <div
+                  className="relative w-36 h-20 sm:w-40 sm:h-24 mx-auto mb-5 rounded-sm overflow-hidden"
+                  style={{ backgroundColor: story.logoBg }}
+                >
                   <Image
-                    src={story.image}
+                    src={story.logo}
                     alt={story.store}
                     fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="160px"
+                    className={story.logoBg === "#ffffff" ? "object-contain p-2" : "object-cover"}
                   />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-serif text-black mb-2">
-                  {story.store}
-                </h2>
-                <p className="text-sm text-neutral-600 leading-relaxed">
+                <p className="text-sm text-neutral-600 leading-relaxed mb-3">
                   {story.teaser}
                 </p>
-                <span className="inline-block mt-3 text-xs uppercase tracking-[0.15em] text-neutral-500 group-hover:text-black transition">
+                <span className="inline-block text-xs uppercase tracking-[0.15em] text-neutral-500 group-hover:text-black transition">
                   Read Story &rarr;
                 </span>
               </Link>
