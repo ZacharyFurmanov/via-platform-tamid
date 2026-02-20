@@ -97,7 +97,7 @@ export const stores = [
   {
     slug: "source-twenty-four",
     name: "Source Twenty Four",
-    location: "United States",
+    location: "New Jersey",
     description:
       "Source Twenty Four is a curated collection of pre-owned luxury handbags, wallets, and accessories from iconic designer houses. Each piece is authenticated and hand-selected, offering timeless style from brands like Chanel, Celine, Dior, and Bottega Veneta.",
     website: "https://sourcetwentyfour.com",
