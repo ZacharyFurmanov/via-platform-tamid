@@ -24,41 +24,61 @@ export default function StoresPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-24">
 
-            {stores.map((store) => (
-              <div key={store.slug} className="group">
+            {stores.map((store) => {
+              const isComingSoon = "comingSoon" in store && store.comingSoon;
 
-                {/* IMAGE (CLICKABLE) */}
-                <Link href={`/stores/${store.slug}`} className="block mb-6">
-                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
-                    {store.image && (
-                      <Image
-                        src={store.image}
-                        alt={store.name}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                      />
-                    )}
-                  </div>
-                </Link>
+              return (
+                <div key={store.slug} className="group">
 
-                {/* TEXT (ALSO CLICKABLE) */}
-                <Link href={`/stores/${store.slug}`} className="block">
-                  <h2 className="text-lg font-serif mb-1 link-underline">
-                    {store.name}
-                  </h2>
-                </Link>
+                  {/* IMAGE */}
+                  {isComingSoon ? (
+                    <div className="mb-6">
+                      <div className="relative aspect-[3/4] bg-neutral-200 overflow-hidden flex items-center justify-center">
+                        <span className="text-sm uppercase tracking-[0.2em] text-neutral-500">
+                          Coming Soon
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link href={`/stores/${store.slug}`} className="block mb-6">
+                      <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
+                        {store.image && (
+                          <Image
+                            src={store.image}
+                            alt={store.name}
+                            fill
+                            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                          />
+                        )}
+                      </div>
+                    </Link>
+                  )}
 
-                <p className="text-sm text-neutral-500 mb-4">
-                  {store.location}
-                </p>
+                  {/* TEXT */}
+                  {isComingSoon ? (
+                    <h2 className="text-lg font-serif mb-1">
+                      {store.name}
+                    </h2>
+                  ) : (
+                    <Link href={`/stores/${store.slug}`} className="block">
+                      <h2 className="text-lg font-serif mb-1 link-underline">
+                        {store.name}
+                      </h2>
+                    </Link>
+                  )}
 
-                <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">
-                  {store.description}
-                </p>
+                  <p className="text-sm text-neutral-500 mb-4">
+                    {store.location}
+                  </p>
 
-              </div>
-            ))}
+                  <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">
+                    {store.description}
+                  </p>
+
+                </div>
+              );
+            })}
 
           </div>
         </div>
