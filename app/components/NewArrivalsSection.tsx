@@ -11,28 +11,28 @@ export default async function NewArrivalsSection() {
 
   return (
 
-    <section id="new-arrivals" className="bg-neutral-100 py-24 sm:py-40">
+    <section id="new-arrivals" className="bg-neutral-100 pt-16 pb-20 sm:pt-24 sm:pb-28">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-12 px-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-2 sm:mb-3">
               Just Added
             </p>
-            <h2 className="text-3xl sm:text-5xl font-serif text-black">
+            <h2 className="text-2xl sm:text-5xl font-serif text-black">
               New Arrivals
             </h2>
           </div>
 
           <Link
             href="/new-arrivals"
-            className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline"
+            className="mt-3 sm:mt-0 text-sm uppercase tracking-wide link-underline"
           >
             Shop new arrivals
           </Link>
         </div>
 
         <div className="overflow-x-auto pb-4 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
-          <div className="flex gap-4 pl-6 pr-6">
+          <div className="flex gap-3 sm:gap-4 pl-6 pr-6">
             {products.map((product) => {
               const categorySlug = inferCategoryFromTitle(product.title);
               const categoryLabel = categoryMap[categorySlug];
@@ -42,7 +42,7 @@ export default async function NewArrivalsSection() {
                 : [];
 
               return (
-                <div key={product.id} className="w-[42vw] sm:w-[22vw] md:w-[18vw] flex-shrink-0">
+                <div key={product.id} className="w-[40vw] sm:w-[22vw] md:w-[18vw] flex-shrink-0">
                   <ProductCard
                     id={compositeId}
                     dbId={product.id}
