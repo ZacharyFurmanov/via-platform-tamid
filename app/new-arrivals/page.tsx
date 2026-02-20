@@ -3,10 +3,15 @@ export const dynamic = "force-dynamic";
 import { getNewArrivals } from "@/app/lib/db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
-import ProductCard from "@/app/components/ProductCard";
+import MixedProductGrid from "@/app/components/MixedProductGrid";
 
 export default async function NewArrivalsPage() {
   const products = await getNewArrivals(48, 14);
+
+  const gridProducts = products.map((p) => ({
+    ...p,
+    categoryLabel: categoryMap[inferCategoryFromTitle(p.title)],
+  }));
 
   return (
     <main className="bg-white min-h-screen text-black">
@@ -28,32 +33,7 @@ export default async function NewArrivalsPage() {
               No new arrivals right now. Check back soon.
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {products.map((product) => {
-                const categorySlug = inferCategoryFromTitle(product.title);
-                const categoryLabel = categoryMap[categorySlug];
-                const compositeId = `${product.store_slug}-${product.id}`;
-                const images: string[] = product.images
-                  ? JSON.parse(product.images)
-                  : [];
-
-                return (
-                  <ProductCard
-                    key={product.id}
-                    id={compositeId}
-                    dbId={product.id}
-                    name={product.title}
-                    price={`$${Math.round(Number(product.price))}`}
-                    category={categoryLabel}
-                    storeName={product.store_name}
-                    storeSlug={product.store_slug}
-                    image={product.image || ""}
-                    images={images}
-                    from="/new-arrivals"
-                  />
-                );
-              })}
-            </div>
+            <MixedProductGrid products={gridProducts} from="/new-arrivals" />
           )}
         </div>
       </section>
