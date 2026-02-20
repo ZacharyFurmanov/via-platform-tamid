@@ -94,8 +94,57 @@ export default function StoreCarousel() {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Coverflow viewport */}
-      <div className="relative flex items-center justify-center overflow-hidden"
+      {/* ===== MOBILE: Simple card slider ===== */}
+      <div className="md:hidden px-6">
+        <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
+          {stores.map((store, i) => (
+            <div
+              key={store.slug}
+              className="absolute inset-0 transition-opacity duration-700"
+              style={{ opacity: i === active ? 1 : 0 }}
+            >
+              <Link href={`/stores/${store.slug}`} className="block w-full h-full relative">
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  fill
+                  sizes="90vw"
+                  className="object-cover"
+                  priority={i === 0}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <h3 className="font-serif text-xl text-white leading-snug mb-1">
+                    {store.name}
+                  </h3>
+                  <p className="text-sm text-white/70 mb-3">{store.location}</p>
+                  <span className="inline-block bg-white text-black text-xs font-medium px-5 py-2 rounded-full">
+                    View
+                  </span>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile dots */}
+        <div className="flex justify-center gap-2 mt-4">
+          {stores.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              aria-label={`Go to store ${i + 1}`}
+              className={`h-[2px] transition-all duration-500 ${
+                i === active ? "w-6 bg-black" : "w-3 bg-black/20"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ===== DESKTOP: Coverflow carousel ===== */}
+      <div
+        className="hidden md:flex relative items-center justify-center overflow-hidden"
         style={{ height: "clamp(400px, 55vw, 600px)" }}
       >
         {stores.map((store, i) => {
@@ -121,7 +170,7 @@ export default function StoreCarousel() {
                   src={store.image}
                   alt={store.name}
                   fill
-                  sizes="(min-width: 768px) 38vw, 80vw"
+                  sizes="38vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   priority={Math.abs(offset) <= 1}
                 />
@@ -152,22 +201,22 @@ export default function StoreCarousel() {
           );
         })}
 
-        {/* Left arrow */}
+        {/* Left arrow — desktop only */}
         <button
           onClick={prev}
           aria-label="Previous store"
-          className="absolute left-4 sm:left-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
+          className="absolute left-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
         >
           <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Right arrow */}
+        {/* Right arrow — desktop only */}
         <button
           onClick={next}
           aria-label="Next store"
-          className="absolute right-4 sm:right-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
+          className="absolute right-8 z-40 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"
         >
           <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
