@@ -101,20 +101,18 @@ export default async function AccountPage() {
               </div>
             </div>
 
-            {/* Friends */}
+            {/* Invite a Friend */}
             <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-serif text-xl">Friends</h2>
-              </div>
+              <h2 className="font-serif text-xl mb-2">Invite a Friend</h2>
               <p className="text-sm text-black/50 mb-6 leading-relaxed">
-                Find friends by phone number, see what they&apos;re hearting and shopping.
+                Know someone who&apos;d love VIA? Send them an invite and shop together.
               </p>
               <div className="mt-auto">
                 <a
                   href="/account/friends"
                   className="block text-center text-sm uppercase tracking-wide px-5 py-3 border border-black hover:bg-black hover:text-white transition"
                 >
-                  Manage Friends
+                  Invite Friend
                 </a>
               </div>
             </div>
