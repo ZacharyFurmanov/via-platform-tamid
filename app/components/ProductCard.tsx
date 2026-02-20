@@ -44,17 +44,17 @@ export default function ProductCard({
       <AuthProductLink href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-black block">
         <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
-        {/* Product info with mobile-friendly text sizes */}
-        <div className="pt-3 pb-2">
-          <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/50 mb-1 transition-colors duration-300 group-hover:text-black/80">
+        {/* Product info */}
+        <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">
+          <p className="text-[9px] sm:text-xs uppercase tracking-wide text-black/50 mb-0.5 sm:mb-1 transition-colors duration-300 group-hover:text-black/80">
             {storeName}
           </p>
 
-          <h3 className="font-serif text-sm sm:text-base text-black leading-snug line-clamp-2">
+          <h3 className="font-serif text-xs sm:text-base text-black leading-snug line-clamp-2">
             {name}
           </h3>
 
-          <p className="text-sm mt-1 text-black/80">{price}</p>
+          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-black/80">{price}</p>
         </div>
       </AuthProductLink>
 

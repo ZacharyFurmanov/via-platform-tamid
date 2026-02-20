@@ -11,7 +11,7 @@ export default function HomePage() {
     <main className="w-full">
       <SmoothScroll />
 {/* ================= HERO ================= */}
-<section className="relative min-h-screen flex items-end overflow-hidden">
+<section className="relative min-h-screen flex items-center overflow-hidden">
 
   {/* Background image */}
   <div className="absolute inset-0">
@@ -26,7 +26,7 @@ export default function HomePage() {
   </div>
 
   {/* Content wrapper */}
-  <div className="relative z-10 w-full pb-20 sm:pb-32">
+  <div className="relative z-10 w-full">
     <div className="max-w-7xl mx-auto px-6">
       <div className="max-w-2xl animate-hero">
 
