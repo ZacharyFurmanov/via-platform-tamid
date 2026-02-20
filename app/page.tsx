@@ -30,12 +30,8 @@ export default function HomePage() {
     <div className="max-w-7xl mx-auto px-6">
       <div className="max-w-2xl animate-hero">
 
-        <p className="text-xs tracking-[0.25em] text-gray-300 mb-6 uppercase">
-          Curated Vintage & Secondhand
-        </p>
-
         <h1 className="text-5xl sm:text-6xl md:text-[4.25rem] font-serif mb-8 text-white leading-tight">
-          Shop the best vintage & secondhand stores
+          The home of curated vintage & secondhand.
         </h1>
 
         <p className="max-w-xl mb-10 text-base text-gray-200">
