@@ -57,12 +57,7 @@ export default function HomePage() {
             Browse Categories
           </Link>
 
-          <Link
-            href="#new-arrivals"
-            className="border border-white/50 text-white/90 px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
-          >
-            New Arrivals
-          </Link>
+
         </div>
 
       </div>
