@@ -221,7 +221,13 @@ export async function getNewArrivals(
     return result as DBProduct[];
   } catch {
     // created_at column may not exist yet (migration runs on next sync)
-    return [];
+    // Fall back to synced_at so the section still renders
+    const result = await sql`
+      SELECT * FROM products
+      ORDER BY synced_at DESC
+      LIMIT ${limit}
+    `;
+    return result as DBProduct[];
   }
 }
 
