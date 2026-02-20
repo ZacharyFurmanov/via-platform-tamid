@@ -70,13 +70,6 @@ export default function HomePage() {
   </div>
 </section>
 
-      {/* ================= NEW ARRIVALS ================= */}
-      <ScrollReveal>
-        <Suspense>
-          <NewArrivalsSection />
-        </Suspense>
-      </ScrollReveal>
-
      {/* ================= SHOP BY STORE ================= */}
 <section className="bg-neutral-100 py-24 sm:py-40">
   <div className="max-w-7xl mx-auto">
@@ -161,6 +154,13 @@ export default function HomePage() {
     </div>
   </div>
 </section>
+
+      {/* ================= NEW ARRIVALS ================= */}
+      <ScrollReveal>
+        <Suspense>
+          <NewArrivalsSection />
+        </Suspense>
+      </ScrollReveal>
 
       {/* ================= FAQ TEASER ================= */}
       <section className="bg-[#f7f6f3] py-24 sm:py-40">

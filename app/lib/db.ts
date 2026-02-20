@@ -69,9 +69,16 @@ export async function initDatabase() {
     ALTER TABLE products ADD COLUMN IF NOT EXISTS variant_id TEXT
   `;
 
-  // Add created_at column (only set on first insert, never updated)
+  // Add created_at column (set explicitly during sync, NULL for existing products)
   await sql`
-    ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE
+  `;
+
+  // Clear created_at for existing products so they don't all appear as new arrivals
+  // (only products inserted during subsequent syncs will have a non-NULL created_at)
+  await sql`
+    UPDATE products SET created_at = NULL WHERE created_at IS NOT NULL
+      AND created_at < NOW() - INTERVAL '1 hour'
   `;
 
   // Index for new arrivals queries
@@ -100,6 +107,14 @@ export async function syncProducts(
 ) {
   const sql = neon(getDatabaseUrl());
 
+  // Check if this store already has products (i.e. not a first-time sync).
+  // Only products appearing for the first time in a subsequent sync are
+  // genuine "new arrivals" on the store — not all products from a brand-new store.
+  const existing = await sql`
+    SELECT 1 FROM products WHERE store_slug = ${storeSlug} LIMIT 1
+  `;
+  const isExistingStore = existing.length > 0;
+
   // Upsert each product (preserves id for existing rows)
   const titles: string[] = [];
   for (const product of products) {
@@ -119,7 +134,7 @@ export async function syncProducts(
         ${product.description || null},
         ${product.variantId || null},
         NOW(),
-        NOW()
+        ${isExistingStore ? new Date() : null}
       )
       ON CONFLICT (store_slug, title) DO UPDATE SET
         store_name = EXCLUDED.store_name,
@@ -214,20 +229,15 @@ export async function getNewArrivals(
   try {
     const result = await sql`
       SELECT * FROM products
-      WHERE created_at >= NOW() - make_interval(days => ${days})
+      WHERE created_at IS NOT NULL
+        AND created_at >= NOW() - make_interval(days => ${days})
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
     return result as DBProduct[];
   } catch {
     // created_at column may not exist yet (migration runs on next sync)
-    // Fall back to synced_at so the section still renders
-    const result = await sql`
-      SELECT * FROM products
-      ORDER BY synced_at DESC
-      LIMIT ${limit}
-    `;
-    return result as DBProduct[];
+    return [];
   }
 }
 
