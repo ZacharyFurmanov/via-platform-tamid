@@ -22,6 +22,43 @@ type SearchResult =
   | { type: "store"; name: string; href: string; meta?: string }
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
+function AnnouncementBar() {
+  const [showNewArrivals, setShowNewArrivals] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowNewArrivals((prev) => !prev);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase overflow-hidden">
+      <div className="relative h-full flex items-center">
+        <span
+          className={`transition-all duration-500 ease-in-out ${
+            showNewArrivals
+              ? "opacity-0 -translate-y-full absolute"
+              : "opacity-100 translate-y-0"
+          }`}
+        >
+          Curated Vintage &amp; Secondhand
+        </span>
+        <Link
+          href="/#new-arrivals"
+          className={`transition-all duration-500 ease-in-out hover:text-white ${
+            showNewArrivals
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-full absolute"
+          }`}
+        >
+          New Arrivals
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function HeaderClient({
   categories,
 }: {
@@ -202,9 +239,7 @@ export default function HeaderClient({
   return (
     <>
       {/* Announcement bar */}
-      <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase">
-        Curated Vintage &amp; Secondhand
-      </div>
+      <AnnouncementBar />
 
       <header className="fixed top-8 z-50 w-full bg-black">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">

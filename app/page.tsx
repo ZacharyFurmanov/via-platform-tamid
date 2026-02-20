@@ -5,13 +5,15 @@ import ScrollReveal from "./components/ScrollReveal";
 import SmoothScroll from "./components/SmoothScroll";
 import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
+import NewArrivalsSection from "./components/NewArrivalsSection";
+import { Suspense } from "react";
 
 export default function HomePage() {
   return (
     <main className="w-full">
       <SmoothScroll />
 {/* ================= HERO ================= */}
-<section className="relative min-h-screen flex items-center overflow-hidden">
+<section className="relative min-h-[70vh] sm:min-h-screen flex items-center overflow-hidden">
 
   {/* Background image */}
   <div className="absolute inset-0">
@@ -30,29 +32,36 @@ export default function HomePage() {
     <div className="max-w-7xl mx-auto px-6">
       <div className="max-w-2xl animate-hero">
 
-        <h1 className="text-5xl sm:text-6xl md:text-[4.25rem] font-serif mb-8 text-white leading-tight">
+        <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-8 text-white leading-tight">
           The home of curated vintage & secondhand.
         </h1>
 
-        <p className="max-w-xl mb-10 text-base text-gray-200">
+        <p className="max-w-xl mb-6 sm:mb-10 text-sm sm:text-base text-gray-200">
           Discover and browse independent vintage and secondhand stores worldwide.
           The pieces you've been looking for, without the hunt. All trusted and verified stores.
         </p>
 
         {/* CTA buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-hero delay-150">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 animate-hero delay-150">
           <Link
             href="/stores"
-            className="bg-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 hover:scale-[1.02] transition-all duration-300 text-black text-center"
+            className="bg-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-neutral-200 hover:scale-[1.02] transition-all duration-300 text-black text-center"
           >
             Explore Stores
           </Link>
 
           <Link
             href="/categories"
-            className="border border-white text-white px-10 py-4 text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
+            className="border border-white text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
           >
             Browse Categories
+          </Link>
+
+          <Link
+            href="#new-arrivals"
+            className="border border-white/50 text-white/90 px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
+          >
+            New Arrivals
           </Link>
         </div>
 
@@ -60,6 +69,13 @@ export default function HomePage() {
     </div>
   </div>
 </section>
+
+      {/* ================= NEW ARRIVALS ================= */}
+      <ScrollReveal>
+        <Suspense>
+          <NewArrivalsSection />
+        </Suspense>
+      </ScrollReveal>
 
      {/* ================= SHOP BY STORE ================= */}
 <section className="bg-neutral-100 py-24 sm:py-40">
@@ -109,7 +125,7 @@ export default function HomePage() {
       </div>
     </ScrollReveal>
 
-    <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide">
+    <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
       <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
         {[
           { label: "Clothes", slug: "clothes", image: "/categories/clothes.jpg" },

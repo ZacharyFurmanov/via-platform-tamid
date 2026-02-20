@@ -25,6 +25,7 @@ export type DBProduct = {
   description: string | null;
   variant_id: string | null;
   synced_at: Date;
+  created_at: Date;
 };
 
 /**
@@ -67,6 +68,16 @@ export async function initDatabase() {
   await sql`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS variant_id TEXT
   `;
+
+  // Add created_at column (only set on first insert, never updated)
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  `;
+
+  // Index for new arrivals queries
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC)
+  `;
 }
 
 /**
@@ -95,7 +106,7 @@ export async function syncProducts(
     titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, synced_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -107,6 +118,7 @@ export async function syncProducts(
         ${product.externalUrl || null},
         ${product.description || null},
         ${product.variantId || null},
+        NOW(),
         NOW()
       )
       ON CONFLICT (store_slug, title) DO UPDATE SET
@@ -185,6 +197,24 @@ export async function getRecommendedProducts(
   const result = await sql`
     SELECT * FROM products TABLESAMPLE BERNOULLI(50)
     WHERE id != ${excludeId}
+    LIMIT ${limit}
+  `;
+  return result as DBProduct[];
+}
+
+/**
+ * Get recently added products (new arrivals)
+ */
+export async function getNewArrivals(
+  limit: number = 12,
+  days: number = 7
+): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+
+  const result = await sql`
+    SELECT * FROM products
+    WHERE created_at >= NOW() - make_interval(days => ${days})
+    ORDER BY created_at DESC
     LIMIT ${limit}
   `;
   return result as DBProduct[];
