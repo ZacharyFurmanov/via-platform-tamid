@@ -256,45 +256,55 @@ export default function FriendsPage() {
             </div>
           )}
 
-          {contactsSupported && (
-            <div className="mt-6">
-              <button
-                onClick={handleFindFromContacts}
-                disabled={contactSearching}
-                className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition disabled:opacity-50"
-              >
-                {contactSearching ? "Searching..." : "Find Friends from Contacts"}
-              </button>
+          <div className="mt-6">
+            {contactsSupported ? (
+              <>
+                <button
+                  onClick={handleFindFromContacts}
+                  disabled={contactSearching}
+                  className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition disabled:opacity-50"
+                >
+                  {contactSearching ? "Searching..." : "Find Friends from Contacts"}
+                </button>
 
-              {contactMatches.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  <p className="text-xs text-black/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
-                  {contactMatches.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between border border-neutral-200 p-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={user.name} image={user.image} size="sm" />
-                        <span className="text-sm font-medium">{user.name || "VIA User"}</span>
+                {contactMatches.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-xs text-black/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
+                    {contactMatches.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between border border-neutral-200 p-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={user.name} image={user.image} size="sm" />
+                          <span className="text-sm font-medium">{user.name || "VIA User"}</span>
+                        </div>
+                        {contactRequestStatuses[user.id] ? (
+                          <span className="text-xs text-black/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
+                        ) : (
+                          <button
+                            onClick={() => handleContactSendRequest(user.id)}
+                            className="text-sm uppercase tracking-wide px-3 py-1.5 bg-black text-white hover:bg-black/80 transition"
+                          >
+                            Add Friend
+                          </button>
+                        )}
                       </div>
-                      {contactRequestStatuses[user.id] ? (
-                        <span className="text-xs text-black/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
-                      ) : (
-                        <button
-                          onClick={() => handleContactSendRequest(user.id)}
-                          className="text-sm uppercase tracking-wide px-3 py-1.5 bg-black text-white hover:bg-black/80 transition"
-                        >
-                          Add Friend
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {!contactSearching && contactMatches.length === 0 && contactRequestStatuses && Object.keys(contactRequestStatuses).length === 0 && (
-                <span />
-              )}
-            </div>
-          )}
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <button
+                  onClick={handleInvite}
+                  className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition"
+                >
+                  Invite Friends to VIA
+                </button>
+                <p className="text-xs text-black/50 mt-2">
+                  To find friends from your contacts, open this page on your phone.
+                </p>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Friend Requests */}
