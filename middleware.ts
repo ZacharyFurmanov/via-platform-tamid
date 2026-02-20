@@ -20,7 +20,16 @@ const PUBLIC_ROUTES = [
 ];
 
 // Routes that require the access code cookie but not a full user session
-const ACCESS_CODE_ROUTES = ["/login"];
+const ACCESS_CODE_ROUTES = [
+  "/login",
+  "/",
+  "/stores",
+  "/categories",
+  "/browse",
+  "/products",
+  "/stories",
+  "/faqs",
+];
 
 // Routes that require user authentication (Auth.js session)
 // Now all non-public, non-admin routes require auth

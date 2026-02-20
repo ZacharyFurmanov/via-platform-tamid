@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Script from "next/script";
 import { GiveawayProvider } from "./components/GiveawayProvider";
+import { SignUpProvider } from "./components/SignUpProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { FavoritesProvider } from "./components/FavoritesProvider";
 import { FriendsProvider } from "./components/FriendsProvider";
@@ -69,12 +70,14 @@ export default function RootLayout({
           <FavoritesProvider>
             <FriendsProvider>
             <CartProvider>
+              <SignUpProvider>
               <GiveawayProvider>
                 <ScrollToTop />
                 <Header />
                 <main className="pt-[104px]">{children}</main>
                 <Footer />
               </GiveawayProvider>
+              </SignUpProvider>
             </CartProvider>
             </FriendsProvider>
           </FavoritesProvider>
