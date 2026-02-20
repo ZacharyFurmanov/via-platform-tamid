@@ -213,7 +213,13 @@ export default async function AccountPage() {
 
         {/* Settings & Sign Out */}
         <section className="py-12 border-t border-neutral-100 mb-8">
-          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
+          <AccountActions
+            notificationsEnabled={notificationsEnabled}
+            initialPhone={userPhone}
+            userImage={session.user.image || null}
+            userName={session.user.name || null}
+            userEmail={session.user.email || null}
+          />
         </section>
       </div>
     </main>

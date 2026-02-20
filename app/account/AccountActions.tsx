@@ -1,20 +1,83 @@
 "use client";
 
-import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { useState, useRef } from "react";
+
+function resizeImage(file: File, maxSize: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let w = img.width;
+      let h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) {
+          h = Math.round((h * maxSize) / w);
+          w = maxSize;
+        } else {
+          w = Math.round((w * maxSize) / h);
+          h = maxSize;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Failed to resize"))),
+        "image/webp",
+        0.85
+      );
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 export default function AccountActions({
   notificationsEnabled: initialEnabled,
   initialPhone,
+  userImage: initialImage,
+  userName,
+  userEmail,
 }: {
   notificationsEnabled: boolean;
   initialPhone: string;
+  userImage: string | null;
+  userName: string | null;
+  userEmail: string | null;
 }) {
+  const { update: updateSession } = useSession();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [saving, setSaving] = useState(false);
   const [phone, setPhone] = useState(initialPhone);
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneMessage, setPhoneMessage] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(initialImage);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const resized = await resizeImage(file, 400);
+      const formData = new FormData();
+      formData.append("file", resized, "avatar.webp");
+      const res = await fetch("/api/account/avatar", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setAvatarUrl(data.url);
+        await updateSession();
+      }
+    } catch {
+      // upload failed
+    } finally {
+      setAvatarUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function toggleNotifications() {
     setSaving(true);
@@ -59,11 +122,47 @@ export default function AccountActions({
     }
   }
 
+  const initial = (userName?.[0] || userEmail?.[0] || "?").toUpperCase();
+
   return (
     <div>
       <h2 className="font-serif text-2xl mb-8">Settings</h2>
 
       <div className="space-y-6">
+        {/* Profile Picture */}
+        <div className="flex items-center gap-5 pb-6 border-b border-neutral-100">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+            className="relative group flex-shrink-0"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center">
+                <span className="text-2xl font-serif text-black/40">{initial}</span>
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <span className="text-white text-xs uppercase tracking-wide">
+                {avatarUploading ? "..." : "Change"}
+              </span>
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleAvatarChange}
+            className="hidden"
+          />
+          <div>
+            <h3 className="text-sm font-medium mb-1">Profile Picture</h3>
+            <p className="text-xs text-black/50">Click to upload a new photo</p>
+          </div>
+        </div>
+
         {/* Phone Number */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-100">
           <div>

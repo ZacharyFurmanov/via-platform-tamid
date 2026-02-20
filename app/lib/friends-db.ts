@@ -72,6 +72,13 @@ export async function getUserByPhone(phone: string): Promise<FriendProfile | nul
   return rows[0] as FriendProfile;
 }
 
+export async function getUsersByPhones(phones: string[], excludeUserId: string): Promise<Pick<FriendProfile, "id" | "name" | "image">[]> {
+  await initFriendsTables();
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`SELECT id, name, image FROM users WHERE phone = ANY(${phones}) AND id != ${excludeUserId}`;
+  return rows as Pick<FriendProfile, "id" | "name" | "image">[];
+}
+
 // --- Friend Requests ---
 
 export async function sendFriendRequest(fromUserId: string, toUserId: string): Promise<{ status: "sent" | "accepted" | "already_friends" | "already_sent" }> {

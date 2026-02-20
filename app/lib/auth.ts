@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
+import { neon } from "@neondatabase/serverless";
 import { neonAdapter } from "@/app/lib/auth-adapter";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
@@ -75,15 +76,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/login/error",
   },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
+        token.image = user.image;
+      }
+      if (trigger === "update" && token.id) {
+        try {
+          const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+          if (url) {
+            const sql = neon(url);
+            const rows = await sql`SELECT image FROM users WHERE id = ${token.id as string}`;
+            if (rows[0]) {
+              token.image = rows[0].image as string | null;
+            }
+          }
+        } catch {
+          // keep existing token image
+        }
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        if (token.image !== undefined) {
+          session.user.image = token.image as string | null;
+        }
       }
       return session;
     },

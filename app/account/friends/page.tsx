@@ -42,6 +42,11 @@ export default function FriendsPage() {
   const [searching, setSearching] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string>("");
 
+  const [contactsSupported, setContactsSupported] = useState(false);
+  const [contactMatches, setContactMatches] = useState<{ id: string; name: string | null; image: string | null }[]>([]);
+  const [contactSearching, setContactSearching] = useState(false);
+  const [contactRequestStatuses, setContactRequestStatuses] = useState<Record<string, string>>({});
+
   const [incoming, setIncoming] = useState<FriendRequest[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
   const [feed, setFeed] = useState<ActivityFeedItem[]>([]);
@@ -77,6 +82,52 @@ export default function FriendsPage() {
       fetchFeed();
     }
   }, [session, status, router, fetchRequests, fetchFeed]);
+
+  useEffect(() => {
+    if ("contacts" in navigator && "ContactsManager" in window) {
+      setContactsSupported(true);
+    }
+  }, []);
+
+  async function handleFindFromContacts() {
+    try {
+      setContactSearching(true);
+      setContactMatches([]);
+      setContactRequestStatuses({});
+      const nav = navigator as unknown as { contacts: { select: (props: string[], opts: { multiple: boolean }) => Promise<{ tel?: string[] }[]> } };
+      const contacts = await nav.contacts.select(["tel"], { multiple: true });
+      const phones = contacts.flatMap((c) => c.tel || []);
+      if (phones.length === 0) {
+        setContactSearching(false);
+        return;
+      }
+      const res = await fetch("/api/friends/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phones }),
+      });
+      const data = await res.json();
+      const friendIds = new Set(friends.map((f) => f.id));
+      const pendingIds = new Set([
+        ...outgoing.map((r) => r.to_user?.id),
+        ...incoming.map((r) => r.from_user?.id),
+      ]);
+      const filtered = (data.users || []).filter(
+        (u: { id: string }) => !friendIds.has(u.id) && !pendingIds.has(u.id)
+      );
+      setContactMatches(filtered);
+    } catch {
+      // user cancelled or API unsupported
+    } finally {
+      setContactSearching(false);
+    }
+  }
+
+  async function handleContactSendRequest(userId: string) {
+    const result = await sendRequest(userId);
+    setContactRequestStatuses((prev) => ({ ...prev, [userId]: result.status }));
+    await fetchRequests();
+  }
 
   async function handleSearch() {
     if (!searchPhone.trim()) return;
@@ -201,6 +252,46 @@ export default function FriendsPage() {
                     Invite to VIA
                   </button>
                 </div>
+              )}
+            </div>
+          )}
+
+          {contactsSupported && (
+            <div className="mt-6">
+              <button
+                onClick={handleFindFromContacts}
+                disabled={contactSearching}
+                className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition disabled:opacity-50"
+              >
+                {contactSearching ? "Searching..." : "Find Friends from Contacts"}
+              </button>
+
+              {contactMatches.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs text-black/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
+                  {contactMatches.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between border border-neutral-200 p-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={user.name} image={user.image} size="sm" />
+                        <span className="text-sm font-medium">{user.name || "VIA User"}</span>
+                      </div>
+                      {contactRequestStatuses[user.id] ? (
+                        <span className="text-xs text-black/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
+                      ) : (
+                        <button
+                          onClick={() => handleContactSendRequest(user.id)}
+                          className="text-sm uppercase tracking-wide px-3 py-1.5 bg-black text-white hover:bg-black/80 transition"
+                        >
+                          Add Friend
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!contactSearching && contactMatches.length === 0 && contactRequestStatuses && Object.keys(contactRequestStatuses).length === 0 && (
+                <span />
               )}
             </div>
           )}
