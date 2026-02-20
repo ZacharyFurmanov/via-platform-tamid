@@ -15,6 +15,8 @@ export default function AccountActions({
   const [phone, setPhone] = useState(initialPhone);
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneMessage, setPhoneMessage] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function toggleNotifications() {
     setSaving(true);
@@ -114,15 +116,79 @@ export default function AccountActions({
           </button>
         </div>
 
-        {/* Sign Out */}
-        <div className="pt-2">
+        {/* Your Data */}
+        <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
+          <div>
+            <h3 className="text-sm font-medium mb-1">Your Data</h3>
+            <p className="text-xs text-black/50">Download a copy of everything VIA stores about you</p>
+          </div>
+          <button
+            onClick={async () => {
+              const res = await fetch("/api/account/data");
+              if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `via-data-export-${new Date().toISOString().split("T")[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }
+            }}
+            className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition"
+          >
+            Download
+          </button>
+        </div>
+
+        {/* Sign Out & Delete */}
+        <div className="flex items-center justify-between pt-2">
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="text-sm uppercase tracking-wide text-black/50 hover:text-red-600 transition"
           >
             Sign Out
           </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-sm uppercase tracking-wide text-black/30 hover:text-red-600 transition"
+          >
+            Delete Account
+          </button>
         </div>
+
+        {showDeleteConfirm && (
+          <div className="mt-4 border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-800 mb-3">
+              This will permanently delete your account and all your data. This cannot be undone.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    const res = await fetch("/api/account/delete", { method: "DELETE" });
+                    if (res.ok) {
+                      signOut({ callbackUrl: "/" });
+                    }
+                  } catch {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+                className="text-sm uppercase tracking-wide px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Yes, Delete My Account"}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="text-sm uppercase tracking-wide px-4 py-2 border border-neutral-300 hover:border-black transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
