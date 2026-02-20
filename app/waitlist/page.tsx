@@ -45,7 +45,7 @@ function WaitlistContent() {
         body: JSON.stringify({ code: accessCode.trim() }),
       });
       if (res.ok) {
-        window.location.href = "/login";
+        window.location.href = "/";
       } else {
         setAccessError("Invalid code");
       }
