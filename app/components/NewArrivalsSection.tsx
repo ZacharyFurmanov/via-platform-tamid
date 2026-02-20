@@ -10,6 +10,7 @@ export default async function NewArrivalsSection() {
   if (products.length === 0) return null;
 
   return (
+
     <section id="new-arrivals" className="bg-neutral-100 py-24 sm:py-40">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
