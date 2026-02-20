@@ -34,19 +34,35 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
   const story = stories[current];
 
   return (
-    <div className="relative overflow-hidden rounded-sm">
-      {/* Two-column layout: logo panel + image */}
-      <div className="grid grid-cols-1 md:grid-cols-2 min-h-[500px] sm:min-h-[560px]">
-        {/* Left: Logo + text panel */}
-        <div className="relative flex flex-col justify-center items-center text-center px-8 sm:px-12 py-12 sm:py-16 bg-white order-2 md:order-1">
+    <div className="overflow-hidden rounded-sm">
+      {/* Mobile: stacked, Desktop: two columns */}
+      <div className="flex flex-col md:grid md:grid-cols-2 md:min-h-[560px]">
+        {/* Image — on top for mobile, right side for desktop */}
+        <div className="relative aspect-[16/9] md:aspect-auto md:order-2">
+          {stories.map((s, i) => (
+            <div
+              key={s.slug}
+              className="absolute inset-0 transition-opacity duration-1000"
+              style={{ opacity: i === current ? 1 : 0 }}
+            >
+              <Image
+                src={s.image}
+                alt={s.store}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Logo + text panel — below image on mobile, left side for desktop */}
+        <div className="flex flex-col justify-center items-center text-center px-6 sm:px-12 py-10 sm:py-16 bg-white md:order-1">
           {/* Logo */}
           <div
             key={story.slug + "-logo"}
-            className="animate-fade-in mb-6 sm:mb-8"
+            className="animate-fade-in mb-5 sm:mb-8"
           >
-            <div
-              className="relative w-64 h-32 sm:w-72 sm:h-36 mx-auto overflow-hidden"
-            >
+            <div className="relative w-48 h-24 sm:w-72 sm:h-36 mx-auto overflow-hidden">
               <Image
                 src={story.logo}
                 alt={story.store}
@@ -59,7 +75,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
           {/* Teaser */}
           <p
             key={story.slug + "-teaser"}
-            className="animate-fade-in max-w-sm text-black/60 text-sm sm:text-base leading-relaxed mb-8 italic font-serif"
+            className="animate-fade-in max-w-sm text-black/60 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 italic font-serif"
           >
             &ldquo;{story.teaser}&rdquo;
           </p>
@@ -72,7 +88,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
           </Link>
 
           {/* Navigation */}
-          <div className="flex items-center gap-4 mt-8">
+          <div className="flex items-center gap-4 mt-6 sm:mt-8">
             <button
               onClick={prev}
               aria-label="Previous story"
@@ -102,24 +118,6 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
               &rarr;
             </button>
           </div>
-        </div>
-
-        {/* Right: Store image */}
-        <div className="relative aspect-[4/5] md:aspect-auto overflow-hidden order-1 md:order-2">
-          {stories.map((s, i) => (
-            <div
-              key={s.slug}
-              className="absolute inset-0 transition-opacity duration-1000"
-              style={{ opacity: i === current ? 1 : 0 }}
-            >
-              <Image
-                src={s.image}
-                alt={s.store}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ))}
         </div>
       </div>
     </div>
