@@ -24,10 +24,10 @@ export default async function NewArrivalsSection() {
           </div>
 
           <Link
-            href="/categories"
-            className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
+            href="#new-arrivals"
+            className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline"
           >
-            Browse all
+            Shop new arrivals
           </Link>
         </div>
 
