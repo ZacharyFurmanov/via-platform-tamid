@@ -283,28 +283,17 @@ export default function HeaderClient({
                 >
                   <div className="bg-white text-black min-w-[220px] shadow-xl rounded-sm border border-neutral-100">
                     <div className="py-2">
-                      {stores.map((store) => {
-                        const isComingSoon = "comingSoon" in store && store.comingSoon;
-                        return isComingSoon ? (
-                          <div
-                            key={store.slug}
-                            className="block px-6 py-3 text-sm normal-case tracking-normal text-neutral-400"
-                          >
-                            <span className="font-medium">{store.name}</span>
-                            <span className="block text-xs text-neutral-400 mt-0.5">Coming Soon</span>
-                          </div>
-                        ) : (
-                          <Link
-                            key={store.slug}
-                            href={`/stores/${store.slug}`}
-                            onClick={() => setStoresDropdownOpen(false)}
-                            className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-neutral-50 transition-colors"
-                          >
-                            <span className="font-medium">{store.name}</span>
-                            <span className="block text-xs text-neutral-500 mt-0.5">{store.location}</span>
-                          </Link>
-                        );
-                      })}
+                      {stores.map((store) => (
+                        <Link
+                          key={store.slug}
+                          href={`/stores/${store.slug}`}
+                          onClick={() => setStoresDropdownOpen(false)}
+                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-neutral-50 transition-colors"
+                        >
+                          <span className="font-medium">{store.name}</span>
+                          <span className="block text-xs text-neutral-500 mt-0.5">{store.location}</span>
+                        </Link>
+                      ))}
                     </div>
                     <div className="border-t border-neutral-100">
                       <Link
@@ -457,26 +446,16 @@ export default function HeaderClient({
                     }`}
                   >
                     <div className="pb-4 pl-4 space-y-1">
-                      {stores.map((store) => {
-                        const isComingSoon = "comingSoon" in store && store.comingSoon;
-                        return isComingSoon ? (
-                          <div
-                            key={store.slug}
-                            className="block py-2 text-white/30"
-                          >
-                            {store.name} <span className="text-xs">— Coming Soon</span>
-                          </div>
-                        ) : (
-                          <Link
-                            key={store.slug}
-                            href={`/stores/${store.slug}`}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="block py-2 text-white/70 hover:text-white transition-colors"
-                          >
-                            {store.name}
-                          </Link>
-                        );
-                      })}
+                      {stores.map((store) => (
+                        <Link
+                          key={store.slug}
+                          href={`/stores/${store.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block py-2 text-white/70 hover:text-white transition-colors"
+                        >
+                          {store.name}
+                        </Link>
+                      ))}
                       <Link
                         href="/stores"
                         onClick={() => setMobileMenuOpen(false)}

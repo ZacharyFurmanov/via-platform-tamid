@@ -28,7 +28,7 @@ export default function MixedProductGrid({
   from?: string;
 }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
       {products.map((product, i) => {
         const compositeId = `${product.store_slug}-${product.id}`;
         const images: string[] = product.images
@@ -39,7 +39,7 @@ export default function MixedProductGrid({
         return (
           <div
             key={product.id}
-            className={featured ? "col-span-2" : "col-span-1"}
+            className={featured ? "col-span-2 md:col-span-1" : "col-span-1"}
           >
             <ProductCard
               id={compositeId}

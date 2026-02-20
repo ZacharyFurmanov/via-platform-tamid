@@ -43,12 +43,11 @@ export const stores = [
       "Lover Girl Vintage is a curated collection of vintage and pre-loved fashion, hand-selected with a feminine, romantic eye. Based in Newport Beach, each piece is chosen for its charm, character, and timeless appeal.",
     website: "https://lovergirlvintage.com",
     dataSource: "lover-girl-vintage",
-    image: "",
-    logo: "",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
     affiliatePath: "VIAPARTNER",
-    comingSoon: true,
     shippingPolicy:
       "Ships from Newport Beach, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
