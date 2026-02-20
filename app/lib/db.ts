@@ -211,13 +211,18 @@ export async function getNewArrivals(
 ): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  const result = await sql`
-    SELECT * FROM products
-    WHERE created_at >= NOW() - make_interval(days => ${days})
-    ORDER BY created_at DESC
-    LIMIT ${limit}
-  `;
-  return result as DBProduct[];
+  try {
+    const result = await sql`
+      SELECT * FROM products
+      WHERE created_at >= NOW() - make_interval(days => ${days})
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return result as DBProduct[];
+  } catch {
+    // created_at column may not exist yet (migration runs on next sync)
+    return [];
+  }
 }
 
 /**
