@@ -4,7 +4,7 @@ import { useState, createContext, useContext, ReactNode } from "react";
 import SignUpModal from "./SignUpModal";
 
 interface SignUpContextType {
-  openModal: () => void;
+  openModal: (targetUrl?: string) => void;
 }
 
 const SignUpContext = createContext<SignUpContextType | null>(null);
@@ -19,14 +19,18 @@ export function useSignUp() {
 
 export function SignUpProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [targetUrl, setTargetUrl] = useState<string | undefined>();
 
-  const openModal = () => setIsOpen(true);
+  const openModal = (url?: string) => {
+    setTargetUrl(url);
+    setIsOpen(true);
+  };
   const closeModal = () => setIsOpen(false);
 
   return (
     <SignUpContext.Provider value={{ openModal }}>
       {children}
-      <SignUpModal isOpen={isOpen} onClose={closeModal} />
+      <SignUpModal isOpen={isOpen} onClose={closeModal} callbackUrl={targetUrl} />
     </SignUpContext.Provider>
   );
 }

@@ -29,6 +29,8 @@ const ACCESS_CODE_ROUTES = [
   "/products",
   "/stories",
   "/faqs",
+  "/search",
+  "/cart",
 ];
 
 // Routes that require user authentication (Auth.js session)

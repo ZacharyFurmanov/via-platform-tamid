@@ -7,12 +7,15 @@ import Link from "next/link";
 interface SignUpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  callbackUrl?: string;
 }
 
-export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
+export default function SignUpModal({ isOpen, onClose, callbackUrl }: SignUpModalProps) {
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const redirectUrl = callbackUrl || "/";
 
   // Animate modal entrance
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    await signIn("resend", { email, callbackUrl: window.location.pathname });
+    await signIn("resend", { email, callbackUrl: redirectUrl });
   }
 
   if (!isOpen) return null;
@@ -95,7 +98,7 @@ export default function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
 
           {/* Google */}
           <button
-            onClick={() => signIn("google", { callbackUrl: window.location.pathname })}
+            onClick={() => signIn("google", { callbackUrl: redirectUrl })}
             className="w-full flex items-center justify-center gap-3 bg-black text-white py-3.5 text-sm uppercase tracking-wide hover:bg-neutral-800 transition mb-3"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

@@ -17,7 +17,7 @@ export default function AuthProductLink({ href, className, children }: AuthProdu
   function handleClick(e: React.MouseEvent) {
     if (!session) {
       e.preventDefault();
-      openModal();
+      openModal(href);
     }
   }
 
