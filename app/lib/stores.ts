@@ -95,6 +95,24 @@ export const stores = [
       "All sales are final. As a vintage and pre-loved retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "source-twenty-four",
+    name: "Source Twenty Four",
+    location: "United States",
+    description:
+      "Source Twenty Four is a curated collection of pre-owned luxury handbags, wallets, and accessories from iconic designer houses. Each piece is authenticated and hand-selected, offering timeless style from brands like Chanel, Celine, Dior, and Bottega Veneta.",
+    website: "https://sourcetwentyfour.com",
+    dataSource: "source-twenty-four",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "VIAPLATFORM",
+    shippingPolicy:
+      "Free shipping on all items. Orders ship from the United States.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "lover-girl-vintage",
     name: "Lover Girl Vintage",
     location: "Newport Beach, CA",
