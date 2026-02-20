@@ -63,19 +63,11 @@ export default async function AccountPage() {
       <section className="border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
           <div className="flex items-center gap-5">
-            {session.user.image ? (
-              <img
-                src={session.user.image}
-                alt=""
-                className="w-16 h-16 rounded-full"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center">
-                <span className="text-2xl font-serif text-black/40">
-                  {(session.user.name?.[0] || session.user.email?.[0] || "?").toUpperCase()}
-                </span>
-              </div>
-            )}
+            <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center">
+              <span className="text-2xl font-serif text-black/40">
+                {(session.user.name?.[0] || session.user.email?.[0] || "?").toUpperCase()}
+              </span>
+            </div>
             <div>
               {session.user.name && (
                 <h1 className="text-2xl sm:text-3xl font-serif">{session.user.name}</h1>
@@ -213,13 +205,7 @@ export default async function AccountPage() {
 
         {/* Settings & Sign Out */}
         <section className="py-12 border-t border-neutral-100 mb-8">
-          <AccountActions
-            notificationsEnabled={notificationsEnabled}
-            initialPhone={userPhone}
-            userImage={session.user.image || null}
-            userName={session.user.name || null}
-            userEmail={session.user.email || null}
-          />
+          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
         </section>
       </div>
     </main>
