@@ -24,7 +24,7 @@ export default async function NewArrivalsSection() {
           </div>
 
           <Link
-            href="#new-arrivals"
+            href="/new-arrivals"
             className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline"
           >
             Shop new arrivals

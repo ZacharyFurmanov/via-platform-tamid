@@ -45,14 +45,14 @@ function AnnouncementBar() {
           Curated Vintage &amp; Secondhand
         </span>
         <Link
-          href="/#new-arrivals"
+          href="/new-arrivals"
           className={`transition-all duration-500 ease-in-out hover:text-white ${
             showNewArrivals
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-full absolute"
           }`}
         >
-          New Arrivals
+          New Arrivals Added Weekly
         </Link>
       </div>
     </div>
