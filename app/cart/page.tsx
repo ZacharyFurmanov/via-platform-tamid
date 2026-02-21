@@ -161,26 +161,9 @@ export default function CartPage() {
                     href={(() => {
                       const firstItem = group.items[0];
 
-                      // Aggregate all items into a single Shopify cart URL
-                      // Format: /cart/VARIANT1:1,VARIANT2:1?discount=CODE
-                      let aggregatedUrl = firstItem.checkoutUrl;
-                      try {
-                        const isShopifyCart = firstItem.checkoutUrl.includes("/cart/");
-                        if (isShopifyCart && group.items.length > 1) {
-                          const variantParts: string[] = [];
-                          for (const item of group.items) {
-                            const m = item.checkoutUrl.match(/\/cart\/([^?,]+)/);
-                            if (m) variantParts.push(m[1]);
-                          }
-                          const url = new URL(firstItem.checkoutUrl);
-                          const discount = url.searchParams.get("discount");
-                          const discountParam = discount ? `?discount=${discount}` : "";
-                          aggregatedUrl = `${url.origin}/cart/${variantParts.join(",")}${discountParam}`;
-                        }
-                      } catch {
-                        // For non-Shopify stores or invalid URLs, fall back to first item
-                      }
-
+                      // Use the product page URL (not /cart/) so the affiliate
+                      // path is injected by /api/track and the Shopify Collabs
+                      // cookie is set, guaranteeing commission tracking.
                       const params = new URLSearchParams({
                         pid: firstItem.compositeId,
                         pn: group.items.length > 1
@@ -188,7 +171,7 @@ export default function CartPage() {
                           : firstItem.title,
                         s: firstItem.storeName,
                         ss: firstItem.storeSlug,
-                        url: aggregatedUrl,
+                        url: firstItem.externalUrl,
                       });
                       return `/api/track?${params.toString()}`;
                     })()}
