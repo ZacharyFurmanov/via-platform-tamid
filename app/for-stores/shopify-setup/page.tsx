@@ -47,7 +47,8 @@ export default function ShopifySetupPage() {
             <div className="bg-green-50 border border-green-200 p-4 text-sm">
               <p className="text-green-800">
                 <strong>Why we use Collabs:</strong> It&apos;s free, native to Shopify, and handles
-                all the complex tracking automatically. You don&apos;t need to add any code to your store.
+                all the complex tracking automatically. The only setup on your end is enabling
+                the Collabs app embed in your theme (a one-click toggle).
               </p>
             </div>
           </div>
@@ -189,17 +190,49 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 5 */}
+              <div className="border-l-2 border-black pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                    5
+                  </span>
+                  <h3 className="text-lg font-medium">Enable the Collabs App Embed</h3>
+                </div>
+                <div className="text-neutral-600 space-y-3">
+                  <p>
+                    This is a critical step. The Shopify Collabs app embed must be turned on in your
+                    theme for affiliate tracking cookies to work. Without it, clicks from VIA
+                    won&apos;t be attributed and commissions won&apos;t be tracked.
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    <li>Go to your Shopify Admin</li>
+                    <li>Navigate to <strong>Online Store → Themes</strong></li>
+                    <li>Click <strong>Customize</strong> on your active theme</li>
+                    <li>In the theme editor, click <strong>App embeds</strong> (the blocks icon in the left sidebar)</li>
+                    <li>Find <strong>Shopify Collabs</strong> and toggle it <strong>on</strong></li>
+                    <li>Click <strong>Save</strong></li>
+                  </ol>
+                  <div className="bg-red-50 border border-red-200 p-3 text-sm">
+                    <p className="text-red-800">
+                      <strong>Required:</strong> If the Collabs app embed is not enabled, affiliate tracking
+                      cookies will not be set when customers visit your store from VIA. This means
+                      sales won&apos;t be attributed and commissions won&apos;t be recorded.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 6 */}
               <div className="border-l-2 border-neutral-300 pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-neutral-200 text-neutral-600 flex items-center justify-center text-sm font-medium">
-                    5
+                    6
                   </span>
-                  <h3 className="text-lg font-medium text-neutral-600">Done! (That&apos;s it)</h3>
+                  <h3 className="text-lg font-medium text-neutral-600">Done!</h3>
                 </div>
                 <div className="text-neutral-500 space-y-3">
                   <p>
-                    Once we accept your invitation, all VIA traffic to your store will be
-                    automatically tracked. Shopify handles:
+                    Once we accept your invitation and the app embed is enabled, all VIA traffic
+                    to your store will be automatically tracked. Shopify handles:
                   </p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li>Click tracking via affiliate links</li>
@@ -242,7 +275,8 @@ export default function ShopifySetupPage() {
               <div>
                 <h3 className="font-medium mb-2">Do I need to add any code to my store?</h3>
                 <p className="text-neutral-600 text-sm">
-                  No. Shopify Collabs handles everything automatically. No pixels, no scripts, no theme edits.
+                  No custom code is needed. The only requirement is enabling the Shopify Collabs
+                  app embed in your theme (Step 5 above). This is a one-click toggle—no coding required.
                 </p>
               </div>
               <div>

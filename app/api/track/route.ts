@@ -27,14 +27,17 @@ function getAffiliateConfig(
 }
 
 /**
- * Fetch the Shopify Collabs landing page server-side to extract the dt_id
- * tracking parameter. Shopify redirects e.g. store.com/VIAPLATFORM → store.com/?dt_id=12345.
- * We grab that dt_id and append it to the actual product URL so the user
- * lands on the product page AND the Collabs cookie gets set.
+ * Fetch the Shopify Collabs landing page server-side to determine the
+ * redirect type and extract the dt_id tracking parameter.
+ *
+ * Some stores redirect directly: store.com/AFFILIATE → store.com/?dt_id=123
+ * Others go through a discount flow: store.com/AFFILIATE → /discount/CODE?dt_id=123&redirect=/...
+ *
+ * Returns the dt_id and whether it uses the discount flow.
  */
-async function getCollabsDtId(
+async function getCollabsRedirect(
   affiliateUrl: string
-): Promise<string | null> {
+): Promise<{ dtId: string; discountPath: string | null } | null> {
   try {
     const res = await fetch(affiliateUrl, {
       redirect: "manual",
@@ -44,15 +47,19 @@ async function getCollabsDtId(
       },
     });
 
-    // Shopify returns a 302 with Location header containing dt_id
     const location = res.headers.get("location");
-    if (location) {
-      const url = new URL(location, affiliateUrl);
-      const dtId = url.searchParams.get("dt_id");
-      if (dtId) return dtId;
-    }
+    if (!location) return null;
 
-    return null;
+    const url = new URL(location, affiliateUrl);
+    const dtId = url.searchParams.get("dt_id");
+    if (!dtId) return null;
+
+    // Check if the redirect goes through /discount/ path
+    const isDiscountFlow = url.pathname.startsWith("/discount/");
+    return {
+      dtId,
+      discountPath: isDiscountFlow ? url.pathname : null,
+    };
   } catch {
     return null;
   }
@@ -102,24 +109,34 @@ export async function GET(request: NextRequest) {
   }).catch(console.error);
 
   // For stores with Shopify Collabs affiliate tracking:
-  // 1. Fetch the affiliate landing page server-side to get the dt_id
-  // 2. Append dt_id to the product URL so Shopify sets the tracking cookie
-  // 3. User lands directly on the product page with commission tracking active
   if (storeSlug) {
     const affiliate = getAffiliateConfig(storeSlug);
     if (affiliate) {
       const affiliateUrl = `${affiliate.origin}/${affiliate.affiliatePath}`;
-      const dtId = await getCollabsDtId(affiliateUrl);
+      const collabs = await getCollabsRedirect(affiliateUrl);
 
-      if (dtId) {
-        // Redirect to the product URL with dt_id — Shopify's Collabs script
-        // on the product page reads dt_id and sets the attribution cookie
-        parsedUrl.searchParams.set("dt_id", dtId);
+      if (collabs) {
+        // Extract the product path (e.g. /products/some-product)
+        const productPath = parsedUrl.pathname + parsedUrl.search;
+
+        if (collabs.discountPath) {
+          // Discount flow (Missi, SCARZ): redirect through /discount/ path
+          // with the product page as the redirect destination. This lets
+          // Shopify apply the discount AND carry the dt_id to the product page
+          // through its own redirect chain, which is more reliable than
+          // appending dt_id ourselves.
+          const discountUrl = new URL(collabs.discountPath, affiliate.origin);
+          discountUrl.searchParams.set("dt_id", collabs.dtId);
+          discountUrl.searchParams.set("redirect", productPath);
+          return NextResponse.redirect(discountUrl.toString(), 302);
+        }
+
+        // Direct flow: append dt_id to the product URL
+        parsedUrl.searchParams.set("dt_id", collabs.dtId);
         return NextResponse.redirect(parsedUrl.toString(), 302);
       }
 
-      // Fallback: if we couldn't extract dt_id, redirect to the affiliate
-      // landing page directly (user lands on homepage but cookie is set)
+      // Fallback: redirect to the affiliate landing page directly
       return NextResponse.redirect(affiliateUrl, 302);
     }
   }
