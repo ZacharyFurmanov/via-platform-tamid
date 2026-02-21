@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick } from "@/app/lib/analytics-db";
+import { stores } from "@/app/lib/stores";
+
+/**
+ * Inject the Shopify Collabs affiliate path into a store URL.
+ * e.g. https://store.com/products/item → https://store.com/AFFILIATE/products/item
+ *      https://store.com/cart/123:1    → https://store.com/AFFILIATE/cart/123:1
+ */
+function injectAffiliatePath(url: URL, storeSlug: string): URL {
+  const storeConfig = stores.find((s) => s.slug === storeSlug);
+  if (!storeConfig) return url;
+
+  const affiliatePath =
+    "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
+  if (!affiliatePath) return url;
+
+  // Don't double-inject if already present
+  if (url.pathname.startsWith(`/${affiliatePath}/`) || url.pathname === `/${affiliatePath}`) {
+    return url;
+  }
+
+  url.pathname = `/${affiliatePath}${url.pathname}`;
+  return url;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
@@ -43,6 +67,11 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect URL with tracking parameters
   let redirectUrl = new URL(externalUrl);
+
+  // Inject Shopify Collabs affiliate path for commission tracking
+  if (storeSlug) {
+    redirectUrl = injectAffiliatePath(redirectUrl, storeSlug);
+  }
 
   // Always append via_click_id for our own conversion attribution
   redirectUrl.searchParams.set("via_click_id", clickId);
