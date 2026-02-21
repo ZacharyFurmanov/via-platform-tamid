@@ -58,7 +58,7 @@ export async function POST() {
       "line_items[0][price]": process.env.STRIPE_PRICE_ID!,
       "line_items[0][quantity]": "1",
       ui_mode: "embedded",
-      return_url: `${getBaseUrl()}/account?membership=success`,
+      return_url: `${getBaseUrl()}/account/insider?membership=success`,
     });
 
     return NextResponse.json({ clientSecret: checkoutSession.client_secret });

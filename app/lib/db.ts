@@ -267,6 +267,27 @@ export async function getNewArrivals(
 }
 
 /**
+ * Get products added in the last 24 hours — the VIA Insider early-access window.
+ * Only shown to active members.
+ */
+export async function getInsiderProducts(limit: number = 48): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+
+  try {
+    const result = await sql`
+      SELECT * FROM products
+      WHERE created_at IS NOT NULL
+        AND created_at >= NOW() - interval '24 hours'
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return result as DBProduct[];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Get list of all synced stores
  */
 export async function getSyncedStores(): Promise<

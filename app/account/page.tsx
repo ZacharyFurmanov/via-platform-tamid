@@ -90,23 +90,36 @@ export default async function AccountPage() {
         <section className="py-12 border-b border-neutral-100">
           <h2 className="font-serif text-2xl mb-6">VIA Insider Membership</h2>
           {isMember ? (
-            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div>
-                <p className="font-medium text-sm mb-1">Active</p>
-                {memberSince && (
-                  <p className="text-sm text-black/50">
-                    Member since{" "}
-                    {memberSince.toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
+            <div className="flex flex-col gap-4">
+              <a
+                href="/account/insider"
+                className="border border-black p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-black hover:text-white transition group"
+              >
+                <div>
+                  <p className="font-serif text-xl mb-1">First Looks</p>
+                  <p className="text-sm text-black/50 group-hover:text-white/60">
+                    View new arrivals added in the last 24 hours — before anyone else.
                   </p>
-                )}
-                <p className="text-sm text-black/50 mt-1">
-                  You have 24-hour early access to new arrivals.
-                </p>
+                </div>
+                <span className="shrink-0 text-sm uppercase tracking-wide">
+                  View →
+                </span>
+              </a>
+              <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <div>
+                  <p className="font-medium text-sm mb-1">Active</p>
+                  {memberSince && (
+                    <p className="text-sm text-black/50">
+                      Member since{" "}
+                      {memberSince.toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
+                </div>
+                <MembershipPortalButton />
               </div>
-              <MembershipPortalButton />
             </div>
           ) : (
             <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
