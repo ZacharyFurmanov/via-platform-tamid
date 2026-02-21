@@ -68,7 +68,7 @@ export const stores = [
     currency: "USD",
     affiliatePath: "0001",
     discountCode: "0001",
-    perk: "VIA customers get free shipping",
+    perk: "VIA customers get free shipping — use code 0001 at checkout",
     shippingPolicy:
       "Orders are processed within 2–5 business days. Delivery times vary by destination and chosen shipping service. A confirmation email with tracking details is sent once your order is dispatched.",
     returnPolicy:
@@ -88,7 +88,7 @@ export const stores = [
     currency: "GBP",
     affiliatePath: "VIAXSCARZ",
     discountCode: "VIAXSCARZ",
-    perk: "VIA customers get free shipping",
+    perk: "VIA customers get free shipping — use code VIAXSCARZ at checkout",
     shippingPolicy:
       "Orders are processed within 1–2 business days. UK Standard: £4 (2–4 days). EU International: £15 (2–11 days). Rest of World: £30 (3–17 days). Free shipping on orders over £500. International customers are responsible for customs duties and taxes.",
     returnPolicy:
