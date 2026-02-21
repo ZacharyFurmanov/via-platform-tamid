@@ -5,7 +5,7 @@ import { getUserByEmail, saveStripeCustomerId } from "@/app/lib/membership-db";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
 
 async function stripePost(path: string, params: Record<string, string>) {
-  const key = process.env.STRIPE_SECRET_KEY;
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
 
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
@@ -61,6 +61,6 @@ export async function POST() {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Stripe checkout error:", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Could not start checkout. Please try again." }, { status: 500 });
   }
 }
