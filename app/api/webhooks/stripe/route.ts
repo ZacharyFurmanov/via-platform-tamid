@@ -95,17 +95,11 @@ export async function POST(request: NextRequest) {
       }
 
       case "invoice.payment_failed": {
+        // Do not cancel immediately — Stripe will retry the payment automatically
+        // (3–4 attempts over several days). Membership is only revoked when
+        // customer.subscription.deleted fires after all retries are exhausted.
         const invoice = event.data.object;
-        const customerId = invoice.customer as string;
-
-        const user = await getUserByStripeCustomerId(customerId);
-        if (!user) {
-          console.error("Webhook: no user found for Stripe customer", customerId);
-          break;
-        }
-
-        await setMemberCancelled(user.id);
-        console.log(`Membership cancelled due to payment failure for user ${user.id}`);
+        console.log(`Payment failed for customer ${invoice.customer} — awaiting Stripe retry logic`);
         break;
       }
 
