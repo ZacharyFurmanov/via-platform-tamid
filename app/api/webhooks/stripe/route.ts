@@ -4,6 +4,7 @@ import {
   setMemberActive,
   setMemberCancelled,
 } from "@/app/lib/membership-db";
+import { sendMembershipConfirmation } from "@/app/lib/email";
 
 // Verify Stripe webhook signature without the SDK
 async function verifyStripeSignature(
@@ -76,6 +77,13 @@ export async function POST(request: NextRequest) {
 
         await setMemberActive(user.id, customerId, subscriptionId);
         console.log(`Membership activated for user ${user.id}`);
+
+        // Send confirmation email
+        try {
+          await sendMembershipConfirmation(user.email);
+        } catch (emailErr) {
+          console.error("Failed to send membership confirmation email:", emailErr);
+        }
         break;
       }
 

@@ -182,6 +182,37 @@ export async function sendGiveawayReminder(
   });
 }
 
+export async function sendMembershipConfirmation(email: string) {
+  const resend = getResend();
+  const insiderUrl = `${BASE_URL}/account/insider`;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "Welcome to VIA Insider",
+    html: `
+<!DOCTYPE html>
+<html>
+<head><style>${baseStyles()}</style></head>
+<body>
+  <div class="container">
+    <div class="header"><h1>VIA</h1></div>
+    <div class="content">
+      <h2>You're in.</h2>
+      <p>Welcome to VIA Insider. You now have 24-hour early access to new arrivals from all of our curated stores — before anyone else sees them.</p>
+      <p>Head to your Insider page to see what's just dropped.</p>
+      <a href="${insiderUrl}" class="btn">View New Arrivals</a>
+      <p style="font-size: 13px; color: #999; margin-top: 24px;">You'll be billed $10/month. You can cancel anytime from your account page.</p>
+    </div>
+    <div class="footer">
+      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+    </div>
+  </div>
+</body>
+</html>`,
+  });
+}
+
 export async function sendFavoriteActivityNotification(
   email: string,
   productTitle: string,
