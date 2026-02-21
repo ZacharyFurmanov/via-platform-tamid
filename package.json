@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "@stripe/stripe-js": "^8.8.0",
     "@types/xml2js": "^0.4.14",
     "@vercel/blob": "^2.3.0",
     "axios": "^1.13.2",
@@ -21,6 +22,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "resend": "^6.9.1",
+    "stripe": "^20.3.1",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {

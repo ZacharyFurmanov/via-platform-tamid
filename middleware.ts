@@ -17,6 +17,8 @@ const PUBLIC_ROUTES = [
   "/api/track",
   "/api/conversion",
   "/api/access-code",
+  "/membership",
+  "/api/webhooks/stripe",
 ];
 
 // Routes that require the access code cookie but not a full user session
@@ -35,7 +37,7 @@ const ACCESS_CODE_ROUTES = [
 
 // Routes that require user authentication (Auth.js session)
 // Now all non-public, non-admin routes require auth
-const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends"];
+const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends", "/api/membership"];
 
 // Simple hash function for admin password comparison
 function hashPassword(password: string): string {

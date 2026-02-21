@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
 import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
+import MembershipPortalButton from "./MembershipPortalButton";
 import { neon } from "@neondatabase/serverless";
 
 async function getUserSettings(userId: string): Promise<{ notificationsEnabled: boolean; phone: string }> {
@@ -33,18 +35,23 @@ export default async function AccountPage() {
   let notificationsEnabled = true;
   let userPhone = "";
   let favCounts: Record<number, number> = {};
+  let isMember = false;
+  let memberSince: Date | null = null;
 
   if (userId) {
     try {
-      const [products, storeSlugs, settings] = await Promise.all([
+      const [products, storeSlugs, settings, membershipStatus] = await Promise.all([
         getUserFavoritedProducts(userId),
         getUserStoreFavoriteIds(userId),
         getUserSettings(userId),
+        getUserMembershipStatus(userId).catch(() => ({ isMember: false, memberSince: null })),
       ]);
       favProducts = products;
       favStoreSlugs = storeSlugs;
       notificationsEnabled = settings.notificationsEnabled;
       userPhone = settings.phone;
+      isMember = membershipStatus.isMember;
+      memberSince = membershipStatus.memberSince;
       if (favProducts.length > 0) {
         favCounts = await getProductFavoriteCounts(favProducts.map((p) => p.id));
       }
@@ -79,6 +86,45 @@ export default async function AccountPage() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6">
+        {/* First Look Membership */}
+        <section className="py-12 border-b border-neutral-100">
+          <h2 className="font-serif text-2xl mb-6">First Look Membership</h2>
+          {isMember ? (
+            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <p className="font-medium text-sm mb-1">Active</p>
+                {memberSince && (
+                  <p className="text-sm text-black/50">
+                    Member since{" "}
+                    {memberSince.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
+                <p className="text-sm text-black/50 mt-1">
+                  You have 24-hour early access to new arrivals.
+                </p>
+              </div>
+              <MembershipPortalButton />
+            </div>
+          ) : (
+            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <p className="text-sm text-black/50 leading-relaxed">
+                  Get 24-hour early access to new arrivals from all VIA stores.
+                </p>
+              </div>
+              <a
+                href="/membership"
+                className="shrink-0 text-center text-sm uppercase tracking-wide px-6 py-3 bg-black text-white hover:bg-black/85 transition"
+              >
+                Join First Look — $10/month
+              </a>
+            </div>
+          )}
+        </section>
+
         {/* Refer a Friend + Friends — side by side on desktop */}
         <section className="py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

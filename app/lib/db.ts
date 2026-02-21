@@ -218,22 +218,35 @@ export async function getRecommendedProducts(
 }
 
 /**
- * Get recently added products (new arrivals)
+ * Get recently added products (new arrivals).
+ * Members see all products from the last `days` days.
+ * Non-members only see products older than 24 hours (the early-access window).
  */
 export async function getNewArrivals(
   limit: number = 12,
-  days: number = 7
+  days: number = 7,
+  isMember: boolean = false
 ): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
   try {
-    const result = await sql`
-      SELECT * FROM products
-      WHERE created_at IS NOT NULL
-        AND created_at >= NOW() - make_interval(days => ${days})
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
+    const result = isMember
+      ? await sql`
+          SELECT * FROM products
+          WHERE created_at IS NOT NULL
+            AND created_at >= NOW() - make_interval(days => ${days})
+          ORDER BY created_at DESC
+          LIMIT ${limit}
+        `
+      : await sql`
+          SELECT * FROM products
+          WHERE created_at IS NOT NULL
+            AND created_at >= NOW() - make_interval(days => ${days})
+            AND created_at <= NOW() - interval '24 hours'
+          ORDER BY created_at DESC
+          LIMIT ${limit}
+        `;
+
     // If no genuine new arrivals yet, show a random sample as fallback
     if (result.length === 0) {
       const fallback = await sql`
