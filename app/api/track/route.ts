@@ -4,29 +4,21 @@ import { saveClick } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 
 /**
- * Inject the Shopify Collabs affiliate path into a store URL.
- * Works on /products/ paths. For other paths, falls back to
- * redirecting to the affiliate landing page to set the cookie.
+ * Get the Shopify Collabs affiliate landing URL for a store.
+ * Returns e.g. "https://store.com/VIAPLATFORM" or null if no affiliate.
  */
-function applyAffiliateTracking(url: URL, storeSlug: string): URL {
+function getAffiliateLandingUrl(
+  storeUrl: URL,
+  storeSlug: string
+): string | null {
   const storeConfig = stores.find((s) => s.slug === storeSlug);
-  if (!storeConfig) return url;
+  if (!storeConfig) return null;
 
   const affiliatePath =
     "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
-  if (!affiliatePath) return url;
+  if (!affiliatePath) return null;
 
-  // Don't double-inject
-  if (
-    url.pathname.startsWith(`/${affiliatePath}/`) ||
-    url.pathname === `/${affiliatePath}`
-  ) {
-    return url;
-  }
-
-  // Inject affiliate path into the URL
-  url.pathname = `/${affiliatePath}${url.pathname}`;
-  return url;
+  return `${storeUrl.origin}/${affiliatePath}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -72,17 +64,18 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // Build the redirect URL with affiliate tracking and click ID
-  let redirectUrl = new URL(externalUrl);
-
-  // Inject Shopify Collabs affiliate path for commission tracking
+  // Check if this store has a Shopify Collabs affiliate link.
+  // If so, redirect to the affiliate landing page (e.g. store.com/VIAPLATFORM)
+  // which sets the tracking cookie. The user lands on the store with the
+  // cookie active — any purchase within the attribution window earns commission.
   if (storeSlug) {
-    redirectUrl = applyAffiliateTracking(redirectUrl, storeSlug);
+    const affiliateUrl = getAffiliateLandingUrl(parsedUrl, storeSlug);
+    if (affiliateUrl) {
+      return NextResponse.redirect(affiliateUrl, 302);
+    }
   }
 
-  // Append via_click_id for our own conversion attribution
-  redirectUrl.searchParams.set("via_click_id", clickId);
-
-  // Redirect to the store
-  return NextResponse.redirect(redirectUrl.toString(), 302);
+  // For stores without affiliate tracking, redirect to the product URL directly
+  parsedUrl.searchParams.set("via_click_id", clickId);
+  return NextResponse.redirect(parsedUrl.toString(), 302);
 }
