@@ -39,7 +39,7 @@ export default async function InsiderPage() {
       <section className="border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <p className="text-xs uppercase tracking-widest text-black/40 mb-3">VIA Insider</p>
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">First Looks</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">VIA Insider</h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             Pieces added in the last 24 hours — yours before anyone else sees them.
           </p>

@@ -96,7 +96,7 @@ export default async function AccountPage() {
                 className="border border-black p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-black hover:text-white transition group"
               >
                 <div>
-                  <p className="font-serif text-xl mb-1">First Looks</p>
+                  <p className="font-serif text-xl mb-1">VIA Insider</p>
                   <p className="text-sm text-black/50 group-hover:text-white/60">
                     View new arrivals added in the last 24 hours — before anyone else.
                   </p>
