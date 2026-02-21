@@ -4,21 +4,58 @@ import { saveClick } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 
 /**
- * Get the Shopify Collabs affiliate landing URL for a store.
- * Returns e.g. "https://store.com/VIAPLATFORM" or null if no affiliate.
+ * Get the Shopify Collabs affiliate config for a store.
  */
-function getAffiliateLandingUrl(
-  storeUrl: URL,
+function getAffiliateConfig(
   storeSlug: string
-): string | null {
+): { affiliatePath: string; origin: string } | null {
   const storeConfig = stores.find((s) => s.slug === storeSlug);
   if (!storeConfig) return null;
 
   const affiliatePath =
-    "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
+    "affiliatePath" in storeConfig
+      ? (storeConfig as any).affiliatePath
+      : null;
   if (!affiliatePath) return null;
 
-  return `${storeUrl.origin}/${affiliatePath}`;
+  try {
+    const origin = new URL(storeConfig.website).origin;
+    return { affiliatePath, origin };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch the Shopify Collabs landing page server-side to extract the dt_id
+ * tracking parameter. Shopify redirects e.g. store.com/VIAPLATFORM → store.com/?dt_id=12345.
+ * We grab that dt_id and append it to the actual product URL so the user
+ * lands on the product page AND the Collabs cookie gets set.
+ */
+async function getCollabsDtId(
+  affiliateUrl: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(affiliateUrl, {
+      redirect: "manual",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; VIA/1.0; +https://theviaplatform.com)",
+      },
+    });
+
+    // Shopify returns a 302 with Location header containing dt_id
+    const location = res.headers.get("location");
+    if (location) {
+      const url = new URL(location, affiliateUrl);
+      const dtId = url.searchParams.get("dt_id");
+      if (dtId) return dtId;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -64,13 +101,25 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // Check if this store has a Shopify Collabs affiliate link.
-  // If so, redirect to the affiliate landing page (e.g. store.com/VIAPLATFORM)
-  // which sets the tracking cookie. The user lands on the store with the
-  // cookie active — any purchase within the attribution window earns commission.
+  // For stores with Shopify Collabs affiliate tracking:
+  // 1. Fetch the affiliate landing page server-side to get the dt_id
+  // 2. Append dt_id to the product URL so Shopify sets the tracking cookie
+  // 3. User lands directly on the product page with commission tracking active
   if (storeSlug) {
-    const affiliateUrl = getAffiliateLandingUrl(parsedUrl, storeSlug);
-    if (affiliateUrl) {
+    const affiliate = getAffiliateConfig(storeSlug);
+    if (affiliate) {
+      const affiliateUrl = `${affiliate.origin}/${affiliate.affiliatePath}`;
+      const dtId = await getCollabsDtId(affiliateUrl);
+
+      if (dtId) {
+        // Redirect to the product URL with dt_id — Shopify's Collabs script
+        // on the product page reads dt_id and sets the attribution cookie
+        parsedUrl.searchParams.set("dt_id", dtId);
+        return NextResponse.redirect(parsedUrl.toString(), 302);
+      }
+
+      // Fallback: if we couldn't extract dt_id, redirect to the affiliate
+      // landing page directly (user lands on homepage but cookie is set)
       return NextResponse.redirect(affiliateUrl, 302);
     }
   }
