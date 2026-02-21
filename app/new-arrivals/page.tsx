@@ -50,7 +50,7 @@ export default async function NewArrivalsPage() {
               href="/membership"
               className="text-sm font-medium underline underline-offset-2 hover:text-black/70 transition whitespace-nowrap"
             >
-              Join First Look — $10/month →
+              Join VIA Insider — $10/month →
             </a>
           </div>
         </div>

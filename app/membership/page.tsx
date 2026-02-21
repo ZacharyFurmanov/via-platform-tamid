@@ -23,7 +23,7 @@ export default async function MembershipPage() {
       <section className="border-b border-neutral-200">
         <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24 text-center">
           <p className="text-xs uppercase tracking-widest text-black/40 mb-4">Membership</p>
-          <h1 className="text-3xl sm:text-4xl font-serif mb-6">First Look</h1>
+          <h1 className="text-3xl sm:text-4xl font-serif mb-6">VIA Insider</h1>
           <p className="text-base sm:text-lg text-black/60 max-w-xl mx-auto leading-relaxed">
             Be first to see new arrivals from VIA's curated stores — 24 hours before everyone else.
           </p>
@@ -55,7 +55,7 @@ export default async function MembershipPage() {
         <div className="border border-neutral-200 p-8 sm:p-12 text-center max-w-md mx-auto">
           {isMember ? (
             <div>
-              <p className="font-serif text-xl mb-3">You're a First Look member.</p>
+              <p className="font-serif text-xl mb-3">You're a VIA Insider member.</p>
               <p className="text-sm text-black/50 mb-8">
                 You have early access to new arrivals. Manage your subscription from your account.
               </p>
@@ -68,7 +68,7 @@ export default async function MembershipPage() {
             </div>
           ) : (
             <div>
-              <p className="font-serif text-xl mb-3">Join First Look</p>
+              <p className="font-serif text-xl mb-3">Join VIA Insider</p>
               <p className="text-sm text-black/50 mb-8">
                 $10/month · Cancel anytime
               </p>

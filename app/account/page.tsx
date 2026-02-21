@@ -86,9 +86,9 @@ export default async function AccountPage() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6">
-        {/* First Look Membership */}
+        {/* VIA Insider Membership */}
         <section className="py-12 border-b border-neutral-100">
-          <h2 className="font-serif text-2xl mb-6">First Look Membership</h2>
+          <h2 className="font-serif text-2xl mb-6">VIA Insider Membership</h2>
           {isMember ? (
             <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
@@ -119,7 +119,7 @@ export default async function AccountPage() {
                 href="/membership"
                 className="shrink-0 text-center text-sm uppercase tracking-wide px-6 py-3 bg-black text-white hover:bg-black/85 transition"
               >
-                Join First Look — $10/month
+                Join VIA Insider — $10/month
               </a>
             </div>
           )}
