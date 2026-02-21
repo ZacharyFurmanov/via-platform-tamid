@@ -154,37 +154,50 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
                     4
                   </span>
-                  <h3 className="text-lg font-medium">Set Commission Rate</h3>
+                  <h3 className="text-lg font-medium">Set Commission Rate — start at 7%</h3>
                 </div>
                 <div className="text-neutral-600 space-y-3">
-                  <p>Configure the commission VIA earns on referred sales. We use a tiered commission structure:</p>
+                  <p>
+                    Shopify Collabs uses one flat commission rate per program.{" "}
+                    <strong className="text-black">Set it to 7% when you&apos;re getting started.</strong>{" "}
+                    That&apos;s it — no tiers to configure. As your referred sales grow, we&apos;ll
+                    reach out to discuss adjusting the rate together.
+                  </p>
 
-                  <div className="bg-neutral-50 border border-neutral-200 p-4 space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-neutral-200">
-                      <span className="text-sm font-medium">Sales under $1,000</span>
-                      <span className="text-sm font-medium bg-black text-white px-3 py-1">7% commission</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-neutral-200">
-                      <span className="text-sm font-medium">Sales $1,000 - $5,000</span>
-                      <span className="text-sm font-medium bg-neutral-700 text-white px-3 py-1">5% commission</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm font-medium">Sales above $5,000</span>
-                      <span className="text-sm font-medium bg-neutral-500 text-white px-3 py-1">3% commission</span>
-                    </div>
-                  </div>
-
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>In Collabs, go to <strong>Programs</strong> and create or edit your program</li>
-                    <li>Set the commission percentage based on your typical order value</li>
-                    <li>Choose <strong>All products</strong> or select specific collections</li>
-                    <li>Set cookie duration (we recommend 30 days)</li>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
+                    <li>Click <strong>Create program</strong> (or open your existing one)</li>
+                    <li>Under <strong>Commission</strong>, enter <strong>7</strong></li>
+                    <li>Under <strong>Products</strong>, select <strong>All products</strong></li>
+                    <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
+                    <li>Click <strong>Save</strong></li>
                   </ol>
+
                   <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
                     <p className="text-amber-800">
-                      <strong>Tip:</strong> A 30-day cookie window captures customers who browse
-                      on VIA but purchase later. Most vintage purchases happen within 7 days.
+                      <strong>Why 30 days?</strong> This captures customers who browse VIA but
+                      come back to buy later. Most vintage purchases happen within a week, but
+                      the extra window means you won&apos;t miss delayed sales.
                     </p>
+                  </div>
+
+                  <div className="bg-neutral-50 border border-neutral-200 p-4">
+                    <p className="text-sm font-medium text-black mb-3">How the rate adjusts as volume grows:</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                        <span className="text-sm">Total referred sales under $1,000</span>
+                        <span className="text-sm font-medium bg-black text-white px-3 py-1">7%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                        <span className="text-sm">Total referred sales $1,000 – $5,000</span>
+                        <span className="text-sm font-medium bg-neutral-500 text-white px-3 py-1">5%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm">Total referred sales above $5,000</span>
+                        <span className="text-sm font-medium bg-neutral-400 text-white px-3 py-1">3%</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-neutral-400 mt-3">You don&apos;t need to manage this yourself — we&apos;ll be in touch when it&apos;s time to adjust.</p>
                   </div>
                 </div>
               </div>
