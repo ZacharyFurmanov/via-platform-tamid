@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/app/lib/auth";
 import { getUserByEmail } from "@/app/lib/membership-db";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+function getBaseUrl() {
+  const url = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+  if (url.startsWith("http")) return url;
+  return `https://${url}`;
+}
 
 async function stripePost(path: string, params: Record<string, string>) {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
@@ -38,7 +42,7 @@ export async function POST() {
 
     const portalSession = await stripePost("billing_portal/sessions", {
       customer: user.stripe_customer_id,
-      return_url: `${BASE_URL}/account`,
+      return_url: `${getBaseUrl()}/account`,
     });
 
     return NextResponse.json({ url: portalSession.url });
