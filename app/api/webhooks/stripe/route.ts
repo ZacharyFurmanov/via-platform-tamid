@@ -6,11 +6,11 @@ import {
   setMemberCancelled,
 } from "@/app/lib/membership-db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
-});
-
 export async function POST(request: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-01-28.clover",
+  });
+
   const body = await request.text();
   const sig = request.headers.get("stripe-signature");
 
@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        // Ignore other events
         break;
     }
   } catch (err) {

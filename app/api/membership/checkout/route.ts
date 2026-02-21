@@ -3,10 +3,6 @@ import Stripe from "stripe";
 import { auth } from "@/app/lib/auth";
 import { getUserByEmail, saveStripeCustomerId } from "@/app/lib/membership-db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
-});
-
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
 
 export async function POST() {
@@ -14,6 +10,10 @@ export async function POST() {
   if (!session?.user?.id || !session.user.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-01-28.clover",
+  });
 
   const userId = session.user.id;
   const email = session.user.email;
