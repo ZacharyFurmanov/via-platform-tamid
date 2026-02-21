@@ -3,145 +3,47 @@ import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
 
+// Keyword → category mapping, checked in order (most specific first, broad last)
+const categoryKeywords: [CategorySlug, string[]][] = [
+  ["shoes", [
+    "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
+    "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
+    "derby", "brogue", "trainer", "slide", "flat", "slingback",
+    "blahnik", "louboutin", "stuart weitzman", "roger vivier",
+  ]],
+  ["bags", ["bag", "clutch", "tote", "purse", "handbag"]],
+  ["accessories", [
+    "belt", "scarf", "hat", "sunglasses", "jewelry",
+    "necklace", "bracelet", "earring", "watch",
+  ]],
+  ["dresses", ["dress", "gown"]],
+  ["coats-jackets", [
+    "coat", "jacket", "blazer", "parka", "windbreaker", "puffer",
+    "bomber", "trench", "overcoat", "cape", "poncho", "anorak",
+  ]],
+  ["sweaters", [
+    "sweater", "cardigan", "knit", "pullover", "hoodie",
+    "sweatshirt", "turtleneck", "crewneck",
+  ]],
+  ["jeans", ["jean", "denim"]],
+  ["pants", [
+    "pants", "trousers", "cargo", "chino", "jogger",
+    "sweatpant", "wide-leg", "flare",
+  ]],
+  ["shorts", ["shorts"]],
+  ["skirts", ["skirt"]],
+  ["jumpsuits", ["jumpsuit", "romper", "playsuit", "overall"]],
+  ["tops", [
+    "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
+    "bodysuit", "corset", "bustier", "halter", "polo", "henley", "tube",
+  ]],
+];
+
 export const inferCategoryFromTitle = (title: string): CategorySlug => {
   const t = title.toLowerCase();
-
-  if (
-    // Product types
-    t.includes("heel") ||
-    t.includes("shoe") ||
-    t.includes("boot") ||
-    t.includes("pump") ||
-    t.includes("sandal") ||
-    t.includes("mule") ||
-    t.includes("clog") ||
-    t.includes("loafer") ||
-    t.includes("sneaker") ||
-    t.includes("slipper") ||
-    t.includes("espadrille") ||
-    t.includes("stiletto") ||
-    t.includes("wedge") ||
-    t.includes("oxford") ||
-    t.includes("derby") ||
-    t.includes("brogue") ||
-    t.includes("trainer") ||
-    t.includes("slide") ||
-    t.includes("flat") ||
-    t.includes("slingback") ||
-    // Shoe-only brands
-    t.includes("blahnik") ||
-    t.includes("louboutin") ||
-    t.includes("stuart weitzman") ||
-    t.includes("roger vivier")
-  ) {
-    return "shoes";
+  for (const [category, keywords] of categoryKeywords) {
+    if (keywords.some((kw) => t.includes(kw))) return category;
   }
-
-  if (
-    t.includes("bag") ||
-    t.includes("clutch") ||
-    t.includes("tote") ||
-    t.includes("purse") ||
-    t.includes("handbag")
-  ) {
-    return "bags";
-  }
-
-  if (
-    t.includes("belt") ||
-    t.includes("scarf") ||
-    t.includes("hat") ||
-    t.includes("sunglasses") ||
-    t.includes("jewelry") ||
-    t.includes("necklace") ||
-    t.includes("bracelet") ||
-    t.includes("earring") ||
-    t.includes("watch")
-  ) {
-    return "accessories";
-  }
-
-  // Clothing subcategories (most specific first)
-  if (t.includes("dress") || t.includes("gown")) return "dresses";
-
-  if (
-    t.includes("coat") ||
-    t.includes("jacket") ||
-    t.includes("blazer") ||
-    t.includes("parka") ||
-    t.includes("windbreaker") ||
-    t.includes("puffer") ||
-    t.includes("bomber") ||
-    t.includes("trench") ||
-    t.includes("overcoat") ||
-    t.includes("cape") ||
-    t.includes("poncho") ||
-    t.includes("anorak")
-  ) {
-    return "coats-jackets";
-  }
-
-  if (
-    t.includes("sweater") ||
-    t.includes("cardigan") ||
-    t.includes("knit") ||
-    t.includes("pullover") ||
-    t.includes("hoodie") ||
-    t.includes("sweatshirt") ||
-    t.includes("turtleneck") ||
-    t.includes("crewneck")
-  ) {
-    return "sweaters";
-  }
-
-  if (t.includes("jean") || t.includes("denim")) return "jeans";
-
-  if (
-    t.includes("pants") ||
-    t.includes("trousers") ||
-    t.includes("cargo") ||
-    t.includes("chino") ||
-    t.includes("jogger") ||
-    t.includes("sweatpant") ||
-    t.includes("wide-leg") ||
-    t.includes("flare")
-  ) {
-    return "pants";
-  }
-
-  if (t.includes("shorts")) return "shorts";
-
-  if (t.includes("skirt")) return "skirts";
-
-  if (
-    t.includes("jumpsuit") ||
-    t.includes("romper") ||
-    t.includes("playsuit") ||
-    t.includes("overall")
-  ) {
-    return "jumpsuits";
-  }
-
-  if (
-    t.includes("top") ||
-    t.includes("blouse") ||
-    t.includes("shirt") ||
-    t.includes("tee") ||
-    t.includes("t-shirt") ||
-    t.includes("tank") ||
-    t.includes("cami") ||
-    t.includes("bodysuit") ||
-    t.includes("corset") ||
-    t.includes("bustier") ||
-    t.includes("halter") ||
-    t.includes("polo") ||
-    t.includes("henley") ||
-    t.includes("tube")
-  ) {
-    return "tops";
-  }
-
-  // Default fallback for unmatched clothing
   return "other-clothing";
 };
 
