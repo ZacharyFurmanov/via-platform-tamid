@@ -242,10 +242,21 @@ export default function ShopifySetupPage() {
                   </ol>
                   <div className="bg-red-50 border border-red-200 p-3 text-sm">
                     <p className="text-red-800">
-                      <strong>Required:</strong> If the Collabs app embed is not enabled, affiliate tracking
-                      cookies will not be set when customers visit your store from VIA. This means
-                      sales won&apos;t be attributed and commissions won&apos;t be recorded.
+                      <strong>Why this matters:</strong> When a customer clicks through from VIA, the
+                      app embed sets a tracking cookie on your store. That cookie is what captures
+                      sales even if the customer leaves and comes back later — without it, we can only
+                      track purchases made in that exact same session, which means most referred sales
+                      won&apos;t be attributed and commissions won&apos;t be recorded.
                     </p>
+                  </div>
+
+                  <div className="bg-neutral-50 border border-neutral-200 p-4 text-sm space-y-2">
+                    <p className="font-medium text-black">Don&apos;t see Shopify Collabs in the list?</p>
+                    <p className="text-neutral-600">First try scrolling down — it may be below your other apps. If it&apos;s still not there, contact Shopify Support at <strong>help.shopify.com</strong> → Contact Support and paste this message:</p>
+                    <div className="bg-white border border-neutral-200 p-3 text-neutral-600 italic">
+                      &quot;Hi, I have the Shopify Collabs app installed but it&apos;s not appearing in my App Embeds list in the theme editor. I need it to show up so I can toggle it on and enable affiliate tracking. Can you help me get it to register as an app embed?&quot;
+                    </div>
+                    <p className="text-neutral-500">Shopify Support can fix this quickly on their end.</p>
                   </div>
                 </div>
               </div>
