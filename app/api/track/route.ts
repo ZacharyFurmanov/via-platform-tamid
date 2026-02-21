@@ -4,24 +4,34 @@ import { saveClick } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 
 /**
- * Inject the Shopify Collabs affiliate path into a store URL.
- * e.g. https://store.com/products/item → https://store.com/AFFILIATE/products/item
- *      https://store.com/cart/123:1    → https://store.com/AFFILIATE/cart/123:1
+ * Get the affiliate path for a store, if configured.
  */
-function injectAffiliatePath(url: URL, storeSlug: string): URL {
+function getAffiliatePath(storeSlug: string): string | null {
   const storeConfig = stores.find((s) => s.slug === storeSlug);
-  if (!storeConfig) return url;
+  if (!storeConfig) return null;
+  return "affiliatePath" in storeConfig
+    ? (storeConfig as any).affiliatePath
+    : null;
+}
 
-  const affiliatePath =
-    "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
-  if (!affiliatePath) return url;
-
-  // Don't double-inject if already present
-  if (url.pathname.startsWith(`/${affiliatePath}/`) || url.pathname === `/${affiliatePath}`) {
+/**
+ * Inject the Shopify Collabs affiliate path into a product URL.
+ * Only works for /products/ paths — Shopify doesn't support it on /cart/ etc.
+ */
+function injectAffiliatePath(url: URL, affiliatePath: string): URL {
+  // Don't double-inject
+  if (
+    url.pathname.startsWith(`/${affiliatePath}/`) ||
+    url.pathname === `/${affiliatePath}`
+  ) {
     return url;
   }
 
-  url.pathname = `/${affiliatePath}${url.pathname}`;
+  // Only inject for product page URLs
+  if (url.pathname.startsWith("/products/")) {
+    url.pathname = `/${affiliatePath}${url.pathname}`;
+  }
+
   return url;
 }
 
@@ -44,7 +54,10 @@ export async function GET(request: NextRequest) {
   try {
     parsedUrl = new URL(externalUrl);
     if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-      return NextResponse.json({ error: "Invalid URL protocol" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid URL protocol" },
+        { status: 400 }
+      );
     }
   } catch {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
@@ -67,10 +80,57 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect URL with tracking parameters
   let redirectUrl = new URL(externalUrl);
+  const affiliatePath = storeSlug ? getAffiliatePath(storeSlug) : null;
 
-  // Inject Shopify Collabs affiliate path for commission tracking
-  if (storeSlug) {
-    redirectUrl = injectAffiliatePath(redirectUrl, storeSlug);
+  if (affiliatePath) {
+    const isCartUrl =
+      redirectUrl.pathname.startsWith("/cart/") ||
+      redirectUrl.pathname.startsWith("/checkouts/");
+
+    if (isCartUrl) {
+      // For cart/checkout URLs, Shopify doesn't support the affiliate path
+      // in the URL. Instead, redirect to the affiliate landing page first
+      // which sets the tracking cookie, then the browser follows to cart.
+      // We return an HTML page that visits the affiliate link (setting the
+      // cookie) then immediately redirects to the cart URL.
+      redirectUrl.searchParams.set("via_click_id", clickId);
+      const affiliateLandingUrl = `${redirectUrl.origin}/${affiliatePath}`;
+      const cartUrl = redirectUrl.toString();
+
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Redirecting...</title>
+</head>
+<body>
+<img src="${affiliateLandingUrl}" style="display:none" onerror="void(0)">
+<script>
+// Visit affiliate landing page in a hidden iframe to set tracking cookie,
+// then redirect to the cart
+var iframe = document.createElement('iframe');
+iframe.style.display = 'none';
+iframe.src = ${JSON.stringify(affiliateLandingUrl)};
+document.body.appendChild(iframe);
+// Give it a moment to set the cookie, then go to cart
+setTimeout(function() {
+  window.location.href = ${JSON.stringify(cartUrl)};
+}, 800);
+</script>
+<noscript>
+<meta http-equiv="refresh" content="0;url=${cartUrl}">
+</noscript>
+</body>
+</html>`;
+
+      return new NextResponse(html, {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      });
+    } else {
+      // For product URLs, inject affiliate path directly
+      redirectUrl = injectAffiliatePath(redirectUrl, affiliatePath);
+    }
   }
 
   // Always append via_click_id for our own conversion attribution
