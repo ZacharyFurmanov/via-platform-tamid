@@ -114,14 +114,9 @@ export default function HomePage() {
     </ScrollReveal>
 
     <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
-      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-6">
+      <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
         {[
-          { label: "Tops", slug: "tops", image: "/categories/clothes.jpg" },
-          { label: "Sweaters", slug: "sweaters", image: "/categories/clothes.jpg" },
-          { label: "Coats & Jackets", slug: "coats-jackets", image: "/categories/clothes.jpg" },
-          { label: "Pants", slug: "pants", image: "/categories/clothes.jpg" },
-          { label: "Jeans", slug: "jeans", image: "/categories/clothes.jpg" },
-          { label: "Dresses", slug: "dresses", image: "/categories/clothes.jpg" },
+          { label: "Clothing", slug: "clothing", image: "/categories/clothes.jpg" },
           { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
           { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
           { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },

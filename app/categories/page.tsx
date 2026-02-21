@@ -2,32 +2,42 @@ export const dynamic = "force-dynamic";
 
 import { getInventory } from "@/app/lib/inventory";
 import { stores } from "@/app/lib/stores";
-import { categories } from "@/app/lib/categories";
-import { categoryMap } from "@/app/lib/categoryMap";
+import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+
+// Map product subcategories to display categories for filtering
+function toDisplayCategory(slug: CategorySlug): string {
+  return clothingSlugs.has(slug) ? "clothing" : slug;
+}
 
 export default async function CategoriesPage() {
   const inventory = await getInventory();
 
-  const products: FilterableProduct[] = inventory.map((item, idx) => ({
-    id: item.id,
-    title: item.title,
-    price: item.price,
-    category: item.category,
-    categoryLabel: categoryMap[item.category as keyof typeof categoryMap],
-    brand: item.brand,
-    brandLabel: item.brandLabel,
-    store: item.store,
-    storeSlug: item.storeSlug,
-    externalUrl: item.externalUrl,
-    image: item.image,
-    images: item.images,
-    createdAt: Date.now() - idx * 1000,
-  }));
+  const products: FilterableProduct[] = inventory.map((item, idx) => {
+    const displaySlug = toDisplayCategory(item.category);
+    const displayLabel = displayCategories.find((c) => c.slug === displaySlug)?.label
+      ?? categoryMap[item.category as CategorySlug];
+    return {
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      category: displaySlug,
+      categoryLabel: displayLabel,
+      brand: item.brand,
+      brandLabel: item.brandLabel,
+      store: item.store,
+      storeSlug: item.storeSlug,
+      externalUrl: item.externalUrl,
+      image: item.image,
+      images: item.images,
+      createdAt: Date.now() - idx * 1000,
+    };
+  });
 
   const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
-  const categoryList = categories.map((c) => ({ slug: c.slug, label: c.label }));
+  const categoryList = displayCategories.map((c) => ({ slug: c.slug, label: c.label }));
 
   return (
     <main className="bg-white min-h-screen text-black">

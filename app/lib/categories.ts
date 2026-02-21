@@ -1,5 +1,6 @@
-import { categoryMap, type CategorySlug } from "./categoryMap";
+import { categoryMap, type CategorySlug, clothingSlugs, displayCategories } from "./categoryMap";
 
+// All fine-grained categories (used for filtering within clothing page, etc.)
 const categoryImages: Partial<Record<CategorySlug, string>> = {
   bags: "/categories/bags.jpg",
   shoes: "/categories/shoes.jpg",
@@ -14,4 +15,10 @@ export const categories = (Object.keys(categoryMap) as CategorySlug[]).map((slug
   image: categoryImages[slug] ?? defaultImage,
 }));
 
+// Clothing subcategories only (for filters on the clothing page)
+export const clothingSubcategories = categories.filter((c) =>
+  clothingSlugs.has(c.slug as CategorySlug)
+);
+
+export { displayCategories, clothingSlugs };
 export type { CategorySlug };

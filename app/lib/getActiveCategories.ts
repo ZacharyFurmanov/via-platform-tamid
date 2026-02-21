@@ -1,27 +1,12 @@
-import { getInventory } from "@/app/lib/inventory";
-import { categoryMap } from "@/app/lib/categoryMap";
-import type { CategorySlug } from "@/app/lib/categoryMap";
+import { displayCategories } from "@/app/lib/categoryMap";
+import type { DisplayCategorySlug } from "@/app/lib/categoryMap";
 
 type ActiveCategory = {
-  slug: CategorySlug;
+  slug: DisplayCategorySlug;
   label: string;
   image: string;
 };
 
 export async function getActiveCategories(): Promise<ActiveCategory[]> {
-  const items = await getInventory();
-
-  // collect unique category slugs that exist in inventory
-  const activeSlugs = new Set<CategorySlug>();
-
-  for (const item of items) {
-    activeSlugs.add(item.category);
-  }
-
-  // build display-ready category objects
-  return Array.from(activeSlugs).map((slug) => ({
-    slug,
-    label: categoryMap[slug],
-    image: `/categories/${slug}.jpg`,
-  }));
+  return displayCategories.map((c) => ({ ...c }));
 }
