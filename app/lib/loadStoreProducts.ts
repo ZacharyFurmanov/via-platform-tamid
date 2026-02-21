@@ -61,8 +61,88 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
     return "accessories";
   }
 
-  // Default to clothes for everything else
-  return "clothes";
+  // Clothing subcategories (most specific first)
+  if (t.includes("dress") || t.includes("gown")) return "dresses";
+
+  if (
+    t.includes("coat") ||
+    t.includes("jacket") ||
+    t.includes("blazer") ||
+    t.includes("parka") ||
+    t.includes("windbreaker") ||
+    t.includes("puffer") ||
+    t.includes("bomber") ||
+    t.includes("trench") ||
+    t.includes("overcoat") ||
+    t.includes("cape") ||
+    t.includes("poncho") ||
+    t.includes("anorak")
+  ) {
+    return "coats-jackets";
+  }
+
+  if (
+    t.includes("sweater") ||
+    t.includes("cardigan") ||
+    t.includes("knit") ||
+    t.includes("pullover") ||
+    t.includes("hoodie") ||
+    t.includes("sweatshirt") ||
+    t.includes("turtleneck") ||
+    t.includes("crewneck")
+  ) {
+    return "sweaters";
+  }
+
+  if (t.includes("jean") || t.includes("denim")) return "jeans";
+
+  if (
+    t.includes("pants") ||
+    t.includes("trousers") ||
+    t.includes("cargo") ||
+    t.includes("chino") ||
+    t.includes("jogger") ||
+    t.includes("sweatpant") ||
+    t.includes("wide-leg") ||
+    t.includes("flare")
+  ) {
+    return "pants";
+  }
+
+  if (t.includes("shorts")) return "shorts";
+
+  if (t.includes("skirt")) return "skirts";
+
+  if (
+    t.includes("jumpsuit") ||
+    t.includes("romper") ||
+    t.includes("playsuit") ||
+    t.includes("overall")
+  ) {
+    return "jumpsuits";
+  }
+
+  if (
+    t.includes("top") ||
+    t.includes("blouse") ||
+    t.includes("shirt") ||
+    t.includes("tee") ||
+    t.includes("t-shirt") ||
+    t.includes("tank") ||
+    t.includes("cami") ||
+    t.includes("bodysuit") ||
+    t.includes("corset") ||
+    t.includes("bustier") ||
+    t.includes("halter") ||
+    t.includes("polo") ||
+    t.includes("henley") ||
+    t.includes("tube")
+  ) {
+    return "tops";
+  }
+
+  // Default fallback for unmatched clothing
+  return "other-clothing";
 };
 
 export const inferItemTypeFromTitle = (title: string): string | null => {

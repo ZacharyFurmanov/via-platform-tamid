@@ -1,7 +1,15 @@
 export const categories = [
-    { slug: "clothes", label: "Clothing" },
+    { slug: "tops", label: "Tops" },
+    { slug: "sweaters", label: "Sweaters" },
+    { slug: "coats-jackets", label: "Coats & Jackets" },
+    { slug: "pants", label: "Pants" },
+    { slug: "jeans", label: "Jeans" },
+    { slug: "dresses", label: "Dresses" },
+    { slug: "skirts", label: "Skirts" },
+    { slug: "shorts", label: "Shorts" },
+    { slug: "jumpsuits", label: "Jumpsuits" },
+    { slug: "other-clothing", label: "Clothing" },
     { slug: "bags", label: "Bags" },
     { slug: "shoes", label: "Shoes" },
     { slug: "accessories", label: "Accessories" },
   ];
-  
