@@ -154,24 +154,59 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
                     4
                   </span>
-                  <h3 className="text-lg font-medium">Set Commission Rate — start at 7%</h3>
+                  <h3 className="text-lg font-medium">Set Tiered Commission Rates</h3>
                 </div>
-                <div className="text-neutral-600 space-y-3">
+                <div className="text-neutral-600 space-y-4">
                   <p>
-                    Shopify Collabs uses one flat commission rate per program.{" "}
-                    <strong className="text-black">Set it to 7% when you&apos;re getting started.</strong>{" "}
-                    That&apos;s it — no tiers to configure. As your referred sales grow, we&apos;ll
-                    reach out to discuss adjusting the rate together.
+                    Shopify Collabs sets commission rates <strong className="text-black">per product collection</strong>,
+                    not per order total. To set up tiers, you&apos;ll create three collections in your
+                    Shopify store — one for each tier — assign your products to them by price, and
+                    then set a different commission rate for each collection in Collabs.
                   </p>
 
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
-                    <li>Click <strong>Create program</strong> (or open your existing one)</li>
-                    <li>Under <strong>Commission</strong>, enter <strong>7</strong></li>
-                    <li>Under <strong>Products</strong>, select <strong>All products</strong></li>
-                    <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
-                    <li>Click <strong>Save</strong></li>
-                  </ol>
+                  {/* Part A */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-black">Part A — Create three collections in Shopify</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>In your Shopify Admin, go to <strong>Products → Collections</strong></li>
+                      <li>Click <strong>Create collection</strong> and name it <strong>TIER 1</strong></li>
+                      <li>Add all products priced <strong>under $1,000</strong> to this collection</li>
+                      <li>Repeat to create <strong>TIER 2</strong> (products $1,000–$5,000) and <strong>TIER 3</strong> (products above $5,000)</li>
+                    </ol>
+                  </div>
+
+                  {/* Part B */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-black">Part B — Set commission rates per collection in Collabs</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
+                      <li>Click <strong>Create program</strong> (or open your existing one)</li>
+                      <li>Under <strong>Commission</strong>, click <strong>Add rate</strong> and select <strong>TIER 1</strong> → enter <strong>7%</strong></li>
+                      <li>Click <strong>Add rate</strong> again, select <strong>TIER 2</strong> → enter <strong>5%</strong></li>
+                      <li>Click <strong>Add rate</strong> again, select <strong>TIER 3</strong> → enter <strong>3%</strong></li>
+                      <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
+                      <li>Click <strong>Save</strong></li>
+                    </ol>
+                  </div>
+
+                  {/* Tier reference */}
+                  <div className="bg-neutral-50 border border-neutral-200 p-4">
+                    <p className="text-sm font-medium text-black mb-3">Commission rate reference:</p>
+                    <div className="space-y-0">
+                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                        <span className="text-sm"><strong>TIER 1</strong> — products under $1,000</span>
+                        <span className="text-sm font-medium bg-black text-white px-3 py-1">7%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                        <span className="text-sm"><strong>TIER 2</strong> — products $1,000–$5,000</span>
+                        <span className="text-sm font-medium bg-neutral-500 text-white px-3 py-1">5%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm"><strong>TIER 3</strong> — products above $5,000</span>
+                        <span className="text-sm font-medium bg-neutral-400 text-white px-3 py-1">3%</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
                     <p className="text-amber-800">
@@ -179,25 +214,6 @@ export default function ShopifySetupPage() {
                       come back to buy later. Most vintage purchases happen within a week, but
                       the extra window means you won&apos;t miss delayed sales.
                     </p>
-                  </div>
-
-                  <div className="bg-neutral-50 border border-neutral-200 p-4">
-                    <p className="text-sm font-medium text-black mb-3">How the rate adjusts as volume grows:</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
-                        <span className="text-sm">Total referred sales under $1,000</span>
-                        <span className="text-sm font-medium bg-black text-white px-3 py-1">7%</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
-                        <span className="text-sm">Total referred sales $1,000 – $5,000</span>
-                        <span className="text-sm font-medium bg-neutral-500 text-white px-3 py-1">5%</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm">Total referred sales above $5,000</span>
-                        <span className="text-sm font-medium bg-neutral-400 text-white px-3 py-1">3%</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-neutral-400 mt-3">You don&apos;t need to manage this yourself — we&apos;ll be in touch when it&apos;s time to adjust.</p>
                   </div>
                 </div>
               </div>
