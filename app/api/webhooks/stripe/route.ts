@@ -1,35 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import {
   getUserByStripeCustomerId,
   setMemberActive,
   setMemberCancelled,
 } from "@/app/lib/membership-db";
 
-export async function POST(request: NextRequest) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-01-28.clover",
-  });
+// Verify Stripe webhook signature without the SDK
+async function verifyStripeSignature(
+  body: string,
+  sig: string,
+  secret: string
+): Promise<boolean> {
+  const parts = sig.split(",").reduce<Record<string, string>>((acc, part) => {
+    const [k, v] = part.split("=");
+    acc[k] = v;
+    return acc;
+  }, {});
 
+  const timestamp = parts["t"];
+  const signature = parts["v1"];
+  if (!timestamp || !signature) return false;
+
+  const payload = `${timestamp}.${body}`;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  const expected = Array.from(new Uint8Array(signed))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return expected === signature;
+}
+
+export async function POST(request: NextRequest) {
   const body = await request.text();
   const sig = request.headers.get("stripe-signature");
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
+  if (!sig || !secret) {
     return NextResponse.json({ error: "Missing signature or webhook secret" }, { status: 400 });
   }
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error("Stripe webhook signature verification failed:", err);
+  const valid = await verifyStripeSignature(body, sig, secret);
+  if (!valid) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  let event: { type: string; data: { object: Record<string, unknown> } };
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         if (session.mode !== "subscription") break;
 
         const customerId = session.customer as string;
@@ -47,7 +80,7 @@ export async function POST(request: NextRequest) {
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object;
         const customerId = subscription.customer as string;
 
         const user = await getUserByStripeCustomerId(customerId);
@@ -62,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
 
       case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object;
         const customerId = invoice.customer as string;
 
         const user = await getUserByStripeCustomerId(customerId);
