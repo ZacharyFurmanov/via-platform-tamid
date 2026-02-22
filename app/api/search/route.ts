@@ -10,50 +10,55 @@ const getDatabaseUrl = () => {
   return url;
 };
 
-// Map category search terms to title keywords that indicate that category
-const categoryKeywords: Record<string, string[]> = {
-  bags: ["bag", "clutch", "tote", "purse", "handbag"],
-  shoes: [
-    "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
-    "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
-    "derby", "brogue", "trainer", "slide", "flat", "slingback",
-  ],
-  accessories: [
-    "belt", "scarf", "hat", "sunglasses", "jewelry", "necklace",
-    "bracelet", "earring", "watch", "ring", "glove", "tie", "wallet",
-  ],
-  clothes: [
-    "jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers",
-    "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit",
-    "jumpsuit", "romper", "shorts", "cape", "poncho", "top", "hoodie",
-    "sweatshirt", "tee", "t-shirt",
-  ],
+// Aliases: common search terms → category slug
+const categoryAliases: Record<string, string> = {
+  // bags
+  bag: "bags", pouch: "bags", clutch: "bags", tote: "bags", purse: "bags",
+  backpack: "bags", satchel: "bags", crossbody: "bags",
+  // shoes
+  shoe: "shoes", shoes: "shoes", boot: "shoes", boots: "shoes",
+  heels: "shoes", sneakers: "shoes", sandals: "shoes", loafers: "shoes",
+  // clothing
+  clothing: "clothing", clothes: "clothing",
+  top: "tops", tops: "tops", shirt: "tops", shirts: "tops", blouse: "tops",
+  dress: "dresses", dresses: "dresses",
+  jacket: "coats-jackets", jackets: "coats-jackets",
+  coat: "coats-jackets", coats: "coats-jackets", blazer: "coats-jackets",
+  pants: "pants", trousers: "pants",
+  jean: "jeans", denim: "jeans",
+  skirt: "skirts", skirts: "skirts",
+  sweater: "sweaters", sweaters: "sweaters", knitwear: "sweaters",
+  short: "shorts",
+  jumpsuit: "jumpsuits", romper: "jumpsuits",
+  // accessories
+  accessory: "accessories", accessories: "accessories",
+  belt: "accessories", belts: "accessories",
+  scarf: "accessories", scarves: "accessories",
+  hat: "accessories", hats: "accessories",
+  jewelry: "accessories", jewellery: "accessories",
+  ring: "accessories", rings: "accessories",
+  necklace: "accessories", necklaces: "accessories",
+  bracelet: "accessories", bracelets: "accessories",
+  earring: "accessories", earrings: "accessories",
+  watch: "accessories", watches: "accessories",
+  sunglasses: "accessories", wallet: "accessories", wallets: "accessories",
 };
 
-// Aliases so users can type plural/alternate forms
-const categoryAliases: Record<string, string> = {
-  bag: "bags",
-  shoe: "shoes",
-  boot: "shoes",
-  boots: "shoes",
-  heels: "shoes",
-  sneakers: "shoes",
-  sandals: "shoes",
-  clothing: "clothes",
-  shirt: "clothes",
-  shirts: "clothes",
-  dress: "clothes",
-  dresses: "clothes",
-  jacket: "clothes",
-  jackets: "clothes",
-  pants: "clothes",
-  jeans: "clothes",
-  tops: "clothes",
-  accessory: "accessories",
-  belts: "accessories",
-  scarves: "accessories",
-  hats: "accessories",
-  jewelry: "accessories",
+// Category slug → title keywords for DB search
+const categoryKeywords: Record<string, string[]> = {
+  bags: ["bag", "clutch", "tote", "purse", "handbag", "pouch", "backpack", "rucksack", "satchel", "crossbody", "wristlet", "minaudiere"],
+  shoes: ["heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer", "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford", "derby", "brogue", "trainer", "slide", "slingback", "mary jane", "moccasin"],
+  accessories: ["belt", "scarf", "hat", "sunglasses", "jewelry", "necklace", "bracelet", "earring", "watch", "ring", "wallet", "brooch", "pendant", "bangle", "choker", "anklet"],
+  clothing: ["jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers", "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit", "jumpsuit", "romper", "shorts", "cape", "top", "hoodie", "sweatshirt", "tee", "t-shirt", "bodysuit", "corset", "tunic", "cami", "kimono"],
+  tops: ["top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami", "bodysuit", "corset", "bustier", "halter", "polo", "henley", "tunic"],
+  dresses: ["dress", "gown", "kaftan", "sundress"],
+  "coats-jackets": ["coat", "jacket", "blazer", "parka", "windbreaker", "puffer", "bomber", "trench", "overcoat", "cape", "poncho", "anorak", "kimono", "vest", "suit"],
+  sweaters: ["sweater", "cardigan", "knit", "pullover", "hoodie", "sweatshirt", "turtleneck", "crewneck"],
+  jeans: ["jeans", "denim"],
+  pants: ["pants", "trousers", "chino", "jogger", "legging", "culottes"],
+  skirts: ["skirt", "sarong"],
+  shorts: ["shorts"],
+  jumpsuits: ["jumpsuit", "romper", "playsuit", "overall", "matching set"],
 };
 
 export async function GET(request: Request) {
@@ -73,27 +78,25 @@ export async function GET(request: Request) {
         b.label.toLowerCase().includes(q) ||
         b.keywords.some((kw) => kw.includes(q) || q.includes(kw))
       )
-      .slice(0, 6)
+      .slice(0, 5)
       .map((b) => ({ slug: b.slug, label: b.label }));
 
     // 2. Match categories
     const matchedCategories: { slug: string; label: string }[] = [];
-    for (const [slug, label] of Object.entries(categoryMap)) {
-      if (
-        slug.includes(q) ||
-        label.toLowerCase().includes(q) ||
-        categoryAliases[q] === slug
-      ) {
-        matchedCategories.push({ slug, label });
+    const seenSlugs = new Set<string>();
+
+    const aliasTarget = categoryAliases[q];
+    if (aliasTarget) {
+      const label = categoryMap[aliasTarget as keyof typeof categoryMap];
+      if (label && !seenSlugs.has(aliasTarget)) {
+        matchedCategories.push({ slug: aliasTarget, label });
+        seenSlugs.add(aliasTarget);
       }
     }
-    // Also check if query matches a category keyword
-    for (const [slug, keywords] of Object.entries(categoryKeywords)) {
-      if (keywords.some((kw) => kw.includes(q) || q.includes(kw))) {
-        const label = categoryMap[slug as keyof typeof categoryMap];
-        if (label && !matchedCategories.find((c) => c.slug === slug)) {
-          matchedCategories.push({ slug, label });
-        }
+    for (const [slug, label] of Object.entries(categoryMap)) {
+      if (!seenSlugs.has(slug) && (slug.includes(q) || label.toLowerCase().includes(q))) {
+        matchedCategories.push({ slug, label });
+        seenSlugs.add(slug);
       }
     }
 
@@ -104,32 +107,48 @@ export async function GET(request: Request) {
       .map((s) => ({ slug: s.slug, name: s.name, location: s.location }));
 
     // 4. Product search
-    const categorySlug = categoryKeywords[q]
-      ? q
-      : categoryAliases[q] || null;
-
+    const catSlug = categoryAliases[q] || (categoryKeywords[q] ? q : null);
     let products;
 
-    if (categorySlug && categoryKeywords[categorySlug]) {
-      const keywords = categoryKeywords[categorySlug];
-      const patterns = keywords.map((k) => `%${k}%`);
-
+    if (catSlug && categoryKeywords[catSlug]) {
+      // Category-level search: match by title keywords
+      const patterns = categoryKeywords[catSlug].map((k) => `%${k}%`);
       products = await sql`
-        SELECT id, store_slug, store_name, title, price, currency, image
+        SELECT id, store_slug, store_name, title, price, currency, image, created_at
         FROM products
         WHERE LOWER(title) LIKE ANY(${patterns})
-        ORDER BY title
+        ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
     } else {
-      const pattern = `%${q}%`;
-      products = await sql`
-        SELECT id, store_slug, store_name, title, price, currency, image
-        FROM products
-        WHERE LOWER(title) LIKE ${pattern}
-        ORDER BY title
-        LIMIT 50
-      `;
+      const words = q.split(/\s+/).filter((w) => w.length > 0);
+
+      if (words.length > 1) {
+        // Multi-word AND search: title must contain every word (any order)
+        const wordPatterns = words.map((w) =>
+          w.replace(/[.+*?^${}()|[\]\\]/g, "\\$&")
+        );
+        products = await sql`
+          SELECT id, store_slug, store_name, title, price, currency, image, created_at
+          FROM products
+          WHERE LOWER(title) ~ ALL(${wordPatterns})
+          ORDER BY created_at DESC NULLS LAST
+          LIMIT 50
+        `;
+      } else {
+        // Single word: LIKE with exact-start matches ranked first
+        const pattern = `%${q}%`;
+        const startPattern = `${q}%`;
+        products = await sql`
+          SELECT id, store_slug, store_name, title, price, currency, image, created_at
+          FROM products
+          WHERE LOWER(title) LIKE ${pattern}
+          ORDER BY
+            CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
+            created_at DESC NULLS LAST
+          LIMIT 50
+        `;
+      }
     }
 
     return NextResponse.json({

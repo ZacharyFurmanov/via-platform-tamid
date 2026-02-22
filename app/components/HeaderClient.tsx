@@ -541,6 +541,40 @@ export default function HeaderClient({
             />
 
             <div className="mt-4 overflow-y-auto flex-1 min-h-0">
+              {/* Empty state: browse suggestions when no query */}
+              {!query.trim() && (
+                <div className="pt-1">
+                  <p className="px-3 pt-2 pb-2 text-[10px] uppercase tracking-widest text-black/40">Browse by Category</p>
+                  <div className="px-3 pb-5 grid grid-cols-2 gap-2">
+                    {[
+                      { slug: "clothing", label: "Clothing" },
+                      { slug: "bags", label: "Bags" },
+                      { slug: "shoes", label: "Shoes" },
+                      { slug: "accessories", label: "Accessories" },
+                    ].map((cat) => (
+                      <button
+                        key={cat.slug}
+                        onClick={() => { setSearchOpen(false); router.push(`/categories/${cat.slug}`); }}
+                        className="border border-neutral-200 py-3 text-sm text-center hover:bg-black hover:text-white hover:border-black transition-colors"
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-black/40 border-t border-neutral-100">Our Stores</p>
+                  {stores.map((store) => (
+                    <button
+                      key={store.slug}
+                      onClick={() => { setSearchOpen(false); router.push(`/stores/${store.slug}`); }}
+                      className="w-full text-left px-3 py-3 hover:bg-neutral-50 flex items-center justify-between"
+                    >
+                      <span className="text-sm">{store.name}</span>
+                      <span className="text-xs text-black/40">{store.location}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {searchLoading && results.length === 0 && (
                 <p className="text-sm text-black/40 px-3 py-2">Searching...</p>
               )}
