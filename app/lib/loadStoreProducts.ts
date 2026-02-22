@@ -9,12 +9,27 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
     "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
     "derby", "brogue", "trainer", "slide", "flat", "slingback",
+    "mary jane", "moccasin", "platform shoe",
     "blahnik", "louboutin", "stuart weitzman", "roger vivier",
   ]],
-  ["bags", ["bag", "clutch", "tote", "purse", "handbag"]],
+  ["bags", [
+    "bag", "clutch", "tote", "purse", "handbag", "pouch",
+    "backpack", "rucksack", "satchel", "crossbody", "cross-body",
+    "minaudiere", "minaudière", "wristlet", "baguette", "hobo bag",
+    "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
+    "suitcase", "duffel", "evening bag",
+  ]],
   ["accessories", [
-    "belt", "scarf", "hat", "sunglasses", "jewelry",
-    "necklace", "bracelet", "earring", "watch",
+    "belt", "scarf", "hat", "sunglasses", "glasses", "jewelry",
+    "necklace", "bracelet", "earring", "watch", "ring", "rings",
+    "pendant", "brooch", "charm", "anklet", "cuff", "bangle",
+    "choker", "locket", "signet", "pin", "brooch",
+    "tie", "bow tie", "pocket square", "suspenders",
+    "glove", "mitten", "headband", "hair clip", "barrette",
+    "hair band", "hair accessory", "wallet", "coin purse",
+    "vermeil", "gemstone", "topaz", "sapphire", "diamond",
+    "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
+    "turquoise", "onyx", "keyring", "keychain",
   ]],
   ["dresses", ["dress", "gown"]],
   ["coats-jackets", [
@@ -44,7 +59,8 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
   for (const [category, keywords] of categoryKeywords) {
     if (keywords.some((kw) => t.includes(kw))) return category;
   }
-  return "other-clothing";
+  // Default to accessories rather than clothing for unrecognized items
+  return "accessories";
 };
 
 export const inferItemTypeFromTitle = (title: string): string | null => {
