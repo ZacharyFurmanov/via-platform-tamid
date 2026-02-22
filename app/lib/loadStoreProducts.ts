@@ -3,13 +3,15 @@ import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
 
-// Keyword → category mapping, checked in order (most specific first, broad last)
+// Keyword → category mapping, checked in order.
+// IMPORTANT: accessories is checked LAST among categories so that clothing
+// keywords (shirt, cuff, tie-dye, etc.) take priority over accessory keywords.
 const categoryKeywords: [CategorySlug, string[]][] = [
   ["shoes", [
     "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
     "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
-    "derby", "brogue", "trainer", "slide", "flat", "slingback",
-    "mary jane", "moccasin", "platform shoe",
+    "derby", "brogue", "trainer", "slide", "slingback",
+    "mary jane", "moccasin",
     "blahnik", "louboutin", "stuart weitzman", "roger vivier",
   ]],
   ["bags", [
@@ -19,22 +21,11 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
     "suitcase", "duffel", "evening bag",
   ]],
-  ["accessories", [
-    "belt", "scarf", "hat", "sunglasses", "glasses", "jewelry",
-    "necklace", "bracelet", "earring", "watch", "ring", "rings",
-    "pendant", "brooch", "charm", "anklet", "cuff", "bangle",
-    "choker", "locket", "signet", "pin", "brooch",
-    "tie", "bow tie", "pocket square", "suspenders",
-    "glove", "mitten", "headband", "hair clip", "barrette",
-    "hair band", "hair accessory", "wallet", "coin purse",
-    "vermeil", "gemstone", "topaz", "sapphire", "diamond",
-    "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
-    "turquoise", "onyx", "keyring", "keychain",
-  ]],
-  ["dresses", ["dress", "gown"]],
+  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "maxi"]],
   ["coats-jackets", [
     "coat", "jacket", "blazer", "parka", "windbreaker", "puffer",
     "bomber", "trench", "overcoat", "cape", "poncho", "anorak",
+    "kimono", "vest", "waistcoat", "gilet", "suit",
   ]],
   ["sweaters", [
     "sweater", "cardigan", "knit", "pullover", "hoodie",
@@ -43,14 +34,43 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ["jeans", ["jean", "denim"]],
   ["pants", [
     "pants", "trousers", "cargo", "chino", "jogger",
-    "sweatpant", "wide-leg", "flare",
+    "sweatpant", "wide-leg", "flare", "legging", "culottes",
   ]],
   ["shorts", ["shorts"]],
-  ["skirts", ["skirt"]],
+  ["skirts", ["skirt", "sarong", "wrap skirt"]],
   ["jumpsuits", ["jumpsuit", "romper", "playsuit", "overall"]],
   ["tops", [
     "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
-    "bodysuit", "corset", "bustier", "halter", "polo", "henley", "tube",
+    "bodysuit", "corset", "bustier", "halter", "polo", "henley",
+    "tube top", "crop", "tunic",
+  ]],
+  // Accessories checked last so clothing keywords win on ambiguous titles
+  // (e.g. "French Cuff Shirt" hits "shirt" in tops before reaching "cuff" here)
+  ["accessories", [
+    // Jewelry
+    "ring", "rings", "necklace", "bracelet", "earring", "pendant",
+    "brooch", "charm", "anklet", "bangle", "choker", "locket",
+    "signet", "cuff bracelet", "lapel pin", "hair pin",
+    "vermeil", "gemstone", "topaz", "sapphire", "diamond",
+    "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
+    "turquoise", "onyx",
+    // Watches
+    "watch",
+    // Eyewear
+    "sunglasses", "sunglass", "eyewear", "spectacles",
+    // Belts & scarves
+    "belt", "scarf", "stole",
+    // Hats & headwear
+    "hat", "cap", "beret", "beanie", "headband", "hair clip",
+    "barrette", "hair band", "fascinator",
+    // Gloves
+    "gloves", "mittens",
+    // Neckwear
+    "necktie", "bow tie", "pocket square",
+    // Wallets & small leather goods
+    "wallet", "coin purse", "card holder", "cardholder", "keyring", "keychain",
+    // Catch-all label
+    "jewelry", "jewellery", "accessories",
   ]],
 ];
 
@@ -59,8 +79,8 @@ export const inferCategoryFromTitle = (title: string): CategorySlug => {
   for (const [category, keywords] of categoryKeywords) {
     if (keywords.some((kw) => t.includes(kw))) return category;
   }
-  // Default to accessories rather than clothing for unrecognized items
-  return "accessories";
+  // Unrecognized items default to clothing (these are vintage fashion stores)
+  return "other-clothing";
 };
 
 export const inferItemTypeFromTitle = (title: string): string | null => {
