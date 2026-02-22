@@ -3,7 +3,36 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { X, ShoppingCart } from "lucide-react";
-import { useCart } from "@/app/components/CartProvider";
+import { useCart, CartItem } from "@/app/components/CartProvider";
+
+/**
+ * Build a Shopify multi-cart URL from a group of items.
+ * Format: https://store.com/cart/VAR1:1,VAR2:1,VAR3:1
+ * Falls back to first item's external URL if any item lacks a variant ID.
+ */
+function buildGroupCheckoutUrl(items: CartItem[]): string {
+  const variantEntries: string[] = [];
+  let storeOrigin = "";
+  let discountCode = "";
+
+  for (const item of items) {
+    if (!item.checkoutUrl) return items[0].externalUrl;
+    try {
+      const url = new URL(item.checkoutUrl);
+      if (!storeOrigin) storeOrigin = url.origin;
+      if (!discountCode) discountCode = url.searchParams.get("discount") || "";
+      const cartMatch = url.pathname.match(/^\/cart\/(\d+):(\d+)/);
+      if (!cartMatch) return items[0].externalUrl;
+      variantEntries.push(`${cartMatch[1]}:${cartMatch[2]}`);
+    } catch {
+      return items[0].externalUrl;
+    }
+  }
+
+  if (!storeOrigin || variantEntries.length === 0) return items[0].externalUrl;
+  const discountParam = discountCode ? `?discount=${discountCode}` : "";
+  return `${storeOrigin}/cart/${variantEntries.join(",")}${discountParam}`;
+}
 
 export default function CartPage() {
   const { items, removeItem, clearCart, itemCount } = useCart();
@@ -160,10 +189,7 @@ export default function CartPage() {
                   <a
                     href={(() => {
                       const firstItem = group.items[0];
-
-                      // Use the product page URL (not /cart/) so the affiliate
-                      // path is injected by /api/track and the Shopify Collabs
-                      // cookie is set, guaranteeing commission tracking.
+                      const cartUrl = buildGroupCheckoutUrl(group.items);
                       const params = new URLSearchParams({
                         pid: firstItem.compositeId,
                         pn: group.items.length > 1
@@ -171,7 +197,7 @@ export default function CartPage() {
                           : firstItem.title,
                         s: firstItem.storeName,
                         ss: firstItem.storeSlug,
-                        url: firstItem.externalUrl,
+                        url: cartUrl,
                       });
                       return `/api/track?${params.toString()}`;
                     })()}
