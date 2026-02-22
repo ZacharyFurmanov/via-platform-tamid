@@ -4,8 +4,9 @@ import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
 
 // Keyword → category mapping, checked in order.
-// IMPORTANT: accessories is checked LAST among categories so that clothing
-// keywords (shirt, cuff, tie-dye, etc.) take priority over accessory keywords.
+// Rule: specific garment-type keywords (skirt, dress, shorts) are checked
+// BEFORE material/fabric keywords (denim, jeans) so that e.g. a "Denim Skirt"
+// is classified as a skirt, not jeans. Accessories is checked last.
 const categoryKeywords: [CategorySlug, string[]][] = [
   ["shoes", [
     "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
@@ -21,7 +22,11 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
     "suitcase", "duffel", "evening bag",
   ]],
-  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "maxi"]],
+  // Specific garment types first — these take priority over material keywords
+  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress"]],
+  ["skirts", ["skirt", "sarong"]],
+  ["shorts", ["shorts"]],
+  ["jumpsuits", ["jumpsuit", "romper", "playsuit", "overall", "matching set", "co-ord"]],
   ["coats-jackets", [
     "coat", "jacket", "blazer", "parka", "windbreaker", "puffer",
     "bomber", "trench", "overcoat", "cape", "poncho", "anorak",
@@ -31,21 +36,20 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "sweater", "cardigan", "knit", "pullover", "hoodie",
     "sweatshirt", "turtleneck", "crewneck",
   ]],
-  ["jeans", ["jean", "denim"]],
   ["pants", [
-    "pants", "trousers", "cargo", "chino", "jogger",
+    "pants", "trousers", "chino", "jogger",
     "sweatpant", "wide-leg", "flare", "legging", "culottes",
   ]],
-  ["shorts", ["shorts"]],
-  ["skirts", ["skirt", "sarong", "wrap skirt"]],
-  ["jumpsuits", ["jumpsuit", "romper", "playsuit", "overall"]],
   ["tops", [
     "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
     "bodysuit", "corset", "bustier", "halter", "polo", "henley",
     "tube top", "crop", "tunic",
   ]],
-  // Accessories checked last so clothing keywords win on ambiguous titles
-  // (e.g. "French Cuff Shirt" hits "shirt" in tops before reaching "cuff" here)
+  // Jeans checked after specific garment types so "Denim Skirt" → skirts,
+  // not jeans. "jeans" (plural only) avoids matching designer first names
+  // like "Jean Paul Gaultier".
+  ["jeans", ["jeans", "denim"]],
+  // Accessories checked last so clothing keywords always win
   ["accessories", [
     // Jewelry
     "ring", "rings", "necklace", "bracelet", "earring", "pendant",
