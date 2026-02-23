@@ -36,6 +36,7 @@ export default function CollabsLinksPage() {
     store?: string;
   } | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [log, setLog] = useState<string[]>([]);
   const router = useRouter();
 
   async function handleLogout() {
@@ -74,6 +75,7 @@ export default function CollabsLinksPage() {
     setLoading(true);
     setResult(null);
     setProgress(null);
+    setLog([]);
 
     try {
       const body: Record<string, string> = {
@@ -113,13 +115,26 @@ export default function CollabsLinksPage() {
             if (!line.trim()) continue;
             try {
               const data = JSON.parse(line);
-              if (data.type === "store") {
+              if (data.type === "start") {
+                setLog((prev) => [...prev, `Starting: ${data.stores} stores, ${data.missingInDb} products missing in DB`]);
+              } else if (data.type === "store") {
                 setStatusMessage(`Fetching products from ${data.store}...`);
+                setLog((prev) => [...prev, `--- ${data.store} ---`]);
+              } else if (data.type === "fetch_error") {
+                setStatusMessage(`${data.store} ERROR: ${data.error}`);
+                setLog((prev) => [...prev, `ERROR fetching ${data.store}: ${data.error}`]);
               } else if (data.type === "store_products") {
-                const debug = data.debug
-                  ? ` | Collabs IDs: ${JSON.stringify(data.debug.collabsSampleIds)} | DB IDs: ${JSON.stringify(data.debug.dbSampleIds)} | Missing: ${data.debug.missingCount}`
-                  : "";
-                setStatusMessage(`${data.store}: found ${data.count} products in Collabs${debug}`);
+                const msg = `${data.store}: ${data.count} products in Collabs`;
+                setStatusMessage(msg);
+                setLog((prev) => [
+                  ...prev,
+                  msg,
+                  ...(data.debug ? [
+                    `  Collabs sample IDs: ${JSON.stringify(data.debug.collabsSampleIds)}`,
+                    `  DB sample IDs: ${JSON.stringify(data.debug.dbSampleIds)}`,
+                    `  Missing in DB: ${data.debug.missingCount}`,
+                  ] : []),
+                ]);
               } else if (data.type === "progress") {
                 setProgress({
                   saved: data.saved,
@@ -129,11 +144,12 @@ export default function CollabsLinksPage() {
                   store: data.store,
                 });
               } else if (data.type === "error") {
-                // individual product error, progress handles it
+                setLog((prev) => [...prev, `FAILED: ${data.product} (${data.store}): ${data.error}`]);
               } else if (data.type === "done") {
                 setResult(data);
                 setProgress(null);
                 setStatusMessage("");
+                setLog((prev) => [...prev, `Done: saved=${data.saved} created=${data.created} failed=${data.failed} skipped=${data.skipped}`]);
                 checkMissing();
               }
             } catch {
@@ -357,6 +373,15 @@ export default function CollabsLinksPage() {
               {/* Status message */}
               {statusMessage && (
                 <p className="text-sm text-neutral-500">{statusMessage}</p>
+              )}
+
+              {/* Debug log */}
+              {log.length > 0 && (
+                <div className="bg-neutral-900 text-green-400 p-4 text-xs font-mono max-h-[300px] overflow-y-auto whitespace-pre-wrap">
+                  {log.map((entry, i) => (
+                    <div key={i}>{entry}</div>
+                  ))}
+                </div>
               )}
 
               {/* Live progress */}

@@ -69,40 +69,50 @@ async function fetchCollabsProducts(
   collabsStoreId: string,
   cookie: string,
   csrfToken: string
-): Promise<CollabsProduct[]> {
+): Promise<{ products: CollabsProduct[]; error: string | null }> {
   const all: CollabsProduct[] = [];
   let after: string | null = null;
   const gid = `gid://dovetale-api/ShopifyStore/${collabsStoreId}`;
 
   while (true) {
-    const fetchRes: Response = await fetch(COLLABS_GRAPHQL_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-        "X-Csrf-Token": csrfToken,
-      },
-      body: JSON.stringify({
-        operationName: "ProductsQuery",
-        query: PRODUCTS_QUERY,
-        variables: {
-          first: 100,
-          after,
-          seed: Math.random().toString(36).slice(2),
-          searchParams: {
-            brandValues: [],
-            categories: [],
-            shopifyStoreId: gid,
-          },
+    let fetchRes: Response;
+    try {
+      fetchRes = await fetch(COLLABS_GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookie,
+          "X-Csrf-Token": csrfToken,
         },
-      }),
-    });
+        body: JSON.stringify({
+          operationName: "ProductsQuery",
+          query: PRODUCTS_QUERY,
+          variables: {
+            first: 100,
+            after,
+            seed: Math.random().toString(36).slice(2),
+            searchParams: {
+              brandValues: [],
+              categories: [],
+              shopifyStoreId: gid,
+            },
+          },
+        }),
+      });
+    } catch (e) {
+      return { products: all, error: `Fetch failed: ${e instanceof Error ? e.message : String(e)}` };
+    }
 
-    if (!fetchRes.ok) break;
+    if (!fetchRes.ok) {
+      const text = await fetchRes.text().catch(() => "");
+      return { products: all, error: `HTTP ${fetchRes.status}: ${text.slice(0, 300)}` };
+    }
 
     const json = await fetchRes.json();
     const products = json?.data?.products;
-    if (!products?.nodes) break;
+    if (!products?.nodes) {
+      return { products: all, error: `Unexpected response: ${JSON.stringify(json).slice(0, 300)}` };
+    }
 
     all.push(...products.nodes);
 
@@ -115,7 +125,7 @@ async function fetchCollabsProducts(
     }
   }
 
-  return all;
+  return { products: all, error: null };
 }
 
 async function createAffiliateLink(
@@ -257,11 +267,20 @@ export async function POST(request: NextRequest) {
         send({ type: "store", store: store.name, slug: store.slug });
 
         // Fetch all products from Collabs for this store
-        const collabsProducts = await fetchCollabsProducts(
+        const fetchResult = await fetchCollabsProducts(
           store.collabsStoreId,
           cookie,
           csrfToken
         );
+        const collabsProducts = fetchResult.products;
+
+        if (fetchResult.error) {
+          send({
+            type: "fetch_error",
+            store: store.name,
+            error: fetchResult.error,
+          });
+        }
 
         // Debug: show sample IDs from both sides
         const collabsShopifyIds = collabsProducts
