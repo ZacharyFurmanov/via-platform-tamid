@@ -18,7 +18,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ["bags", [
     "bag", "clutch", "tote", "purse", "handbag", "pouch",
     "backpack", "rucksack", "satchel", "crossbody", "cross-body",
-    "minaudiere", "minaudière", "wristlet", "baguette", "hobo bag",
+    "minaudiere", "minaudière", "wristlet", "baguette bag", "hobo bag",
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
     "suitcase", "duffel", "evening bag",
   ]],
