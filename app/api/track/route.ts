@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
+import { getCollabsLink } from "@/app/lib/db";
 
 /**
  * Get the Shopify Collabs affiliate config for a store.
@@ -96,6 +97,21 @@ export async function GET(request: NextRequest) {
     externalUrl,
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
+
+  // If this product has a pre-generated per-product collabs.shop link, use it
+  // directly. The user's browser hitting collabs.shop registers the visit and
+  // sets a 30-day attribution cookie — no app embed required.
+  // pid is the composite product ID like "store-slug-123" — extract trailing number.
+  if (productId) {
+    const match = productId.match(/(\d+)$/);
+    const numericId = match ? parseInt(match[1], 10) : NaN;
+    if (!isNaN(numericId)) {
+      const collabsLink = await getCollabsLink(numericId).catch(() => null);
+      if (collabsLink) {
+        return NextResponse.redirect(collabsLink, 302);
+      }
+    }
+  }
 
   // For stores with Shopify Collabs affiliate tracking:
   // Fetch the affiliate URL server-side to extract dt_id, then deep-link the

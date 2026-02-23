@@ -19,6 +19,8 @@ const PUBLIC_ROUTES = [
   "/api/access-code",
   "/membership",
   "/api/webhooks/stripe",
+  "/api/admin/collabs-product-ids",
+  "/api/admin/import-collabs-links",
 ];
 
 // Routes that require the access code cookie but not a full user session

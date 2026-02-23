@@ -24,6 +24,8 @@ export type DBProduct = {
   external_url: string | null;
   description: string | null;
   variant_id: string | null;
+  shopify_product_id: string | null;
+  collabs_link: string | null;
   synced_at: Date;
   created_at: Date;
 };
@@ -74,6 +76,16 @@ export async function initDatabase() {
     ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE
   `;
 
+  // Add shopify_product_id for Collabs affiliate link generation
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS shopify_product_id TEXT
+  `;
+
+  // Add collabs_link: per-product collabs.shop affiliate URL
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS collabs_link TEXT
+  `;
+
   // Clear created_at for existing products so they don't all appear as new arrivals
   // (only products inserted during subsequent syncs will have a non-NULL created_at)
   await sql`
@@ -103,6 +115,7 @@ export async function syncProducts(
     externalUrl?: string;
     description?: string;
     variantId?: string;
+    shopifyProductId?: string;
   }>
 ) {
   const sql = neon(getDatabaseUrl());
@@ -121,7 +134,7 @@ export async function syncProducts(
     titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, synced_at, created_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -133,6 +146,7 @@ export async function syncProducts(
         ${product.externalUrl || null},
         ${product.description || null},
         ${product.variantId || null},
+        ${product.shopifyProductId || null},
         NOW(),
         ${isExistingStore ? new Date() : null}
       )
@@ -145,6 +159,7 @@ export async function syncProducts(
         external_url = EXCLUDED.external_url,
         description = EXCLUDED.description,
         variant_id = EXCLUDED.variant_id,
+        shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
         synced_at = NOW()
     `;
   }
@@ -306,4 +321,50 @@ export async function getSyncedStores(): Promise<
     ORDER BY store_name
   `;
   return result as any;
+}
+
+/**
+ * Update the collabs_link for a product by its database ID.
+ * Called by the admin generate-collabs-links endpoint.
+ */
+export async function updateCollabsLink(id: number, collabsLink: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    UPDATE products SET collabs_link = ${collabsLink} WHERE id = ${id}
+  `;
+}
+
+/**
+ * Get all products for Collabs-enabled stores that have a shopify_product_id
+ * but no collabs_link yet. Optionally filtered to a specific store.
+ */
+export async function getProductsMissingCollabsLink(storeSlug?: string): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+  const result = storeSlug
+    ? await sql`
+        SELECT * FROM products
+        WHERE store_slug = ${storeSlug}
+          AND shopify_product_id IS NOT NULL
+          AND collabs_link IS NULL
+        ORDER BY id
+      `
+    : await sql`
+        SELECT * FROM products
+        WHERE shopify_product_id IS NOT NULL
+          AND collabs_link IS NULL
+        ORDER BY store_slug, id
+      `;
+  return result as DBProduct[];
+}
+
+/**
+ * Look up the collabs_link for a product by its database ID.
+ * Returns null if the product doesn't exist or has no collabs_link.
+ */
+export async function getCollabsLink(id: number): Promise<string | null> {
+  const sql = neon(getDatabaseUrl());
+  const result = await sql`
+    SELECT collabs_link FROM products WHERE id = ${id} LIMIT 1
+  `;
+  return (result[0]?.collabs_link as string | null) ?? null;
 }

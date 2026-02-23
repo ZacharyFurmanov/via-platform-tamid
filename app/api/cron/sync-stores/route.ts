@@ -69,6 +69,7 @@ export async function GET(request: Request) {
             externalUrl: p.externalUrl,
             description: p.description ?? undefined,
             variantId: p.variantId ?? undefined,
+            shopifyProductId: p.shopifyProductId ?? undefined,
           }));
 
         const productCount = await syncProducts(storeSlug, store.name, products);

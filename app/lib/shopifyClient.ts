@@ -20,6 +20,7 @@ export type ShopifyProduct = {
   availableForSale: boolean;
   description: string | null;
   variantId: string | null;
+  shopifyProductId: string | null;
 };
 
 export type ShopifyFetchResult = {
@@ -228,7 +229,8 @@ export async function fetchShopifyProducts(
       const allImageUrls = node.images.edges.map((e) => e.node.url);
       const imageUrl = allImageUrls[0] || null;
 
-      // Extract numeric variant ID from GID (e.g. "gid://shopify/ProductVariant/12345" -> "12345")
+      // Extract numeric IDs from GIDs (e.g. "gid://shopify/Product/12345" -> "12345")
+      const productId = node.id?.match(/(\d+)$/)?.[1] ?? null;
       const variantGid = node.variants?.edges?.[0]?.node?.id;
       const variantId = variantGid?.match(/(\d+)$/)?.[1] ?? null;
 
@@ -245,6 +247,7 @@ export async function fetchShopifyProducts(
         availableForSale: node.availableForSale,
         description: node.descriptionHtml || null,
         variantId,
+        shopifyProductId: productId,
       });
     }
 
@@ -408,6 +411,7 @@ export async function fetchShopifyProductsPublic(
       const variant = variants[0];
       const price = variant?.price ? parseFloat(variant.price) : null;
       const variantId = variant?.id ? String(variant.id) : null;
+      const shopifyProductId = product.id ? String(product.id) : null;
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];
@@ -434,6 +438,7 @@ export async function fetchShopifyProductsPublic(
         availableForSale: isAvailable,
         description: product.body_html || null,
         variantId,
+        shopifyProductId,
       });
     }
 
@@ -462,6 +467,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   store: string;
   description: string | null;
   variantId: string | null;
+  shopifyProductId: string | null;
 } {
   return {
     title: product.title,
@@ -473,5 +479,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     store: product.store,
     description: product.description,
     variantId: product.variantId,
+    shopifyProductId: product.shopifyProductId,
   };
 }
