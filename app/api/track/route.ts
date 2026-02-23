@@ -120,14 +120,16 @@ export async function GET(request: NextRequest) {
         const productPath = parsedUrl.pathname + parsedUrl.search;
 
         if (collabs.discountPath) {
-          // Discount flow (Missi, SCARZ): redirect through /discount/ path
-          // with the product page as the redirect destination. This lets
-          // Shopify apply the discount AND carry the dt_id to the product page
-          // through its own redirect chain, which is more reliable than
-          // appending dt_id ourselves.
+          // Discount flow (Missi, SCARZ): redirect through /discount/ path.
+          // Shopify strips dt_id during its internal redirect, so we include
+          // dt_id in the redirect target (the product URL) so the Collabs
+          // app embed on the product page can still read it and register the visit.
+          const productPathWithDtId = productPath.includes("?")
+            ? `${productPath}&dt_id=${collabs.dtId}`
+            : `${productPath}?dt_id=${collabs.dtId}`;
           const discountUrl = new URL(collabs.discountPath, affiliate.origin);
           discountUrl.searchParams.set("dt_id", collabs.dtId);
-          discountUrl.searchParams.set("redirect", productPath);
+          discountUrl.searchParams.set("redirect", productPathWithDtId);
           return NextResponse.redirect(discountUrl.toString(), 302);
         }
 
