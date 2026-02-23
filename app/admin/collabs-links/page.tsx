@@ -8,9 +8,10 @@ type StoreCount = Record<string, number>;
 
 type GenerateResult = {
   success?: boolean;
-  total?: number;
-  generated?: number;
+  saved?: number;
+  created?: number;
   failed?: number;
+  skipped?: number;
   errors?: { id: number; title: string; error: string }[];
   error?: string;
 };
