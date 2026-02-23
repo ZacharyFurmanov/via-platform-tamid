@@ -75,7 +75,7 @@ async function fetchCollabsProducts(
   const gid = `gid://dovetale-api/ShopifyStore/${collabsStoreId}`;
 
   while (true) {
-    const res = await fetch(COLLABS_GRAPHQL_URL, {
+    const fetchRes: Response = await fetch(COLLABS_GRAPHQL_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,9 +98,9 @@ async function fetchCollabsProducts(
       }),
     });
 
-    if (!res.ok) break;
+    if (!fetchRes.ok) break;
 
-    const json = await res.json();
+    const json = await fetchRes.json();
     const products = json?.data?.products;
     if (!products?.nodes) break;
 
