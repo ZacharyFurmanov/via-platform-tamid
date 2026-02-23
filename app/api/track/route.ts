@@ -29,6 +29,31 @@ function getAffiliateConfig(storeSlug: string): {
   }
 }
 
+/**
+ * Fetch the Shopify Collabs affiliate URL server-side to extract the dt_id
+ * tracking parameter. This is appended to the product URL so the Collabs
+ * app embed on the store can register the visit and attribute any sale to VIA.
+ *
+ * Requires the store to have the Collabs app embed (Step 5) enabled.
+ */
+async function getDtId(affiliateUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(affiliateUrl, {
+      redirect: "manual",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; VIA/1.0; +https://theviaplatform.com)",
+      },
+    });
+    const location = res.headers.get("location");
+    if (!location) return null;
+    const url = new URL(location, affiliateUrl);
+    return url.searchParams.get("dt_id");
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
@@ -72,37 +97,43 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // For stores with Shopify Collabs affiliate tracking, route the user's
-  // browser directly through Shopify's affiliate mechanism so Shopify counts
-  // the visit server-side (no app embed required).
+  // For stores with Shopify Collabs affiliate tracking:
+  // Fetch the affiliate URL server-side to extract dt_id, then deep-link the
+  // user directly to the product with dt_id appended. The Collabs app embed
+  // on the store reads dt_id and registers the visit + 30-day attribution cookie.
   if (storeSlug) {
     const affiliate = getAffiliateConfig(storeSlug);
     if (affiliate) {
       const productPath = parsedUrl.pathname + parsedUrl.search;
+      const affiliateUrl = `${affiliate.origin}/${affiliate.affiliatePath}`;
+      const dtId = await getDtId(affiliateUrl);
 
-      if (affiliate.discountCode) {
-        // Discount flow (Missi, SCARZ): the affiliate path IS the discount code.
-        // /discount/CODE supports a ?redirect= param so the user lands on the
-        // specific product after Shopify applies the discount.
-        const discountUrl = new URL(
-          `/discount/${affiliate.discountCode}`,
-          affiliate.origin
-        );
-        discountUrl.searchParams.set("redirect", productPath);
-        return NextResponse.redirect(discountUrl.toString(), 302);
+      if (dtId) {
+        if (affiliate.discountCode) {
+          // Discount flow (Missi, SCARZ): route through /discount/CODE so
+          // Shopify applies the discount. Include dt_id in the redirect target
+          // since Shopify strips it during the discount redirect.
+          const productPathWithDtId = productPath.includes("?")
+            ? `${productPath}&dt_id=${dtId}`
+            : `${productPath}?dt_id=${dtId}`;
+          const discountUrl = new URL(
+            `/discount/${affiliate.discountCode}`,
+            affiliate.origin
+          );
+          discountUrl.searchParams.set("dt_id", dtId);
+          discountUrl.searchParams.set("redirect", productPathWithDtId);
+          return NextResponse.redirect(discountUrl.toString(), 302);
+        }
+
+        // Direct flow: append dt_id to the product URL so the Collabs app
+        // embed on the product page registers the visit.
+        parsedUrl.searchParams.set("dt_id", dtId);
+        return NextResponse.redirect(parsedUrl.toString(), 302);
       }
 
-      // Direct flow: send the user's browser to the store affiliate URL.
-      // Shopify counts the visit server-side when this URL is hit.
-      // The ?redirect= param tells Shopify where to land after tracking —
-      // if Shopify passes it through the user goes straight to the product,
-      // otherwise they land on the store homepage (visit is still counted).
-      const affiliateUrl = new URL(
-        `/${affiliate.affiliatePath}`,
-        affiliate.origin
-      );
-      affiliateUrl.searchParams.set("redirect", productPath);
-      return NextResponse.redirect(affiliateUrl.toString(), 302);
+      // Fallback if dt_id fetch fails: redirect to the affiliate URL directly
+      // so the user at least lands on the store (visit counted via their browser).
+      return NextResponse.redirect(affiliateUrl, 302);
     }
   }
 
