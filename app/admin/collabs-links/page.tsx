@@ -27,6 +27,8 @@ export default function CollabsLinksPage() {
     total: number;
     byStore: StoreCount;
     collabsStores: string[];
+    sampleLinks?: { id: number; title: string; storeSlug: string; collabsLink: string; compositeId: string }[];
+    redirectInfo?: { collabsLink: string; redirectsTo: string } | null;
   } | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progress, setProgress] = useState<{
@@ -265,6 +267,47 @@ export default function CollabsLinksPage() {
           ) : null}
         </div>
       </section>
+
+      {/* Verify Links */}
+      {missing?.sampleLinks && missing.sampleLinks.length > 0 && (
+        <section className="border-b border-neutral-200">
+          <div className="max-w-7xl mx-auto px-6 py-6 sm:py-8">
+            <h2 className="text-lg font-serif mb-4">Verify Links</h2>
+
+            {missing.redirectInfo && (
+              <div className="bg-neutral-50 border border-neutral-200 p-4 text-xs font-mono mb-4 space-y-1">
+                <p className="text-neutral-600">collabs.shop redirects to:</p>
+                <p className="text-black break-all">{missing.redirectInfo.redirectsTo}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {missing.sampleLinks.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 text-sm">
+                  <span className="text-neutral-400 text-xs w-28 flex-shrink-0">{p.storeSlug}</span>
+                  <span className="text-black truncate flex-1">{p.title}</span>
+                  <a
+                    href={p.collabsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-xs flex-shrink-0"
+                  >
+                    collabs.shop
+                  </a>
+                  <a
+                    href={`/api/track?pid=${p.compositeId}&pn=${encodeURIComponent(p.title)}&s=test&ss=${p.storeSlug}&url=https://example.com`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-xs flex-shrink-0"
+                  >
+                    test track
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Generate Form */}
       {missing && missing.total > 0 && (

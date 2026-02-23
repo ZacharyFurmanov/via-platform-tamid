@@ -370,6 +370,28 @@ export async function getCollabsLink(id: number): Promise<string | null> {
 }
 
 /**
+ * Get sample products that have collabs links, for verification.
+ */
+export async function getProductsWithCollabsLinks(storeSlug?: string, limit = 5): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+  const result = storeSlug
+    ? await sql`
+        SELECT * FROM products
+        WHERE store_slug = ${storeSlug}
+          AND collabs_link IS NOT NULL
+        ORDER BY id
+        LIMIT ${limit}
+      `
+    : await sql`
+        SELECT * FROM products
+        WHERE collabs_link IS NOT NULL
+        ORDER BY store_slug, id
+        LIMIT ${limit}
+      `;
+  return result as DBProduct[];
+}
+
+/**
  * Update the collabs_link for a product by its Shopify product ID.
  * Used when importing links generated from the Collabs browser script.
  */

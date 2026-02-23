@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getProductsMissingCollabsLink,
+  getProductsWithCollabsLinks,
   updateCollabsLinkByShopifyProductId,
 } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
@@ -406,9 +407,38 @@ export async function GET(request: NextRequest) {
     {} as Record<string, number>
   );
 
+  // Get sample products with collabs links for verification
+  const withLinks = await getProductsWithCollabsLinks(undefined, 10);
+  const sampleLinks = withLinks.map((p) => ({
+    id: p.id,
+    title: p.title,
+    storeSlug: p.store_slug,
+    collabsLink: p.collabs_link,
+    compositeId: `${p.store_slug}-${p.id}`,
+  }));
+
+  // Follow one collabs.shop link to see the redirect structure
+  let redirectInfo: { collabsLink: string; redirectsTo: string } | null = null;
+  if (sampleLinks.length > 0 && sampleLinks[0].collabsLink) {
+    try {
+      const res = await fetch(sampleLinks[0].collabsLink, { redirect: "manual" });
+      const location = res.headers.get("location");
+      if (location) {
+        redirectInfo = {
+          collabsLink: sampleLinks[0].collabsLink,
+          redirectsTo: location,
+        };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return NextResponse.json({
     total: candidates.length,
     byStore,
     collabsStores: Array.from(COLLABS_STORE_SLUGS),
+    sampleLinks,
+    redirectInfo,
   });
 }
