@@ -47,8 +47,8 @@ export default function ShopifySetupPage() {
             <div className="bg-green-50 border border-green-200 p-4 text-sm">
               <p className="text-green-800">
                 <strong>Why we use Collabs:</strong> It&apos;s free, native to Shopify, and handles
-                all the complex tracking automatically. The only setup on your end is enabling
-                the Collabs app embed in your theme (a one-click toggle).
+                all the complex tracking automatically. We generate per-product affiliate links
+                on our end, so there&apos;s no theme setup required on yours.
               </p>
             </div>
           </div>
@@ -116,35 +116,24 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
                     3
                   </span>
-                  <h3 className="text-lg font-medium">Create a Custom Affiliate Link for VIA</h3>
+                  <h3 className="text-lg font-medium">We Generate the Affiliate Links</h3>
                 </div>
                 <div className="text-neutral-600 space-y-3">
                   <p>
-                    Once VIA has been added to your Collabs program, you need to create a
-                    custom affiliate link that we&apos;ll use to send customers to your store.
+                    Once VIA has been added to your Collabs program, we generate a unique
+                    affiliate link for each of your products on our end. No action needed from you.
                   </p>
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>In Shopify Collabs, go to <strong>Affiliates</strong> and find VIA</li>
-                    <li>Click on VIA&apos;s profile and go to <strong>Affiliate links</strong></li>
-                    <li>Create a new custom link with a handle like <strong>VIAPARTNER</strong></li>
-                  </ol>
                   <p className="text-sm">
-                    This creates a link like:
+                    Each product gets its own tracked link like:
                   </p>
                   <div className="bg-neutral-100 p-3 font-mono text-sm">
-                    https://yourstore.com/VIAPARTNER
+                    https://collabs.shop/xxxxxxx
                   </div>
                   <p className="text-sm">
-                    When a customer clicks a product on VIA, they&apos;ll be routed through this
-                    link so Shopify knows the sale came from us.
+                    When a customer clicks a product on VIA, they&apos;re routed through that
+                    product&apos;s link. Shopify Collabs registers the visit and sets a tracking
+                    cookie automatically — no theme changes or app embeds needed on your store.
                   </p>
-                  <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
-                    <p className="text-amber-800">
-                      <strong>Important:</strong> Once you&apos;ve created the link, send it to us
-                      at <a href="mailto:partnerships@theviaplatform.com" className="underline">partnerships@theviaplatform.com</a> so
-                      we can connect it to your store on VIA.
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -219,60 +208,18 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 5 */}
-              <div className="border-l-2 border-black pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
-                    5
-                  </span>
-                  <h3 className="text-lg font-medium">Enable the Collabs App Embed</h3>
-                </div>
-                <div className="text-neutral-600 space-y-3">
-                  <p>
-                    This is a critical step. The Shopify Collabs app embed must be turned on in your
-                    theme for affiliate tracking cookies to work. Without it, clicks from VIA
-                    won&apos;t be attributed and commissions won&apos;t be tracked.
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-sm">
-                    <li>Go to your Shopify Admin</li>
-                    <li>Navigate to <strong>Online Store → Themes</strong></li>
-                    <li>Click <strong>Customize</strong> on your active theme</li>
-                    <li>In the theme editor, click <strong>App embeds</strong> (the blocks icon in the left sidebar)</li>
-                    <li>Find <strong>Shopify Collabs</strong> and toggle it <strong>on</strong></li>
-                    <li>Click <strong>Save</strong></li>
-                  </ol>
-                  <div className="bg-red-50 border border-red-200 p-3 text-sm">
-                    <p className="text-red-800">
-                      <strong>Why this matters:</strong> When a customer clicks through from VIA, the
-                      app embed sets a tracking cookie on your store. That cookie is what captures
-                      sales even if the customer leaves and comes back later — without it, we can only
-                      track purchases made in that exact same session, which means most referred sales
-                      won&apos;t be attributed and commissions won&apos;t be recorded.
-                    </p>
-                  </div>
-
-                  <div className="bg-neutral-50 border border-neutral-200 p-4 text-sm space-y-2">
-                    <p className="font-medium text-black">Don&apos;t see Shopify Collabs in the list?</p>
-                    <p className="text-neutral-600">First try scrolling down — it may be below your other apps. If it&apos;s still not there, contact Shopify Support at <strong>help.shopify.com</strong> → Contact Support and paste this message:</p>
-                    <div className="bg-white border border-neutral-200 p-3 text-neutral-600 italic">
-                      &quot;Hi, I have the Shopify Collabs app installed but it&apos;s not appearing in my App Embeds list in the theme editor. I need it to show up so I can toggle it on and enable affiliate tracking. Can you help me get it to register as an app embed?&quot;
-                    </div>
-                    <p className="text-neutral-500">Shopify Support can fix this quickly on their end.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 6 */}
               <div className="border-l-2 border-neutral-300 pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-neutral-200 text-neutral-600 flex items-center justify-center text-sm font-medium">
-                    6
+                    5
                   </span>
                   <h3 className="text-lg font-medium text-neutral-600">Done!</h3>
                 </div>
                 <div className="text-neutral-500 space-y-3">
                   <p>
-                    Once we accept your invitation and the app embed is enabled, all VIA traffic
-                    to your store will be automatically tracked. Shopify handles:
+                    Once we accept your invitation, all VIA traffic to your store will be
+                    automatically tracked. No theme changes needed — our per-product links
+                    handle tracking and attribution. Shopify handles:
                   </p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li>Click tracking via affiliate links</li>
@@ -291,11 +238,11 @@ export default function ShopifySetupPage() {
             <div className="bg-neutral-50 p-6 space-y-4 text-sm">
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">1</div>
-                <p>Customer clicks a product on VIA → redirected to your Shopify store with affiliate tracking</p>
+                <p>Customer clicks a product on VIA → routed through a unique per-product affiliate link</p>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">2</div>
-                <p>Shopify Collabs drops a cookie on the customer&apos;s browser</p>
+                <p>Shopify Collabs registers the visit and sets an attribution cookie</p>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">3</div>
@@ -313,10 +260,10 @@ export default function ShopifySetupPage() {
             <h2 className="text-xl sm:text-2xl font-serif mb-6">Common Questions</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-medium mb-2">Do I need to add any code to my store?</h3>
+                <h3 className="font-medium mb-2">Do I need to change anything on my store or theme?</h3>
                 <p className="text-neutral-600 text-sm">
-                  No custom code is needed. The only requirement is enabling the Shopify Collabs
-                  app embed in your theme (Step 5 above). This is a one-click toggle—no coding required.
+                  No. We use per-product affiliate links that handle tracking automatically.
+                  No theme changes, app embeds, or custom code required on your end.
                 </p>
               </div>
               <div>

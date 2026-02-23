@@ -101,6 +101,13 @@ export default function SyncAdminPage() {
               <span className="text-black">Sync</span>
               <span className="text-neutral-300">/</span>
               <Link
+                href="/admin/collabs-links"
+                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
+              >
+                Collabs Links
+              </Link>
+              <span className="text-neutral-300">/</span>
+              <Link
                 href="/admin/analytics"
                 className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
               >
@@ -375,6 +382,12 @@ export default function SyncAdminPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
             <span className="text-black min-h-[44px] flex items-center">Inventory Sync</span>
+            <Link
+              href="/admin/collabs-links"
+              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
+            >
+              Collabs Links
+            </Link>
             <Link
               href="/admin/analytics"
               className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"

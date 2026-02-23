@@ -5,51 +5,22 @@ import { stores } from "@/app/lib/stores";
 import { getCollabsLink } from "@/app/lib/db";
 
 /**
- * Get the Shopify Collabs affiliate config for a store.
+ * Get the discount config for a store (if any).
  */
-function getAffiliateConfig(storeSlug: string): {
-  affiliatePath: string;
+function getDiscountConfig(storeSlug: string): {
   origin: string;
-  discountCode: string | null;
+  discountCode: string;
 } | null {
   const storeConfig = stores.find((s) => s.slug === storeSlug);
   if (!storeConfig) return null;
 
-  const affiliatePath =
-    "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
-  if (!affiliatePath) return null;
-
   const discountCode =
     "discountCode" in storeConfig ? (storeConfig as any).discountCode : null;
+  if (!discountCode) return null;
 
   try {
     const origin = new URL(storeConfig.website).origin;
-    return { affiliatePath, origin, discountCode };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch the Shopify Collabs affiliate URL server-side to extract the dt_id
- * tracking parameter. This is appended to the product URL so the Collabs
- * app embed on the store can register the visit and attribute any sale to VIA.
- *
- * Requires the store to have the Collabs app embed (Step 5) enabled.
- */
-async function getDtId(affiliateUrl: string): Promise<string | null> {
-  try {
-    const res = await fetch(affiliateUrl, {
-      redirect: "manual",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; VIA/1.0; +https://theviaplatform.com)",
-      },
-    });
-    const location = res.headers.get("location");
-    if (!location) return null;
-    const url = new URL(location, affiliateUrl);
-    return url.searchParams.get("dt_id");
+    return { origin, discountCode };
   } catch {
     return null;
   }
@@ -98,9 +69,9 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // If this product has a pre-generated per-product collabs.shop link, use it
-  // directly. The user's browser hitting collabs.shop registers the visit and
-  // sets a 30-day attribution cookie — no app embed required.
+  // If this product has a per-product collabs.shop link, use it directly.
+  // The user's browser hitting collabs.shop registers the visit and sets a
+  // 30-day attribution cookie — no app embed or dt_id needed.
   // pid is the composite product ID like "store-slug-123" — extract trailing number.
   if (productId) {
     const match = productId.match(/(\d+)$/);
@@ -113,47 +84,24 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // For stores with Shopify Collabs affiliate tracking:
-  // Fetch the affiliate URL server-side to extract dt_id, then deep-link the
-  // user directly to the product with dt_id appended. The Collabs app embed
-  // on the store reads dt_id and registers the visit + 30-day attribution cookie.
+  // Fallback for products without a collabs.shop link yet:
+  // Apply discount code if the store has one, otherwise redirect directly.
   if (storeSlug) {
-    const affiliate = getAffiliateConfig(storeSlug);
-    if (affiliate) {
+    const discount = getDiscountConfig(storeSlug);
+    if (discount) {
+      // Route through /discount/CODE so Shopify applies the discount,
+      // then redirect to the product page.
       const productPath = parsedUrl.pathname + parsedUrl.search;
-      const affiliateUrl = `${affiliate.origin}/${affiliate.affiliatePath}`;
-      const dtId = await getDtId(affiliateUrl);
-
-      if (dtId) {
-        if (affiliate.discountCode) {
-          // Discount flow (Missi, SCARZ): route through /discount/CODE so
-          // Shopify applies the discount. Include dt_id in the redirect target
-          // since Shopify strips it during the discount redirect.
-          const productPathWithDtId = productPath.includes("?")
-            ? `${productPath}&dt_id=${dtId}`
-            : `${productPath}?dt_id=${dtId}`;
-          const discountUrl = new URL(
-            `/discount/${affiliate.discountCode}`,
-            affiliate.origin
-          );
-          discountUrl.searchParams.set("dt_id", dtId);
-          discountUrl.searchParams.set("redirect", productPathWithDtId);
-          return NextResponse.redirect(discountUrl.toString(), 302);
-        }
-
-        // Direct flow: append dt_id to the product URL so the Collabs app
-        // embed on the product page registers the visit.
-        parsedUrl.searchParams.set("dt_id", dtId);
-        return NextResponse.redirect(parsedUrl.toString(), 302);
-      }
-
-      // Fallback if dt_id fetch fails: redirect to the affiliate URL directly
-      // so the user at least lands on the store (visit counted via their browser).
-      return NextResponse.redirect(affiliateUrl, 302);
+      const discountUrl = new URL(
+        `/discount/${discount.discountCode}`,
+        discount.origin
+      );
+      discountUrl.searchParams.set("redirect", productPath);
+      return NextResponse.redirect(discountUrl.toString(), 302);
     }
   }
 
-  // For stores without affiliate tracking, redirect to the product URL directly
+  // For stores without discount codes or collabs links, redirect directly
   parsedUrl.searchParams.set("via_click_id", clickId);
   return NextResponse.redirect(parsedUrl.toString(), 302);
 }

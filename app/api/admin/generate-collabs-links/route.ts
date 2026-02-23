@@ -5,6 +5,9 @@ import {
 } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 
+// Allow up to 5 minutes for bulk generation
+export const maxDuration = 300;
+
 // Slugs of Collabs-enabled stores (those with affiliatePath)
 const COLLABS_STORE_SLUGS = new Set(
   stores
@@ -65,39 +68,56 @@ async function generateCollabsLink(
   }
 }
 
+// Simple hash function — must match middleware
+function hashPassword(password: string): string {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
+function isAuthorized(request: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+
+  // Accept Bearer token (for scripts)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${adminPassword}`) return true;
+
+  // Accept admin cookie (for browser UI)
+  const adminToken = request.cookies.get("via_admin_token")?.value;
+  if (adminToken && adminToken === hashPassword(adminPassword)) return true;
+
+  return false;
+}
+
 /**
  * POST /api/admin/generate-collabs-links
  *
- * Bulk-generates per-product collabs.shop affiliate links for all Collabs-enabled
- * stores that have a shopify_product_id but no collabs_link yet.
+ * Streams progress as newline-delimited JSON while generating per-product
+ * collabs.shop affiliate links. Each line is a JSON object with the current
+ * progress so the UI can update in real-time.
  *
- * Body:
- *   cookie      — full Cookie header value from an active Shopify Collabs browser session
- *   csrfToken   — X-Csrf-Token header value from the same session
- *   storeSlug   — (optional) limit to a single store
- *   dryRun      — (optional) if true, just count products without generating
- *
- * Auth: requires ADMIN_PASSWORD env var in Authorization header (Bearer <password>)
+ * Auth: admin cookie or Bearer token
  */
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword || authHeader !== `Bearer ${adminPassword}`) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));
-  const { cookie, csrfToken, storeSlug, dryRun } = body as {
+  const { cookie, csrfToken, storeSlug } = body as {
     cookie?: string;
     csrfToken?: string;
     storeSlug?: string;
-    dryRun?: boolean;
   };
 
-  if (!dryRun && (!cookie || !csrfToken)) {
+  if (!cookie || !csrfToken) {
     return NextResponse.json(
-      { error: "cookie and csrfToken are required unless dryRun is true" },
+      { error: "cookie and csrfToken are required" },
       { status: 400 }
     );
   }
@@ -114,53 +134,84 @@ export async function POST(request: NextRequest) {
   }
 
   const products = await getProductsMissingCollabsLink(storeSlug);
-
-  // Filter to Collabs-enabled stores only
   const candidates = storeSlug
     ? products
     : products.filter((p) => COLLABS_STORE_SLUGS.has(p.store_slug));
 
-  if (dryRun) {
-    const byStore = candidates.reduce((acc, p) => {
-      acc[p.store_slug] = (acc[p.store_slug] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return NextResponse.json({ dryRun: true, total: candidates.length, byStore });
-  }
+  // Stream progress as newline-delimited JSON
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let generated = 0;
+      let failed = 0;
+      const errors: { id: number; title: string; error: string }[] = [];
 
-  let generated = 0;
-  let failed = 0;
-  const errors: { id: number; title: string; error: string }[] = [];
+      function send(data: Record<string, unknown>) {
+        controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
+      }
 
-  for (const product of candidates) {
-    const link = await generateCollabsLink(
-      product.shopify_product_id!,
-      cookie!,
-      csrfToken!
-    );
+      send({ type: "start", total: candidates.length });
 
-    if (link) {
-      await updateCollabsLink(product.id, link);
-      generated++;
-    } else {
-      failed++;
-      errors.push({
-        id: product.id,
-        title: product.title,
-        error: "No URL returned from Collabs API",
+      for (const product of candidates) {
+        const link = await generateCollabsLink(
+          product.shopify_product_id!,
+          cookie,
+          csrfToken
+        );
+
+        if (link) {
+          await updateCollabsLink(product.id, link);
+          generated++;
+          send({
+            type: "progress",
+            generated,
+            failed,
+            current: generated + failed,
+            total: candidates.length,
+            product: product.title,
+            store: product.store_slug,
+          });
+        } else {
+          failed++;
+          errors.push({
+            id: product.id,
+            title: product.title,
+            error: "No URL returned from Collabs API",
+          });
+          send({
+            type: "progress",
+            generated,
+            failed,
+            current: generated + failed,
+            total: candidates.length,
+            product: product.title,
+            store: product.store_slug,
+            error: true,
+          });
+        }
+
+        // Rate-limit: 1 request per 300ms
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      send({
+        type: "done",
+        success: failed === 0,
+        total: candidates.length,
+        generated,
+        failed,
+        ...(errors.length > 0 && { errors }),
       });
-    }
 
-    // Rate-limit: 1 request per 300ms to be respectful to the API
-    await new Promise((r) => setTimeout(r, 300));
-  }
+      controller.close();
+    },
+  });
 
-  return NextResponse.json({
-    success: failed === 0,
-    total: candidates.length,
-    generated,
-    failed,
-    ...(errors.length > 0 && { errors }),
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson",
+      "Transfer-Encoding": "chunked",
+    },
   });
 }
 
@@ -169,10 +220,7 @@ export async function POST(request: NextRequest) {
  * Returns stats on how many products need collabs links generated.
  */
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword || authHeader !== `Bearer ${adminPassword}`) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
