@@ -36,8 +36,13 @@ async function generateCollabsLink(
   shopifyProductId: string,
   cookie: string,
   csrfToken: string
-): Promise<string | null> {
+): Promise<{ url: string | null; error: string | null }> {
   try {
+    // The Collabs API expects the full Shopify GID format
+    const gid = shopifyProductId.startsWith("gid://")
+      ? shopifyProductId
+      : `gid://shopify/Product/${shopifyProductId}`;
+
     const res = await fetch(COLLABS_GRAPHQL_URL, {
       method: "POST",
       headers: {
@@ -50,21 +55,32 @@ async function generateCollabsLink(
         query: MUTATION,
         variables: {
           input: {
-            productId: shopifyProductId,
+            productId: gid,
             origin: "LINK_GENERATION",
           },
         },
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return { url: null, error: `HTTP ${res.status}: ${text.slice(0, 200)}` };
+    }
 
     const data = await res.json();
+    const userErrors = data?.data?.affiliateProductCreate?.userErrors;
+    if (userErrors && userErrors.length > 0) {
+      return { url: null, error: userErrors.map((e: { message: string }) => e.message).join(", ") };
+    }
+
     const url =
       data?.data?.affiliateProductCreate?.affiliateProduct?.url ?? null;
-    return url;
-  } catch {
-    return null;
+    if (!url) {
+      return { url: null, error: `Unexpected response: ${JSON.stringify(data).slice(0, 200)}` };
+    }
+    return { url, error: null };
+  } catch (e) {
+    return { url: null, error: e instanceof Error ? e.message : "Unknown error" };
   }
 }
 
@@ -153,14 +169,14 @@ export async function POST(request: NextRequest) {
       send({ type: "start", total: candidates.length });
 
       for (const product of candidates) {
-        const link = await generateCollabsLink(
+        const result = await generateCollabsLink(
           product.shopify_product_id!,
           cookie,
           csrfToken
         );
 
-        if (link) {
-          await updateCollabsLink(product.id, link);
+        if (result.url) {
+          await updateCollabsLink(product.id, result.url);
           generated++;
           send({
             type: "progress",
@@ -173,10 +189,11 @@ export async function POST(request: NextRequest) {
           });
         } else {
           failed++;
+          const errorMsg = result.error || "Unknown error";
           errors.push({
             id: product.id,
             title: product.title,
-            error: "No URL returned from Collabs API",
+            error: errorMsg,
           });
           send({
             type: "progress",
@@ -186,7 +203,7 @@ export async function POST(request: NextRequest) {
             total: candidates.length,
             product: product.title,
             store: product.store_slug,
-            error: true,
+            error: errorMsg,
           });
         }
 
