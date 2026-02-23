@@ -256,6 +256,8 @@ export async function POST(request: NextRequest) {
       let created = 0;
       let failed = 0;
       let skipped = 0;
+      let rateLimited = false;
+      let rateLimitSkipped = 0;
 
       function send(data: Record<string, unknown>) {
         controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
@@ -282,21 +284,10 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        // Debug: show sample IDs from both sides
-        const collabsShopifyIds = collabsProducts
-          .slice(0, 3)
-          .map((p) => ({ raw: p.shopifyProductId, extracted: p.shopifyProductId?.match(/(\d+)$/)?.[1] }));
-        const dbSampleIds = Array.from(missingByShopifyId).slice(0, 3);
-
         send({
           type: "store_products",
           store: store.name,
           count: collabsProducts.length,
-          debug: {
-            collabsSampleIds: collabsShopifyIds,
-            dbSampleIds,
-            missingCount: missingByShopifyId.size,
-          },
         });
 
         for (const product of collabsProducts) {
@@ -311,6 +302,12 @@ export async function POST(request: NextRequest) {
 
           // If no existing affiliate link, create one using the Collabs product ID
           if (!collabsUrl) {
+            if (rateLimited) {
+              // Already hit daily limit — skip creating but count it
+              rateLimitSkipped++;
+              continue;
+            }
+
             const result = await createAffiliateLink(
               product.id,
               cookie,
@@ -321,12 +318,22 @@ export async function POST(request: NextRequest) {
               created++;
             } else {
               failed++;
-              send({
-                type: "error",
-                product: product.title,
-                store: store.name,
-                error: result.error,
-              });
+              // Detect daily limit and stop trying to create new links
+              if (result.error?.includes("Daily links limit")) {
+                rateLimited = true;
+                send({
+                  type: "rate_limit",
+                  store: store.name,
+                  message: "Daily links limit reached. Will save existing links only.",
+                });
+              } else {
+                send({
+                  type: "error",
+                  product: product.title,
+                  store: store.name,
+                  error: result.error,
+                });
+              }
               await new Promise((r) => setTimeout(r, 300));
               continue;
             }
@@ -357,11 +364,12 @@ export async function POST(request: NextRequest) {
 
       send({
         type: "done",
-        success: failed === 0,
+        success: failed === 0 && rateLimitSkipped === 0,
         saved,
         created,
         failed,
         skipped,
+        rateLimitSkipped,
       });
 
       controller.close();

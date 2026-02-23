@@ -12,6 +12,7 @@ type GenerateResult = {
   created?: number;
   failed?: number;
   skipped?: number;
+  rateLimitSkipped?: number;
   errors?: { id: number; title: string; error: string }[];
   error?: string;
 };
@@ -143,6 +144,8 @@ export default function CollabsLinksPage() {
                   product: data.product,
                   store: data.store,
                 });
+              } else if (data.type === "rate_limit") {
+                setLog((prev) => [...prev, `RATE LIMITED: ${data.message}`]);
               } else if (data.type === "error") {
                 setLog((prev) => [...prev, `FAILED: ${data.product} (${data.store}): ${data.error}`]);
               } else if (data.type === "done") {
@@ -433,6 +436,9 @@ export default function CollabsLinksPage() {
                         Saved <strong>{result.saved}</strong> collabs links
                         {result.created
                           ? ` (${result.created} newly created)`
+                          : ""}
+                        {result.rateLimitSkipped
+                          ? ` — ${result.rateLimitSkipped} need links (run again tomorrow)`
                           : ""}
                         {result.failed
                           ? ` — ${result.failed} failed`
