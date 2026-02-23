@@ -28,13 +28,13 @@ export default function CollabsLinksPage() {
   } | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progress, setProgress] = useState<{
-    current: number;
-    total: number;
-    generated: number;
+    saved: number;
+    created: number;
     failed: number;
     product?: string;
     store?: string;
   } | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
   const router = useRouter();
 
   async function handleLogout() {
@@ -112,18 +112,24 @@ export default function CollabsLinksPage() {
             if (!line.trim()) continue;
             try {
               const data = JSON.parse(line);
-              if (data.type === "progress") {
+              if (data.type === "store") {
+                setStatusMessage(`Fetching products from ${data.store}...`);
+              } else if (data.type === "store_products") {
+                setStatusMessage(`${data.store}: found ${data.count} products in Collabs`);
+              } else if (data.type === "progress") {
                 setProgress({
-                  current: data.current,
-                  total: data.total,
-                  generated: data.generated,
+                  saved: data.saved,
+                  created: data.created,
                   failed: data.failed,
                   product: data.product,
                   store: data.store,
                 });
+              } else if (data.type === "error") {
+                // individual product error, progress handles it
               } else if (data.type === "done") {
                 setResult(data);
                 setProgress(null);
+                setStatusMessage("");
                 checkMissing();
               }
             } catch {
@@ -344,30 +350,28 @@ export default function CollabsLinksPage() {
                   : `Generate Links (${selectedCount} products)`}
               </button>
 
+              {/* Status message */}
+              {statusMessage && (
+                <p className="text-sm text-neutral-500">{statusMessage}</p>
+              )}
+
               {/* Live progress */}
               {progress && (
                 <div className="border border-neutral-200 p-4 text-sm space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-neutral-600">
-                      {progress.current} / {progress.total}
-                    </span>
-                    <span className="text-neutral-500">
-                      {progress.generated} ok
-                      {progress.failed > 0 && (
-                        <span className="text-red-600 ml-2">
-                          {progress.failed} failed
+                      {progress.saved} saved
+                      {progress.created > 0 && (
+                        <span className="text-neutral-400 ml-1">
+                          ({progress.created} newly created)
                         </span>
                       )}
                     </span>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="w-full bg-neutral-100 h-2">
-                    <div
-                      className="bg-black h-2 transition-all duration-300"
-                      style={{
-                        width: `${(progress.current / progress.total) * 100}%`,
-                      }}
-                    />
+                    {progress.failed > 0 && (
+                      <span className="text-red-600">
+                        {progress.failed} failed
+                      </span>
+                    )}
                   </div>
                   {progress.product && (
                     <p className="text-neutral-400 text-xs truncate">
@@ -397,10 +401,12 @@ export default function CollabsLinksPage() {
                           result.success ? "text-green-800" : "text-amber-800"
                         }
                       >
-                        Generated <strong>{result.generated}</strong> of{" "}
-                        {result.total} links
+                        Saved <strong>{result.saved}</strong> collabs links
+                        {result.created
+                          ? ` (${result.created} newly created)`
+                          : ""}
                         {result.failed
-                          ? ` (${result.failed} failed)`
+                          ? ` — ${result.failed} failed`
                           : ""}
                       </p>
                       {result.errors && result.errors.length > 0 && (

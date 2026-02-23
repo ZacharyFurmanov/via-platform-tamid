@@ -12,6 +12,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "GBP",
     affiliatePath: "1234",
+    collabsStoreId: "228601",
     shippingPolicy:
       "Ships from Shropshire, England. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -48,6 +49,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     affiliatePath: "VIAPARTNER",
+    collabsStoreId: "229026",
     shippingPolicy:
       "Ships from Newport Beach, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -67,6 +69,7 @@ export const stores = [
     logoDark: true,
     currency: "USD",
     affiliatePath: "0001",
+    collabsStoreId: "228526",
     discountCode: "0001",
     perk: "VIA customers get free shipping — use code 0001 at checkout",
     shippingPolicy:
@@ -87,6 +90,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "GBP",
     affiliatePath: "VIAXSCARZ",
+    collabsStoreId: "228153",
     discountCode: "VIAXSCARZ",
     perk: "VIA customers get free shipping — use code VIAXSCARZ at checkout",
     shippingPolicy:
@@ -107,6 +111,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     affiliatePath: "VIAPLATFORM",
+    collabsStoreId: "229322",
     shippingPolicy:
       "Free shipping on all items. Orders ship from the United States.",
     returnPolicy:
@@ -125,6 +130,7 @@ export const stores = [
     logoBg: "#fdf8d8",
     currency: "USD",
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
+    collabsStoreId: "227548",
     shippingPolicy:
       "Orders are processed within 3–7 business days. Delivery takes an additional 3–7 business days depending on location. Shipping rates are calculated at checkout based on destination and package weight. US shipping only.",
     returnPolicy:

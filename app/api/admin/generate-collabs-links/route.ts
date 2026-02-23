@@ -1,24 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getProductsMissingCollabsLink,
-  updateCollabsLink,
+  updateCollabsLinkByShopifyProductId,
 } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 
 // Allow up to 5 minutes for bulk generation
 export const maxDuration = 300;
 
-// Slugs of Collabs-enabled stores (those with affiliatePath)
-const COLLABS_STORE_SLUGS = new Set(
-  stores
-    .filter((s) => "affiliatePath" in s)
-    .map((s) => s.slug)
-);
+// Map VIA store slugs to Collabs shopifyStoreIds
+const COLLABS_STORES = stores
+  .filter((s) => "collabsStoreId" in s)
+  .map((s) => ({
+    slug: s.slug,
+    name: s.name,
+    collabsStoreId: (s as any).collabsStoreId as string,
+  }));
+
+const COLLABS_STORE_SLUGS = new Set(COLLABS_STORES.map((s) => s.slug));
 
 const COLLABS_GRAPHQL_URL =
   "https://api.collabs.shopify.com/creator/graphql";
 
-const MUTATION = `
+// Query to list products for a store — returns Collabs IDs, Shopify IDs, and existing affiliate links
+const PRODUCTS_QUERY = `
+  query ProductsQuery($searchParams: ProductsSearchInput!, $first: Int, $after: String, $seed: String!) {
+    products(searchParams: $searchParams, first: $first, after: $after, seed: $seed) {
+      nodes {
+        id
+        title
+        shopifyProductId
+        affiliateProduct {
+          url
+        }
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+// Mutation to create an affiliate link for a product (uses Collabs internal product ID)
+const CREATE_MUTATION = `
   mutation ProductListAffiliateProductCreateMutation($input: AffiliateProductCreateInput!) {
     affiliateProductCreate(input: $input) {
       affiliateProduct {
@@ -32,17 +58,72 @@ const MUTATION = `
   }
 `;
 
-async function generateCollabsLink(
-  shopifyProductId: string,
+type CollabsProduct = {
+  id: string;
+  title: string;
+  shopifyProductId: string;
+  affiliateProduct: { url: string } | null;
+};
+
+async function fetchCollabsProducts(
+  collabsStoreId: string,
+  cookie: string,
+  csrfToken: string
+): Promise<CollabsProduct[]> {
+  const all: CollabsProduct[] = [];
+  let after: string | null = null;
+  const gid = `gid://dovetale-api/ShopifyStore/${collabsStoreId}`;
+
+  while (true) {
+    const res = await fetch(COLLABS_GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookie,
+        "X-Csrf-Token": csrfToken,
+      },
+      body: JSON.stringify({
+        operationName: "ProductsQuery",
+        query: PRODUCTS_QUERY,
+        variables: {
+          first: 100,
+          after,
+          seed: Math.random().toString(36).slice(2),
+          searchParams: {
+            brandValues: [],
+            categories: [],
+            shopifyStoreId: gid,
+          },
+        },
+      }),
+    });
+
+    if (!res.ok) break;
+
+    const json = await res.json();
+    const products = json?.data?.products;
+    if (!products?.nodes) break;
+
+    all.push(...products.nodes);
+
+    if (products.pageInfo?.hasNextPage && products.pageInfo.endCursor) {
+      after = products.pageInfo.endCursor;
+      // Small delay between pages
+      await new Promise((r) => setTimeout(r, 200));
+    } else {
+      break;
+    }
+  }
+
+  return all;
+}
+
+async function createAffiliateLink(
+  collabsProductId: string,
   cookie: string,
   csrfToken: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
-    // The Collabs API expects the full Shopify GID format
-    const gid = shopifyProductId.startsWith("gid://")
-      ? shopifyProductId
-      : `gid://shopify/Product/${shopifyProductId}`;
-
     const res = await fetch(COLLABS_GRAPHQL_URL, {
       method: "POST",
       headers: {
@@ -52,10 +133,10 @@ async function generateCollabsLink(
       },
       body: JSON.stringify({
         operationName: "ProductListAffiliateProductCreateMutation",
-        query: MUTATION,
+        query: CREATE_MUTATION,
         variables: {
           input: {
-            productId: gid,
+            productId: collabsProductId,
             origin: "LINK_GENERATION",
           },
         },
@@ -70,17 +151,22 @@ async function generateCollabsLink(
     const data = await res.json();
     const userErrors = data?.data?.affiliateProductCreate?.userErrors;
     if (userErrors && userErrors.length > 0) {
-      return { url: null, error: userErrors.map((e: { message: string }) => e.message).join(", ") };
+      return {
+        url: null,
+        error: userErrors
+          .map((e: { message: string }) => e.message)
+          .join(", "),
+      };
     }
 
     const url =
       data?.data?.affiliateProductCreate?.affiliateProduct?.url ?? null;
-    if (!url) {
-      return { url: null, error: `Unexpected response: ${JSON.stringify(data).slice(0, 200)}` };
-    }
-    return { url, error: null };
+    return { url, error: url ? null : "No URL in response" };
   } catch (e) {
-    return { url: null, error: e instanceof Error ? e.message : "Unknown error" };
+    return {
+      url: null,
+      error: e instanceof Error ? e.message : "Unknown error",
+    };
   }
 }
 
@@ -99,11 +185,9 @@ function isAuthorized(request: NextRequest): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) return false;
 
-  // Accept Bearer token (for scripts)
   const authHeader = request.headers.get("authorization");
   if (authHeader === `Bearer ${adminPassword}`) return true;
 
-  // Accept admin cookie (for browser UI)
   const adminToken = request.cookies.get("via_admin_token")?.value;
   if (adminToken && adminToken === hashPassword(adminPassword)) return true;
 
@@ -113,11 +197,9 @@ function isAuthorized(request: NextRequest): boolean {
 /**
  * POST /api/admin/generate-collabs-links
  *
- * Streams progress as newline-delimited JSON while generating per-product
- * collabs.shop affiliate links. Each line is a JSON object with the current
- * progress so the UI can update in real-time.
- *
- * Auth: admin cookie or Bearer token
+ * Fetches all products from Collabs for each store, grabs existing affiliate
+ * URLs, creates new ones where missing, and saves them to VIA's database.
+ * Streams progress as newline-delimited JSON.
  */
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {
@@ -138,86 +220,118 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Validate storeSlug is Collabs-enabled if provided
-  if (storeSlug && !COLLABS_STORE_SLUGS.has(storeSlug)) {
+  const targetStores = storeSlug
+    ? COLLABS_STORES.filter((s) => s.slug === storeSlug)
+    : COLLABS_STORES;
+
+  if (targetStores.length === 0) {
     return NextResponse.json(
-      {
-        error: `Store '${storeSlug}' is not a Collabs-enabled store`,
-        collabsStores: Array.from(COLLABS_STORE_SLUGS),
-      },
+      { error: `Store '${storeSlug}' not found` },
       { status: 400 }
     );
   }
 
-  const products = await getProductsMissingCollabsLink(storeSlug);
-  const candidates = storeSlug
-    ? products
-    : products.filter((p) => COLLABS_STORE_SLUGS.has(p.store_slug));
+  // Get products missing collabs links from VIA's database
+  const missingProducts = await getProductsMissingCollabsLink(storeSlug);
+  const missingByShopifyId = new Set(
+    missingProducts
+      .filter((p) => p.shopify_product_id && COLLABS_STORE_SLUGS.has(p.store_slug))
+      .map((p) => p.shopify_product_id!)
+  );
 
-  // Stream progress as newline-delimited JSON
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      let generated = 0;
+      let saved = 0;
+      let created = 0;
       let failed = 0;
-      const errors: { id: number; title: string; error: string }[] = [];
+      let skipped = 0;
 
       function send(data: Record<string, unknown>) {
         controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
       }
 
-      send({ type: "start", total: candidates.length });
+      send({ type: "start", stores: targetStores.length, missingInDb: missingByShopifyId.size });
 
-      for (const product of candidates) {
-        const result = await generateCollabsLink(
-          product.shopify_product_id!,
+      for (const store of targetStores) {
+        send({ type: "store", store: store.name, slug: store.slug });
+
+        // Fetch all products from Collabs for this store
+        const collabsProducts = await fetchCollabsProducts(
+          store.collabsStoreId,
           cookie,
           csrfToken
         );
 
-        if (result.url) {
-          await updateCollabsLink(product.id, result.url);
-          generated++;
-          send({
-            type: "progress",
-            generated,
-            failed,
-            current: generated + failed,
-            total: candidates.length,
-            product: product.title,
-            store: product.store_slug,
-          });
-        } else {
-          failed++;
-          const errorMsg = result.error || "Unknown error";
-          errors.push({
-            id: product.id,
-            title: product.title,
-            error: errorMsg,
-          });
-          send({
-            type: "progress",
-            generated,
-            failed,
-            current: generated + failed,
-            total: candidates.length,
-            product: product.title,
-            store: product.store_slug,
-            error: errorMsg,
-          });
-        }
+        send({
+          type: "store_products",
+          store: store.name,
+          count: collabsProducts.length,
+        });
 
-        // Rate-limit: 1 request per 300ms
-        await new Promise((r) => setTimeout(r, 300));
+        for (const product of collabsProducts) {
+          // Extract the numeric Shopify product ID from the GID
+          const shopifyId = product.shopifyProductId?.match(/(\d+)$/)?.[1];
+          if (!shopifyId || !missingByShopifyId.has(shopifyId)) {
+            skipped++;
+            continue;
+          }
+
+          let collabsUrl = product.affiliateProduct?.url || null;
+
+          // If no existing affiliate link, create one using the Collabs product ID
+          if (!collabsUrl) {
+            const result = await createAffiliateLink(
+              product.id,
+              cookie,
+              csrfToken
+            );
+            if (result.url) {
+              collabsUrl = result.url;
+              created++;
+            } else {
+              failed++;
+              send({
+                type: "error",
+                product: product.title,
+                store: store.name,
+                error: result.error,
+              });
+              await new Promise((r) => setTimeout(r, 300));
+              continue;
+            }
+          }
+
+          // Save to VIA's database
+          if (collabsUrl) {
+            await updateCollabsLinkByShopifyProductId(shopifyId, collabsUrl);
+            saved++;
+            missingByShopifyId.delete(shopifyId);
+
+            send({
+              type: "progress",
+              saved,
+              created,
+              failed,
+              skipped,
+              product: product.title,
+              store: store.name,
+              url: collabsUrl,
+            });
+          }
+
+          // Rate-limit
+          await new Promise((r) => setTimeout(r, 200));
+        }
       }
 
       send({
         type: "done",
         success: failed === 0,
-        total: candidates.length,
-        generated,
+        saved,
+        created,
         failed,
-        ...(errors.length > 0 && { errors }),
+        skipped,
       });
 
       controller.close();
@@ -242,12 +356,17 @@ export async function GET(request: NextRequest) {
   }
 
   const products = await getProductsMissingCollabsLink();
-  const candidates = products.filter((p) => COLLABS_STORE_SLUGS.has(p.store_slug));
+  const candidates = products.filter((p) =>
+    COLLABS_STORE_SLUGS.has(p.store_slug)
+  );
 
-  const byStore = candidates.reduce((acc, p) => {
-    acc[p.store_slug] = (acc[p.store_slug] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const byStore = candidates.reduce(
+    (acc, p) => {
+      acc[p.store_slug] = (acc[p.store_slug] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return NextResponse.json({
     total: candidates.length,
