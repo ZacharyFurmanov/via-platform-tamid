@@ -201,21 +201,9 @@ export async function processReferralEntry(
   const upperCode = referrerCode.toUpperCase();
   const lowerEmail = newEmail.toLowerCase();
 
-  // Prevent duplicate: check if this email was already counted as a referral for this code
-  const alreadyCounted = await sql`
-    SELECT 1 FROM giveaway_entries
-    WHERE email = ${lowerEmail} AND UPPER(referred_by_code) = ${upperCode}
-  `;
-  if (alreadyCounted.length > 0) {
-    // Already processed — just return the referrer's current state
-    const existing = await sql`
-      SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
-    `;
-    if (existing.length === 0) return null;
-    return { referrerEntry: mapRow(existing[0]), friendNumber: null };
-  }
-
-  // Compute the true count from actual referred entries, then set it + 1
+  // Compute the true referral count from actual entries with this referred_by_code.
+  // The friend's entry was already created with referred_by_code set by
+  // createGiveawayEntry, so realCount already includes them.
   const countResult = await sql`
     SELECT COUNT(*)::int AS real_count
     FROM giveaway_entries
@@ -223,12 +211,26 @@ export async function processReferralEntry(
   `;
   const realCount = (countResult[0]?.real_count ?? 0) as number;
 
+  // Get the referrer's current state
+  const referrerResult = await sql`
+    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
+  `;
+  if (referrerResult.length === 0) return null;
+
+  const storedCount = referrerResult[0].referral_count as number;
+
+  // If the true count hasn't increased, this referral was already processed
+  if (realCount <= storedCount) {
+    return { referrerEntry: mapRow(referrerResult[0]), friendNumber: null };
+  }
+
+  // Update the referrer's count and fill friend email slots
   const result = await sql`
     UPDATE giveaway_entries
     SET
-      referral_count = ${realCount + 1},
-      friend_1_email = CASE WHEN ${realCount} = 0 THEN ${lowerEmail} ELSE friend_1_email END,
-      friend_2_email = CASE WHEN ${realCount} = 1 THEN ${lowerEmail} ELSE friend_2_email END,
+      referral_count = ${realCount},
+      friend_1_email = CASE WHEN friend_1_email IS NULL THEN ${lowerEmail} ELSE friend_1_email END,
+      friend_2_email = CASE WHEN friend_1_email IS NOT NULL AND friend_2_email IS NULL THEN ${lowerEmail} ELSE friend_2_email END,
       updated_at = NOW()
     WHERE UPPER(referral_code) = ${upperCode}
     RETURNING *
@@ -237,7 +239,7 @@ export async function processReferralEntry(
   if (result.length === 0) return null;
 
   const entry = mapRow(result[0]);
-  const friendNumber = entry.referralCount === 1 ? 1 : entry.referralCount === 2 ? 2 : null;
+  const friendNumber = realCount === 1 ? 1 : realCount === 2 ? 2 : null;
   return { referrerEntry: entry, friendNumber };
 }
 
