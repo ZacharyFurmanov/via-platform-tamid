@@ -90,7 +90,7 @@ async function fetchCollabsProducts(
           variables: {
             first: 100,
             after,
-            seed: crypto.randomUUID(),
+            seed: [8,4,4,4,8].map(n => Array.from(crypto.getRandomValues(new Uint8Array(n/2))).map(b => b.toString(16).padStart(2,"0")).join("")).join("-").toUpperCase(),
             searchParams: {
               brandValues: [],
               categories: [],
