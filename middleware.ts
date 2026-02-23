@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = [
   "/api/webhooks/stripe",
   "/api/admin/collabs-product-ids",
   "/api/admin/import-collabs-links",
+  "/api/admin/import-collabs-links-by-shopify-id",
 ];
 
 // Routes that require the access code cookie but not a full user session

@@ -368,3 +368,19 @@ export async function getCollabsLink(id: number): Promise<string | null> {
   `;
   return (result[0]?.collabs_link as string | null) ?? null;
 }
+
+/**
+ * Update the collabs_link for a product by its Shopify product ID.
+ * Used when importing links generated from the Collabs browser script.
+ */
+export async function updateCollabsLinkByShopifyProductId(
+  shopifyProductId: string,
+  collabsLink: string
+): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    UPDATE products
+    SET collabs_link = ${collabsLink}
+    WHERE shopify_product_id = ${shopifyProductId}
+  `;
+}
