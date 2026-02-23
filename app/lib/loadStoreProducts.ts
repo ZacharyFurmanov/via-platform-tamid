@@ -33,7 +33,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "kimono", "vest", "waistcoat", "gilet", "suit",
   ]],
   ["sweaters", [
-    "sweater", "cardigan", "knit", "pullover", "hoodie",
+    "sweater", "cardigan", "knit", "knitwear", "pullover", "hoodie",
     "sweatshirt", "turtleneck", "crewneck",
   ]],
   ["pants", [
@@ -63,7 +63,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     // Eyewear
     "sunglasses", "sunglass", "eyewear", "spectacles",
     // Belts & scarves
-    "belt", "scarf", "stole",
+    "belt", "scarf", "scarves", "stole",
     // Hats & headwear
     "hat", "cap", "beret", "beanie", "headband", "hair clip",
     "barrette", "hair band", "fascinator",
@@ -78,10 +78,32 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ]],
 ];
 
+// Pre-compile word-boundary patterns once at module load.
+// Single-word keywords use \b…(?:s|es)?\b so that:
+//   • "top"  matches "Silk Top" / "Silk Tops"  — but NOT "Topaz"
+//   • "tote" matches "Leather Tote" / "Canvas Totes" — but NOT "Toteme"
+//   • "boot" matches "Ankle Boot" / "Black Boots"
+//   • "watch" matches "Vintage Watch" / "Vintage Watches"
+// Multi-word keywords (e.g. "tube top", "mary jane") keep substring matching.
+function buildPattern(kw: string): RegExp | string {
+  if (kw.includes(" ")) return kw;
+  const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\b${escaped}(?:s|es)?\\b`, "i");
+}
+
+const compiledCategories: [CategorySlug, Array<RegExp | string>][] =
+  categoryKeywords.map(([cat, keywords]) => [
+    cat,
+    keywords.map(buildPattern),
+  ]);
+
 export const inferCategoryFromTitle = (title: string): CategorySlug => {
-  const t = title.toLowerCase();
-  for (const [category, keywords] of categoryKeywords) {
-    if (keywords.some((kw) => t.includes(kw))) return category;
+  for (const [category, patterns] of compiledCategories) {
+    if (patterns.some((p) =>
+      typeof p === "string" ? title.toLowerCase().includes(p) : p.test(title)
+    )) {
+      return category;
+    }
   }
   // Unrecognized items default to clothing (these are vintage fashion stores)
   return "other-clothing";
