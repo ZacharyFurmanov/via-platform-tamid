@@ -370,6 +370,20 @@ export async function getCollabsLink(id: number): Promise<string | null> {
 }
 
 /**
+ * Get any collabs link for a given store slug.
+ * Used to extract the dt_id tracking parameter for cart checkout URLs.
+ */
+export async function getAnyCollabsLinkForStore(storeSlug: string): Promise<string | null> {
+  const sql = neon(getDatabaseUrl());
+  const result = await sql`
+    SELECT collabs_link FROM products
+    WHERE store_slug = ${storeSlug} AND collabs_link IS NOT NULL
+    LIMIT 1
+  `;
+  return (result[0]?.collabs_link as string | null) ?? null;
+}
+
+/**
  * Get sample products that have collabs links, for verification.
  */
 export async function getProductsWithCollabsLinks(storeSlug?: string, limit = 5): Promise<DBProduct[]> {

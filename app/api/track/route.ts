@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
-import { getCollabsLink } from "@/app/lib/db";
+import { getCollabsLink, getAnyCollabsLinkForStore } from "@/app/lib/db";
 
 /**
  * Get the discount config for a store (if any).
@@ -24,6 +24,29 @@ function getDiscountConfig(storeSlug: string): {
   } catch {
     return null;
   }
+}
+
+/**
+ * Follow a collabs.shop link and extract the dt_id tracking parameter
+ * from the redirect URL. Returns null if it can't be extracted.
+ */
+async function extractDtId(collabsLink: string): Promise<string | null> {
+  try {
+    const res = await fetch(collabsLink, { redirect: "manual" });
+    const location = res.headers.get("location");
+    if (!location) return null;
+    const url = new URL(location);
+    return url.searchParams.get("dt_id");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if a URL is a Shopify cart URL (e.g. /cart/VARIANT:1,VARIANT:1)
+ */
+function isCartUrl(url: URL): boolean {
+  return /^\/cart\/\d+:\d+/.test(url.pathname);
 }
 
 export async function GET(request: NextRequest) {
@@ -69,10 +92,41 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // If this product has a per-product collabs.shop link, use it directly.
-  // The user's browser hitting collabs.shop registers the visit and sets a
-  // 30-day attribution cookie — no app embed or dt_id needed.
-  // pid is the composite product ID like "store-slug-123" — extract trailing number.
+  // ---- Cart URLs (multi-item checkout) ----
+  // For cart URLs like store.com/cart/VAR1:1,VAR2:1, we can't redirect through
+  // collabs.shop (that goes to a single product page). Instead, extract the
+  // dt_id tracking parameter from a collabs.shop link and append it to the
+  // cart URL. The Collabs embed on the store reads dt_id and sets the cookie.
+  if (isCartUrl(parsedUrl) && storeSlug) {
+    const collabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
+    if (collabsLink) {
+      const dtId = await extractDtId(collabsLink);
+      if (dtId) {
+        parsedUrl.searchParams.set("dt_id", dtId);
+        return NextResponse.redirect(parsedUrl.toString(), 302);
+      }
+    }
+
+    // Fallback: try discount code for cart URLs
+    const discount = getDiscountConfig(storeSlug);
+    if (discount) {
+      const cartPath = parsedUrl.pathname + parsedUrl.search;
+      const discountUrl = new URL(
+        `/discount/${discount.discountCode}`,
+        discount.origin
+      );
+      discountUrl.searchParams.set("redirect", cartPath);
+      return NextResponse.redirect(discountUrl.toString(), 302);
+    }
+
+    parsedUrl.searchParams.set("via_click_id", clickId);
+    return NextResponse.redirect(parsedUrl.toString(), 302);
+  }
+
+  // ---- Single product URLs ----
+  // If this product has a collabs.shop link, redirect through it.
+  // The user's browser hitting collabs.shop registers the visit and sets
+  // a 30-day attribution cookie via dt_id.
   if (productId) {
     const match = productId.match(/(\d+)$/);
     const numericId = match ? parseInt(match[1], 10) : NaN;
@@ -84,13 +138,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Fallback for products without a collabs.shop link yet:
-  // Apply discount code if the store has one, otherwise redirect directly.
+  // Fallback: apply discount code if store has one, otherwise redirect directly.
   if (storeSlug) {
     const discount = getDiscountConfig(storeSlug);
     if (discount) {
-      // Route through /discount/CODE so Shopify applies the discount,
-      // then redirect to the product page.
       const productPath = parsedUrl.pathname + parsedUrl.search;
       const discountUrl = new URL(
         `/discount/${discount.discountCode}`,
