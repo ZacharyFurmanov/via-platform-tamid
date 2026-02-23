@@ -263,10 +263,21 @@ export async function POST(request: NextRequest) {
           csrfToken
         );
 
+        // Debug: show sample IDs from both sides
+        const collabsShopifyIds = collabsProducts
+          .slice(0, 3)
+          .map((p) => ({ raw: p.shopifyProductId, extracted: p.shopifyProductId?.match(/(\d+)$/)?.[1] }));
+        const dbSampleIds = Array.from(missingByShopifyId).slice(0, 3);
+
         send({
           type: "store_products",
           store: store.name,
           count: collabsProducts.length,
+          debug: {
+            collabsSampleIds: collabsShopifyIds,
+            dbSampleIds,
+            missingCount: missingByShopifyId.size,
+          },
         });
 
         for (const product of collabsProducts) {

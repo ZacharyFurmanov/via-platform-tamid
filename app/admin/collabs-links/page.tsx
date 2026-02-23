@@ -116,7 +116,10 @@ export default function CollabsLinksPage() {
               if (data.type === "store") {
                 setStatusMessage(`Fetching products from ${data.store}...`);
               } else if (data.type === "store_products") {
-                setStatusMessage(`${data.store}: found ${data.count} products in Collabs`);
+                const debug = data.debug
+                  ? ` | Collabs IDs: ${JSON.stringify(data.debug.collabsSampleIds)} | DB IDs: ${JSON.stringify(data.debug.dbSampleIds)} | Missing: ${data.debug.missingCount}`
+                  : "";
+                setStatusMessage(`${data.store}: found ${data.count} products in Collabs${debug}`);
               } else if (data.type === "progress") {
                 setProgress({
                   saved: data.saved,
