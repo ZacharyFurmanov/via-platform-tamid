@@ -10,6 +10,7 @@ import { useCart } from "./CartProvider";
 import { useFriends } from "./FriendsProvider";
 
 import { stores } from "@/app/lib/stores";
+import { resizeImage } from "@/app/lib/imageUtils";
 
 type Category = {
   slug: string;
@@ -608,9 +609,11 @@ export default function HeaderClient({
                     >
                       {r.type === "product" && r.image && (
                         <img
-                          src={r.image}
+                          src={resizeImage(r.image, 120)}
                           alt=""
                           className="w-10 h-13 object-cover flex-shrink-0"
+                          loading="lazy"
+                          decoding="async"
                         />
                       )}
                       <div className="flex-1 flex justify-between items-center min-w-0">

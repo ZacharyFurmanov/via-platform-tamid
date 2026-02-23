@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
+import { resizeImage } from "@/app/lib/imageUtils";
 
 type SearchProduct = {
   id: number;
@@ -254,9 +255,11 @@ function SearchResults() {
                   <div className="aspect-[3/4] bg-neutral-100 overflow-hidden mb-3">
                     {p.image ? (
                       <img
-                        src={p.image}
+                        src={resizeImage(p.image, 600)}
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-neutral-400 text-xs">

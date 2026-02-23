@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { resizeImage } from "@/app/lib/imageUtils";
 
 type ImageCarouselProps = {
   images: string[];
@@ -77,18 +78,26 @@ export default function ImageCarousel({
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
-        {/* Render all images stacked to eliminate lag on switch */}
-        {safeImages.map((src, idx) => (
-          <img
-            key={idx}
-            src={src}
-            alt={alt}
-            className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${
-              idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
-            }`}
-            loading="lazy"
-          />
-        ))}
+        {/* Only render current + adjacent images to avoid loading all images upfront */}
+        {safeImages.map((src, idx) => {
+          const isAdjacentOrCurrent =
+            idx === current ||
+            idx === (current + 1) % safeImages.length ||
+            idx === (current - 1 + safeImages.length) % safeImages.length;
+          if (!isAdjacentOrCurrent) return null;
+          return (
+            <img
+              key={idx}
+              src={resizeImage(src, 600)}
+              alt={alt}
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${
+                idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+              loading="lazy"
+              decoding="async"
+            />
+          );
+        })}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-neutral-200 z-10" />
@@ -149,9 +158,10 @@ export default function ImageCarousel({
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
         <img
-          src={safeImages[current]}
+          src={resizeImage(safeImages[current], 1200)}
           alt={alt}
           className="w-full h-full object-cover object-top"
+          decoding="async"
         />
 
         {safeImages[0] === "/placeholder.jpg" && (
@@ -197,10 +207,11 @@ export default function ImageCarousel({
               aria-label={`View image ${idx + 1}`}
             >
               <img
-                src={src}
+                src={resizeImage(src, 200)}
                 alt={`${alt} ${idx + 1}`}
                 className="w-full h-full object-cover object-top"
                 loading="lazy"
+                decoding="async"
               />
             </button>
           ))}
