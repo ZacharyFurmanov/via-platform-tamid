@@ -6,60 +6,24 @@ import { stores } from "@/app/lib/stores";
 /**
  * Get the Shopify Collabs affiliate config for a store.
  */
-function getAffiliateConfig(
-  storeSlug: string
-): { affiliatePath: string; origin: string } | null {
+function getAffiliateConfig(storeSlug: string): {
+  affiliatePath: string;
+  origin: string;
+  discountCode: string | null;
+} | null {
   const storeConfig = stores.find((s) => s.slug === storeSlug);
   if (!storeConfig) return null;
 
   const affiliatePath =
-    "affiliatePath" in storeConfig
-      ? (storeConfig as any).affiliatePath
-      : null;
+    "affiliatePath" in storeConfig ? (storeConfig as any).affiliatePath : null;
   if (!affiliatePath) return null;
+
+  const discountCode =
+    "discountCode" in storeConfig ? (storeConfig as any).discountCode : null;
 
   try {
     const origin = new URL(storeConfig.website).origin;
-    return { affiliatePath, origin };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch the Shopify Collabs landing page server-side to determine the
- * redirect type and extract the dt_id tracking parameter.
- *
- * Some stores redirect directly: store.com/AFFILIATE → store.com/?dt_id=123
- * Others go through a discount flow: store.com/AFFILIATE → /discount/CODE?dt_id=123&redirect=/...
- *
- * Returns the dt_id and whether it uses the discount flow.
- */
-async function getCollabsRedirect(
-  affiliateUrl: string
-): Promise<{ dtId: string; discountPath: string | null } | null> {
-  try {
-    const res = await fetch(affiliateUrl, {
-      redirect: "manual",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; VIA/1.0; +https://theviaplatform.com)",
-      },
-    });
-
-    const location = res.headers.get("location");
-    if (!location) return null;
-
-    const url = new URL(location, affiliateUrl);
-    const dtId = url.searchParams.get("dt_id");
-    if (!dtId) return null;
-
-    // Check if the redirect goes through /discount/ path
-    const isDiscountFlow = url.pathname.startsWith("/discount/");
-    return {
-      dtId,
-      discountPath: isDiscountFlow ? url.pathname : null,
-    };
+    return { affiliatePath, origin, discountCode };
   } catch {
     return null;
   }
@@ -108,38 +72,37 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // For stores with Shopify Collabs affiliate tracking:
+  // For stores with Shopify Collabs affiliate tracking, route the user's
+  // browser directly through Shopify's affiliate mechanism so Shopify counts
+  // the visit server-side (no app embed required).
   if (storeSlug) {
     const affiliate = getAffiliateConfig(storeSlug);
     if (affiliate) {
-      const affiliateUrl = `${affiliate.origin}/${affiliate.affiliatePath}`;
-      const collabs = await getCollabsRedirect(affiliateUrl);
+      const productPath = parsedUrl.pathname + parsedUrl.search;
 
-      if (collabs) {
-        // Extract the product path (e.g. /products/some-product)
-        const productPath = parsedUrl.pathname + parsedUrl.search;
-
-        if (collabs.discountPath) {
-          // Discount flow (Missi, SCARZ): redirect through /discount/ path.
-          // Shopify strips dt_id during its internal redirect, so we include
-          // dt_id in the redirect target (the product URL) so the Collabs
-          // app embed on the product page can still read it and register the visit.
-          const productPathWithDtId = productPath.includes("?")
-            ? `${productPath}&dt_id=${collabs.dtId}`
-            : `${productPath}?dt_id=${collabs.dtId}`;
-          const discountUrl = new URL(collabs.discountPath, affiliate.origin);
-          discountUrl.searchParams.set("dt_id", collabs.dtId);
-          discountUrl.searchParams.set("redirect", productPathWithDtId);
-          return NextResponse.redirect(discountUrl.toString(), 302);
-        }
-
-        // Direct flow: append dt_id to the product URL
-        parsedUrl.searchParams.set("dt_id", collabs.dtId);
-        return NextResponse.redirect(parsedUrl.toString(), 302);
+      if (affiliate.discountCode) {
+        // Discount flow (Missi, SCARZ): the affiliate path IS the discount code.
+        // /discount/CODE supports a ?redirect= param so the user lands on the
+        // specific product after Shopify applies the discount.
+        const discountUrl = new URL(
+          `/discount/${affiliate.discountCode}`,
+          affiliate.origin
+        );
+        discountUrl.searchParams.set("redirect", productPath);
+        return NextResponse.redirect(discountUrl.toString(), 302);
       }
 
-      // Fallback: redirect to the affiliate landing page directly
-      return NextResponse.redirect(affiliateUrl, 302);
+      // Direct flow: send the user's browser to the store affiliate URL.
+      // Shopify counts the visit server-side when this URL is hit.
+      // The ?redirect= param tells Shopify where to land after tracking —
+      // if Shopify passes it through the user goes straight to the product,
+      // otherwise they land on the store homepage (visit is still counted).
+      const affiliateUrl = new URL(
+        `/${affiliate.affiliatePath}`,
+        affiliate.origin
+      );
+      affiliateUrl.searchParams.set("redirect", productPath);
+      return NextResponse.redirect(affiliateUrl.toString(), 302);
     }
   }
 
