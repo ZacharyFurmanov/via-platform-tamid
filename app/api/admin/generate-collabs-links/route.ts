@@ -90,7 +90,7 @@ async function fetchCollabsProducts(
           variables: {
             first: 100,
             after,
-            seed: Math.random().toString(36).slice(2),
+            seed: String(Math.floor(Math.random() * 1000000)),
             searchParams: {
               brandValues: [],
               categories: [],
