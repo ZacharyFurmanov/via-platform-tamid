@@ -9,8 +9,12 @@ export default function StoresPage() {
       {/* ================= HEADER ================= */}
       <section className="border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
-            Explore Our Stores
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-black/80">Explore</p>
+            <div className="flex-1 h-px bg-neutral-200" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2 mb-4">
+            Stores
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             A curated selection of independent vintage and secondhand stores,

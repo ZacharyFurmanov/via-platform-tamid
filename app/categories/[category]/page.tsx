@@ -87,6 +87,30 @@ export default async function CategoryPage({
     label: c.label,
   }));
 
+  // Compute brand/designer counts for this category
+  const brandCounts: { label: string; count: number }[] = [];
+  const brandCountMap = new Map<string, number>();
+  for (const p of filteredProducts) {
+    if (p.brandLabel) {
+      brandCountMap.set(p.brandLabel, (brandCountMap.get(p.brandLabel) || 0) + 1);
+    }
+  }
+  for (const [bl, count] of brandCountMap) {
+    brandCounts.push({ label: bl, count });
+  }
+  brandCounts.sort((a, b) => b.count - a.count);
+
+  // Compute store counts for this category
+  const storeCounts: { label: string; count: number }[] = [];
+  const storeCountMap = new Map<string, number>();
+  for (const p of filteredProducts) {
+    storeCountMap.set(p.store, (storeCountMap.get(p.store) || 0) + 1);
+  }
+  for (const [sl, count] of storeCountMap) {
+    storeCounts.push({ label: sl, count });
+  }
+  storeCounts.sort((a, b) => b.count - a.count);
+
   return (
     <main className="bg-white min-h-screen text-black">
       {/* ================= CATEGORY HEADER ================= */}
@@ -98,13 +122,51 @@ export default async function CategoryPage({
           >
             &larr; All Categories
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-black/80">Shop</p>
+            <div className="flex-1 h-px bg-neutral-200" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2 mb-4">
             {label}
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
             Curated {label.toLowerCase()} from independent vintage
             and secondhand stores.
           </p>
+
+          {/* Store pills */}
+          {storeCounts.length > 0 && (
+            <div className="mt-6 overflow-x-auto scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-2">
+                {storeCounts.map((s) => (
+                  <span
+                    key={s.label}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-100 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                  >
+                    {s.label}
+                    <span className="text-black/40">{s.count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Designer pills */}
+          {brandCounts.length > 0 && (
+            <div className="mt-3 overflow-x-auto scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-2">
+                {brandCounts.map((brand) => (
+                  <span
+                    key={brand.label}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-neutral-200 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                  >
+                    {brand.label}
+                    <span className="text-black/40">{brand.count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

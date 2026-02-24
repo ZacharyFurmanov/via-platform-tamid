@@ -3,7 +3,8 @@ import Link from "next/link";
 import { stores } from "@/app/lib/stores";
 import { loadStoreProducts } from "@/app/lib/loadStoreProducts";
 import { StoreProduct } from "@/app/lib/types";
-import { categoryMap } from "@/app/lib/categoryMap";
+import { categoryMap, clothingSlugs } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import FavoriteButton from "@/app/components/FavoriteButton";
@@ -77,6 +78,31 @@ export default async function StorePage({ params }: StorePageProps) {
     };
   });
 
+  // Compute category counts (display-level: Clothing, Bags, Shoes, Accessories)
+  const categoryCounts: { label: string; count: number }[] = [];
+  const catCountMap = new Map<string, number>();
+  for (const p of products) {
+    const displayCat = clothingSlugs.has(p.category as CategorySlug) ? "Clothing" : (categoryMap[p.category as keyof typeof categoryMap] || p.category);
+    catCountMap.set(displayCat, (catCountMap.get(displayCat) || 0) + 1);
+  }
+  for (const [label, count] of catCountMap) {
+    categoryCounts.push({ label, count });
+  }
+  categoryCounts.sort((a, b) => b.count - a.count);
+
+  // Compute brand/designer counts
+  const brandCounts: { label: string; count: number }[] = [];
+  const brandCountMap = new Map<string, number>();
+  for (const p of products) {
+    if (p.brandLabel) {
+      brandCountMap.set(p.brandLabel, (brandCountMap.get(p.brandLabel) || 0) + 1);
+    }
+  }
+  for (const [label, count] of brandCountMap) {
+    brandCounts.push({ label, count });
+  }
+  brandCounts.sort((a, b) => b.count - a.count);
+
   return (
     <main className="bg-white min-h-screen">
       {/* ================= STORE HEADER ================= */}
@@ -105,11 +131,45 @@ export default async function StorePage({ params }: StorePageProps) {
               {store.perk}
             </p>
           )}
+
+          {/* Category pills */}
+          {categoryCounts.length > 0 && (
+            <div className="mt-6 overflow-x-auto scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-2">
+                {categoryCounts.map((cat) => (
+                  <span
+                    key={cat.label}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-100 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                  >
+                    {cat.label}
+                    <span className="text-black/40">{cat.count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Designer pills */}
+          {brandCounts.length > 0 && (
+            <div className="mt-3 overflow-x-auto scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-2">
+                {brandCounts.map((brand) => (
+                  <span
+                    key={brand.label}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-neutral-200 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                  >
+                    {brand.label}
+                    <span className="text-black/40">{brand.count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
       {/* ================= PRODUCTS WITH FILTERS ================= */}
-      <section className="py-24">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <FilteredProductGrid
             products={products}
