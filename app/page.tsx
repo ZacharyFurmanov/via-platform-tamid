@@ -30,24 +30,32 @@ export default function HomePage() {
 
   {/* Content wrapper */}
   <div className="relative z-10 w-full">
-    <div className="max-w-7xl mx-auto px-6 text-center">
-      <div className="max-w-3xl mx-auto animate-hero">
+    <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-2xl animate-hero">
 
-        <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-6 text-white leading-tight">
-          Curated by the <em>obsessed</em>,{"\n"}not the algorithm.
+        <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-8 text-white leading-tight">
+          The home of curated vintage & secondhand.
         </h1>
 
-        <p className="max-w-xl mx-auto mb-6 sm:mb-10 text-sm sm:text-base text-white/80">
-          Shop the recommendations of the world&apos;s most trusted vintage and secondhand stores.
+        <p className="max-w-xl mb-6 sm:mb-10 text-sm sm:text-base text-gray-200">
+          Discover and browse independent vintage and secondhand stores worldwide.
+          The pieces you&apos;ve been looking for, without the hunt. All trusted and verified stores.
         </p>
 
-        {/* CTA button */}
-        <div className="animate-hero delay-150">
+        {/* CTA buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 animate-hero delay-150">
           <Link
             href="/stores"
-            className="inline-block bg-white px-10 sm:px-14 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.15em] hover:bg-neutral-100 transition-all duration-300 text-black text-center"
+            className="bg-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-neutral-200 hover:scale-[1.02] transition-all duration-300 text-black text-center"
           >
-            Shop Stores
+            Explore Stores
+          </Link>
+
+          <Link
+            href="/categories"
+            className="border border-white text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
+          >
+            Browse Categories
           </Link>
         </div>
 
