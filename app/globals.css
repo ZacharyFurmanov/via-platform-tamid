@@ -178,8 +178,8 @@ h1, h2, h3 {
 .link-underline:hover::after {
   transform: scaleX(1);
 }
-.link-underline-light::after {
-  background-color: rgba(255, 255, 255, 0.7);
+.link-underline-dark::after {
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 /* ================================

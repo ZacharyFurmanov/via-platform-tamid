@@ -3,52 +3,44 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getInventory } from "@/app/lib/inventory";
-import { categories, clothingSubcategories } from "@/app/lib/categories";
-import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
-import type { CategorySlug } from "@/app/lib/categoryMap";
+import { brandMap } from "@/app/lib/brandData";
 import { stores } from "@/app/lib/stores";
+import { categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 
-export default async function CategoryPage({
+export default async function BrandPage({
   params,
 }: {
-  params: { category: string };
+  params: { slug: string };
 }) {
-  const category = (await params).category;
+  const slug = (await params).slug;
+  const label = brandMap[slug];
 
-  // Check if it's a display category (clothing, bags, shoes, accessories)
-  const displayMeta = displayCategories.find((c) => c.slug === category);
-  // Or a direct subcategory slug
-  const subcategoryMeta = categories.find((c) => c.slug === category);
-
-  if (!displayMeta && !subcategoryMeta) {
+  if (!label) {
     return notFound();
   }
 
-  const label = displayMeta?.label ?? subcategoryMeta!.label;
-  const isClothing = category === "clothing";
-
   const inventory = await getInventory();
+  const brandItems = inventory.filter((item) => item.brand === slug);
 
-  // Filter inventory: "clothing" matches all clothing subcategories, others match exact slug
-  const categoryItems = isClothing
-    ? inventory.filter((item) => clothingSlugs.has(item.category))
-    : inventory.filter((item) => item.category === category);
+  if (brandItems.length === 0) {
+    return notFound();
+  }
 
   // Extract DB IDs and fetch popularity scores
   const dbIdMap = new Map<string, number>();
-  for (const item of categoryItems) {
+  for (const item of brandItems) {
     const match = item.id.match(/-(\d+)$/);
     if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
   }
   const dbIds = Array.from(dbIdMap.values());
   const popularityScores = await getProductPopularityScores(dbIds);
 
-  // Transform for FilteredProductGrid with composite ranking
-  const filteredProducts: FilterableProduct[] = categoryItems.map((item) => {
+  const products: FilterableProduct[] = brandItems.map((item) => {
     const engagementScore = popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0;
     const syncedAt = item.syncedAt ?? new Date().toISOString();
 
@@ -78,32 +70,24 @@ export default async function CategoryPage({
     };
   });
 
-  // Get stores for the filter
   const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
-
-  // Show subcategory filters on the clothing page
-  const clothingFilterCategories = clothingSubcategories.map((c) => ({
-    slug: c.slug,
-    label: c.label,
-  }));
 
   return (
     <main className="bg-white min-h-screen text-black">
-      {/* ================= CATEGORY HEADER ================= */}
+      {/* ================= BRAND HEADER ================= */}
       <section className="border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <Link
-            href="/categories"
+            href="/brands"
             className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
           >
-            &larr; All Categories
+            &larr; All Designers
           </Link>
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">
             {label}
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
-            Curated {label.toLowerCase()} from independent vintage
-            and secondhand stores.
+            {products.length} {products.length === 1 ? "piece" : "pieces"} available
           </p>
         </div>
       </section>
@@ -112,12 +96,12 @@ export default async function CategoryPage({
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <FilteredProductGrid
-            products={filteredProducts}
+            products={products}
             stores={storeList}
-            categories={isClothing ? clothingFilterCategories : []}
-            showCategoryFilter={isClothing}
-            from={`/categories/${category}`}
-            emptyMessage="No products found in this category."
+            categories={[]}
+            showCategoryFilter={false}
+            from={`/brands/${slug}`}
+            emptyMessage={`No ${label} pieces found. Check back soon.`}
           />
         </div>
       </section>

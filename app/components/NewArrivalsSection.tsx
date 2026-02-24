@@ -10,7 +10,7 @@ export default async function NewArrivalsSection() {
   if (products.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="bg-neutral-100 pt-16 pb-20 sm:pt-24 sm:pb-28">
+    <section id="new-arrivals" className="bg-white pt-16 pb-20 sm:pt-24 sm:pb-28 border-t border-neutral-100">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-12 px-6">
           <div>

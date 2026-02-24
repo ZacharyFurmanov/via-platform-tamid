@@ -20,7 +20,7 @@ export default function StoresPage() {
       </section>
 
       {/* ================= STORES GRID ================= */}
-      <section className="py-20 sm:py-36">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-24">
 

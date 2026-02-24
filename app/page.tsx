@@ -6,6 +6,7 @@ import SmoothScroll from "./components/SmoothScroll";
 import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
+import BrandsSection from "./components/BrandsSection";
 import { Suspense } from "react";
 
 export default function HomePage() {
@@ -24,7 +25,7 @@ export default function HomePage() {
       priority
       className="object-cover object-top md:object-center"
     />
-    <div className="absolute inset-0 bg-black/40" />
+    <div className="absolute inset-0 bg-black/30" />
   </div>
 
   {/* Content wrapper */}
@@ -66,7 +67,7 @@ export default function HomePage() {
 </section>
 
      {/* ================= SHOP BY STORE ================= */}
-<section className="bg-neutral-100 py-24 sm:py-40">
+<section className="bg-white py-16 sm:py-24">
   <div className="max-w-7xl mx-auto">
     {/* Header */}
     <ScrollReveal>
@@ -94,7 +95,7 @@ export default function HomePage() {
 </section>
 
     {/* ================= SHOP BY CATEGORY ================= */}
-<section className="bg-[#f1f0ed] py-24 sm:py-40">
+<section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
   <div className="max-w-7xl mx-auto">
     <ScrollReveal>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
@@ -150,6 +151,13 @@ export default function HomePage() {
   </div>
 </section>
 
+      {/* ================= SHOP BY DESIGNER ================= */}
+      <ScrollReveal>
+        <Suspense>
+          <BrandsSection />
+        </Suspense>
+      </ScrollReveal>
+
       {/* ================= NEW ARRIVALS ================= */}
       <ScrollReveal>
         <Suspense>
@@ -158,7 +166,7 @@ export default function HomePage() {
       </ScrollReveal>
 
       {/* ================= FAQ TEASER ================= */}
-      <section className="bg-[#f7f6f3] py-24 sm:py-40">
+      <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
         <div className="max-w-6xl mx-auto px-6">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12 sm:mb-20">
@@ -214,7 +222,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= STORY BEHIND THE SELECTION ================= */}
-      <section className="bg-neutral-100 py-24 sm:py-40">
+      <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16">
@@ -287,7 +295,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= VIA EXPERIENCE ================= */}
-      <section className="bg-[#f7f6f3] py-24 sm:py-36 border-t border-neutral-200">
+      <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <ScrollReveal>
             <p className="text-xs uppercase tracking-[0.25em] text-neutral-400 mb-3 sm:mb-4">
@@ -334,4 +342,3 @@ export default function HomePage() {
     </main>
   );
 }
-

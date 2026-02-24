@@ -103,7 +103,7 @@ export default function NewsletterSignup({
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3.5 bg-white/10 border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:border-white transition min-h-[48px] touch-manipulation"
+                className="flex-1 px-4 py-3.5 bg-neutral-50 border border-neutral-300 text-black placeholder:text-neutral-400 focus:outline-none focus:border-black transition min-h-[48px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
@@ -111,7 +111,7 @@ export default function NewsletterSignup({
                 disabled={status === "loading"}
                 onClick={handleButtonInteraction}
                 onTouchEnd={handleButtonInteraction}
-                className="px-8 py-3.5 bg-white text-black text-sm uppercase tracking-wide hover:bg-neutral-200 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
+                className="px-8 py-3.5 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "Joining..." : "Get Updates"}
               </button>
@@ -147,7 +147,7 @@ export default function NewsletterSignup({
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Your email"
-                className="flex-1 px-4 py-2.5 bg-transparent border border-neutral-700 text-white placeholder:text-neutral-500 text-sm focus:outline-none focus:border-white transition min-h-[44px] touch-manipulation"
+                className="flex-1 px-4 py-2.5 bg-transparent border border-neutral-300 text-black placeholder:text-neutral-400 text-sm focus:outline-none focus:border-black transition min-h-[44px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
@@ -155,7 +155,7 @@ export default function NewsletterSignup({
                 disabled={status === "loading"}
                 onClick={handleButtonInteraction}
                 onTouchEnd={handleButtonInteraction}
-                className="px-5 py-2.5 border border-white text-white text-xs uppercase tracking-wide hover:bg-white hover:text-black transition disabled:opacity-50 min-h-[44px] cursor-pointer touch-manipulation"
+                className="px-5 py-2.5 border border-black text-black text-xs uppercase tracking-wide hover:bg-black hover:text-white transition disabled:opacity-50 min-h-[44px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "..." : "Join"}
               </button>

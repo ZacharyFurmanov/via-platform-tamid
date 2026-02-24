@@ -52,7 +52,7 @@ export default async function CategoriesPage() {
         </div>
       </section>
 
-      <section className="py-24">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <FilteredProductGrid
             products={products}

@@ -84,7 +84,7 @@ export function GiveawayFooterLink() {
   return (
     <button
       onClick={openModal}
-      className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm text-left"
+      className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm text-left"
     >
       Enter the Giveaway
     </button>

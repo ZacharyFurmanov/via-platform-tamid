@@ -195,9 +195,18 @@ export default function FriendsPage() {
 
   return (
     <main className="bg-white min-h-screen">
-      <div className="max-w-3xl mx-auto px-6 py-16 sm:py-20">
-        <h1 className="font-serif text-3xl mb-12">Friends</h1>
-
+      <section className="border-b border-neutral-200">
+        <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+          <a
+            href="/account"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+          >
+            &larr; Account
+          </a>
+          <h1 className="font-serif text-2xl sm:text-3xl">Friends</h1>
+        </div>
+      </section>
+      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         {/* Find Friends */}
         <section className="mb-12">
           <h2 className="font-serif text-xl mb-4">Find Friends</h2>

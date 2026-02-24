@@ -34,7 +34,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase overflow-hidden">
+    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-100 flex items-center justify-center text-[11px] text-neutral-600 tracking-[0.15em] uppercase overflow-hidden">
       <div className="relative h-full flex items-center">
         <span
           className={`transition-all duration-500 ease-in-out ${
@@ -47,7 +47,7 @@ function AnnouncementBar() {
         </span>
         <Link
           href="/new-arrivals"
-          className={`transition-all duration-500 ease-in-out hover:text-white ${
+          className={`transition-all duration-500 ease-in-out hover:text-black ${
             showNewArrivals
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-full absolute"
@@ -242,13 +242,13 @@ export default function HeaderClient({
       {/* Announcement bar */}
       <AnnouncementBar />
 
-      <header className="fixed top-8 z-50 w-full bg-black">
+      <header className="fixed top-8 z-50 w-full bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/via-logo-white.png"
+              src="/via-logo-black.png"
               alt="VIA"
               width={80}
               height={32}
@@ -258,7 +258,7 @@ export default function HeaderClient({
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-12 text-[13px] uppercase tracking-[0.15em] text-white">
+            <nav className="hidden md:flex items-center gap-12 text-[13px] uppercase tracking-[0.15em] text-black">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -266,7 +266,7 @@ export default function HeaderClient({
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/70 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-black/60 transition-colors duration-300"
                 >
                   Stores
                   <ChevronDown
@@ -316,7 +316,7 @@ export default function HeaderClient({
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/70 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-black/60 transition-colors duration-300"
                 >
                   Shop Category
                   <ChevronDown
@@ -358,13 +358,20 @@ export default function HeaderClient({
                 </div>
               </div>
 
+              {/* DESIGNERS LINK */}
+              <Link
+                href="/brands"
+                className="hover:text-black/60 transition-colors duration-300"
+              >
+                Designers
+              </Link>
             </nav>
 
             {/* Search Button */}
             <button
               aria-label="Search"
               onClick={() => setSearchOpen(true)}
-              className="p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Search size={20} />
             </button>
@@ -372,12 +379,12 @@ export default function HeaderClient({
             {/* Cart Button */}
             <Link
               href="/cart"
-              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
+              className="relative p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-black/60 transition-colors"
               aria-label="Cart"
             >
               <ShoppingCart size={20} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
+                <span className="absolute -top-0.5 -right-0.5 bg-black text-white text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
                   {itemCount}
                 </span>
               )}
@@ -386,7 +393,7 @@ export default function HeaderClient({
             {/* Account Button */}
             <Link
               href={session ? "/account" : "/login"}
-              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/80 transition-colors"
+              className="relative p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-black/60 transition-colors"
               aria-label={session ? "Account" : "Sign in"}
             >
               {session?.user?.image ? (
@@ -407,7 +414,7 @@ export default function HeaderClient({
             <button
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="md:hidden p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -425,15 +432,15 @@ export default function HeaderClient({
           />
 
           {/* Menu Panel */}
-          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-black overflow-y-auto">
+          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-white overflow-y-auto">
             <div className="px-6 py-8">
               {/* Main Links */}
               <ul className="space-y-1">
                 {/* Mobile Stores Accordion */}
-                <li className="border-b border-white/10">
+                <li className="border-b border-neutral-200">
                   <button
                     onClick={() => setMobileStoresExpanded(!mobileStoresExpanded)}
-                    className="w-full flex items-center justify-between py-4 text-lg text-white"
+                    className="w-full flex items-center justify-between py-4 text-lg text-black"
                   >
                     Stores
                     <ChevronDown
@@ -452,7 +459,7 @@ export default function HeaderClient({
                           key={store.slug}
                           href={`/stores/${store.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="block py-2 text-white/70 hover:text-white transition-colors"
+                          className="block py-2 text-neutral-600 hover:text-black transition-colors"
                         >
                           {store.name}
                         </Link>
@@ -460,7 +467,7 @@ export default function HeaderClient({
                       <Link
                         href="/stores"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-xs uppercase tracking-wide text-white/50 hover:text-white transition-colors"
+                        className="block py-2 text-xs uppercase tracking-wide text-neutral-400 hover:text-black transition-colors"
                       >
                         View All Stores
                       </Link>
@@ -469,10 +476,10 @@ export default function HeaderClient({
                 </li>
 
                 {/* Mobile Categories Accordion */}
-                <li className="border-b border-white/10">
+                <li className="border-b border-neutral-200">
                   <button
                     onClick={() => setMobileCategoriesExpanded(!mobileCategoriesExpanded)}
-                    className="w-full flex items-center justify-between py-4 text-lg text-white"
+                    className="w-full flex items-center justify-between py-4 text-lg text-black"
                   >
                     Shop Category
                     <ChevronDown
@@ -491,7 +498,7 @@ export default function HeaderClient({
                           key={cat.slug}
                           href={`/categories/${cat.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="block py-2 text-white/70 hover:text-white transition-colors"
+                          className="block py-2 text-neutral-600 hover:text-black transition-colors"
                         >
                           {cat.label}
                         </Link>
@@ -499,7 +506,7 @@ export default function HeaderClient({
                       <Link
                         href="/categories"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-xs uppercase tracking-wide text-white/50 hover:text-white transition-colors"
+                        className="block py-2 text-xs uppercase tracking-wide text-neutral-400 hover:text-black transition-colors"
                       >
                         All Categories
                       </Link>
@@ -508,11 +515,24 @@ export default function HeaderClient({
                 </li>
               </ul>
 
-              <div className="mt-8 pt-8 border-t border-white/10">
+              {/* Mobile Designers Link */}
+              <ul className="space-y-1">
+                <li className="border-b border-neutral-200">
+                  <Link
+                    href="/brands"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block py-4 text-lg text-black"
+                  >
+                    Designers
+                  </Link>
+                </li>
+              </ul>
+
+              <div className="mt-8 pt-8 border-t border-neutral-200">
                 <Link
                   href={session ? "/account" : "/login"}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-white/80 hover:text-white"
+                  className="block py-3 text-neutral-600 hover:text-black"
                 >
                   {session ? "My Account" : "Sign In"}
                 </Link>

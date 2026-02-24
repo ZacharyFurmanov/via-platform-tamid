@@ -47,7 +47,7 @@ export default async function FavoritesPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-20">
+      <section className="py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-6">
           {favProducts.length === 0 ? (
             <div className="text-center py-16">

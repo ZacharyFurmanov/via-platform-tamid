@@ -62,7 +62,7 @@ export default async function BrowsePage() {
   return (
     <main className="bg-white min-h-screen text-black">
       {/* ================= HERO ================= */}
-      <section className="bg-[#f7f6f3] py-24 sm:py-32">
+      <section className="bg-white py-16 sm:py-24 border-b border-neutral-100">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
             Explore
@@ -80,7 +80,7 @@ export default async function BrowsePage() {
       </section>
 
       {/* ================= PRODUCTS WITH FILTERS ================= */}
-      <section className="py-24">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-end justify-between mb-8">
             <h2 className="text-3xl font-serif">All Products</h2>
