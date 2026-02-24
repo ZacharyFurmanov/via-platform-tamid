@@ -34,7 +34,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-100 flex items-center justify-center text-[11px] text-neutral-600 tracking-[0.15em] uppercase overflow-hidden">
+    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase overflow-hidden">
       <div className="relative h-full flex items-center">
         <span
           className={`transition-all duration-500 ease-in-out ${
@@ -47,7 +47,7 @@ function AnnouncementBar() {
         </span>
         <Link
           href="/new-arrivals"
-          className={`transition-all duration-500 ease-in-out hover:text-black ${
+          className={`transition-all duration-500 ease-in-out hover:text-white ${
             showNewArrivals
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-full absolute"
@@ -242,13 +242,13 @@ export default function HeaderClient({
       {/* Announcement bar */}
       <AnnouncementBar />
 
-      <header className="fixed top-8 z-50 w-full bg-white border-b border-neutral-200">
+      <header className="fixed top-8 z-50 w-full bg-black">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/via-logo-black.png"
+              src="/via-logo-white.png"
               alt="VIA"
               width={80}
               height={32}
@@ -258,7 +258,7 @@ export default function HeaderClient({
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8 text-[15px] text-black">
+            <nav className="hidden md:flex items-center gap-8 text-[15px] text-white">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -266,7 +266,7 @@ export default function HeaderClient({
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-black/60 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-white/60 transition-colors duration-300"
                 >
                   Stores
                   <ChevronDown
@@ -316,7 +316,7 @@ export default function HeaderClient({
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-black/60 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-white/60 transition-colors duration-300"
                 >
                   Categories
                   <ChevronDown
@@ -361,7 +361,7 @@ export default function HeaderClient({
               {/* DESIGNERS LINK */}
               <Link
                 href="/brands"
-                className="hover:text-black/60 transition-colors duration-300"
+                className="hover:text-white/60 transition-colors duration-300"
               >
                 Designers
               </Link>
@@ -371,7 +371,7 @@ export default function HeaderClient({
             <button
               aria-label="Search"
               onClick={() => setSearchOpen(true)}
-              className="p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Search size={20} />
             </button>
@@ -379,12 +379,12 @@ export default function HeaderClient({
             {/* Cart Button */}
             <Link
               href="/cart"
-              className="relative p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-black/60 transition-colors"
+              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/60 transition-colors"
               aria-label="Cart"
             >
               <ShoppingCart size={20} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-black text-white text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
+                <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
                   {itemCount}
                 </span>
               )}
@@ -393,7 +393,7 @@ export default function HeaderClient({
             {/* Account Button */}
             <Link
               href={session ? "/account" : "/login"}
-              className="relative p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-black/60 transition-colors"
+              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/60 transition-colors"
               aria-label={session ? "Account" : "Sign in"}
             >
               {session?.user?.image ? (
@@ -414,7 +414,7 @@ export default function HeaderClient({
             <button
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-black min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="md:hidden p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
