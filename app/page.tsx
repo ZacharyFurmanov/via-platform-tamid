@@ -33,6 +33,10 @@ export default function HomePage() {
     <div className="max-w-7xl mx-auto px-6">
       <div className="max-w-2xl animate-hero">
 
+        <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/70 mb-3 sm:mb-4">
+          Stop digging. Start shopping.
+        </p>
+
         <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-8 text-white leading-tight">
           The home of curated vintage & secondhand.
         </h1>
@@ -148,17 +152,17 @@ export default function HomePage() {
   </div>
 </section>
 
-      {/* ================= SHOP BY DESIGNER ================= */}
-      <ScrollReveal>
-        <Suspense>
-          <BrandsSection />
-        </Suspense>
-      </ScrollReveal>
-
       {/* ================= NEW ARRIVALS ================= */}
       <ScrollReveal>
         <Suspense>
           <NewArrivalsSection />
+        </Suspense>
+      </ScrollReveal>
+
+      {/* ================= SHOP BY DESIGNER ================= */}
+      <ScrollReveal>
+        <Suspense>
+          <BrandsSection />
         </Suspense>
       </ScrollReveal>
 
