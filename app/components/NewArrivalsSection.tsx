@@ -12,22 +12,22 @@ export default async function NewArrivalsSection() {
   return (
     <section id="new-arrivals" className="bg-white pt-16 pb-20 sm:pt-24 sm:pb-28 border-t border-neutral-100">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-12 px-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-2 sm:mb-3">
-              Just Added
-            </p>
-            <h2 className="text-2xl sm:text-5xl font-serif text-black">
+        <div className="px-6 mb-8 sm:mb-12">
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-black/80">Just Added</p>
+            <div className="flex-1 h-px bg-neutral-200" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2">
               New Arrivals
             </h2>
+            <Link
+              href="/new-arrivals"
+              className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors min-h-[44px] flex items-center"
+            >
+              Shop New Arrivals
+            </Link>
           </div>
-
-          <Link
-            href="/new-arrivals"
-            className="mt-3 sm:mt-0 text-sm uppercase tracking-wide link-underline"
-          >
-            Shop new arrivals
-          </Link>
         </div>
 
         <div className="overflow-x-auto pb-4 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">

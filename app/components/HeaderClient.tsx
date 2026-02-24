@@ -258,7 +258,7 @@ export default function HeaderClient({
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-12 text-[13px] uppercase tracking-[0.15em] text-black">
+            <nav className="hidden md:flex items-center gap-8 text-[15px] text-black">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -318,7 +318,7 @@ export default function HeaderClient({
                   }}
                   className="flex items-center gap-1 hover:text-black/60 transition-colors duration-300"
                 >
-                  Shop Category
+                  Categories
                   <ChevronDown
                     size={14}
                     className={`transition-transform duration-200 ${categoriesDropdownOpen ? 'rotate-180' : ''}`}
@@ -481,7 +481,7 @@ export default function HeaderClient({
                     onClick={() => setMobileCategoriesExpanded(!mobileCategoriesExpanded)}
                     className="w-full flex items-center justify-between py-4 text-lg text-black"
                   >
-                    Shop Category
+                    Categories
                     <ChevronDown
                       size={20}
                       className={`transition-transform duration-300 ${mobileCategoriesExpanded ? 'rotate-180' : ''}`}

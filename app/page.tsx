@@ -30,35 +30,25 @@ export default function HomePage() {
 
   {/* Content wrapper */}
   <div className="relative z-10 w-full">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="max-w-2xl animate-hero">
+    <div className="max-w-7xl mx-auto px-6 text-center">
+      <div className="max-w-3xl mx-auto animate-hero">
 
-        <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-8 text-white leading-tight">
-          The home of curated vintage & secondhand.
+        <h1 className="text-3xl sm:text-6xl md:text-[4.25rem] font-serif mb-4 sm:mb-6 text-white leading-tight">
+          Curated by the <em>obsessed</em>,{"\n"}not the algorithm.
         </h1>
 
-        <p className="max-w-xl mb-6 sm:mb-10 text-sm sm:text-base text-gray-200">
-          Discover and browse independent vintage and secondhand stores worldwide.
-          The pieces you've been looking for, without the hunt. All trusted and verified stores.
+        <p className="max-w-xl mx-auto mb-6 sm:mb-10 text-sm sm:text-base text-white/80">
+          Shop the recommendations of the world&apos;s most trusted vintage and secondhand stores.
         </p>
 
-        {/* CTA buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 animate-hero delay-150">
+        {/* CTA button */}
+        <div className="animate-hero delay-150">
           <Link
             href="/stores"
-            className="bg-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-neutral-200 hover:scale-[1.02] transition-all duration-300 text-black text-center"
+            className="inline-block bg-white px-10 sm:px-14 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.15em] hover:bg-neutral-100 transition-all duration-300 text-black text-center"
           >
-            Explore Stores
+            Shop Stores
           </Link>
-
-          <Link
-            href="/categories"
-            className="border border-white text-white px-8 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm uppercase tracking-wide hover:bg-white hover:text-black hover:scale-[1.02] transition-all duration-300 text-center"
-          >
-            Browse Categories
-          </Link>
-
-
         </div>
 
       </div>
@@ -69,24 +59,23 @@ export default function HomePage() {
      {/* ================= SHOP BY STORE ================= */}
 <section className="bg-white py-16 sm:py-24">
   <div className="max-w-7xl mx-auto">
-    {/* Header */}
     <ScrollReveal>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-            Selected by VIA
-          </p>
-          <h2 className="text-3xl sm:text-5xl font-serif text-black">
-            Shop by Store
-          </h2>
+      <div className="px-6 mb-10 sm:mb-14">
+        <div className="flex items-center gap-4 mb-1">
+          <p className="text-lg sm:text-xl font-serif italic text-black/80">Shop by</p>
+          <div className="flex-1 h-px bg-neutral-200" />
         </div>
-
-        <Link
-          href="/stores"
-          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
-        >
-          View all stores
-        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2">
+            Store
+          </h2>
+          <Link
+            href="/stores"
+            className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors min-h-[44px] flex items-center"
+          >
+            Shop All Stores
+          </Link>
+        </div>
       </div>
     </ScrollReveal>
 
@@ -98,19 +87,22 @@ export default function HomePage() {
 <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
   <div className="max-w-7xl mx-auto">
     <ScrollReveal>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16 px-6">
-        <div>
-          <h2 className="text-3xl sm:text-5xl font-serif text-black">
-            Shop by Category
-          </h2>
+      <div className="px-6 mb-10 sm:mb-14">
+        <div className="flex items-center gap-4 mb-1">
+          <p className="text-lg sm:text-xl font-serif italic text-black/80">Shop by</p>
+          <div className="flex-1 h-px bg-neutral-200" />
         </div>
-
-        <Link
-          href="/categories"
-          className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
-        >
-          View all categories
-        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2">
+            Category
+          </h2>
+          <Link
+            href="/categories"
+            className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors min-h-[44px] flex items-center"
+          >
+            Shop All Categories
+          </Link>
+        </div>
       </div>
     </ScrollReveal>
 
@@ -127,7 +119,7 @@ export default function HomePage() {
               href={`/categories/${category.slug}`}
               className="group block w-[72vw] flex-shrink-0 sm:w-auto"
             >
-              <div className="aspect-[3/4] relative overflow-hidden mb-3 sm:mb-4 rounded-sm">
+              <div className="aspect-square relative overflow-hidden mb-4 bg-neutral-50 rounded-sm">
                 <Image
                   src={category.image}
                   alt={category.label}
@@ -135,14 +127,11 @@ export default function HomePage() {
                   sizes="(min-width: 768px) 25vw, 72vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/15 group-hover:bg-black/25 transition-colors duration-500" />
-
-                <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8">
-                  <h3 className="text-xl sm:text-3xl font-serif text-white">
-                    {category.label}
-                  </h3>
-                </div>
               </div>
+              <p className="text-xs text-neutral-400 text-center mb-1 italic">Shop</p>
+              <h3 className="text-xl sm:text-2xl font-serif text-black text-center">
+                {category.label}
+              </h3>
             </Link>
           </ScrollReveal>
         ))}
@@ -165,82 +154,26 @@ export default function HomePage() {
         </Suspense>
       </ScrollReveal>
 
-      {/* ================= FAQ TEASER ================= */}
-      <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
-        <div className="max-w-6xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12 sm:mb-20">
-              <div className="max-w-xl">
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-                  Have questions?
-                </p>
-
-                <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6">
-                  Frequently Asked Questions
-                </h2>
-
-                <p className="text-gray-700 text-sm sm:text-base">
-                  Everything you need to know about shopping, shipping,
-                  and how VIA works.
-                </p>
-              </div>
-
-              <div className="mt-6 md:mt-2">
-                <Link
-                  href="/faqs"
-                  className="inline-flex items-center justify-center border border-black px-6 py-3 min-h-[48px] text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
-                >
-                  Explore FAQs
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={150}>
-          <FAQAccordion
-            faqs={[
-              {
-                q: "Is everything authentic?",
-                a: "Yes — we partner only with vetted stores known for authenticity and quality.",
-              },
-              {
-                q: "Who handles shipping?",
-                a: "Each store fulfills orders directly using their own shipping policies.",
-              },
-              {
-                q: "What about returns?",
-                a: "Return policies are set by each individual store and listed on their product pages.",
-              },
-              {
-                q: "Where do you ship?",
-                a: "Stores decide where they ship, but most stores ship worldwide.",
-              },
-            ]}
-          />
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* ================= STORY BEHIND THE SELECTION ================= */}
       <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-16">
-              <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-3 sm:mb-4">
-                  The Story Behind the Selection
-                </p>
-                <h2 className="text-3xl sm:text-5xl font-serif text-black">
-                  Why we chose them
-                </h2>
+            <div className="mb-10 sm:mb-14">
+              <div className="flex items-center gap-4 mb-1">
+                <p className="text-lg sm:text-xl font-serif italic text-black/80">Featured</p>
+                <div className="flex-1 h-px bg-neutral-200" />
               </div>
-
-              <Link
-                href="/stories"
-                className="mt-4 sm:mt-0 text-sm uppercase tracking-wide link-underline min-h-[44px] flex items-center"
-              >
-                View all stories
-              </Link>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+                <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2">
+                  Stories
+                </h2>
+                <Link
+                  href="/stories"
+                  className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors min-h-[44px] flex items-center"
+                >
+                  View All Stories
+                </Link>
+              </div>
             </div>
           </ScrollReveal>
 
@@ -294,19 +227,71 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ================= FAQ TEASER ================= */}
+      <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <ScrollReveal>
+            <div className="max-w-xl mb-12 sm:mb-16">
+              <p className="text-lg sm:text-xl font-serif italic text-black/80 mb-4">
+                Have questions?
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-serif mb-4">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-neutral-500 text-sm sm:text-base">
+                Everything you need to know about shopping, shipping,
+                and how VIA works.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={150}>
+          <FAQAccordion
+            faqs={[
+              {
+                q: "Is everything authentic?",
+                a: "Yes — we partner only with vetted stores known for authenticity and quality.",
+              },
+              {
+                q: "Who handles shipping?",
+                a: "Each store fulfills orders directly using their own shipping policies.",
+              },
+              {
+                q: "What about returns?",
+                a: "Return policies are set by each individual store and listed on their product pages.",
+              },
+              {
+                q: "Where do you ship?",
+                a: "Stores decide where they ship, but most stores ship worldwide.",
+              },
+            ]}
+          />
+          </ScrollReveal>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/faqs"
+              className="inline-block bg-black text-white px-10 py-3.5 text-sm uppercase tracking-[0.15em] hover:bg-black/85 transition"
+            >
+              Explore FAQs
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ================= VIA EXPERIENCE ================= */}
       <section className="bg-white py-16 sm:py-24 border-t border-neutral-100">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <ScrollReveal>
-            <p className="text-xs uppercase tracking-[0.25em] text-neutral-400 mb-3 sm:mb-4">
+            <p className="text-lg sm:text-xl font-serif italic text-black/80 mb-4">
               The VIA Experience
             </p>
 
-            <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-6 text-black">
+            <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-black">
               A better way to shop vintage
             </h2>
 
-            <p className="max-w-2xl mx-auto mb-12 sm:mb-20 text-neutral-600 text-sm sm:text-base">
+            <p className="max-w-2xl mx-auto mb-12 sm:mb-16 text-neutral-500 text-sm sm:text-base">
               VIA brings together the best independent vintage and secondhand stores
               into one seamless browsing experience, while keeping checkout
               with the store you love.
@@ -316,21 +301,21 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             <ScrollReveal delay={0}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Browse across stores</h3>
-              <p className="text-neutral-600 text-sm sm:text-base">
+              <p className="text-neutral-500 text-sm sm:text-base">
                 Explore curated inventory from multiple stores at once.
               </p>
             </ScrollReveal>
 
             <ScrollReveal delay={150}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Discover rare pieces</h3>
-              <p className="text-neutral-600 text-sm sm:text-base">
-                Find one-of-a-kind items you won't see everywhere else.
+              <p className="text-neutral-500 text-sm sm:text-base">
+                Find one-of-a-kind items you won&apos;t see everywhere else.
               </p>
             </ScrollReveal>
 
             <ScrollReveal delay={300}>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-black">Checkout with confidence</h3>
-              <p className="text-neutral-600 text-sm sm:text-base">
+              <p className="text-neutral-500 text-sm sm:text-base">
                 Purchase directly from the original store, no middlemen.
               </p>
             </ScrollReveal>
