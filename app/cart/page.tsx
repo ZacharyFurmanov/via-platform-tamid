@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import Link from "next/link";
 import { X, ShoppingCart } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useCart, CartItem } from "@/app/components/CartProvider";
+import { useSignUp } from "@/app/components/SignUpProvider";
 
 /**
  * Build a Shopify multi-cart URL from a group of items.
@@ -36,6 +38,17 @@ function buildGroupCheckoutUrl(items: CartItem[]): string {
 
 export default function CartPage() {
   const { items, removeItem, clearCart, itemCount } = useCart();
+  const { data: session, status } = useSession();
+  const { openModal } = useSignUp();
+
+  // Auto-open the sign-in modal for unauthenticated users with items in cart
+  const needsAuth = status !== "loading" && !session && itemCount > 0;
+
+  useEffect(() => {
+    if (needsAuth) {
+      openModal("/cart");
+    }
+  }, [needsAuth, openModal]);
 
   // Group items by store
   const storeGroups = useMemo(() => {

@@ -1,7 +1,7 @@
+import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
-import AuthProductLink from "./AuthProductLink";
 
 type ProductCardProps = {
   id: string;
@@ -41,7 +41,7 @@ export default function ProductCard({
 
   return (
     <div className="relative group">
-      <AuthProductLink href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-black block">
+      <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-black block">
         <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
         {/* Product info */}
@@ -56,7 +56,7 @@ export default function ProductCard({
 
           <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-black/80">{price}</p>
         </div>
-      </AuthProductLink>
+      </Link>
 
       {/* Favorite button overlay */}
       {numericId != null && (
