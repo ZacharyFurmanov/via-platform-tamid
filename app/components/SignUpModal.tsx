@@ -8,9 +8,10 @@ interface SignUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   callbackUrl?: string;
+  required?: boolean;
 }
 
-export default function SignUpModal({ isOpen, onClose, callbackUrl }: SignUpModalProps) {
+export default function SignUpModal({ isOpen, onClose, callbackUrl, required = false }: SignUpModalProps) {
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,14 +32,15 @@ export default function SignUpModal({ isOpen, onClose, callbackUrl }: SignUpModa
     setTimeout(() => onClose(), 200);
   }, [onClose]);
 
-  // Escape key handler
+  // Escape key handler (disabled when required)
   useEffect(() => {
+    if (required) return;
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) handleClose();
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, handleClose]);
+  }, [isOpen, handleClose, required]);
 
   // Scroll lock
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function SignUpModal({ isOpen, onClose, callbackUrl }: SignUpModa
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300 ease-out ${
           showModal ? "opacity-100" : "opacity-0"
         }`}
-        onClick={handleClose}
+        onClick={required ? undefined : handleClose}
       />
 
       {/* Modal */}
@@ -77,16 +79,18 @@ export default function SignUpModal({ isOpen, onClose, callbackUrl }: SignUpModa
           showModal ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
       >
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-10 p-2 text-gray-500 hover:text-black transition"
-          aria-label="Close modal"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {/* Close button (hidden when required) */}
+        {!required && (
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 z-10 p-2 text-gray-500 hover:text-black transition"
+            aria-label="Close modal"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
         <div className="p-8 sm:p-10">
           <h2 className="font-serif text-3xl sm:text-4xl text-center mb-3">

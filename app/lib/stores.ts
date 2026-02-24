@@ -136,6 +136,23 @@ export const stores = [
     returnPolicy:
       "All sales are final — no refunds, exchanges, or returns. Please review all item details carefully before purchasing.",
   },
+  {
+    slug: "the-objects-of-affection",
+    name: "The Objects of Affection",
+    location: "New Hope, Pennsylvania",
+    description:
+      "Founded by Mackenzie, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras. With an archival mindset and an editorial eye, each piece is sourced not for trend but for reverence — hand-selected for craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives.",
+    website: "https://theobjectsofaffection.com",
+    dataSource: "the-objects-of-affection",
+    image: "/stores/the-objects-of-affection.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    shippingPolicy:
+      "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Every item is authenticated and transparently presented. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 // Approximate exchange rates to USD (update periodically)

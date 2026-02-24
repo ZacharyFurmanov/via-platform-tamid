@@ -64,6 +64,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "source-twenty-four",
     storeDomain: "sourcetwentyfour.com",
   },
+  {
+    type: "shopify",
+    name: "The Objects of Affection",
+    slug: "the-objects-of-affection",
+    storeDomain: "theobjectsofaffection.com",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];

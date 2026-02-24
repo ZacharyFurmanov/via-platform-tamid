@@ -46,7 +46,7 @@ export default function CartPage() {
 
   useEffect(() => {
     if (needsAuth) {
-      openModal("/cart");
+      openModal("/cart", { required: true });
     }
   }, [needsAuth, openModal]);
 

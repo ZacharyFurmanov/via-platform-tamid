@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, createContext, useContext, ReactNode } from "react";
+import { useState, createContext, useContext, useCallback, ReactNode } from "react";
 import SignUpModal from "./SignUpModal";
 
 interface SignUpContextType {
-  openModal: (targetUrl?: string) => void;
+  openModal: (targetUrl?: string, options?: { required?: boolean }) => void;
 }
 
 const SignUpContext = createContext<SignUpContextType | null>(null);
@@ -20,17 +20,19 @@ export function useSignUp() {
 export function SignUpProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [targetUrl, setTargetUrl] = useState<string | undefined>();
+  const [required, setRequired] = useState(false);
 
-  const openModal = (url?: string) => {
+  const openModal = useCallback((url?: string, options?: { required?: boolean }) => {
     setTargetUrl(url);
+    setRequired(options?.required ?? false);
     setIsOpen(true);
-  };
+  }, []);
   const closeModal = () => setIsOpen(false);
 
   return (
     <SignUpContext.Provider value={{ openModal }}>
       {children}
-      <SignUpModal isOpen={isOpen} onClose={closeModal} callbackUrl={targetUrl} />
+      <SignUpModal isOpen={isOpen} onClose={closeModal} callbackUrl={targetUrl} required={required} />
     </SignUpContext.Provider>
   );
 }
