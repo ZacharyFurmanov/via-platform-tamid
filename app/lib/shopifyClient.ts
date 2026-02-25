@@ -21,6 +21,7 @@ export type ShopifyProduct = {
   description: string | null;
   variantId: string | null;
   shopifyProductId: string | null;
+  size: string | null;
 };
 
 export type ShopifyFetchResult = {
@@ -42,6 +43,7 @@ type ShopifyVariantNode = {
   id: string;
   priceV2: ShopifyPriceV2;
   availableForSale: boolean;
+  selectedOptions: Array<{ name: string; value: string }>;
 };
 
 type ShopifyProductNode = {
@@ -114,6 +116,10 @@ const PRODUCTS_QUERY = `
                   currencyCode
                 }
                 availableForSale
+                selectedOptions {
+                  name
+                  value
+                }
               }
             }
           }
@@ -231,8 +237,15 @@ export async function fetchShopifyProducts(
 
       // Extract numeric IDs from GIDs (e.g. "gid://shopify/Product/12345" -> "12345")
       const productId = node.id?.match(/(\d+)$/)?.[1] ?? null;
-      const variantGid = node.variants?.edges?.[0]?.node?.id;
+      const firstVariant = node.variants?.edges?.[0]?.node;
+      const variantGid = firstVariant?.id;
       const variantId = variantGid?.match(/(\d+)$/)?.[1] ?? null;
+
+      // Extract size from variant options (look for "Size", "Shoe size", etc.)
+      const sizeOption = firstVariant?.selectedOptions?.find(
+        (opt) => /size/i.test(opt.name)
+      );
+      const size = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
 
       products.push({
         title: node.title,
@@ -248,6 +261,7 @@ export async function fetchShopifyProducts(
         description: node.descriptionHtml || null,
         variantId,
         shopifyProductId: productId,
+        size,
       });
     }
 
@@ -412,6 +426,16 @@ export async function fetchShopifyProductsPublic(
       const price = variant?.price ? parseFloat(variant.price) : null;
       const variantId = variant?.id ? String(variant.id) : null;
       const shopifyProductId = product.id ? String(product.id) : null;
+
+      // Extract size from variant options or product options
+      let size: string | null = null;
+      const productOptions: Array<{ name: string; values?: string[] }> = product.options || [];
+      const sizeOptionIndex = productOptions.findIndex((opt: { name: string }) => /size/i.test(opt.name));
+      if (sizeOptionIndex >= 0 && variant) {
+        const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
+        const val = variant[optionKey];
+        if (val && val !== "Default Title") size = val;
+      }
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];
@@ -439,6 +463,7 @@ export async function fetchShopifyProductsPublic(
         description: product.body_html || null,
         variantId,
         shopifyProductId,
+        size,
       });
     }
 
@@ -468,6 +493,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   description: string | null;
   variantId: string | null;
   shopifyProductId: string | null;
+  size: string | null;
 } {
   return {
     title: product.title,
@@ -480,5 +506,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     description: product.description,
     variantId: product.variantId,
     shopifyProductId: product.shopifyProductId,
+    size: product.size,
   };
 }

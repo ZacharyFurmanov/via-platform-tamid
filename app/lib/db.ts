@@ -26,6 +26,7 @@ export type DBProduct = {
   variant_id: string | null;
   shopify_product_id: string | null;
   collabs_link: string | null;
+  size: string | null;
   synced_at: Date;
   created_at: Date;
 };
@@ -86,6 +87,11 @@ export async function initDatabase() {
     ALTER TABLE products ADD COLUMN IF NOT EXISTS collabs_link TEXT
   `;
 
+  // Add size column for product sizing info (e.g. "38.5", "M", "US 8")
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS size TEXT
+  `;
+
   // Clear created_at for existing products so they don't all appear as new arrivals
   // (only products inserted during subsequent syncs will have a non-NULL created_at)
   await sql`
@@ -116,6 +122,7 @@ export async function syncProducts(
     description?: string;
     variantId?: string;
     shopifyProductId?: string;
+    size?: string;
   }>
 ) {
   const sql = neon(getDatabaseUrl());
@@ -134,7 +141,7 @@ export async function syncProducts(
     titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, synced_at, created_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -147,6 +154,7 @@ export async function syncProducts(
         ${product.description || null},
         ${product.variantId || null},
         ${product.shopifyProductId || null},
+        ${product.size || null},
         NOW(),
         ${isExistingStore ? new Date() : null}
       )
@@ -160,6 +168,7 @@ export async function syncProducts(
         description = EXCLUDED.description,
         variant_id = EXCLUDED.variant_id,
         shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
+        size = COALESCE(EXCLUDED.size, products.size),
         synced_at = NOW()
     `;
   }

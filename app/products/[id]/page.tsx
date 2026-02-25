@@ -125,6 +125,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
             <p className="text-sm text-black/50 mb-1">{categoryLabel}</p>
 
+            {product.size && (
+              <p className="text-sm text-black/70 mb-1">
+                Size: <span className="font-medium">{product.size}</span>
+              </p>
+            )}
+
             <div className="flex items-center gap-4 mb-8">
               <p className="text-2xl font-medium text-black">{price}</p>
               <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />

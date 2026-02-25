@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
         description: p.description ?? undefined,
         variantId: p.variantId ?? undefined,
         shopifyProductId: p.shopifyProductId ?? undefined,
+        size: p.size ?? undefined,
       }));
     const skippedCount = fetchResult.skippedCount;
 
