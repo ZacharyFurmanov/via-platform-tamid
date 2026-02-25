@@ -148,6 +148,8 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    affiliatePath: "001",
+    collabsStoreId: "5662739",
     shippingPolicy:
       "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -165,6 +167,8 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    affiliatePath: "VIA",
+    collabsStoreId: "5668014",
     shippingPolicy:
       "Ships from Dallas, Texas. Shipping rates are calculated at checkout.",
     returnPolicy:
