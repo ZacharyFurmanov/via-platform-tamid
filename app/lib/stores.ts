@@ -153,6 +153,23 @@ export const stores = [
     returnPolicy:
       "All sales are final. Every item is authenticated and transparently presented. Please review all item details and photos carefully before purchasing.",
   },
+  {
+    slug: "vintari-vault",
+    name: "Vintari Vault",
+    location: "Dallas, Texas",
+    description:
+      "Vintari Vault is a Dallas-based seller of vintage designer handbags founded by two best friends, one with a deep love for designer handbags and the other with a passion for vintage fashion history. What began as sourcing pieces for personal collections grew into a mission to provide a curated selection of authentic, timeless designer bags that celebrate the history of vintage fashion while bringing it to the everyday wardrobe. Operating primarily online with select Dallas pop-ups, their mission is to make timeless luxury accessible and inclusive — unlocking vintage one bag at a time.",
+    website: "https://vintarivault.com",
+    dataSource: "vintari-vault",
+    image: "/stores/vintari-vault.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    shippingPolicy:
+      "Ships from Dallas, Texas. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
+  },
 ];
 
 // Approximate exchange rates to USD (update periodically)

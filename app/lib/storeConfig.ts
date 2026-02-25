@@ -70,6 +70,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "the-objects-of-affection",
     storeDomain: "theobjectsofaffection.com",
   },
+  {
+    type: "shopify",
+    name: "Vintari Vault",
+    slug: "vintari-vault",
+    storeDomain: "vintarivault.com",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
