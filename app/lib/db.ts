@@ -273,20 +273,28 @@ export async function getNewArrivals(
 
     // If no genuine new arrivals yet, show a random sample as fallback
     if (result.length === 0) {
+      try {
+        const fallback = await sql`
+          SELECT * FROM products TABLESAMPLE BERNOULLI(50)
+          LIMIT ${limit}
+        `;
+        return fallback as DBProduct[];
+      } catch {
+        return [];
+      }
+    }
+    return result as DBProduct[];
+  } catch {
+    // created_at column may not exist yet — try a simple fallback
+    try {
       const fallback = await sql`
         SELECT * FROM products TABLESAMPLE BERNOULLI(50)
         LIMIT ${limit}
       `;
       return fallback as DBProduct[];
+    } catch {
+      return [];
     }
-    return result as DBProduct[];
-  } catch {
-    // created_at column may not exist yet (migration runs on next sync)
-    const fallback = await sql`
-      SELECT * FROM products TABLESAMPLE BERNOULLI(50)
-      LIMIT ${limit}
-    `;
-    return fallback as DBProduct[];
   }
 }
 
