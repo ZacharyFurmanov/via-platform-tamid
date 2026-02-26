@@ -1,9 +1,47 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
+import Credentials from "next-auth/providers/credentials";
+import { neon } from "@neondatabase/serverless";
+import type { DecodedIdToken } from "firebase-admin/auth";
 import { neonAdapter } from "@/app/lib/auth-adapter";
+import { verifyFirebaseIdToken } from "@/app/lib/firebase-admin";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+type DbUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+};
+
+function getDatabaseUrl() {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url) throw new Error("DATABASE_URL or POSTGRES_URL is not set.");
+  return url;
+}
+
+async function getOrCreateUserFromFirebase(decodedToken: DecodedIdToken): Promise<DbUser | null> {
+  const email = decodedToken.email;
+  if (!email) return null;
+
+  const sql = neon(getDatabaseUrl());
+  const existing = await sql`SELECT id, name, email, image FROM users WHERE email = ${email} LIMIT 1`;
+  if (existing[0]) {
+    return existing[0] as DbUser;
+  }
+
+  const name = typeof decodedToken.name === "string" ? decodedToken.name : null;
+  const image = typeof decodedToken.picture === "string" ? decodedToken.picture : null;
+  const emailVerified = decodedToken.email_verified ? new Date().toISOString() : null;
+
+  const created = await sql`
+    INSERT INTO users (name, email, email_verified, image)
+    VALUES (${name}, ${email}, ${emailVerified}, ${image})
+    RETURNING id, name, email, image
+  `;
+
+  return (created[0] as DbUser) ?? null;
+}
 
 function baseStyles() {
   return `
@@ -30,6 +68,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   providers: [
+    Credentials({
+      id: "firebase",
+      name: "Firebase",
+      credentials: {
+        idToken: { label: "Firebase ID Token", type: "text" },
+      },
+      async authorize(credentials) {
+        const idToken =
+          typeof credentials?.idToken === "string" ? credentials.idToken : null;
+        if (!idToken) return null;
+
+        try {
+          const decodedToken = await verifyFirebaseIdToken(idToken);
+          return await getOrCreateUserFromFirebase(decodedToken);
+        } catch (error) {
+          console.error("FIREBASE AUTHORIZE ERROR:", error);
+          return null;
+        }
+      },
+    }),
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
