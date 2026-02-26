@@ -135,6 +135,22 @@ const PRODUCTS_QUERY = `
 `;
 
 /**
+ * Extracts a size from a product title as a fallback when no variant size option exists.
+ * Matches patterns like "Size M", "Size 38", "/ Size 9.5", "- Size US 8", "(Size L)"
+ */
+function extractSizeFromTitle(title: string): string | null {
+  // Parenthesized: "(Size M)", "(size 38)"
+  const parenMatch = /\(\s*(?:size|sz)\s*:?\s*([^)]+)\)/i.exec(title);
+  if (parenMatch) return parenMatch[1].trim();
+
+  // With separator or space: "- Size M", "/ Size 38", ", Size XL", " Size US 9"
+  const sepMatch = /(?:[-–—|\/,]\s*|\s+)(?:size|sz)\s*:?\s*((?:US|UK|EU)?\s*\d[\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)/i.exec(title);
+  if (sepMatch) return sepMatch[1].trim();
+
+  return null;
+}
+
+/**
  * Normalizes a Shopify store domain to the correct format
  * Handles custom domains and .myshopify.com domains
  */
@@ -245,7 +261,9 @@ export async function fetchShopifyProducts(
       const sizeOption = firstVariant?.selectedOptions?.find(
         (opt) => /size/i.test(opt.name)
       );
-      const size = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
+      const sizeFromVariant = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
+      // Fallback: extract size from product title (common in vintage stores with single variants)
+      const size = sizeFromVariant ?? extractSizeFromTitle(node.title);
 
       products.push({
         title: node.title,
@@ -428,14 +446,16 @@ export async function fetchShopifyProductsPublic(
       const shopifyProductId = product.id ? String(product.id) : null;
 
       // Extract size from variant options or product options
-      let size: string | null = null;
+      let sizeFromVariant: string | null = null;
       const productOptions: Array<{ name: string; values?: string[] }> = product.options || [];
       const sizeOptionIndex = productOptions.findIndex((opt: { name: string }) => /size/i.test(opt.name));
       if (sizeOptionIndex >= 0 && variant) {
         const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
         const val = variant[optionKey];
-        if (val && val !== "Default Title") size = val;
+        if (val && val !== "Default Title") sizeFromVariant = val;
       }
+      // Fallback: extract size from product title (common in vintage stores with single variants)
+      const size = sizeFromVariant ?? extractSizeFromTitle(product.title);
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];
