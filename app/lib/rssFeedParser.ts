@@ -8,6 +8,7 @@ export type RSSProduct = {
   externalUrl: string;
   store: string;
   description: string | null;
+  size?: string | null;
 };
 
 export type RSSFetchResult = {
