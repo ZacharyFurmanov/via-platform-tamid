@@ -6,6 +6,7 @@ export type SquarespaceProduct = {
   externalUrl: string;
   store: string;
   description: string | null;
+  size: string | null;
 };
 
 export type SquarespaceResult = {
@@ -36,6 +37,38 @@ type SquarespaceItem = {
   body?: string;
   excerpt?: string;
 };
+
+const SS_SIZE_VALUE = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\\s+Size`;
+
+/** Extract size from Squarespace tags (e.g. "size-m", "xl", "us-8") */
+function extractSizeFromTags(tags: string[]): string | null {
+  for (const tag of tags) {
+    const t = tag.trim();
+    // "size-m", "size:xl", "size 38"
+    const tagMatch = /^size[-:\s](.+)$/i.exec(t);
+    if (tagMatch) return tagMatch[1].trim().toUpperCase();
+    // Bare letter sizes
+    if (/^(xs|s|m|l|xl|xxl|2xl|3xl|xxxl|os|osfm)$/i.test(t)) return t.toUpperCase();
+  }
+  return null;
+}
+
+/** Extract size from title or description text */
+function extractSizeFromText(text: string | null): string | null {
+  if (!text) return null;
+  const plain = text.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+  // Parenthesized: "(Size M)"
+  const parenMatch = /\(\s*(?:size|sz)\s*:?\s*([^)]+)\)/i.exec(plain);
+  if (parenMatch) return parenMatch[1].trim();
+  // "Size: M", "Tagged size: 38", "Size M" at end, etc.
+  const re = new RegExp(
+    `(?:tagged\\s+size|labeled\\s+size|marked\\s+size|size)\\s*:?\\s*(${SS_SIZE_VALUE})`,
+    "i"
+  );
+  const match = re.exec(plain);
+  if (match) return match[1].trim();
+  return null;
+}
 
 /**
  * Checks if a product appears to be sold out based on title or tags
@@ -139,7 +172,13 @@ export async function parseSquarespaceJSON(
     // Product description (HTML body from Squarespace)
     const description = item.body || item.excerpt || null;
 
-    products.push({ title, price, image, images, externalUrl, store: storeName, description });
+    // Extract size: tags first, then title, then description body
+    const size =
+      extractSizeFromTags(item.tags || [])
+      ?? extractSizeFromText(title)
+      ?? extractSizeFromText(description);
+
+    products.push({ title, price, image, images, externalUrl, store: storeName, description, size });
   }
 
   return { products, skippedCount };

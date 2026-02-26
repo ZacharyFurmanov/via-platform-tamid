@@ -134,19 +134,34 @@ const PRODUCTS_QUERY = `
   }
 `;
 
+const SIZE_VALUE_PATTERN = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\\s+Size`;
+
 /**
  * Extracts a size from a product title as a fallback when no variant size option exists.
  * Matches patterns like "Size M", "Size 38", "/ Size 9.5", "- Size US 8", "(Size L)"
  */
 function extractSizeFromTitle(title: string): string | null {
-  // Parenthesized: "(Size M)", "(size 38)"
   const parenMatch = /\(\s*(?:size|sz)\s*:?\s*([^)]+)\)/i.exec(title);
   if (parenMatch) return parenMatch[1].trim();
 
-  // With separator or space: "- Size M", "/ Size 38", ", Size XL", " Size US 9"
-  const sepMatch = /(?:[-–—|\/,]\s*|\s+)(?:size|sz)\s*:?\s*((?:US|UK|EU)?\s*\d[\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)/i.exec(title);
+  const re = new RegExp(`(?:[-–—|\\/,]\\s*|\\s+)(?:size|sz)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
+  const sepMatch = re.exec(title);
   if (sepMatch) return sepMatch[1].trim();
 
+  return null;
+}
+
+/**
+ * Extracts a size from product description HTML.
+ * Handles patterns like "Size: M", "Size M", "Tagged size: 38", "Labeled size S"
+ */
+function extractSizeFromDescription(description: string | null): string | null {
+  if (!description) return null;
+  // Strip HTML tags and decode common entities
+  const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+  const re = new RegExp(`(?:tagged\\s+size|labeled\\s+size|marked\\s+size|size)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
+  const match = re.exec(text);
+  if (match) return match[1].trim();
   return null;
 }
 
@@ -262,8 +277,10 @@ export async function fetchShopifyProducts(
         (opt) => /size/i.test(opt.name)
       );
       const sizeFromVariant = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
-      // Fallback: extract size from product title (common in vintage stores with single variants)
-      const size = sizeFromVariant ?? extractSizeFromTitle(node.title);
+      // Fallbacks: title then description (common in vintage stores with single "Default Title" variants)
+      const size = sizeFromVariant
+        ?? extractSizeFromTitle(node.title)
+        ?? extractSizeFromDescription(node.descriptionHtml || null);
 
       products.push({
         title: node.title,
@@ -454,8 +471,13 @@ export async function fetchShopifyProductsPublic(
         const val = variant[optionKey];
         if (val && val !== "Default Title") sizeFromVariant = val;
       }
-      // Fallback: extract size from product title (common in vintage stores with single variants)
-      const size = sizeFromVariant ?? extractSizeFromTitle(product.title);
+      // Check variant.title as another source (e.g. "M", "US 8") before falling back to text extraction
+      const variantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
+      // Fallbacks: variant title → product title → description
+      const size = sizeFromVariant
+        ?? variantTitle
+        ?? extractSizeFromTitle(product.title)
+        ?? extractSizeFromDescription(product.body_html || null);
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];

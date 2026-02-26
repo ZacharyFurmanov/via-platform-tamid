@@ -98,6 +98,7 @@ export async function GET(request: Request) {
             images: p.images,
             externalUrl: p.externalUrl,
             description: p.description ?? undefined,
+            size: p.size ?? undefined,
           }));
 
         const productCount = await syncProducts(storeSlug, store.name, products);
