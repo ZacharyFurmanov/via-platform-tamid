@@ -66,6 +66,7 @@ export default async function CategoryPage({
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
+      size: item.size,
       createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
       popularityScore: computeProductScore({
         engagementScore,

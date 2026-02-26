@@ -26,6 +26,7 @@ export type FilterableProduct = {
   images?: string[];
   createdAt?: number; // timestamp for sorting by newest
   popularityScore?: number;
+  size?: string | null;
 };
 
 type FilteredProductGridProps = {
@@ -263,6 +264,7 @@ export default function FilteredProductGrid({
                 externalUrl={product.externalUrl}
                 image={product.image}
                 images={product.images}
+                size={product.size}
                 from={from}
                 favoriteCount={
                   favCounts[

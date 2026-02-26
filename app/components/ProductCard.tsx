@@ -3,6 +3,20 @@ import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
 
+// Strip "Size X" patterns from a product title when size is already shown separately
+function stripSizeFromTitle(title: string, size: string | null | undefined): string {
+  if (!size) return title;
+  const result = title
+    // "(Size M)" or "(size 38)" anywhere
+    .replace(/\s*\(\s*size\s*:?\s*[^)]+\)\s*/gi, " ")
+    // "- Size M", "/ Size M", ", Size M", "| Size M" at end
+    .replace(/\s*[-–—|\/,]+\s*size\s*:?\s*\S+\s*$/gi, "")
+    // " Size M" at end (space before "size")
+    .replace(/\s+size\s*:?\s*\S+\s*$/gi, "")
+    .trim();
+  return result || title;
+}
+
 type ProductCardProps = {
   id: string;
   dbId?: number;
@@ -16,6 +30,7 @@ type ProductCardProps = {
   images?: string[];
   favoriteCount?: number;
   from?: string;
+  size?: string | null;
 };
 
 export default function ProductCard({
@@ -29,6 +44,7 @@ export default function ProductCard({
   images,
   favoriteCount,
   from,
+  size,
 }: ProductCardProps) {
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
@@ -51,10 +67,12 @@ export default function ProductCard({
           </p>
 
           <h3 className="font-serif text-xs sm:text-base text-black leading-snug line-clamp-2">
-            {name}
+            {stripSizeFromTitle(name, size)}
           </h3>
 
-          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-black/80">{price}</p>
+          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-black/80">
+            {price}{size ? <span className="ml-2 text-black/50">{size}</span> : null}
+          </p>
         </div>
       </Link>
 

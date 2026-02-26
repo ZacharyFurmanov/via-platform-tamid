@@ -52,6 +52,7 @@ export default async function NewArrivalsSection() {
                     storeSlug={product.store_slug}
                     image={product.image || ""}
                     images={images}
+                    size={product.size}
                   />
                 </div>
               );

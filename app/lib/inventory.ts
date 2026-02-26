@@ -16,6 +16,7 @@ export type InventoryItem = {
   storeSlug: string;
   externalUrl?: string;
   syncedAt?: string;
+  size?: string | null;
 };
 
 // Parse images JSON from DB, falling back to single image
@@ -47,6 +48,7 @@ function transformDBProduct(product: DBProduct): InventoryItem {
     syncedAt: product.synced_at instanceof Date
       ? product.synced_at.toISOString()
       : String(product.synced_at),
+    size: product.size ?? null,
   };
 }
 

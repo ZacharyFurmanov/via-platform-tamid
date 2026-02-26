@@ -13,6 +13,7 @@ type GridProduct = {
   images: string | null;
   categoryLabel: CategoryLabel;
   from?: string;
+  size?: string | null;
 };
 
 // Every 5th item (index 0, 5, 10…) spans 2 columns for visual variety
@@ -51,6 +52,7 @@ export default function MixedProductGrid({
               storeSlug={product.store_slug}
               image={product.image || ""}
               images={images}
+              size={product.size}
               from={from}
             />
           </div>

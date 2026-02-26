@@ -259,6 +259,7 @@ export default async function AccountPage() {
                         storeSlug={product.store_slug}
                         image={product.image || ""}
                         images={images}
+                        size={product.size}
                         favoriteCount={favCounts[product.id]}
                         from="/account/favorites"
                       />
