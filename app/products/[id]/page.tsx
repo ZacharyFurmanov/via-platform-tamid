@@ -18,6 +18,82 @@ type ProductPageProps = {
   searchParams: Promise<{ from?: string }>;
 };
 
+const MEASUREMENT_KEYWORDS = [
+  "shoulder", "sleeve", "bust", "chest", "waist", "hip", "inseam",
+  "outseam", "rise", "hem", "thigh", "knee", "pit", "armhole",
+  "width", "circumference", "belt", "back length", "front length",
+  "total length",
+];
+
+/** Returns true if a plain-text bullet looks like a size or measurement */
+function isMeasurementLine(text: string): boolean {
+  const t = text.toLowerCase().trim();
+  // Size labels: "Size: M", "Labeled size: 10", "Tagged size S"
+  if (/(?:tagged|labeled|marked)?\s*size\s*[:\s]/.test(t)) return true;
+  // Measurement with inches value: "Bust: 17"", "Shoulder length: 19""
+  if (/:\s*\d+(?:\.\d+)?\s*["″'']/.test(t)) {
+    return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
+  }
+  return false;
+}
+
+/**
+ * Splits description HTML into product details and sizing/measurements.
+ * Extracts <li> items that are measurements and returns them separately.
+ */
+function splitDescriptionBySizing(html: string | null): {
+  detailsHtml: string | null;
+  sizingItems: string[];
+} {
+  if (!html) return { detailsHtml: null, sizingItems: [] };
+
+  const detailItems: string[] = [];
+  const sizingItems: string[] = [];
+
+  // Extract all <li> inner contents
+  const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+  let match: RegExpExecArray | null;
+  let hasLiTags = false;
+
+  while ((match = liPattern.exec(html)) !== null) {
+    hasLiTags = true;
+    const inner = match[1];
+    const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+    if (isMeasurementLine(plain)) {
+      sizingItems.push(plain);
+    } else {
+      detailItems.push(`<li>${inner}</li>`);
+    }
+  }
+
+  if (!hasLiTags) {
+    // Fall back to paragraph splitting
+    const pPattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let hasP = false;
+    const remaining: string[] = [];
+    while ((match = pPattern.exec(html)) !== null) {
+      hasP = true;
+      const inner = match[1];
+      const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+      if (isMeasurementLine(plain)) {
+        sizingItems.push(plain);
+      } else {
+        remaining.push(`<p>${inner}</p>`);
+      }
+    }
+    if (!hasP) return { detailsHtml: html, sizingItems: [] };
+    const detailsHtml = remaining.length > 0 ? remaining.join("") : null;
+    return { detailsHtml, sizingItems };
+  }
+
+  const detailsHtml =
+    detailItems.length > 0
+      ? `<ul>${detailItems.join("")}</ul>`
+      : null;
+
+  return { detailsHtml, sizingItems };
+}
+
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { id: compositeId } = await params;
   const { from } = await searchParams;
@@ -72,6 +148,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1${discountParam}`;
     } catch {}
   }
+  const { detailsHtml, sizingItems } = splitDescriptionBySizing(product.description);
+
   const currentItemType = inferItemTypeFromTitle(product.title);
   const currentColor = inferColorFromTitle(product.title);
   const currentBrand = inferBrandFromTitle(product.title);
@@ -142,10 +220,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 sections={[
                   {
                     title: "Product Details",
-                    content: product.description ? (
+                    content: detailsHtml ? (
                       <div
                         className="product-description prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
-                        dangerouslySetInnerHTML={{ __html: product.description }}
+                        dangerouslySetInnerHTML={{ __html: detailsHtml }}
                       />
                     ) : (
                       <p>Details not available for this item. Visit {store.name} for more information.</p>
@@ -155,17 +233,31 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     title: "Sizing & Measurements",
                     content: (
                       <div>
-                        <p className="mb-3">
+                        {product.size && (
+                          <p className="mb-3">
+                            <span className="font-medium">Size:</span> {product.size}
+                          </p>
+                        )}
+                        {sizingItems.length > 0 && (
+                          <ul className="list-disc pl-5 mb-3 space-y-1">
+                            {sizingItems.map((item, i) => (
+                              <li key={i}>{item}</li>
+                            ))}
+                          </ul>
+                        )}
+                        <p className="text-black/60 text-sm">
                           This is a vintage or secondhand item. Sizing may vary from modern standards.
                           We recommend checking measurements carefully before purchasing.
                         </p>
-                        <p>
-                          For specific measurements or sizing questions, contact{" "}
-                          <a href={`/stores/${store.slug}`} className="underline hover:text-black transition">
-                            {store.name}
-                          </a>{" "}
-                          directly.
-                        </p>
+                        {sizingItems.length === 0 && !product.size && (
+                          <p className="mt-2 text-sm">
+                            For specific measurements, contact{" "}
+                            <a href={`/stores/${store.slug}`} className="underline hover:text-black transition">
+                              {store.name}
+                            </a>{" "}
+                            directly.
+                          </p>
+                        )}
                       </div>
                     ),
                   },
