@@ -108,13 +108,15 @@ export default function FilteredProductGrid({
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Search filter (title and store name)
+    // Search filter (title, store name, category label, and category slug)
     if (filters.search.trim()) {
       const query = filters.search.toLowerCase();
       result = result.filter(
         (p) =>
           p.title.toLowerCase().includes(query) ||
-          p.store.toLowerCase().includes(query)
+          p.store.toLowerCase().includes(query) ||
+          (p.categoryLabel ?? "").toLowerCase().includes(query) ||
+          (p.category ?? "").toLowerCase().includes(query)
       );
     }
 
