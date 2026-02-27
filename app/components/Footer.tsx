@@ -1,6 +1,6 @@
 import Link from "next/link";
 import NewsletterSignup from "./NewsletterSignup";
-import { GiveawayFooterLink } from "./GiveawayProvider";
+// import { GiveawayFooterLink } from "./GiveawayProvider";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -96,9 +96,7 @@ export default function Footer() {
                   Designers
                 </Link>
               </li>
-              <li>
-                <GiveawayFooterLink />
-              </li>
+              {/* <li><GiveawayFooterLink /></li> */}
             </ul>
           </div>
 
