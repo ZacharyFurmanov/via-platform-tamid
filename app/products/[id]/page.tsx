@@ -251,11 +251,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                         </p>
                         {sizingItems.length === 0 && !product.size && (
                           <p className="mt-2 text-sm">
-                            For specific measurements, contact{" "}
-                            <a href={`/stores/${store.slug}`} className="underline hover:text-black transition">
-                              {store.name}
-                            </a>{" "}
-                            directly.
+                            For specific measurements,{" "}
+                            <a href="#more-info" className="underline hover:text-black transition">
+                              ask below
+                            </a>
+                            .
                           </p>
                         )}
                       </div>

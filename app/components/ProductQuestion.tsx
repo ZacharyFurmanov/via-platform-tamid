@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type ProductQuestionProps = {
   productTitle: string;
@@ -14,6 +14,12 @@ export default function ProductQuestion({
   productUrl,
 }: ProductQuestionProps) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === "#more-info") {
+      setOpen(true);
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [question, setQuestion] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -49,7 +55,7 @@ export default function ProductQuestion({
   }
 
   return (
-    <div className="mt-6">
+    <div id="more-info" className="mt-6">
       <button
         type="button"
         onClick={() => setOpen(!open)}
