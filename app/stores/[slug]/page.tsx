@@ -66,6 +66,7 @@ export default async function StorePage({ params }: StorePageProps) {
       externalUrl: product.externalUrl,
       image: product.image ?? "",
       images,
+      size: product.size ?? null,
       createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
       popularityScore: computeProductScore({
         engagementScore,
