@@ -71,12 +71,12 @@ export default function RootLayout({
             <FriendsProvider>
             <CartProvider>
               <SignUpProvider>
-              <GiveawayProvider>
+              {/* <GiveawayProvider> */}
                 <ScrollToTop />
                 <Header />
                 <main className="pt-[104px]">{children}</main>
                 <Footer />
-              </GiveawayProvider>
+              {/* </GiveawayProvider> */}
               </SignUpProvider>
             </CartProvider>
             </FriendsProvider>
