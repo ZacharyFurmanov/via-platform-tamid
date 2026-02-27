@@ -7,8 +7,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-white text-black border-t border-neutral-200">
-      {/* Newsletter Section — temporarily hidden */}
-      {/* <div className="border-b border-neutral-200">
+      {/* Newsletter Section */}
+      <div className="border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-20 sm:py-24">
           <div className="max-w-xl mx-auto text-center">
             <h3 className="text-2xl sm:text-3xl font-serif mb-3">
@@ -20,7 +20,7 @@ export default function Footer() {
             <NewsletterSignup variant="hero" />
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">

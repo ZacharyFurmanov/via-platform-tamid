@@ -107,17 +107,63 @@ function isUserAuthRoute(pathname: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // TEMPORARILY DISABLED — all routes open for Figma screenshots
-  // Admin routes still require auth
+  // Redirect referral links to waitlist page with the giveaway modal
+  const refCode = request.nextUrl.searchParams.get("ref");
+  if (pathname === "/" && refCode) {
+    const waitlistUrl = new URL("/waitlist", request.url);
+    waitlistUrl.searchParams.set("ref", refCode);
+    return NextResponse.redirect(waitlistUrl);
+  }
+
+  // Allow public routes without auth
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Admin routes: require admin cookie
   if (pathname.startsWith("/admin")) {
     if (!isAdminAuthenticated(request)) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
+
     if (pathname === "/admin" || pathname === "/admin/") {
       return NextResponse.redirect(new URL("/admin/sync", request.url));
     }
+
+    return NextResponse.next();
+  }
+
+  // Access code routes (e.g. /login): require access cookie or session
+  if (isAccessCodeRoute(pathname)) {
+    if (!hasAccessCode(request) && !hasUserSession(request) && !isAdminAuthenticated(request)) {
+      return NextResponse.redirect(new URL("/waitlist", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // User-auth routes: require Auth.js session
+  if (isUserAuthRoute(pathname)) {
+    if (!hasUserSession(request)) {
+      if (!hasAccessCode(request)) {
+        return NextResponse.redirect(new URL("/waitlist", request.url));
+      }
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
+  // All other routes: require user session (or admin auth) to browse
+  if (!hasUserSession(request) && !isAdminAuthenticated(request)) {
+    if (!hasAccessCode(request)) {
+      return NextResponse.redirect(new URL("/waitlist", request.url));
+    }
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
