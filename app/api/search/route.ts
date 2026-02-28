@@ -117,6 +117,7 @@ export async function GET(request: Request) {
         SELECT id, store_slug, store_name, title, price, currency, image, created_at
         FROM products
         WHERE LOWER(title) LIKE ANY(${patterns})
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
@@ -132,6 +133,7 @@ export async function GET(request: Request) {
           SELECT id, store_slug, store_name, title, price, currency, image, created_at
           FROM products
           WHERE LOWER(title) ~ ALL(${wordPatterns})
+            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           ORDER BY created_at DESC NULLS LAST
           LIMIT 50
         `;
@@ -143,6 +145,7 @@ export async function GET(request: Request) {
           SELECT id, store_slug, store_name, title, price, currency, image, created_at
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
+            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST

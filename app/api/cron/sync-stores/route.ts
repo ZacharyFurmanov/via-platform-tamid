@@ -131,10 +131,24 @@ export async function GET(request: Request) {
     console.error("[Sync Stores] Favorite notifications failed:", err);
   }
 
+  // Run collabs link generation after sync so new products get links right away
+  let collabsResult = null;
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+    const res = await fetch(`${baseUrl}/api/cron/generate-collabs-links`, {
+      headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+    collabsResult = await res.json();
+    console.log("[Sync Stores] Collabs link generation:", collabsResult);
+  } catch (err) {
+    console.error("[Sync Stores] Collabs link generation failed:", err);
+  }
+
   return NextResponse.json({
     success: failed === 0,
     stores: results,
     summary: { total: results.length, succeeded, failed },
     notifications: notificationResult,
+    collabsLinks: collabsResult,
   });
 }
