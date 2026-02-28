@@ -42,31 +42,49 @@ export default function SquarespaceSetupPage() {
     }
   }
 
-  if (typeof Squarespace !== 'undefined' && Squarespace.commerce) {
-    Squarespace.commerce.onOrderComplete(function(orderData) {
-      var payload = {
-        orderId: orderData.orderNumber,
-        orderTotal: orderData.grandTotal.value,
-        currency: orderData.grandTotal.currency,
-        items: orderData.items.map(function(item) {
-          return {
-            productName: item.productName,
-            quantity: item.quantity,
-            price: item.unitPrice.value
-          };
-        }),
+  function sendConversion(orderId, orderTotal, currency, items) {
+    fetch('${baseUrl}/api/conversion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: String(orderId),
+        orderTotal: Number(orderTotal),
+        currency: currency || 'USD',
+        items: items || [],
         viaClickId: viaClickId,
         storeSlug: '${displaySlug}',
         storeName: '${displayName}'
-      };
-
-      fetch('${baseUrl}/api/conversion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(function() {});
-    });
+      })
+    }).catch(function() {});
   }
+
+  var registered = false;
+  function registerCallback() {
+    if (registered) return;
+    if (typeof Squarespace !== 'undefined' && Squarespace.commerce && typeof Squarespace.commerce.onOrderComplete === 'function') {
+      registered = true;
+      Squarespace.commerce.onOrderComplete(function(orderData) {
+        sendConversion(
+          orderData.orderNumber,
+          orderData.grandTotal.value,
+          orderData.grandTotal.currency,
+          (orderData.items || []).map(function(item) {
+            return {
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice ? item.unitPrice.value : 0
+            };
+          })
+        );
+      });
+    }
+  }
+
+  registerCallback();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerCallback);
+  }
+  window.addEventListener('load', registerCallback);
 })();
 </script>`;
 
