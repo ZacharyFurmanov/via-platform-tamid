@@ -6,51 +6,59 @@ import { useState } from "react";
 export default function SquarespaceSetupPage() {
   const [storeSlug, setStoreSlug] = useState("");
   const [storeName, setStoreName] = useState("");
-  const [copiedHeader, setCopiedHeader] = useState(false);
-  const [copiedOrder, setCopiedOrder] = useState(false);
-
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://theviaplatform.com";
+  const [copied, setCopied] = useState(false);
 
   const isFilled = storeSlug.length > 0 && storeName.length > 0;
 
-  // Code block 1: goes in Header (this one is the same for every store)
-  const headerCode = `<!-- VIA Click Tracking -->
+  const displaySlug = storeSlug || "your-store-slug";
+  const displayName = storeName || "Your Store Name";
+
+  // One script goes in Header — handles click tracking AND order conversion
+  const headerCode = `<!-- VIA Tracking -->
 <script>
 (function() {
+  // Save via_click_id from URL into a 30-day cookie
   var urlParams = new URLSearchParams(window.location.search);
   var clickId = urlParams.get('via_click_id');
   if (clickId) {
     document.cookie = 'via_click_id=' + clickId + ';max-age=2592000;path=/;SameSite=Lax';
   }
-})();
-</script>`;
 
-  // Code block 2: goes in Order Confirmation (this one is customized with your store info)
-  const displaySlug = storeSlug || "your-store-slug";
-  const displayName = storeName || "Your Store Name";
+  // Fire conversion when customer lands on order confirmation page
+  if (window.location.pathname.indexOf('/commerce/orders/') === -1) return;
 
-  const orderConfirmationCode = `<!-- VIA Order Tracking -->
-<script>
-(function() {
+  var pathParts = window.location.pathname.split('/');
+  var orderId = pathParts[pathParts.length - 1];
+  if (!orderId || orderId.length < 10) return;
+
+  // Prevent double-firing
+  if (sessionStorage.getItem('via_' + orderId)) return;
+  sessionStorage.setItem('via_' + orderId, '1');
+
+  // Read via_click_id from cookie
   var viaClickId = null;
   var cookies = document.cookie.split(';');
   for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i].trim();
-    if (cookie.indexOf('via_click_id=') === 0) {
-      viaClickId = cookie.substring(13);
-      break;
-    }
+    var c = cookies[i].trim();
+    if (c.indexOf('via_click_id=') === 0) { viaClickId = c.substring(13); break; }
   }
 
-  function sendConversion(orderId, orderTotal, currency, items) {
-    fetch('${baseUrl}/api/conversion', {
+  // Find the order total — take the largest dollar amount on the page
+  function findTotal() {
+    var matches = document.body.innerText.match(/\\$[\\d,]+\\.\\d{2}/g) || [];
+    var amounts = matches.map(function(m) { return parseFloat(m.replace(/[\\$,]/g, '')); });
+    return amounts.length ? Math.max.apply(null, amounts) : 0;
+  }
+
+  function send() {
+    fetch('https://theviaplatform.com/api/conversion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId: String(orderId),
-        orderTotal: Number(orderTotal),
-        currency: currency || 'USD',
-        items: items || [],
+        orderId: orderId,
+        orderTotal: findTotal(),
+        currency: 'USD',
+        items: [],
         viaClickId: viaClickId,
         storeSlug: '${displaySlug}',
         storeName: '${displayName}'
@@ -58,46 +66,18 @@ export default function SquarespaceSetupPage() {
     }).catch(function() {});
   }
 
-  var registered = false;
-  function registerCallback() {
-    if (registered) return;
-    if (typeof Squarespace !== 'undefined' && Squarespace.commerce && typeof Squarespace.commerce.onOrderComplete === 'function') {
-      registered = true;
-      Squarespace.commerce.onOrderComplete(function(orderData) {
-        sendConversion(
-          orderData.orderNumber,
-          orderData.grandTotal.value,
-          orderData.grandTotal.currency,
-          (orderData.items || []).map(function(item) {
-            return {
-              productName: item.productName,
-              quantity: item.quantity,
-              price: item.unitPrice ? item.unitPrice.value : 0
-            };
-          })
-        );
-      });
-    }
-  }
-
-  registerCallback();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', registerCallback);
+    document.addEventListener('DOMContentLoaded', send);
+  } else {
+    send();
   }
-  window.addEventListener('load', registerCallback);
 })();
 </script>`;
 
-  function copyHeaderCode() {
+  function copyCode() {
     navigator.clipboard.writeText(headerCode);
-    setCopiedHeader(true);
-    setTimeout(() => setCopiedHeader(false), 2000);
-  }
-
-  function copyOrderCode() {
-    navigator.clipboard.writeText(orderConfirmationCode);
-    setCopiedOrder(true);
-    setTimeout(() => setCopiedOrder(false), 2000);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -128,7 +108,7 @@ export default function SquarespaceSetupPage() {
         <div className="max-w-3xl mx-auto px-6 py-4">
           <p className="text-sm text-neutral-600">
             This takes about <strong className="text-black">5 minutes</strong>. You&apos;ll just be copying and pasting
-            two blocks of text into your Squarespace settings.
+            one block of text into your Squarespace settings.
           </p>
         </div>
       </section>
@@ -161,8 +141,7 @@ export default function SquarespaceSetupPage() {
               <h2 className="text-xl sm:text-2xl font-serif">Enter Your Store Name</h2>
             </div>
             <p className="text-neutral-600 mb-6">
-              Type in your store details below. The second code block in Step 3 will
-              update automatically with your info.
+              Type in your store details below. The code in Step 2 will update automatically with your info.
             </p>
 
             <div className="space-y-4">
@@ -195,23 +174,32 @@ export default function SquarespaceSetupPage() {
             {isFilled && (
               <div className="mt-4 bg-green-50 border border-green-200 p-4">
                 <p className="text-sm text-green-800">
-                  Your store info has been filled in. The code in Step 3 now
-                  includes <strong>&quot;{storeName}&quot;</strong> and <strong>&quot;{storeSlug}&quot;</strong>.
+                  Your store info has been filled in. The code below now includes{" "}
+                  <strong>&quot;{storeName}&quot;</strong> and <strong>&quot;{storeSlug}&quot;</strong>.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Step 2: Copy Code Block 1 */}
+          {/* Step 2: Copy the code */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
               <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
                 2
               </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the First Code Block</h2>
+              <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the Code</h2>
             </div>
 
             <div className="space-y-6">
+              {!isFilled && (
+                <div className="bg-amber-50 border border-amber-200 p-4">
+                  <p className="text-sm text-amber-800">
+                    Fill in your store name and store ID in Step 1 first — the code will
+                    automatically include your store info.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
                 <p className="text-sm font-medium">Here&apos;s what to do:</p>
                 <ol className="space-y-3 text-sm text-neutral-600">
@@ -221,11 +209,11 @@ export default function SquarespaceSetupPage() {
                   </li>
                   <li className="flex gap-3">
                     <span className="font-medium text-black flex-shrink-0">b.</span>
-                    <span>You&apos;ll see a box labeled <strong className="text-black">Header</strong> at the top of the page</span>
+                    <span>Find the box labeled <strong className="text-black">Header</strong></span>
                   </li>
                   <li className="flex gap-3">
                     <span className="font-medium text-black flex-shrink-0">c.</span>
-                    <span>Click the <strong className="text-black">Copy</strong> button below, then paste it into that Header box</span>
+                    <span>Click <strong className="text-black">Copy</strong> below and paste it into that box</span>
                   </li>
                 </ol>
               </div>
@@ -235,87 +223,28 @@ export default function SquarespaceSetupPage() {
                   <code>{headerCode}</code>
                 </pre>
                 <button
-                  onClick={copyHeaderCode}
+                  onClick={copyCode}
                   className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
-                    copiedHeader
+                    copied
                       ? "bg-green-500 text-white"
                       : "bg-white text-black hover:bg-neutral-200"
                   }`}
                 >
-                  {copiedHeader ? "Copied!" : "Copy"}
+                  {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
 
               <p className="text-neutral-400 text-xs">
-                This code is the same for every store — you don&apos;t need to change anything.
+                If you previously installed two VIA code blocks, replace your existing Header code with this one and delete the Order Confirmation code — this single block handles everything.
               </p>
             </div>
           </div>
 
-          {/* Step 3: Copy Code Block 2 */}
+          {/* Step 3: Save */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
               <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
                 3
-              </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the Second Code Block</h2>
-            </div>
-
-            <div className="space-y-6">
-              {!isFilled && (
-                <div className="bg-amber-50 border border-amber-200 p-4">
-                  <p className="text-sm text-amber-800">
-                    Fill in your store name and store ID in Step 1 first — this code block will
-                    automatically include your store info.
-                  </p>
-                </div>
-              )}
-
-              <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
-                <p className="text-sm font-medium">On the same Code Injection page:</p>
-                <ol className="space-y-3 text-sm text-neutral-600">
-                  <li className="flex gap-3">
-                    <span className="font-medium text-black flex-shrink-0">a.</span>
-                    <span>Scroll down until you see a box labeled <strong className="text-black">Order Confirmation Page</strong></span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="font-medium text-black flex-shrink-0">b.</span>
-                    <span>Click the <strong className="text-black">Copy</strong> button below, then paste it into that Order Confirmation Page box</span>
-                  </li>
-                </ol>
-              </div>
-
-              <div className="relative">
-                <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                  <code>{orderConfirmationCode}</code>
-                </pre>
-                <button
-                  onClick={copyOrderCode}
-                  className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
-                    copiedOrder
-                      ? "bg-green-500 text-white"
-                      : "bg-white text-black hover:bg-neutral-200"
-                  }`}
-                >
-                  {copiedOrder ? "Copied!" : "Copy"}
-                </button>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 p-4">
-                <p className="text-sm text-amber-800">
-                  <strong>Quick recap:</strong> The first code block goes in the <strong>Header</strong> box.
-                  The second code block goes in the <strong>Order Confirmation Page</strong> box.
-                  They&apos;re on the same page in Squarespace, just scroll down.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4: Save */}
-          <div className="mb-12 sm:mb-16">
-            <div className="flex items-center gap-4 mb-6">
-              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
-                4
               </span>
               <h2 className="text-xl sm:text-2xl font-serif">Hit Save</h2>
             </div>
@@ -361,7 +290,7 @@ export default function SquarespaceSetupPage() {
               <div>
                 <h3 className="font-medium mb-2">Can I remove this later?</h3>
                 <p className="text-neutral-600 text-sm">
-                  Yes. Just go back to Code Injection and delete the code from both boxes. No changes
+                  Yes. Just go back to Code Injection and delete the code from the Header box. No changes
                   to your site will remain.
                 </p>
               </div>
