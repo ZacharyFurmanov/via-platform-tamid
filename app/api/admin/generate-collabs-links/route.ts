@@ -4,6 +4,7 @@ import {
   getProductsWithCollabsLinks,
   updateCollabsLinkByShopifyProductId,
   getSyncedStores,
+  getShopifyIdCoverage,
 } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 
@@ -445,6 +446,9 @@ export async function GET(request: NextRequest) {
     {} as Record<string, number>
   );
 
+  // Debug: shopify_product_id coverage per collabs store
+  const shopifyIdCoverage = await getShopifyIdCoverage(Array.from(COLLABS_STORE_SLUGS));
+
   return NextResponse.json({
     total: candidates.length,
     byStore,
@@ -454,6 +458,7 @@ export async function GET(request: NextRequest) {
     debug: {
       dbStoreCounts,
       collabsStoreSlugsList: Array.from(COLLABS_STORE_SLUGS),
+      shopifyIdCoverage,
     },
   });
 }

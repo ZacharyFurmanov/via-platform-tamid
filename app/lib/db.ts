@@ -387,6 +387,38 @@ export async function getCollabsLink(id: number): Promise<string | null> {
 }
 
 /**
+ * Get per-store breakdown of shopify_product_id and collabs_link coverage.
+ * Used for debugging sync issues.
+ */
+export async function getShopifyIdCoverage(
+  storeSlugs: string[]
+): Promise<Record<string, { total: number; withId: number; withoutId: number; withCollabsLink: number }>> {
+  const sql = neon(getDatabaseUrl());
+  if (storeSlugs.length === 0) return {};
+  const rows = await sql`
+    SELECT
+      store_slug,
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE shopify_product_id IS NOT NULL)::int AS with_id,
+      COUNT(*) FILTER (WHERE shopify_product_id IS NULL)::int AS without_id,
+      COUNT(*) FILTER (WHERE collabs_link IS NOT NULL)::int AS with_collabs_link
+    FROM products
+    WHERE store_slug = ANY(${storeSlugs})
+    GROUP BY store_slug
+  `;
+  const result: Record<string, { total: number; withId: number; withoutId: number; withCollabsLink: number }> = {};
+  for (const row of rows) {
+    result[row.store_slug as string] = {
+      total: row.total as number,
+      withId: row.with_id as number,
+      withoutId: row.without_id as number,
+      withCollabsLink: row.with_collabs_link as number,
+    };
+  }
+  return result;
+}
+
+/**
  * Get any collabs link for a given store slug.
  * Used to extract the dt_id tracking parameter for cart checkout URLs.
  */

@@ -29,7 +29,7 @@ export default function CollabsLinksPage() {
     collabsStores: string[];
     sampleLinks?: { id: number; title: string; storeSlug: string; collabsLink: string; compositeId: string }[];
     redirectInfo?: { collabsLink: string; redirectsTo: string } | null;
-    debug?: { dbStoreCounts: Record<string, number>; collabsStoreSlugsList: string[] };
+    debug?: { dbStoreCounts: Record<string, number>; collabsStoreSlugsList: string[]; shopifyIdCoverage?: Record<string, { total: number; withId: number; withoutId: number; withCollabsLink: number }> };
   } | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progress, setProgress] = useState<{
@@ -284,6 +284,29 @@ export default function CollabsLinksPage() {
                           <span>0 products in DB</span>
                         </div>
                       ))}
+                    {missing.debug.shopifyIdCoverage && (
+                      <>
+                        <p className="font-medium text-black mt-3">Shopify ID coverage (collabs stores):</p>
+                        {missing.debug.collabsStoreSlugsList.map(slug => {
+                          const cov = missing.debug!.shopifyIdCoverage?.[slug];
+                          if (!cov) return (
+                            <div key={slug} className="flex gap-3 text-red-500">
+                              <span>{slug}</span>
+                              <span>not in DB</span>
+                            </div>
+                          );
+                          const allHaveId = cov.withoutId === 0 && cov.total > 0;
+                          return (
+                            <div key={slug} className={`flex gap-3 ${allHaveId ? "text-green-600" : "text-red-500"}`}>
+                              <span>{slug}</span>
+                              <span>{cov.withId}/{cov.total} have shopify_id</span>
+                              {cov.withCollabsLink > 0 && <span className="text-neutral-400">({cov.withCollabsLink} have collabs link)</span>}
+                              {cov.withoutId > 0 && <span className="text-red-400">⚠ {cov.withoutId} missing ID — re-sync needed</span>}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
                   </div>
                 </details>
               )}
