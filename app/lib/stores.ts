@@ -1,6 +1,7 @@
 export const stores = [
   {
     slug: "ascensio-vintage",
+    dashboardToken: "av-2b7c9d1e4f8a",
     name: "Ascensio Vintage",
     location: "Shropshire, England",
     description:
@@ -20,6 +21,7 @@ export const stores = [
   },
   {
     slug: "lei-vintage",
+    dashboardToken: "lv-f4a8b2c1d9e3",
     name: "LEI Vintage",
     location: "Boston, MA",
     description:
@@ -38,6 +40,7 @@ export const stores = [
   },
   {
     slug: "lover-girl-vintage",
+    dashboardToken: "lgv-9e3f1a8b2c7d",
     name: "Lover Girl Vintage",
     location: "Newport Beach, CA",
     description:
@@ -57,6 +60,7 @@ export const stores = [
   },
   {
     slug: "missi-archives",
+    dashboardToken: "ma-1c9d4e7f2b8a",
     name: "Missi Archives",
     location: "New York, NY",
     description:
@@ -79,6 +83,7 @@ export const stores = [
   },
   {
     slug: "scarz-vintage",
+    dashboardToken: "sv-8a2c4b9d1e7f",
     name: "SCARZ Vintage",
     location: "London, UK",
     description:
@@ -100,6 +105,7 @@ export const stores = [
   },
   {
     slug: "source-twenty-four",
+    dashboardToken: "s24-7d1f8c4a2b9e",
     name: "Source Twenty Four",
     location: "New Jersey",
     description:
@@ -119,6 +125,7 @@ export const stores = [
   },
   {
     slug: "vintage-archives-la",
+    dashboardToken: "vala-4b8e1c9a7d2f",
     name: "Vintage Archives LA",
     location: "Los Angeles, CA",
     description:
@@ -138,6 +145,7 @@ export const stores = [
   },
   {
     slug: "the-objects-of-affection",
+    dashboardToken: "tooa-2f9a4c8b1e7d",
     name: "The Objects of Affection",
     location: "New Hope, Pennsylvania",
     description:
@@ -157,6 +165,7 @@ export const stores = [
   },
   {
     slug: "vintari-vault",
+    dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",
     location: "Dallas, Texas",
     description:

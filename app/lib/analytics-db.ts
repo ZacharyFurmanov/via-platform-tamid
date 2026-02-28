@@ -316,6 +316,54 @@ export async function getProductPopularityScores(
   return scores;
 }
 
+export async function getStoreAnalytics(storeSlug: string, range: string) {
+  const sql = neon(getDatabaseUrl());
+  await initAnalyticsTables();
+
+  let cutoff: string | null = null;
+  if (range === "7d") {
+    cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  } else if (range === "30d") {
+    cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  const [clickCountRows, topProductRows, recentClickRows, conversionRows] = await Promise.all([
+    cutoff
+      ? sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff}`
+      : sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug}`,
+    cutoff
+      ? sql`SELECT product_name, COUNT(*)::int AS count FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} GROUP BY product_name ORDER BY count DESC LIMIT 10`
+      : sql`SELECT product_name, COUNT(*)::int AS count FROM clicks WHERE store_slug = ${storeSlug} GROUP BY product_name ORDER BY count DESC LIMIT 10`,
+    cutoff
+      ? sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} ORDER BY timestamp DESC LIMIT 20`
+      : sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} ORDER BY timestamp DESC LIMIT 20`,
+    cutoff
+      ? sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
+      : sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} ORDER BY timestamp DESC`,
+  ]);
+
+  const totalClicks = clickCountRows[0].total as number;
+  const topProducts = topProductRows.map((row) => ({
+    name: row.product_name as string,
+    count: row.count as number,
+  }));
+  const recentClicks = recentClickRows.map(mapClickRow);
+  const conversions = conversionRows.map(mapConversionRow);
+  const totalConversions = conversions.length;
+  const totalRevenue = conversions.reduce((sum, c) => sum + c.orderTotal, 0);
+  const recentConversions = conversions.slice(0, 20);
+
+  return {
+    totalClicks,
+    totalConversions,
+    totalRevenue,
+    topProducts,
+    recentClicks,
+    recentConversions,
+    range,
+  };
+}
+
 function mapClickRow(row: Record<string, unknown>): ClickRecord {
   return {
     clickId: row.click_id as string,
