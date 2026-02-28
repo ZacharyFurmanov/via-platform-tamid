@@ -29,6 +29,7 @@ export default function CollabsLinksPage() {
     collabsStores: string[];
     sampleLinks?: { id: number; title: string; storeSlug: string; collabsLink: string; compositeId: string }[];
     redirectInfo?: { collabsLink: string; redirectsTo: string } | null;
+    debug?: { dbStoreCounts: Record<string, number>; collabsStoreSlugsList: string[] };
   } | null>(null);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progress, setProgress] = useState<{
@@ -262,6 +263,29 @@ export default function CollabsLinksPage() {
                 <div className="bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                   All products have collabs links. Nothing to generate.
                 </div>
+              )}
+              {missing.debug && (
+                <details className="mt-4">
+                  <summary className="text-xs text-neutral-400 cursor-pointer hover:text-black">DB debug</summary>
+                  <div className="mt-2 text-xs font-mono space-y-1 text-neutral-600">
+                    <p className="font-medium text-black">All stores in DB:</p>
+                    {Object.entries(missing.debug.dbStoreCounts).map(([slug, count]) => (
+                      <div key={slug} className={`flex gap-3 ${missing.debug!.collabsStoreSlugsList.includes(slug) ? "text-black" : "text-neutral-400"}`}>
+                        <span>{slug}</span>
+                        <span>{count} products</span>
+                        {!missing.debug!.collabsStoreSlugsList.includes(slug) && <span className="text-red-400">(not in collabs list)</span>}
+                      </div>
+                    ))}
+                    {missing.debug.collabsStoreSlugsList
+                      .filter(slug => !missing.debug!.dbStoreCounts[slug])
+                      .map(slug => (
+                        <div key={slug} className="flex gap-3 text-red-500">
+                          <span>{slug}</span>
+                          <span>0 products in DB</span>
+                        </div>
+                      ))}
+                  </div>
+                </details>
               )}
             </div>
           ) : null}

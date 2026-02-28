@@ -3,6 +3,7 @@ import {
   getProductsMissingCollabsLink,
   getProductsWithCollabsLinks,
   updateCollabsLinkByShopifyProductId,
+  getSyncedStores,
 } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 
@@ -434,11 +435,25 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Debug: show all stores in DB with their product counts
+  const syncedStores = await getSyncedStores();
+  const dbStoreCounts = syncedStores.reduce(
+    (acc, s) => {
+      acc[s.store_slug] = s.product_count;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   return NextResponse.json({
     total: candidates.length,
     byStore,
     collabsStores: Array.from(COLLABS_STORE_SLUGS),
     sampleLinks,
     redirectInfo,
+    debug: {
+      dbStoreCounts,
+      collabsStoreSlugsList: Array.from(COLLABS_STORE_SLUGS),
+    },
   });
 }

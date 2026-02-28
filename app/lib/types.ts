@@ -9,5 +9,6 @@ export type StoreProduct = {
   externalUrl?: string;
   image?: string;
   images?: string[];
+  size?: string | null;
   syncedAt?: string; // ISO timestamp from DB
 };
