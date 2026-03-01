@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import "./globals.css";
 import type { Metadata } from "next";
-import { Cormorant_Garamond } from "next/font/google";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Script from "next/script";
@@ -13,11 +12,6 @@ import { FavoritesProvider } from "./components/FavoritesProvider";
 import { FriendsProvider } from "./components/FriendsProvider";
 import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-});
 
 export const metadata: Metadata = {
   title: "VIA",
@@ -65,7 +59,7 @@ export default function RootLayout({
         `}
       </Script>
 
-      <body className={`${cormorant.className} bg-white text-black`}>
+      <body className="bg-[#F7F3EA] text-[#5D0F17]">
         <AuthProvider>
           <FavoritesProvider>
             <FriendsProvider>

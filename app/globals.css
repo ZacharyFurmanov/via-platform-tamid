@@ -1,12 +1,53 @@
 @import "tailwindcss";
 
 /* ================================
+   Fonts — Satoshi (via Fontshare CDN, free)
+================================ */
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
+
+/* PP Eiko — place files in /public/fonts/ */
+@font-face {
+  font-family: 'PP Eiko';
+  src: url('/fonts/PPEiko-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Eiko';
+  src: url('/fonts/PPEiko-RegularItalic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Dreame Avenue — place file in /public/fonts/ */
+@font-face {
+  font-family: 'Dreame Avenue';
+  src: url('/fonts/DreameAvenue.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ================================
    Design tokens
 ================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --font-cormorant: "Cormorant Garamond", serif;
+  --background: #F7F3EA;
+  --foreground: #5D0F17;
+  --via-red: #5D0F17;
+  --via-tan: #D8CABD;
+  --via-cream: #F7F3EA;
+}
+
+/* ================================
+   Tailwind v4 theme overrides
+================================ */
+@theme {
+  --font-serif: 'PP Eiko', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Satoshi', system-ui, sans-serif;
+  --font-logo: 'Dreame Avenue', 'PP Eiko', Georgia, serif;
 }
 
 /* ================================
@@ -28,19 +69,16 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-cormorant);
+  font-family: var(--font-sans, 'Satoshi', sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ================================
    Links & focus handling
-   (prevents mystery outlines)
 ================================ */
-
-/* Subtle focus ring for keyboard accessibility */
 *:focus-visible {
-  outline: 1px solid rgba(0, 0, 0, 0.25);
+  outline: 1px solid rgba(93, 15, 23, 0.25);
   outline-offset: 2px;
 }
 
@@ -69,8 +107,6 @@ body {
 
 .animate-hero {
   animation: heroFadeUp 0.9s ease-out forwards;
-
-  
 }
 
 .delay-150 {
@@ -115,9 +151,6 @@ body {
 }
 
 /* ================================
-   Hide scrollbar for horizontal scroll
-================================ */
-/* ================================
    Heading letter-spacing
 ================================ */
 h1, h2, h3 {
@@ -131,7 +164,7 @@ h1, h2, h3 {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: rgb(163 163 163); /* neutral-400 */
+  color: rgba(93, 15, 23, 0.5);
   margin-bottom: 1rem;
 }
 @media (min-width: 640px) {
@@ -141,7 +174,7 @@ h1, h2, h3 {
 }
 
 .editorial-heading {
-  font-family: var(--font-cormorant);
+  font-family: var(--font-serif);
   font-size: 2.25rem;
   line-height: 1.1;
 }
@@ -179,7 +212,7 @@ h1, h2, h3 {
   transform: scaleX(1);
 }
 .link-underline-dark::after {
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(93, 15, 23, 0.4);
 }
 
 /* ================================
@@ -195,7 +228,6 @@ h1, h2, h3 {
 
 /* ================================
    Product description font override
-   Strips inline font styles from Shopify/Squarespace HTML
 ================================ */
 .product-description * {
   font-family: inherit !important;

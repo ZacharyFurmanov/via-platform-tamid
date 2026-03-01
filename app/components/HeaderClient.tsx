@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, Menu, X, ChevronDown, User, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -34,7 +33,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-neutral-900 flex items-center justify-center text-[11px] text-neutral-400 tracking-[0.15em] uppercase overflow-hidden">
+    <div className="fixed top-0 z-50 w-full h-8 bg-[#D8CABD] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden">
       <div className="relative h-full flex items-center">
         <span
           className={`transition-all duration-500 ease-in-out ${
@@ -47,7 +46,7 @@ function AnnouncementBar() {
         </span>
         <Link
           href="/new-arrivals"
-          className={`transition-all duration-500 ease-in-out hover:text-white ${
+          className={`transition-all duration-500 ease-in-out hover:text-[#5D0F17]/70 ${
             showNewArrivals
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-full absolute"
@@ -81,7 +80,6 @@ export default function HeaderClient({
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (storesDropdownRef.current && !storesDropdownRef.current.contains(e.target as Node)) {
@@ -95,7 +93,6 @@ export default function HeaderClient({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change or resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -106,7 +103,6 @@ export default function HeaderClient({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -118,9 +114,6 @@ export default function HeaderClient({
     };
   }, [mobileMenuOpen]);
 
-  // -----------------------------
-  // SEARCH RESULTS
-  // -----------------------------
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,7 +126,6 @@ export default function HeaderClient({
       return;
     }
 
-    // Debounce API calls by 250ms
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       setSearchLoading(true);
@@ -190,9 +182,6 @@ export default function HeaderClient({
     };
   }, [query]);
 
-  // -----------------------------
-  // KEYBOARD NAV
-  // -----------------------------
   useEffect(() => {
     if (!searchOpen) return;
 
@@ -212,7 +201,6 @@ export default function HeaderClient({
         if (activeIndex >= 0 && results[activeIndex]) {
           router.push(results[activeIndex].href);
         } else {
-          // Check if query is an exact store name match
           const q = query.trim().toLowerCase();
           const matchedStore = stores.find(
             (s) => s.name.toLowerCase() === q || s.slug === q
@@ -228,7 +216,7 @@ export default function HeaderClient({
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [searchOpen, results, activeIndex, router]);
+  }, [searchOpen, results, activeIndex, router, query]);
 
   useEffect(() => {
     if (!searchOpen) {
@@ -242,23 +230,23 @@ export default function HeaderClient({
       {/* Announcement bar */}
       <AnnouncementBar />
 
-      <header className="fixed top-8 z-50 w-full bg-black">
+      {/* Header */}
+      <header className="fixed top-8 z-50 w-full bg-[#D8CABD]">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
-            <Image
-              src="/via-logo-white.png"
-              alt="VIA"
-              width={80}
-              height={32}
-              priority
-            />
+            <span
+              className="text-[#5D0F17] text-3xl sm:text-4xl leading-none tracking-wide"
+              style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
+            >
+              VIA.
+            </span>
           </Link>
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8 text-[15px] text-white">
+            <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]">
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -266,7 +254,7 @@ export default function HeaderClient({
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/60 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
                 >
                   Stores
                   <ChevronDown
@@ -282,25 +270,25 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-white text-black min-w-[220px] shadow-xl rounded-sm border border-neutral-100">
+                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[220px] shadow-xl border border-[#5D0F17]/10">
                     <div className="py-2">
                       {stores.map((store) => (
                         <Link
                           key={store.slug}
                           href={`/stores/${store.slug}`}
                           onClick={() => setStoresDropdownOpen(false)}
-                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-neutral-50 transition-colors"
+                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
                         >
                           <span className="font-medium">{store.name}</span>
-                          <span className="block text-xs text-neutral-500 mt-0.5">{store.location}</span>
+                          <span className="block text-xs text-[#5D0F17]/50 mt-0.5">{store.location}</span>
                         </Link>
                       ))}
                     </div>
-                    <div className="border-t border-neutral-100">
+                    <div className="border-t border-[#5D0F17]/10">
                       <Link
                         href="/stores"
                         onClick={() => setStoresDropdownOpen(false)}
-                        className="block px-6 py-3 text-xs uppercase tracking-wide text-neutral-500 hover:text-black hover:bg-neutral-50 transition-colors"
+                        className="block px-6 py-3 text-xs uppercase tracking-wide text-[#5D0F17]/60 hover:text-[#5D0F17] hover:bg-[#D8CABD]/50 transition-colors"
                       >
                         View All Stores
                       </Link>
@@ -316,7 +304,7 @@ export default function HeaderClient({
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
                   }}
-                  className="flex items-center gap-1 hover:text-white/60 transition-colors duration-300"
+                  className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
                 >
                   Categories
                   <ChevronDown
@@ -332,24 +320,24 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-white text-black min-w-[200px] shadow-xl rounded-sm border border-neutral-100">
+                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[200px] shadow-xl border border-[#5D0F17]/10">
                     <div className="py-2">
                       {categories.map((cat) => (
                         <Link
                           key={cat.slug}
                           href={`/categories/${cat.slug}`}
                           onClick={() => setCategoriesDropdownOpen(false)}
-                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-neutral-50 transition-colors"
+                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
                         >
                           {cat.label}
                         </Link>
                       ))}
                     </div>
-                    <div className="border-t border-neutral-100">
+                    <div className="border-t border-[#5D0F17]/10">
                       <Link
                         href="/categories"
                         onClick={() => setCategoriesDropdownOpen(false)}
-                        className="block px-6 py-3 text-xs uppercase tracking-wide text-neutral-500 hover:text-black hover:bg-neutral-50 transition-colors"
+                        className="block px-6 py-3 text-xs uppercase tracking-wide text-[#5D0F17]/60 hover:text-[#5D0F17] hover:bg-[#D8CABD]/50 transition-colors"
                       >
                         All Categories
                       </Link>
@@ -361,7 +349,7 @@ export default function HeaderClient({
               {/* DESIGNERS LINK */}
               <Link
                 href="/brands"
-                className="hover:text-white/60 transition-colors duration-300"
+                className="hover:text-[#5D0F17]/60 transition-colors duration-300"
               >
                 Designers
               </Link>
@@ -371,7 +359,7 @@ export default function HeaderClient({
             <button
               aria-label="Search"
               onClick={() => setSearchOpen(true)}
-              className="p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 text-[#5D0F17] min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Search size={20} />
             </button>
@@ -379,12 +367,12 @@ export default function HeaderClient({
             {/* Cart Button */}
             <Link
               href="/cart"
-              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/60 transition-colors"
+              className="relative p-2 text-[#5D0F17] min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-[#5D0F17]/60 transition-colors"
               aria-label="Cart"
             >
               <ShoppingCart size={20} />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] font-medium w-4.5 h-4.5 min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none">
+                <span className="absolute -top-0.5 -right-0.5 bg-[#5D0F17] text-[#F7F3EA] text-[10px] font-medium min-w-[18px] min-h-[18px] flex items-center justify-center rounded-full leading-none px-1">
                   {itemCount}
                 </span>
               )}
@@ -393,7 +381,7 @@ export default function HeaderClient({
             {/* Account Button */}
             <Link
               href={session ? "/account" : "/login"}
-              className="relative p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-white/60 transition-colors"
+              className="relative p-2 text-[#5D0F17] min-w-[44px] min-h-[44px] flex items-center justify-center hover:text-[#5D0F17]/60 transition-colors"
               aria-label={session ? "Account" : "Sign in"}
             >
               {session?.user?.image ? (
@@ -406,7 +394,7 @@ export default function HeaderClient({
                 <User size={20} />
               )}
               {pendingCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-[#5D0F17] rounded-full border-2 border-[#D8CABD]" />
               )}
             </Link>
 
@@ -414,7 +402,7 @@ export default function HeaderClient({
             <button
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="md:hidden p-2 text-[#5D0F17] min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -425,22 +413,19 @@ export default function HeaderClient({
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-[#5D0F17]/30"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          {/* Menu Panel */}
-          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-white overflow-y-auto">
+          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-[#F7F3EA] overflow-y-auto">
             <div className="px-6 py-8">
-              {/* Main Links */}
               <ul className="space-y-1">
                 {/* Mobile Stores Accordion */}
-                <li className="border-b border-neutral-200">
+                <li className="border-b border-[#5D0F17]/15">
                   <button
                     onClick={() => setMobileStoresExpanded(!mobileStoresExpanded)}
-                    className="w-full flex items-center justify-between py-4 text-lg text-black"
+                    className="w-full flex items-center justify-between py-4 text-lg text-[#5D0F17]"
                   >
                     Stores
                     <ChevronDown
@@ -459,7 +444,7 @@ export default function HeaderClient({
                           key={store.slug}
                           href={`/stores/${store.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="block py-2 text-neutral-600 hover:text-black transition-colors"
+                          className="block py-2 text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors"
                         >
                           {store.name}
                         </Link>
@@ -467,7 +452,7 @@ export default function HeaderClient({
                       <Link
                         href="/stores"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-xs uppercase tracking-wide text-neutral-400 hover:text-black transition-colors"
+                        className="block py-2 text-xs uppercase tracking-wide text-[#5D0F17]/50 hover:text-[#5D0F17] transition-colors"
                       >
                         View All Stores
                       </Link>
@@ -476,10 +461,10 @@ export default function HeaderClient({
                 </li>
 
                 {/* Mobile Categories Accordion */}
-                <li className="border-b border-neutral-200">
+                <li className="border-b border-[#5D0F17]/15">
                   <button
                     onClick={() => setMobileCategoriesExpanded(!mobileCategoriesExpanded)}
-                    className="w-full flex items-center justify-between py-4 text-lg text-black"
+                    className="w-full flex items-center justify-between py-4 text-lg text-[#5D0F17]"
                   >
                     Categories
                     <ChevronDown
@@ -498,7 +483,7 @@ export default function HeaderClient({
                           key={cat.slug}
                           href={`/categories/${cat.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="block py-2 text-neutral-600 hover:text-black transition-colors"
+                          className="block py-2 text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors"
                         >
                           {cat.label}
                         </Link>
@@ -506,7 +491,7 @@ export default function HeaderClient({
                       <Link
                         href="/categories"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-xs uppercase tracking-wide text-neutral-400 hover:text-black transition-colors"
+                        className="block py-2 text-xs uppercase tracking-wide text-[#5D0F17]/50 hover:text-[#5D0F17] transition-colors"
                       >
                         All Categories
                       </Link>
@@ -515,24 +500,23 @@ export default function HeaderClient({
                 </li>
               </ul>
 
-              {/* Mobile Designers Link */}
               <ul className="space-y-1">
-                <li className="border-b border-neutral-200">
+                <li className="border-b border-[#5D0F17]/15">
                   <Link
                     href="/brands"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block py-4 text-lg text-black"
+                    className="block py-4 text-lg text-[#5D0F17]"
                   >
                     Designers
                   </Link>
                 </li>
               </ul>
 
-              <div className="mt-8 pt-8 border-t border-neutral-200">
+              <div className="mt-8 pt-8 border-t border-[#5D0F17]/15">
                 <Link
                   href={session ? "/account" : "/login"}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-neutral-600 hover:text-black"
+                  className="block py-3 text-[#5D0F17]/70 hover:text-[#5D0F17]"
                 >
                   {session ? "My Account" : "Sign In"}
                 </Link>
@@ -544,11 +528,11 @@ export default function HeaderClient({
 
       {/* SEARCH OVERLAY */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center md:pt-24">
-          <div className="bg-white w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
+        <div className="fixed inset-0 z-50 bg-[#5D0F17]/30 backdrop-blur-sm flex items-start justify-center md:pt-24">
+          <div className="bg-[#F7F3EA] w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
             <button
               onClick={() => setSearchOpen(false)}
-              className="absolute top-4 right-4 text-xs uppercase"
+              className="absolute top-4 right-4 text-xs uppercase text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
             >
               Close
             </button>
@@ -558,14 +542,13 @@ export default function HeaderClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items or stores..."
-              className="w-full border-b border-black pb-3 text-lg outline-none flex-shrink-0"
+              className="w-full border-b border-[#5D0F17] pb-3 text-lg outline-none flex-shrink-0 bg-transparent text-[#5D0F17] placeholder:text-[#5D0F17]/40"
             />
 
             <div className="mt-4 overflow-y-auto flex-1 min-h-0">
-              {/* Empty state: browse suggestions when no query */}
               {!query.trim() && (
                 <div className="pt-1">
-                  <p className="px-3 pt-2 pb-2 text-[10px] uppercase tracking-widest text-black/40">Browse by Category</p>
+                  <p className="px-3 pt-2 pb-2 text-[10px] uppercase tracking-widest text-[#5D0F17]/40">Browse by Category</p>
                   <div className="px-3 pb-5 grid grid-cols-2 gap-2">
                     {[
                       { slug: "clothing", label: "Clothing" },
@@ -576,37 +559,36 @@ export default function HeaderClient({
                       <button
                         key={cat.slug}
                         onClick={() => { setSearchOpen(false); router.push(`/categories/${cat.slug}`); }}
-                        className="border border-neutral-200 py-3 text-sm text-center hover:bg-black hover:text-white hover:border-black transition-colors"
+                        className="border border-[#5D0F17]/30 py-3 text-sm text-center text-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {cat.label}
                       </button>
                     ))}
                   </div>
-                  <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-black/40 border-t border-neutral-100">Our Stores</p>
+                  <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-[#5D0F17]/40 border-t border-[#5D0F17]/10">Our Stores</p>
                   {stores.map((store) => (
                     <button
                       key={store.slug}
                       onClick={() => { setSearchOpen(false); router.push(`/stores/${store.slug}`); }}
-                      className="w-full text-left px-3 py-3 hover:bg-neutral-50 flex items-center justify-between"
+                      className="w-full text-left px-3 py-3 hover:bg-[#D8CABD]/40 flex items-center justify-between text-[#5D0F17]"
                     >
                       <span className="text-sm">{store.name}</span>
-                      <span className="text-xs text-black/40">{store.location}</span>
+                      <span className="text-xs text-[#5D0F17]/40">{store.location}</span>
                     </button>
                   ))}
                 </div>
               )}
 
               {searchLoading && results.length === 0 && (
-                <p className="text-sm text-black/40 px-3 py-2">Searching...</p>
+                <p className="text-sm text-[#5D0F17]/40 px-3 py-2">Searching...</p>
               )}
               {!searchLoading && query.trim().length >= 2 && results.length === 0 && (
-                <p className="text-sm text-black/40 px-3 py-2">No results found</p>
+                <p className="text-sm text-[#5D0F17]/40 px-3 py-2">No results found</p>
               )}
 
-              {/* Grouped results */}
               {(() => {
                 const designers = results.filter((r) => r.type === "designer");
-                const categories = results.filter((r) => r.type === "category");
+                const cats = results.filter((r) => r.type === "category");
                 const storeResults = results.filter((r) => r.type === "store");
                 const products = results.filter((r) => r.type === "product");
                 let flatIndex = -1;
@@ -621,10 +603,10 @@ export default function HeaderClient({
                         setSearchOpen(false);
                         router.push(r.href);
                       }}
-                      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 ${
+                      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 text-[#5D0F17] ${
                         idx === activeIndex
-                          ? "bg-black text-white"
-                          : "hover:bg-neutral-50"
+                          ? "bg-[#5D0F17] text-[#F7F3EA]"
+                          : "hover:bg-[#D8CABD]/40"
                       }`}
                     >
                       {r.type === "product" && r.image && (
@@ -652,25 +634,25 @@ export default function HeaderClient({
                   <>
                     {designers.length > 0 && (
                       <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Designers</p>
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Designers</p>
                         {designers.map(renderItem)}
                       </div>
                     )}
-                    {categories.length > 0 && (
+                    {cats.length > 0 && (
                       <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Categories</p>
-                        {categories.map(renderItem)}
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Categories</p>
+                        {cats.map(renderItem)}
                       </div>
                     )}
                     {storeResults.length > 0 && (
                       <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Stores</p>
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Stores</p>
                         {storeResults.map(renderItem)}
                       </div>
                     )}
                     {products.length > 0 && (
                       <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-black/40 font-medium">Products</p>
+                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Products</p>
                         {products.map(renderItem)}
                       </div>
                     )}
@@ -680,7 +662,7 @@ export default function HeaderClient({
                           setSearchOpen(false);
                           router.push(`/search?q=${encodeURIComponent(query.trim())}`);
                         }}
-                        className="w-full text-left px-3 py-3 mt-2 border-t border-neutral-100 text-sm text-black/60 hover:text-black transition-colors"
+                        className="w-full text-left px-3 py-3 mt-2 border-t border-[#5D0F17]/10 text-sm text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
                       >
                         See all results for &ldquo;{query.trim()}&rdquo;
                       </button>

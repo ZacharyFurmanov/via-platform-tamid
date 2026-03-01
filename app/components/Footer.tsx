@@ -1,20 +1,19 @@
 import Link from "next/link";
 import NewsletterSignup from "./NewsletterSignup";
-// import { GiveawayFooterLink } from "./GiveawayProvider";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white text-black border-t border-neutral-200">
+    <footer className="bg-[#D8CABD] text-[#5D0F17]">
       {/* Newsletter Section */}
-      <div className="border-b border-neutral-200">
+      <div className="border-b border-[#5D0F17]/15">
         <div className="max-w-7xl mx-auto px-6 py-20 sm:py-24">
           <div className="max-w-xl mx-auto text-center">
-            <h3 className="text-2xl sm:text-3xl font-serif mb-3">
+            <h3 className="text-2xl sm:text-3xl font-serif mb-3 text-[#5D0F17]">
               Join the Inner Circle
             </h3>
-            <p className="text-neutral-500 text-sm sm:text-base mb-8 leading-relaxed">
+            <p className="text-[#5D0F17]/70 text-sm sm:text-base mb-8 leading-relaxed">
               Be the first to discover new stores, rare finds, and exclusive drops from independent sellers worldwide.
             </p>
             <NewsletterSignup variant="hero" />
@@ -28,9 +27,14 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
-              <span className="text-3xl font-serif tracking-wide">VIA</span>
+              <span
+                className="text-3xl text-[#5D0F17] leading-none tracking-wide"
+                style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
+              >
+                VIA.
+              </span>
             </Link>
-            <p className="text-neutral-500 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
               Curated vintage and secondhand from independent stores across the country. Discover pieces with stories.
             </p>
             {/* Social Links */}
@@ -39,11 +43,11 @@ export default function Footer() {
                 href="https://www.instagram.com/theviaplatform/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center justify-center w-10 h-10 border border-neutral-300 hover:border-black hover:bg-black transition-all duration-300"
+                className="group flex items-center justify-center w-10 h-10 border border-[#5D0F17]/30 hover:border-[#5D0F17] hover:bg-[#5D0F17] transition-all duration-300"
                 aria-label="Follow us on Instagram"
               >
                 <svg
-                  className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors duration-300"
+                  className="w-5 h-5 text-[#5D0F17] group-hover:text-[#D8CABD] transition-colors duration-300"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -60,98 +64,56 @@ export default function Footer() {
 
           {/* Shop Column */}
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] text-neutral-400 mb-6">
+            <h4 className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">
               Shop
             </h4>
             <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/browse"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Browse All
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/stores"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Our Stores
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categories"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Categories
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/brands"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Designers
-                </Link>
-              </li>
-              {/* <li><GiveawayFooterLink /></li> */}
+              {[
+                { href: "/browse", label: "Browse All" },
+                { href: "/stores", label: "Our Stores" },
+                { href: "/categories", label: "Categories" },
+                { href: "/brands", label: "Designers" },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm link-underline"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Company Column */}
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] text-neutral-400 mb-6">
+            <h4 className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">
               Company
             </h4>
             <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/stories"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Stories
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/for-stores"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Partner With Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faqs"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  FAQs
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Terms &amp; Conditions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm link-underline"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
+              {[
+                { href: "/stories", label: "Stories" },
+                { href: "/for-stores", label: "Partner With Us" },
+                { href: "/faqs", label: "FAQs" },
+                { href: "/terms", label: "Terms & Conditions" },
+                { href: "/privacy", label: "Privacy Policy" },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm link-underline"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact Column */}
+          {/* Connect Column */}
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] text-neutral-400 mb-6">
+            <h4 className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">
               Connect
             </h4>
             <ul className="space-y-4">
@@ -160,7 +122,7 @@ export default function Footer() {
                   href="https://www.instagram.com/theviaplatform/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-neutral-600 hover:text-black transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
+                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
                 >
                   <span>Instagram</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,13 +136,13 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-neutral-200">
+      <div className="border-t border-[#5D0F17]/15">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-neutral-400 text-xs tracking-wide">
+            <p className="text-[#5D0F17]/50 text-xs tracking-wide">
               {currentYear} VIA. All rights reserved.
             </p>
-            <p className="text-neutral-400 text-xs tracking-wide">
+            <p className="text-[#5D0F17]/50 text-xs tracking-wide">
               Curated with care in the USA
             </p>
           </div>
