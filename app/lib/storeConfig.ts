@@ -76,6 +76,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "vintari-vault",
     storeDomain: "vintarivault.com",
   },
+  {
+    type: "shopify",
+    name: "Vangie",
+    slug: "vangie",
+    storeDomain: "vangie.co",
+  },
 ];
 
 export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];

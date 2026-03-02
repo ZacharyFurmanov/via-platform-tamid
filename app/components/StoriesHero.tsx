@@ -57,19 +57,13 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
 
         {/* Logo + text panel — below image on mobile, left side for desktop */}
         <div className="flex flex-col justify-center items-center text-center px-6 sm:px-12 py-10 sm:py-16 bg-[#F7F3EA] md:order-1">
-          {/* Logo */}
+          {/* Store name */}
           <div
-            key={story.slug + "-logo"}
+            key={story.slug + "-name"}
             className="animate-fade-in mb-5 sm:mb-8"
           >
-            <div className="relative w-48 h-24 sm:w-72 sm:h-36 mx-auto overflow-hidden">
-              <Image
-                src={story.logo}
-                alt={story.store}
-                fill
-                className="object-cover"
-              />
-            </div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-2 font-sans">A story from</p>
+            <h3 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">{story.store}</h3>
           </div>
 
           {/* Teaser */}
