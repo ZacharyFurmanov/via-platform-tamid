@@ -15,7 +15,7 @@ export default function HomePage() {
       <SmoothScroll />
 
       {/* ================= HERO ================= */}
-      <section className="relative min-h-[85vh] sm:min-h-screen flex items-end sm:items-center bg-[#5D0F17] overflow-hidden pb-16 sm:pb-0">
+      <section className="relative min-h-[85vh] sm:min-h-screen flex items-center bg-[#5D0F17] overflow-hidden">
         <div className="relative z-10 w-full">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-3xl animate-hero">

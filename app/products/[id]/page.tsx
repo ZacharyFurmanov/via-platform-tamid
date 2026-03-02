@@ -262,6 +262,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     ),
                   },
                   {
+                    title: "Authenticity & Curation",
+                    content: (
+                      <p>
+                        {storeConfig && "authenticityPolicy" in storeConfig && storeConfig.authenticityPolicy
+                          ? String(storeConfig.authenticityPolicy)
+                          : `All items sold by ${store.name} are personally sourced and inspected before listing. Each piece is described accurately — please review all item details and photos carefully before purchasing.`}
+                      </p>
+                    ),
+                  },
+                  {
                     title: "Shipping & Returns",
                     content: (
                       <div>

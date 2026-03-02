@@ -14,6 +14,8 @@ export const stores = [
     currency: "GBP",
     affiliatePath: "1234",
     collabsStoreId: "228601",
+    authenticityPolicy:
+      "Each item is thoroughly checked by our team for quality and authenticity before listing. We specialize in archival pieces from well-known brands, hand-selected with an eye for craftsmanship and condition — every listing is accurate, detailed, and exactly as described.",
     shippingPolicy:
       "Ships from Shropshire, England. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -32,6 +34,8 @@ export const stores = [
     logo: "/stores/lei-vintage-logo.jpg",
     logoBg: "#ffffff",
     currency: "USD",
+    authenticityPolicy:
+      "Every piece at LEI is personally curated and inspected before it reaches you. We stand behind the accuracy of each listing — if your item arrives significantly different from its description, reach out within 48 hours of delivery and we'll make it right.",
     shippingPolicy:
       "Shipping rates are calculated at checkout. Orders ship to the address provided at checkout.",
     returnPolicy:
@@ -53,6 +57,8 @@ export const stores = [
     currency: "USD",
     affiliatePath: "VIAPARTNER",
     collabsStoreId: "229026",
+    authenticityPolicy:
+      "Each piece is hand-selected with careful attention to quality and condition. Any notable wear or flaws are disclosed in individual item descriptions so you always know exactly what you're getting.",
     shippingPolicy:
       "Ships from Newport Beach, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -76,6 +82,8 @@ export const stores = [
     collabsStoreId: "228526",
     discountCode: "0001",
     perk: "VIA customers get free shipping — use code 0001 at checkout",
+    authenticityPolicy:
+      "Every item at Missi Archives is hand-picked and personally inspected before listing. Each piece is described accurately and transparently — if you have any concerns about your order, the team is available directly via email.",
     shippingPolicy:
       "Orders are processed within 2–5 business days. Delivery times vary by destination and chosen shipping service. A confirmation email with tracking details is sent once your order is dispatched.",
     returnPolicy:
@@ -98,6 +106,8 @@ export const stores = [
     collabsStoreId: "228153",
     discountCode: "VIAXSCARZ",
     perk: "VIA customers get free shipping — use code VIAXSCARZ at checkout",
+    authenticityPolicy:
+      "All items are hand-selected and personally authenticated by Scarlett, with a focus on rare archival pieces from Chanel, Gucci, Prada, Versace, and other iconic houses. Every listing includes detailed condition notes — if an item doesn't match its description, contact within 7 days of receiving your order.",
     shippingPolicy:
       "Orders are processed within 1–2 business days. UK Standard: £4 (2–4 days). EU International: £15 (2–11 days). Rest of World: £30 (3–17 days). Free shipping on orders over £500. International customers are responsible for customs duties and taxes.",
     returnPolicy:
@@ -118,6 +128,8 @@ export const stores = [
     currency: "USD",
     affiliatePath: "VIAPLATFORM",
     collabsStoreId: "229322",
+    authenticityPolicy:
+      "Every piece at Source Twenty Four is authenticated and hand-selected before listing. Specializing in pre-owned luxury from Chanel, Celine, Dior, and Bottega Veneta, each item undergoes careful inspection to verify quality and authenticity prior to sale.",
     shippingPolicy:
       "Free shipping on all items. Orders ship from the United States.",
     returnPolicy:
@@ -138,6 +150,8 @@ export const stores = [
     currency: "USD",
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
     collabsStoreId: "227548",
+    authenticityPolicy:
+      "Every item is personally sourced and inspected before listing. As specialists in vintage designer shoes and accessories, each piece is accurately described with any notable condition details clearly disclosed — you'll always know exactly what you're receiving.",
     shippingPolicy:
       "Orders are processed within 3–7 business days. Delivery takes an additional 3–7 business days depending on location. Shipping rates are calculated at checkout based on destination and package weight. US shipping only.",
     returnPolicy:
@@ -158,6 +172,8 @@ export const stores = [
     currency: "USD",
     affiliatePath: "001",
     collabsStoreId: "5662739",
+    authenticityPolicy:
+      "Every item is authenticated and transparently presented before being listed. Founded with an archival and editorial eye, each piece is individually assessed for craftsmanship, condition, and rarity — what you see is exactly what you'll receive.",
     shippingPolicy:
       "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -178,6 +194,8 @@ export const stores = [
     currency: "USD",
     affiliatePath: "VIA",
     collabsStoreId: "5668014",
+    authenticityPolicy:
+      "Every bag is personally authenticated and inspected by the founders before listing. As dedicated specialists in vintage designer handbags, each item is accurately described with full condition details, so you can shop with complete confidence.",
     shippingPolicy:
       "Ships from Dallas, Texas. Shipping rates are calculated at checkout.",
     returnPolicy:
