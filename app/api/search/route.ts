@@ -110,13 +110,22 @@ export async function GET(request: Request) {
     const catSlug = categoryAliases[q] || (categoryKeywords[q] ? q : null);
     let products;
 
+    // Build a word-start-bounded OR regex from category keywords.
+    // \m = PostgreSQL word-start boundary, so \mtop matches "top"/"tops" but not "laptop".
+    function buildCatRegex(slug: string): string {
+      const kws = categoryKeywords[slug].map((k) =>
+        k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      );
+      return `\\m(${kws.join("|")})`;
+    }
+
     if (catSlug && categoryKeywords[catSlug]) {
-      // Category-level search: match by title keywords
-      const patterns = categoryKeywords[catSlug].map((k) => `%${k}%`);
+      // Single-word category search (e.g. "dress", "top", "bag")
+      const catRegex = buildCatRegex(catSlug);
       products = await sql`
         SELECT id, store_slug, store_name, title, price, currency, image, created_at
         FROM products
-        WHERE LOWER(title) LIKE ANY(${patterns})
+        WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
@@ -125,18 +134,54 @@ export async function GET(request: Request) {
       const words = q.split(/\s+/).filter((w) => w.length > 0);
 
       if (words.length > 1) {
-        // Multi-word AND search: title must contain every word (any order)
-        const wordPatterns = words.map((w) =>
-          w.replace(/[.+*?^${}()|[\]\\]/g, "\\$&")
+        // Check if any word is a category alias (e.g. "black dress" → "dress" → "dresses")
+        const catWord = words.find(
+          (w) => categoryAliases[w] && categoryKeywords[categoryAliases[w]]
         );
-        products = await sql`
-          SELECT id, store_slug, store_name, title, price, currency, image, created_at
-          FROM products
-          WHERE LOWER(title) ~ ALL(${wordPatterns})
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-          ORDER BY created_at DESC NULLS LAST
-          LIMIT 50
-        `;
+
+        if (catWord) {
+          const targetSlug = categoryAliases[catWord];
+          const catRegex = buildCatRegex(targetSlug);
+          const modifiers = words.filter((w) => w !== catWord);
+
+          if (modifiers.length === 1) {
+            // e.g. "black dress" → category regex + modifier LIKE
+            const modPattern = `%${modifiers[0]}%`;
+            products = await sql`
+              SELECT id, store_slug, store_name, title, price, currency, image, created_at
+              FROM products
+              WHERE LOWER(title) ~* ${catRegex}
+                AND LOWER(title) LIKE ${modPattern}
+                AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+              ORDER BY created_at DESC NULLS LAST
+              LIMIT 50
+            `;
+          } else {
+            // Multiple modifiers: category constraint only
+            products = await sql`
+              SELECT id, store_slug, store_name, title, price, currency, image, created_at
+              FROM products
+              WHERE LOWER(title) ~* ${catRegex}
+                AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+              ORDER BY created_at DESC NULLS LAST
+              LIMIT 50
+            `;
+          }
+        } else {
+          // No category word — AND search with word-start boundaries to avoid
+          // partial matches (e.g. "top" matching "laptop")
+          const wordPatterns = words.map(
+            (w) => `\\m${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`
+          );
+          products = await sql`
+            SELECT id, store_slug, store_name, title, price, currency, image, created_at
+            FROM products
+            WHERE LOWER(title) ~* ALL(${wordPatterns})
+              AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+            ORDER BY created_at DESC NULLS LAST
+            LIMIT 50
+          `;
+        }
       } else {
         // Single word: LIKE with exact-start matches ranked first
         const pattern = `%${q}%`;

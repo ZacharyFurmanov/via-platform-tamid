@@ -22,12 +22,18 @@ type SearchResult =
   | { type: "store"; name: string; href: string; meta?: string }
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
+const ANNOUNCEMENTS = [
+  { text: "Curated Vintage & Secondhand", href: null },
+  { text: "New Arrivals Added Weekly", href: "/new-arrivals" },
+  { text: "NYC Pop Up March 29th! Click here for tickets", href: "https://posh.vip/e/via-nyc-pop-up" },
+];
+
 function AnnouncementBar() {
-  const [showNewArrivals, setShowNewArrivals] = useState(false);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShowNewArrivals((prev) => !prev);
+      setIndex((prev) => (prev + 1) % ANNOUNCEMENTS.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -35,25 +41,25 @@ function AnnouncementBar() {
   return (
     <div className="fixed top-0 z-50 w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden">
       <div className="relative h-full flex items-center">
-        <span
-          className={`transition-all duration-500 ease-in-out ${
-            showNewArrivals
-              ? "opacity-0 -translate-y-full absolute"
-              : "opacity-100 translate-y-0"
-          }`}
-        >
-          Curated Vintage &amp; Secondhand
-        </span>
-        <Link
-          href="/new-arrivals"
-          className={`transition-all duration-500 ease-in-out hover:text-[#5D0F17]/70 ${
-            showNewArrivals
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-full absolute"
-          }`}
-        >
-          New Arrivals Added Weekly
-        </Link>
+        {ANNOUNCEMENTS.map((item, i) => {
+          const isActive = i === index;
+          const className = `transition-all duration-500 ease-in-out ${
+            isActive ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full absolute"
+          }`;
+          return item.href ? (
+            <Link
+              key={i}
+              href={item.href}
+              target={item.href.startsWith("http") ? "_blank" : undefined}
+              rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className={`${className} hover:text-[#5D0F17]/70`}
+            >
+              {item.text}
+            </Link>
+          ) : (
+            <span key={i} className={className}>{item.text}</span>
+          );
+        })}
       </div>
     </div>
   );
