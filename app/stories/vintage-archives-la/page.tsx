@@ -9,12 +9,12 @@ export const metadata = {
 
 export default function VintageArchivesLAStory() {
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* Back nav */}
       <div className="max-w-3xl mx-auto px-6 pt-8 pb-4">
         <Link
           href="/stories"
-          className="inline-block text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+          className="inline-block text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
         >
           &larr; All Stories
         </Link>
@@ -35,7 +35,7 @@ export default function VintageArchivesLAStory() {
 
       {/* Article */}
       <article className="max-w-3xl mx-auto px-6 pb-24">
-        <p className="text-xs uppercase tracking-[0.25em] text-neutral-500 mb-4">
+        <p className="text-xs uppercase tracking-[0.25em] text-[#5D0F17]/50 mb-4">
           The Story Behind the Selection
         </p>
 
@@ -43,7 +43,7 @@ export default function VintageArchivesLAStory() {
           Vintage Archives LA
         </h1>
 
-        <div className="prose prose-lg max-w-none text-neutral-700 leading-relaxed space-y-6">
+        <div className="prose prose-lg max-w-none text-[#5D0F17]/70 leading-relaxed space-y-6">
           <p>
             Born from a lifelong love of vintage shopping and the thrill of
             uncovering something truly rare, Vintage Archives LA is dedicated to
@@ -67,17 +67,17 @@ export default function VintageArchivesLAStory() {
             a story, waiting to become part of yours.
           </p>
 
-          <p className="font-serif text-black text-xl">
+          <p className="font-serif text-[#5D0F17] text-xl">
             VIA can&apos;t wait for you to find truly special, one of a kind,
             shoes from Vintage Archives LA.
           </p>
         </div>
 
         {/* CTA */}
-        <div className="mt-12 pt-8 border-t border-neutral-200">
+        <div className="mt-12 pt-8 border-t border-[#5D0F17]/10">
           <Link
             href="/stores/vintage-archives-la"
-            className="inline-block bg-black text-white px-8 py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+            className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
           >
             Shop Vintage Archives LA
           </Link>

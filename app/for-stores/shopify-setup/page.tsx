@@ -2,14 +2,14 @@ import Link from "next/link";
 
 export default function ShopifySetupPage() {
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* Header */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-4 text-sm">
             <Link
               href="/for-stores"
-              className="text-neutral-400 hover:text-black transition-colors"
+              className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
             >
               &larr; Partner with VIA
             </Link>
@@ -17,18 +17,18 @@ export default function ShopifySetupPage() {
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
             Shopify Store Setup
           </h1>
-          <p className="text-neutral-600 text-base sm:text-lg">
+          <p className="text-[#5D0F17]/60 text-base sm:text-lg">
             Connect your Shopify store to VIA using Shopify Collabs for automatic affiliate tracking.
           </p>
         </div>
       </section>
 
       {/* Time Estimate */}
-      <section className="border-b border-neutral-200 bg-neutral-50">
+      <section className="border-b border-[#5D0F17]/10 bg-[#5D0F17]/5">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <p className="text-sm">
             <span className="font-medium">⏱ Setup time:</span>{" "}
-            <span className="text-neutral-600">~3 minutes</span>
+            <span className="text-[#5D0F17]/60">~3 minutes</span>
           </p>
         </div>
       </section>
@@ -39,7 +39,7 @@ export default function ShopifySetupPage() {
           {/* What is Shopify Collabs */}
           <div className="mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl font-serif mb-4">What is Shopify Collabs?</h2>
-            <p className="text-neutral-600 mb-4">
+            <p className="text-[#5D0F17]/60 mb-4">
               Shopify Collabs is Shopify&apos;s built-in affiliate and creator management tool.
               It handles all affiliate tracking, commission calculation, and payouts automatically—no
               custom code or pixels required.
@@ -59,14 +59,14 @@ export default function ShopifySetupPage() {
 
             <div className="space-y-8">
               {/* Step 1 */}
-              <div className="border-l-2 border-black pl-6">
+              <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     1
                   </span>
                   <h3 className="text-lg font-medium">Install Shopify Collabs</h3>
                 </div>
-                <div className="text-neutral-600 space-y-3">
+                <div className="text-[#5D0F17]/60 space-y-3">
                   <p>If you haven&apos;t already, install the Shopify Collabs app:</p>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
                     <li>Go to your Shopify Admin</li>
@@ -78,7 +78,7 @@ export default function ShopifySetupPage() {
                     href="https://apps.shopify.com/collabs"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-black underline hover:no-underline"
+                    className="inline-flex items-center gap-2 text-sm text-[#5D0F17] underline hover:no-underline"
                   >
                     Open Shopify Collabs App Store page
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,21 +89,21 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 2 */}
-              <div className="border-l-2 border-black pl-6">
+              <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     2
                   </span>
                   <h3 className="text-lg font-medium">Add VIA as a Collaborator</h3>
                 </div>
-                <div className="text-neutral-600 space-y-3">
+                <div className="text-[#5D0F17]/60 space-y-3">
                   <p>Invite VIA to your Collabs program:</p>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
                     <li>Open <strong>Shopify Collabs</strong> from your Apps</li>
                     <li>Go to <strong>Recruiting → Invite Creator</strong></li>
                     <li>Enter VIA&apos;s email:</li>
                   </ol>
-                  <div className="bg-neutral-100 p-3 font-mono text-sm select-all">
+                  <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm select-all">
                     partnerships@theviaplatform.com
                   </div>
                   <p className="text-sm">Attach your program offer to the invite and click <strong>Send Invite</strong>. We&apos;ll accept within 24 hours.</p>
@@ -111,14 +111,14 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 3 */}
-              <div className="border-l-2 border-black pl-6">
+              <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     3
                   </span>
                   <h3 className="text-lg font-medium">We Generate the Affiliate Links</h3>
                 </div>
-                <div className="text-neutral-600 space-y-3">
+                <div className="text-[#5D0F17]/60 space-y-3">
                   <p>
                     Once VIA has been added to your Collabs program, we generate a unique
                     affiliate link for each of your products on our end. No action needed from you.
@@ -126,7 +126,7 @@ export default function ShopifySetupPage() {
                   <p className="text-sm">
                     Each product gets its own tracked link like:
                   </p>
-                  <div className="bg-neutral-100 p-3 font-mono text-sm">
+                  <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm">
                     https://collabs.shop/xxxxxxx
                   </div>
                   <p className="text-sm">
@@ -138,16 +138,16 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 4 */}
-              <div className="border-l-2 border-black pl-6">
+              <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-medium">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     4
                   </span>
                   <h3 className="text-lg font-medium">Set Tiered Commission Rates</h3>
                 </div>
-                <div className="text-neutral-600 space-y-4">
+                <div className="text-[#5D0F17]/60 space-y-4">
                   <p>
-                    Shopify Collabs sets commission rates <strong className="text-black">per product collection</strong>,
+                    Shopify Collabs sets commission rates <strong className="text-[#5D0F17]">per product collection</strong>,
                     not per order total. To set up tiers, you&apos;ll create three collections in your
                     Shopify store — one for each tier — assign your products to them by price, and
                     then set a different commission rate for each collection in Collabs.
@@ -155,7 +155,7 @@ export default function ShopifySetupPage() {
 
                   {/* Part A */}
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-black">Part A — Create three collections in Shopify</p>
+                    <p className="text-sm font-medium text-[#5D0F17]">Part A — Create three collections in Shopify</p>
                     <ol className="list-decimal list-inside space-y-2 text-sm">
                       <li>In your Shopify Admin, go to <strong>Products → Collections</strong></li>
                       <li>Click <strong>Create collection</strong> and name it <strong>TIER 1</strong></li>
@@ -166,7 +166,7 @@ export default function ShopifySetupPage() {
 
                   {/* Part B */}
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-black">Part B — Set commission rates per collection in Collabs</p>
+                    <p className="text-sm font-medium text-[#5D0F17]">Part B — Set commission rates per collection in Collabs</p>
                     <ol className="list-decimal list-inside space-y-2 text-sm">
                       <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
                       <li>Click <strong>Create program</strong> (or open your existing one)</li>
@@ -179,20 +179,20 @@ export default function ShopifySetupPage() {
                   </div>
 
                   {/* Tier reference */}
-                  <div className="bg-neutral-50 border border-neutral-200 p-4">
-                    <p className="text-sm font-medium text-black mb-3">Commission rate reference:</p>
+                  <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-4">
+                    <p className="text-sm font-medium text-[#5D0F17] mb-3">Commission rate reference:</p>
                     <div className="space-y-0">
-                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
                         <span className="text-sm"><strong>TIER 1</strong> — products under $1,000</span>
-                        <span className="text-sm font-medium bg-black text-white px-3 py-1">7%</span>
+                        <span className="text-sm font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">7%</span>
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-neutral-200">
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
                         <span className="text-sm"><strong>TIER 2</strong> — products $1,000–$5,000</span>
-                        <span className="text-sm font-medium bg-neutral-500 text-white px-3 py-1">5%</span>
+                        <span className="text-sm font-medium bg-[#5D0F17]/50 text-white px-3 py-1">5%</span>
                       </div>
                       <div className="flex justify-between items-center py-2">
                         <span className="text-sm"><strong>TIER 3</strong> — products above $5,000</span>
-                        <span className="text-sm font-medium bg-neutral-400 text-white px-3 py-1">3%</span>
+                        <span className="text-sm font-medium bg-[#5D0F17]/40 text-[#F7F3EA] px-3 py-1">3%</span>
                       </div>
                     </div>
                   </div>
@@ -208,14 +208,14 @@ export default function ShopifySetupPage() {
               </div>
 
               {/* Step 5 */}
-              <div className="border-l-2 border-neutral-300 pl-6">
+              <div className="border-l-2 border-[#5D0F17]/20 pl-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-neutral-200 text-neutral-600 flex items-center justify-center text-sm font-medium">
+                  <span className="w-8 h-8 bg-[#5D0F17]/15 text-[#5D0F17]/60 flex items-center justify-center text-sm font-medium">
                     5
                   </span>
-                  <h3 className="text-lg font-medium text-neutral-600">Done!</h3>
+                  <h3 className="text-lg font-medium text-[#5D0F17]/60">Done!</h3>
                 </div>
-                <div className="text-neutral-500 space-y-3">
+                <div className="text-[#5D0F17]/50 space-y-3">
                   <p>
                     Once we accept your invitation, all VIA traffic to your store will be
                     automatically tracked. No theme changes needed — our per-product links
@@ -235,21 +235,21 @@ export default function ShopifySetupPage() {
           {/* How It Works */}
           <div className="mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl font-serif mb-4">How Attribution Works</h2>
-            <div className="bg-neutral-50 p-6 space-y-4 text-sm">
+            <div className="bg-[#5D0F17]/5 p-6 space-y-4 text-sm">
               <div className="flex items-start gap-4">
-                <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">1</div>
+                <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">1</div>
                 <p>Customer clicks a product on VIA → routed through a unique per-product affiliate link</p>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">2</div>
+                <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">2</div>
                 <p>Shopify Collabs registers the visit and sets an attribution cookie</p>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">3</div>
+                <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">3</div>
                 <p>If they purchase within your cookie window, VIA gets credit</p>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs flex-shrink-0">4</div>
+                <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">4</div>
                 <p>Commission is calculated and paid out monthly via Shopify</p>
               </div>
             </div>
@@ -261,28 +261,28 @@ export default function ShopifySetupPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-medium mb-2">Do I need to change anything on my store or theme?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   No. We use per-product affiliate links that handle tracking automatically.
                   No theme changes, app embeds, or custom code required on your end.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">How do I see VIA-referred sales?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   In Shopify Collabs, go to <strong>Analytics</strong> to see all sales, clicks,
                   and commissions attributed to VIA.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">When do payouts happen?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   Shopify processes affiliate payouts monthly. You can configure payout thresholds
                   and methods in Collabs settings.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Can I change the commission rate later?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   Yes. You can adjust commission rates anytime in Collabs settings. Changes apply
                   to future sales only.
                 </p>
@@ -291,10 +291,10 @@ export default function ShopifySetupPage() {
           </div>
 
           {/* Support */}
-          <div className="border-t border-neutral-200 pt-8">
-            <p className="text-neutral-600 text-sm">
+          <div className="border-t border-[#5D0F17]/10 pt-8">
+            <p className="text-[#5D0F17]/60 text-sm">
               Need help? Email us at{" "}
-              <a href="mailto:partnerships@theviaplatform.com" className="text-black underline">
+              <a href="mailto:partnerships@theviaplatform.com" className="text-[#5D0F17] underline">
                 partnerships@theviaplatform.com
               </a>
             </p>

@@ -81,14 +81,14 @@ export default function SquarespaceSetupPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* Header */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-3xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-4 text-sm">
             <Link
               href="/for-stores"
-              className="text-neutral-400 hover:text-black transition-colors"
+              className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
             >
               &larr; Partner with VIA
             </Link>
@@ -96,7 +96,7 @@ export default function SquarespaceSetupPage() {
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
             Connect Your Squarespace Store
           </h1>
-          <p className="text-neutral-600 text-base sm:text-lg">
+          <p className="text-[#5D0F17]/60 text-base sm:text-lg">
             Follow these steps to connect your Squarespace store to VIA.
             No coding knowledge needed — just copy, paste, and save.
           </p>
@@ -104,10 +104,10 @@ export default function SquarespaceSetupPage() {
       </section>
 
       {/* Time Estimate */}
-      <section className="border-b border-neutral-200 bg-neutral-50">
+      <section className="border-b border-[#5D0F17]/10 bg-[#5D0F17]/5">
         <div className="max-w-3xl mx-auto px-6 py-4">
-          <p className="text-sm text-neutral-600">
-            This takes about <strong className="text-black">5 minutes</strong>. You&apos;ll just be copying and pasting
+          <p className="text-sm text-[#5D0F17]/60">
+            This takes about <strong className="text-[#5D0F17]">5 minutes</strong>. You&apos;ll just be copying and pasting
             one block of text into your Squarespace settings.
           </p>
         </div>
@@ -120,13 +120,13 @@ export default function SquarespaceSetupPage() {
           {/* Before you start */}
           <div className="mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl font-serif mb-4">Before You Start</h2>
-            <p className="text-neutral-600 mb-4">
+            <p className="text-[#5D0F17]/60 mb-4">
               You&apos;ll need access to your Squarespace website settings.
               Make sure you&apos;re logged in as an admin on your Squarespace site.
             </p>
-            <div className="bg-neutral-50 border border-neutral-200 p-5">
-              <p className="text-sm text-neutral-600">
-                <strong className="text-black">Note:</strong> This requires a Squarespace Business plan or higher.
+            <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-5">
+              <p className="text-sm text-[#5D0F17]/60">
+                <strong className="text-[#5D0F17]">Note:</strong> This requires a Squarespace Business plan or higher.
                 If you&apos;re on a Personal plan, you&apos;ll need to upgrade first.
               </p>
             </div>
@@ -135,38 +135,38 @@ export default function SquarespaceSetupPage() {
           {/* Step 1: Enter store info */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
-              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+              <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
                 1
               </span>
               <h2 className="text-xl sm:text-2xl font-serif">Enter Your Store Name</h2>
             </div>
-            <p className="text-neutral-600 mb-6">
+            <p className="text-[#5D0F17]/60 mb-6">
               Type in your store details below. The code in Step 2 will update automatically with your info.
             </p>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store Name <span className="text-neutral-400 font-normal">(how it appears on VIA)</span>
+                  Store Name <span className="text-[#5D0F17]/40 font-normal">(how it appears on VIA)</span>
                 </label>
                 <input
                   type="text"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="e.g. My Vintage Store"
-                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none text-base"
+                  className="w-full px-4 py-3 border border-[#5D0F17]/20 focus:border-[#5D0F17] focus:outline-none text-base"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store ID <span className="text-neutral-400 font-normal">(lowercase, use dashes instead of spaces)</span>
+                  Store ID <span className="text-[#5D0F17]/40 font-normal">(lowercase, use dashes instead of spaces)</span>
                 </label>
                 <input
                   type="text"
                   value={storeSlug}
                   onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
                   placeholder="e.g. my-vintage-store"
-                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none text-base"
+                  className="w-full px-4 py-3 border border-[#5D0F17]/20 focus:border-[#5D0F17] focus:outline-none text-base"
                 />
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function SquarespaceSetupPage() {
           {/* Step 2: Copy the code */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
-              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+              <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
                 2
               </span>
               <h2 className="text-xl sm:text-2xl font-serif">Copy &amp; Paste the Code</h2>
@@ -200,20 +200,20 @@ export default function SquarespaceSetupPage() {
                 </div>
               )}
 
-              <div className="bg-neutral-50 border border-neutral-200 p-5 space-y-4">
+              <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-5 space-y-4">
                 <p className="text-sm font-medium">Here&apos;s what to do:</p>
-                <ol className="space-y-3 text-sm text-neutral-600">
+                <ol className="space-y-3 text-sm text-[#5D0F17]/60">
                   <li className="flex gap-3">
-                    <span className="font-medium text-black flex-shrink-0">a.</span>
-                    <span>In your Squarespace admin, go to <strong className="text-black">Settings</strong> &rarr; <strong className="text-black">Advanced</strong> &rarr; <strong className="text-black">Code Injection</strong></span>
+                    <span className="font-medium text-[#5D0F17] flex-shrink-0">a.</span>
+                    <span>In your Squarespace admin, go to <strong className="text-[#5D0F17]">Settings</strong> &rarr; <strong className="text-[#5D0F17]">Advanced</strong> &rarr; <strong className="text-[#5D0F17]">Code Injection</strong></span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="font-medium text-black flex-shrink-0">b.</span>
-                    <span>Find the box labeled <strong className="text-black">Header</strong></span>
+                    <span className="font-medium text-[#5D0F17] flex-shrink-0">b.</span>
+                    <span>Find the box labeled <strong className="text-[#5D0F17]">Header</strong></span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="font-medium text-black flex-shrink-0">c.</span>
-                    <span>Click <strong className="text-black">Copy</strong> below and paste it into that box</span>
+                    <span className="font-medium text-[#5D0F17] flex-shrink-0">c.</span>
+                    <span>Click <strong className="text-[#5D0F17]">Copy</strong> below and paste it into that box</span>
                   </li>
                 </ol>
               </div>
@@ -227,14 +227,14 @@ export default function SquarespaceSetupPage() {
                   className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
                     copied
                       ? "bg-green-500 text-white"
-                      : "bg-white text-black hover:bg-neutral-200"
+                      : "bg-[#F7F3EA] text-[#5D0F17] hover:bg-[#5D0F17]/10"
                   }`}
                 >
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
 
-              <p className="text-neutral-400 text-xs">
+              <p className="text-[#5D0F17]/40 text-xs">
                 If you previously installed two VIA code blocks, replace your existing Header code with this one and delete the Order Confirmation code — this single block handles everything.
               </p>
             </div>
@@ -243,12 +243,12 @@ export default function SquarespaceSetupPage() {
           {/* Step 3: Save */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
-              <span className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium flex-shrink-0">
+              <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
                 3
               </span>
               <h2 className="text-xl sm:text-2xl font-serif">Hit Save</h2>
             </div>
-            <p className="text-neutral-600">
+            <p className="text-[#5D0F17]/60">
               Click the <strong>Save</strong> button at the top of the Squarespace Code Injection page.
               That&apos;s it — you&apos;re all set!
             </p>
@@ -261,7 +261,7 @@ export default function SquarespaceSetupPage() {
           </div>
 
           {/* Divider */}
-          <hr className="border-neutral-200 my-12 sm:my-16" />
+          <hr className="border-[#5D0F17]/10 my-12 sm:my-16" />
 
           {/* FAQ */}
           <div className="mb-12 sm:mb-16">
@@ -269,27 +269,27 @@ export default function SquarespaceSetupPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-medium mb-2">Will this affect my website speed or checkout?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   No. It&apos;s a tiny piece of code that runs in the background. Your customers won&apos;t notice anything different.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Does this track all my customers?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   No — only customers who came from VIA. If someone finds your store on their own,
                   nothing happens. We never collect customer names, emails, or personal info.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">What if a customer browses other products after clicking from VIA?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   If a customer clicks through from VIA and ends up buying a different item on your store,
                   VIA still gets credit. The tracking lasts for 30 days from their first click.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Can I remove this later?</h3>
-                <p className="text-neutral-600 text-sm">
+                <p className="text-[#5D0F17]/60 text-sm">
                   Yes. Just go back to Code Injection and delete the code from the Header box. No changes
                   to your site will remain.
                 </p>
@@ -298,10 +298,10 @@ export default function SquarespaceSetupPage() {
           </div>
 
           {/* Support */}
-          <div className="border-t border-neutral-200 pt-8">
-            <p className="text-neutral-600 text-sm">
+          <div className="border-t border-[#5D0F17]/10 pt-8">
+            <p className="text-[#5D0F17]/60 text-sm">
               Stuck or have questions? Email us at{" "}
-              <a href="mailto:partnerships@theviaplatform.com" className="text-black underline">
+              <a href="mailto:partnerships@theviaplatform.com" className="text-[#5D0F17] underline">
                 partnerships@theviaplatform.com
               </a>
               {" "}and we&apos;ll walk you through it.

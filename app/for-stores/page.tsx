@@ -2,15 +2,15 @@ import Link from "next/link";
 
 export default function ForStoresPage() {
   return (
-    <main className="bg-white min-h-screen">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
 
       {/* HEADER */}
-      <section className="bg-[#f7f6f3] py-20 sm:py-32">
+      <section className="bg-[#F7F3EA] py-20 sm:py-32 border-b border-[#5D0F17]/10">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif mb-4 sm:mb-6">
             Partner with VIA
           </h1>
-          <p className="text-base sm:text-lg text-black max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-[#5D0F17]/70 max-w-2xl mx-auto">
             We work with independent vintage & secondhand stores to help them reach
             customers worldwide — without changing how they run their business.
           </p>
@@ -18,24 +18,24 @@ export default function ForStoresPage() {
       </section>
 
       {/* Setup Guides */}
-      <section className="border-b border-neutral-200 py-12 sm:py-16">
+      <section className="border-b border-[#5D0F17]/10 py-12 sm:py-16">
         <div className="max-w-xl mx-auto px-6">
           <h2 className="text-xl sm:text-2xl font-serif mb-3 text-center">
             Already a partner? Set up your store.
           </h2>
-          <p className="text-neutral-500 text-sm text-center mb-8">
+          <p className="text-[#5D0F17]/50 text-sm text-center mb-8">
             Follow the guide for your platform to connect your store to VIA.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               href="/for-stores/shopify-setup"
-              className="flex-1 border border-black py-4 text-sm uppercase tracking-wide text-center hover:bg-black hover:text-white transition min-h-[52px] flex items-center justify-center"
+              className="flex-1 border border-[#5D0F17] py-4 text-sm uppercase tracking-wide text-center hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition min-h-[52px] flex items-center justify-center"
             >
               Shopify Setup Guide
             </Link>
             <Link
               href="/for-stores/squarespace-setup"
-              className="flex-1 border border-black py-4 text-sm uppercase tracking-wide text-center hover:bg-black hover:text-white transition min-h-[52px] flex items-center justify-center"
+              className="flex-1 border border-[#5D0F17] py-4 text-sm uppercase tracking-wide text-center hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition min-h-[52px] flex items-center justify-center"
             >
               Squarespace Setup Guide
             </Link>
@@ -62,7 +62,7 @@ export default function ForStoresPage() {
                 type="text"
                 name="store_name"
                 required
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
               />
             </div>
 
@@ -74,7 +74,7 @@ export default function ForStoresPage() {
               <input
                 type="text"
                 name="website"
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
               />
             </div>
 
@@ -87,7 +87,7 @@ export default function ForStoresPage() {
                 type="text"
                 name="location"
                 required
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
               />
             </div>
 
@@ -99,7 +99,7 @@ export default function ForStoresPage() {
               <select
                 name="inventory_size"
                 required
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
               >
                 <option value="">Select one</option>
                 <option value="under-500">Under 500 items</option>
@@ -116,7 +116,7 @@ export default function ForStoresPage() {
               <select
                 name="sells_online"
                 required
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
               >
                 <option value="">Select one</option>
                 <option value="yes-own-site">Yes — my own site</option>
@@ -133,7 +133,7 @@ export default function ForStoresPage() {
               <textarea
                 name="notes"
                 rows={4}
-                className="w-full border-b border-black bg-transparent py-3 text-base focus:outline-none resize-none"
+                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none resize-none"
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function ForStoresPage() {
             <div className="pt-8 sm:pt-12">
               <button
                 type="submit"
-                className="w-full border border-black py-4 min-h-[52px] text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
+                className="w-full border border-[#5D0F17] py-4 min-h-[52px] text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
               >
                 Submit Application
               </button>
@@ -154,4 +154,3 @@ export default function ForStoresPage() {
     </main>
   );
 }
-

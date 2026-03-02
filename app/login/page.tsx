@@ -19,19 +19,19 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen flex items-center justify-center px-6">
+    <main className="bg-[#F7F3EA] min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <h1 className="font-serif text-3xl sm:text-4xl text-center mb-3">
+        <h1 className="font-serif text-3xl sm:text-4xl text-center mb-3 text-[#5D0F17]">
           Sign in to VIA
         </h1>
-        <p className="text-sm text-black/50 text-center mb-10">
+        <p className="text-sm text-[#5D0F17]/50 text-center mb-10">
           Create an account to start shopping.
         </p>
 
         {/* Google */}
         <button
           onClick={() => signIn("google", { callbackUrl })}
-          className="w-full flex items-center justify-center gap-3 bg-black text-white py-3.5 text-sm uppercase tracking-wide hover:bg-neutral-800 transition mb-3"
+          className="w-full flex items-center justify-center gap-3 bg-[#5D0F17] text-[#F7F3EA] py-3.5 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition mb-3"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -44,9 +44,9 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-neutral-200" />
-          <span className="text-xs text-black/40 uppercase tracking-wide">or</span>
-          <div className="flex-1 h-px bg-neutral-200" />
+          <div className="flex-1 h-px bg-[#5D0F17]/20" />
+          <span className="text-xs text-[#5D0F17]/40 uppercase tracking-wide">or</span>
+          <div className="flex-1 h-px bg-[#5D0F17]/20" />
         </div>
 
         {/* Email magic link */}
@@ -57,18 +57,18 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
-            className="w-full border border-neutral-300 px-4 py-3.5 text-sm outline-none focus:border-black transition mb-3"
+            className="w-full border border-[#5D0F17]/30 bg-transparent px-4 py-3.5 text-sm text-[#5D0F17] placeholder:text-[#5D0F17]/40 outline-none focus:border-[#5D0F17] transition mb-3"
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3.5 text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50"
+            className="w-full bg-[#5D0F17] text-[#F7F3EA] py-3.5 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send Magic Link"}
           </button>
         </form>
 
-        <p className="text-[11px] text-black/40 text-center mt-8 leading-relaxed">
+        <p className="text-[11px] text-[#5D0F17]/40 text-center mt-8 leading-relaxed">
           By signing in, you agree to our{" "}
           <Link href="/terms" className="underline">Terms</Link> and{" "}
           <Link href="/privacy" className="underline">Privacy Policy</Link>, and

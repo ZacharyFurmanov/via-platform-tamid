@@ -166,7 +166,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const recommendations = scored.slice(0, 4).map((s) => s.product);
 
   return (
-    <main className="bg-white min-h-screen">
+    <main className="bg-[#F7F3EA] min-h-screen">
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
         <BackButton
