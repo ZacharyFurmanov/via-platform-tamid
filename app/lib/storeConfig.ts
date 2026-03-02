@@ -14,7 +14,15 @@ export type ShopifyStore = {
   storefrontAccessToken?: string;
 };
 
-export type Store = SquarespaceStore | ShopifyStore;
+export type BigCartelStore = {
+  type: "bigcartel";
+  name: string;
+  slug: string;
+  /** The store's Big Cartel subdomain slug (e.g. "kikiddesignandconsign") */
+  storeSlug: string;
+};
+
+export type Store = SquarespaceStore | ShopifyStore | BigCartelStore;
 
 // Squarespace stores (RSS-based)
 export const SQUARESPACE_STORES: SquarespaceStore[] = [
@@ -84,4 +92,18 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
 ];
 
-export const ALL_STORES: Store[] = [...SQUARESPACE_STORES, ...SHOPIFY_STORES];
+// Big Cartel stores (public JSON API — no token required)
+export const BIGCARTEL_STORES: BigCartelStore[] = [
+  {
+    type: "bigcartel",
+    name: "Kiki D Design and Consign",
+    slug: "kiki-d-design-and-consign",
+    storeSlug: "kikiddesignandconsign",
+  },
+];
+
+export const ALL_STORES: Store[] = [
+  ...SQUARESPACE_STORES,
+  ...SHOPIFY_STORES,
+  ...BIGCARTEL_STORES,
+];

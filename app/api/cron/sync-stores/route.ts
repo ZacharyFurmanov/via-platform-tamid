@@ -7,6 +7,7 @@ import {
 } from "@/app/lib/shopifyClient";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
+import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertToUSD } from "@/app/lib/stores";
 
@@ -74,6 +75,25 @@ export async function GET(request: Request) {
           }));
 
         const productCount = await syncProducts(storeSlug, store.name, products);
+        results.push({ store: store.name, success: true, productCount });
+      } else if (store.type === "bigcartel") {
+        const { products: rawProducts } = await parseBigCartelJSON(
+          store.storeSlug,
+          store.name
+        );
+
+        const products = rawProducts
+          .filter((p) => p.price != null)
+          .map((p) => ({
+            title: p.title,
+            price: p.price,
+            image: p.image ?? undefined,
+            images: p.images,
+            externalUrl: p.externalUrl,
+            description: p.description ?? undefined,
+          }));
+
+        const productCount = await syncProducts(store.slug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
       } else {
         // Squarespace

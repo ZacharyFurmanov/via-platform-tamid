@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   SQUARESPACE_STORES,
   SHOPIFY_STORES,
+  BIGCARTEL_STORES,
   ALL_STORES,
   type Store,
 } from "@/app/lib/storeConfig";
@@ -52,6 +53,15 @@ export default function SyncAdminPage() {
             storeName: store.name,
             shopUrl: store.shopUrl,
             rssUrl: store.rssUrl,
+          }),
+        });
+      } else if (store.type === "bigcartel") {
+        response = await fetch("/api/sync-bigcartel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            storeName: store.name,
+            storeSlug: store.storeSlug,
           }),
         });
       } else {
@@ -210,6 +220,66 @@ export default function SyncAdminPage() {
                               <span className="block text-neutral-500 mt-1">
                                 {result.details}
                               </span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Big Cartel Stores */}
+      {BIGCARTEL_STORES.length > 0 && (
+        <section className="py-10 sm:py-16 border-b border-neutral-200">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Big Cartel Stores</h2>
+            <div className="space-y-4 sm:space-y-6">
+              {BIGCARTEL_STORES.map((store) => {
+                const status = statuses[store.slug];
+                const isLoading = status?.loading;
+                const result = status?.result;
+
+                return (
+                  <div key={store.slug} className="border border-neutral-200 p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h3 className="text-lg sm:text-xl font-serif">{store.name}</h3>
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                            Big Cartel
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-neutral-500 break-all">
+                          api.bigcartel.com/{store.storeSlug}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleSync(store)}
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-5 py-3 min-h-[48px] border border-black text-sm tracking-wide hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {isLoading ? "Syncing..." : "Sync"}
+                      </button>
+                    </div>
+                    {result && (
+                      <div className="mt-3 pt-3 border-t border-neutral-100">
+                        {result.success ? (
+                          <div className="text-sm">
+                            <p className="text-green-700">{result.productCount} products synced</p>
+                            {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                              <p className="text-neutral-500 mt-1">{result.skippedCount} skipped (sold out)</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-red-700 text-sm">
+                            {result.error}
+                            {result.details && (
+                              <span className="block text-neutral-500 mt-1">{result.details}</span>
                             )}
                           </p>
                         )}
