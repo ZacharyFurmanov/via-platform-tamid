@@ -144,6 +144,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(parsedUrl.toString(), 302);
   }
 
+  // ---- Single product URLs (no variant_id → can't build cart URL) ----
+  // Redirect through the product's collabs.shop link so dt_id is set.
+  if (productId) {
+    const match = productId.match(/(\d+)$/);
+    const numericId = match ? parseInt(match[1], 10) : NaN;
+    if (!isNaN(numericId)) {
+      const collabsLink = await getCollabsLink(numericId).catch(() => null);
+      if (collabsLink) {
+        return NextResponse.redirect(collabsLink, 302);
+      }
+    }
+  }
+
   // Fallback: apply discount code if store has one, otherwise redirect directly.
   if (storeSlug) {
     const discount = getDiscountConfig(storeSlug);

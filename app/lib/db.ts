@@ -166,7 +166,7 @@ export async function syncProducts(
         images = EXCLUDED.images,
         external_url = EXCLUDED.external_url,
         description = EXCLUDED.description,
-        variant_id = EXCLUDED.variant_id,
+        variant_id = COALESCE(EXCLUDED.variant_id, products.variant_id),
         shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
         size = COALESCE(EXCLUDED.size, products.size),
         synced_at = NOW()
