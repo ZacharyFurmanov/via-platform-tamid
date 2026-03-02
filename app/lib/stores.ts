@@ -193,7 +193,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     affiliatePath: "1",
-    collabsStoreId: "REPLACE_WITH_COLLABS_STORE_ID", // TODO: get from Shopify Collabs dashboard
+    collabsStoreId: "230072",
     authenticityPolicy:
       "Every piece at Vangie is personally sourced and authenticated by Evan before listing. Specializing in collectible and investment-worthy vintage, each item is hand-selected for craftsmanship, condition, and design integrity — bold statement pieces chosen to be treasured for a lifetime.",
     shippingPolicy:
