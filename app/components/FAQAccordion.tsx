@@ -49,7 +49,7 @@ export default function FAQAccordion({ faqs }: { faqs: FAQ[] }) {
             >
               <div className="overflow-hidden">
                 <p
-                  className={`text-gray-700 max-w-3xl text-sm sm:text-base transition-all duration-300 ease-in-out ${
+                  className={`text-[#5D0F17]/70 max-w-3xl text-sm sm:text-base transition-all duration-300 ease-in-out ${
                     isOpen ? "translate-y-0" : "-translate-y-2"
                   }`}
                 >

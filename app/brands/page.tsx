@@ -7,14 +7,18 @@ export default async function BrandsPage() {
   const brands = await getActiveBrands();
 
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= HEADER ================= */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
-            Shop by Designer
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Shop by</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
+            Designer
           </h1>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             Browse curated vintage and secondhand pieces from the world&apos;s most sought-after designers.
           </p>
         </div>
@@ -28,12 +32,12 @@ export default async function BrandsPage() {
               <Link
                 key={brand.slug}
                 href={`/brands/${brand.slug}`}
-                className="group block border border-neutral-200 p-6 sm:p-8 text-center hover:bg-black hover:border-black transition-all duration-300"
+                className="group block border border-[#5D0F17]/20 p-6 sm:p-8 text-center hover:bg-[#5D0F17] hover:border-[#5D0F17] transition-all duration-300"
               >
-                <h2 className="font-serif text-lg sm:text-xl text-black group-hover:text-white transition-colors duration-300">
+                <h2 className="font-serif text-lg sm:text-xl text-[#5D0F17] group-hover:text-[#F7F3EA] transition-colors duration-300">
                   {brand.label}
                 </h2>
-                <p className="text-xs text-neutral-400 group-hover:text-neutral-300 mt-2 transition-colors duration-300">
+                <p className="text-xs text-[#5D0F17]/40 group-hover:text-[#F7F3EA]/60 mt-2 transition-colors duration-300">
                   {brand.productCount} {brand.productCount === 1 ? "piece" : "pieces"}
                 </p>
               </Link>

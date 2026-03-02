@@ -24,7 +24,7 @@ export default function HomePage() {
                 Stop digging. Start shopping.
               </p>
 
-              <h1 className="text-4xl sm:text-6xl md:text-[5rem] font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-[1.05]">
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-[3.25rem] font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight whitespace-nowrap">
                 The home of curated vintage &amp; secondhand.
               </h1>
 

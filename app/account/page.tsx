@@ -66,42 +66,42 @@ export default async function AccountPage() {
     .filter(Boolean);
 
   return (
-    <main className="bg-white min-h-screen">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ===== Compact Header ===== */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-5xl mx-auto px-6 py-6 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 bg-[#D8CABD]/40 flex items-center justify-center shrink-0">
             {session.user.image ? (
-              <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" />
+              <img src={session.user.image} alt="" className="w-10 h-10 object-cover" />
             ) : (
-              <span className="text-base font-serif text-black/40">
+              <span className="text-base font-serif text-[#5D0F17]/40">
                 {(session.user.name?.[0] || session.user.email?.[0] || "?").toUpperCase()}
               </span>
             )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{session.user.name || "My Account"}</p>
-            <p className="text-xs text-neutral-400 truncate">{session.user.email}</p>
+            <p className="text-xs text-[#5D0F17]/40 truncate">{session.user.email}</p>
           </div>
         </div>
       </section>
 
       <div className="max-w-5xl mx-auto px-6">
         {/* ===== VIA Insider ===== */}
-        <section className="py-12 border-b border-neutral-100">
+        <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-serif text-xl italic text-black/80">VIA Insider</h2>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">VIA Insider</h2>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
           {isMember ? (
             <div className="flex flex-col gap-4">
               <Link
                 href="/account/insider"
-                className="border border-black p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-black hover:text-white transition group rounded-sm"
+                className="border border-[#5D0F17] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition group"
               >
                 <div>
                   <p className="font-serif text-xl mb-1">Early Access</p>
-                  <p className="text-sm text-black/50 group-hover:text-white/60">
+                  <p className="text-sm text-[#5D0F17]/50 group-hover:text-[#F7F3EA]/60">
                     View new arrivals added in the last 24 hours — before anyone else.
                   </p>
                 </div>
@@ -109,11 +109,11 @@ export default async function AccountPage() {
                   View →
                 </span>
               </Link>
-              <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 rounded-sm">
+              <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                 <div>
                   <p className="font-medium text-sm mb-1">Active Member</p>
                   {memberSince && (
-                    <p className="text-sm text-black/50">
+                    <p className="text-sm text-[#5D0F17]/50">
                       Since{" "}
                       {memberSince.toLocaleDateString("en-US", {
                         month: "long",
@@ -126,15 +126,15 @@ export default async function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 rounded-sm">
+            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
-                <p className="text-sm text-black/50 leading-relaxed">
+                <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
                   Get 24-hour early access to new arrivals from all VIA stores.
                 </p>
               </div>
               <a
                 href="/membership"
-                className="shrink-0 text-center text-sm uppercase tracking-[0.15em] px-6 py-3 bg-black text-white rounded-full hover:bg-black/85 transition"
+                className="shrink-0 text-center text-sm uppercase tracking-[0.15em] px-6 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
               >
                 Join VIA Insider — $10/month
               </a>
@@ -143,14 +143,14 @@ export default async function AccountPage() {
         </section>
 
         {/* ===== Favorite Products ===== */}
-        <section className="py-12 border-b border-neutral-100">
+        <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="flex items-center gap-4 mb-8">
-            <h2 className="font-serif text-xl italic text-black/80">Liked Products</h2>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">Liked Products</h2>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
             {favProducts.length > 0 && (
               <a
                 href="/account/favorites"
-                className="text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors"
+                className="text-sm uppercase tracking-[0.15em] hover:text-[#5D0F17]/60 transition-colors"
               >
                 View All ({favProducts.length})
               </a>
@@ -158,12 +158,12 @@ export default async function AccountPage() {
           </div>
           {favProducts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-black/40 text-sm mb-4">
+              <p className="text-[#5D0F17]/40 text-sm mb-4">
                 You haven&apos;t favorited any products yet.
               </p>
               <Link
                 href="/browse"
-                className="inline-block text-sm uppercase tracking-[0.15em] px-6 py-2.5 border border-black rounded-full hover:bg-black hover:text-white transition"
+                className="inline-block text-sm uppercase tracking-[0.15em] px-6 py-2.5 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
               >
                 Browse Products
               </Link>
@@ -212,19 +212,19 @@ export default async function AccountPage() {
         </section>
 
         {/* ===== Favorite Stores ===== */}
-        <section className="py-12 border-b border-neutral-100">
+        <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="flex items-center gap-4 mb-8">
-            <h2 className="font-serif text-xl italic text-black/80">Stores</h2>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">Stores</h2>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
           {favStores.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-black/40 text-sm mb-4">
+              <p className="text-[#5D0F17]/40 text-sm mb-4">
                 You haven&apos;t favorited any stores yet.
               </p>
               <Link
                 href="/stores"
-                className="inline-block text-sm uppercase tracking-[0.15em] px-6 py-2.5 border border-black rounded-full hover:bg-black hover:text-white transition"
+                className="inline-block text-sm uppercase tracking-[0.15em] px-6 py-2.5 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
               >
                 Explore Stores
               </Link>
@@ -235,10 +235,10 @@ export default async function AccountPage() {
                 <a
                   key={store.slug}
                   href={`/stores/${store.slug}`}
-                  className="block p-6 border border-neutral-200 rounded-sm hover:border-black transition"
+                  className="block p-6 border border-[#5D0F17]/15 hover:border-[#5D0F17] transition"
                 >
                   <h3 className="font-serif text-lg mb-1">{store.name}</h3>
-                  <p className="text-sm text-black/50">{store.location}</p>
+                  <p className="text-sm text-[#5D0F17]/50">{store.location}</p>
                 </a>
               ))}
             </div>
@@ -246,35 +246,35 @@ export default async function AccountPage() {
         </section>
 
         {/* ===== Refer + Invite ===== */}
-        <section className="py-12 border-b border-neutral-100">
+        <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col rounded-sm">
+            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col">
               <h2 className="font-serif text-lg mb-2">Refer a Friend</h2>
-              <p className="text-sm text-black/50 mb-6 leading-relaxed">
+              <p className="text-sm text-[#5D0F17]/50 mb-6 leading-relaxed">
                 Share VIA with friends and help us grow the community.
               </p>
               <div className="mt-auto flex flex-col gap-3">
                 <a
                   href="/waitlist"
-                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 bg-black text-white rounded-full hover:bg-black/85 transition"
+                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
                 >
                   Get Your Referral Link
                 </a>
-                <p className="text-xs text-black/40 text-center">
+                <p className="text-xs text-[#5D0F17]/40 text-center">
                   Invite 2 friends to enter the $1,000 giveaway
                 </p>
               </div>
             </div>
 
-            <div className="border border-neutral-200 p-6 sm:p-8 flex flex-col rounded-sm">
+            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col">
               <h2 className="font-serif text-lg mb-2">Invite a Friend</h2>
-              <p className="text-sm text-black/50 mb-6 leading-relaxed">
+              <p className="text-sm text-[#5D0F17]/50 mb-6 leading-relaxed">
                 Know someone who&apos;d love VIA? Send them an invite and shop together.
               </p>
               <div className="mt-auto">
                 <a
                   href="/account/friends"
-                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 border border-black rounded-full hover:bg-black hover:text-white transition"
+                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
                 >
                   Invite Friend
                 </a>

@@ -74,7 +74,7 @@ export default function ImageCarousel({
   if (variant === "card") {
     return (
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100 group/carousel"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 group/carousel"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
@@ -100,7 +100,7 @@ export default function ImageCarousel({
         })}
 
         {safeImages[0] === "/placeholder.jpg" && (
-          <div className="absolute inset-0 bg-neutral-200 z-10" />
+          <div className="absolute inset-0 bg-[#D8CABD]/50 z-10" />
         )}
 
 
@@ -153,7 +153,7 @@ export default function ImageCarousel({
   return (
     <div>
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-neutral-100"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
@@ -165,7 +165,7 @@ export default function ImageCarousel({
         />
 
         {safeImages[0] === "/placeholder.jpg" && (
-          <div className="absolute inset-0 bg-neutral-200" />
+          <div className="absolute inset-0 bg-[#D8CABD]/50" />
         )}
 
         {hasMultiple && (

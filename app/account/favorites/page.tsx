@@ -29,19 +29,23 @@ export default async function FavoritesPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen">
-      <section className="border-b border-neutral-200">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <Link
             href="/account"
-            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
           >
             &larr; Account
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">
-            Favorite Products
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">My</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
+            Favorites
           </h1>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-[#5D0F17]/50">
             {favProducts.length} {favProducts.length === 1 ? "piece" : "pieces"} saved
           </p>
         </div>
@@ -51,12 +55,12 @@ export default async function FavoritesPage() {
         <div className="max-w-7xl mx-auto px-6">
           {favProducts.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-black/50 mb-6">
+              <p className="text-[#5D0F17]/50 mb-6">
                 You haven&apos;t favorited any products yet.
               </p>
               <Link
                 href="/browse"
-                className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+                className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-8 py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
               >
                 Browse Products
               </Link>

@@ -85,7 +85,7 @@ export default function ProductDetailModal({
 
       {/* Modal — slides up on mobile, centered on desktop */}
       <div
-        className={`relative w-full sm:max-w-2xl sm:mx-4 max-h-[95vh] overflow-y-auto bg-white rounded-t-xl sm:rounded-lg shadow-2xl transition-all duration-300 ease-out ${
+        className={`relative w-full sm:max-w-2xl sm:mx-4 max-h-[95vh] overflow-y-auto bg-[#F7F3EA] rounded-t-xl sm:rounded-none shadow-2xl transition-all duration-300 ease-out ${
           showModal
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-12 sm:translate-y-8"
@@ -94,7 +94,7 @@ export default function ProductDetailModal({
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-10 p-2 text-gray-500 hover:text-black transition bg-white/80 backdrop-blur-sm rounded-full"
+          className="absolute top-4 right-4 z-10 p-2 text-[#5D0F17]/50 hover:text-[#5D0F17] transition bg-[#F7F3EA]/80 backdrop-blur-sm"
           aria-label="Close"
         >
           <svg
@@ -127,17 +127,17 @@ export default function ProductDetailModal({
 
         {/* Product Info */}
         <div className="p-6 sm:p-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-black/60 mb-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/60 mb-2">
             {product.store}
           </p>
 
-          <h2 className="text-2xl sm:text-3xl font-serif text-black mb-2 leading-snug">
+          <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17] mb-2 leading-snug">
             {product.title}
           </h2>
 
-          <p className="text-sm text-black/60 mb-1">{product.categoryLabel}</p>
+          <p className="text-sm text-[#5D0F17]/60 mb-1">{product.categoryLabel}</p>
 
-          <p className="text-xl font-medium text-black mb-6">
+          <p className="text-xl font-medium text-[#5D0F17] mb-6">
             ${product.price}
           </p>
 
@@ -147,20 +147,20 @@ export default function ProductDetailModal({
               href={checkoutUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full bg-black text-white py-4 text-sm uppercase tracking-wide text-center hover:bg-neutral-800 transition"
+              className="block w-full bg-[#5D0F17] text-[#F7F3EA] py-4 text-sm uppercase tracking-wide text-center hover:bg-[#5D0F17]/85 transition"
             >
               Checkout
             </a>
           ) : (
             <button
               disabled
-              className="block w-full bg-neutral-300 text-white py-4 text-sm uppercase tracking-wide text-center cursor-not-allowed"
+              className="block w-full bg-[#5D0F17]/30 text-[#F7F3EA] py-4 text-sm uppercase tracking-wide text-center cursor-not-allowed"
             >
               Coming Soon
             </button>
           )}
 
-          <p className="text-[10px] text-black/40 mt-4 text-center">
+          <p className="text-[10px] text-[#5D0F17]/40 mt-4 text-center">
             You&apos;ll be redirected to {product.store} to complete your
             purchase.
           </p>

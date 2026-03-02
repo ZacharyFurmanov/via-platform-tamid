@@ -103,7 +103,7 @@ export default function NewsletterSignup({
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3.5 bg-neutral-50 border border-neutral-300 text-black placeholder:text-neutral-400 focus:outline-none focus:border-black transition min-h-[48px] touch-manipulation"
+                className="flex-1 px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition min-h-[48px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
@@ -111,7 +111,7 @@ export default function NewsletterSignup({
                 disabled={status === "loading"}
                 onClick={handleButtonInteraction}
                 onTouchEnd={handleButtonInteraction}
-                className="px-8 py-3.5 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
+                className="px-8 py-3.5 bg-[#5D0F17] text-[#F7F3EA] text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "Joining..." : "Get Updates"}
               </button>
@@ -131,7 +131,7 @@ export default function NewsletterSignup({
       <div className="w-full">
         <h4 className="text-sm uppercase tracking-wide mb-4">{title}</h4>
         {status === "success" ? (
-          <p className="text-sm text-neutral-400">{message}</p>
+          <p className="text-sm text-[#5D0F17]/40">{message}</p>
         ) : (
           <form ref={formRef} onSubmit={handleSubmit}>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -147,7 +147,7 @@ export default function NewsletterSignup({
                   if (status === "error") setStatus("idle");
                 }}
                 placeholder="Your email"
-                className="flex-1 px-4 py-2.5 bg-transparent border border-neutral-300 text-black placeholder:text-neutral-400 text-sm focus:outline-none focus:border-black transition min-h-[44px] touch-manipulation"
+                className="flex-1 px-4 py-2.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 text-sm focus:outline-none focus:border-[#5D0F17] transition min-h-[44px] touch-manipulation"
                 disabled={status === "loading"}
               />
               <button
@@ -155,7 +155,7 @@ export default function NewsletterSignup({
                 disabled={status === "loading"}
                 onClick={handleButtonInteraction}
                 onTouchEnd={handleButtonInteraction}
-                className="px-5 py-2.5 border border-black text-black text-xs uppercase tracking-wide hover:bg-black hover:text-white transition disabled:opacity-50 min-h-[44px] cursor-pointer touch-manipulation"
+                className="px-5 py-2.5 border border-[#5D0F17] text-[#5D0F17] text-xs uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition disabled:opacity-50 min-h-[44px] cursor-pointer touch-manipulation"
               >
                 {status === "loading" ? "..." : "Join"}
               </button>
@@ -173,7 +173,7 @@ export default function NewsletterSignup({
   return (
     <div className="max-w-md mx-auto text-center">
       <h3 className="text-2xl sm:text-3xl font-serif mb-3">{title}</h3>
-      <p className="text-neutral-600 text-sm sm:text-base mb-6">{description}</p>
+      <p className="text-[#5D0F17]/60 text-sm sm:text-base mb-6">{description}</p>
 
       {status === "success" ? (
         <div className="py-4 px-6 bg-green-50 border border-green-200">
@@ -194,7 +194,7 @@ export default function NewsletterSignup({
                 if (status === "error") setStatus("idle");
               }}
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition min-h-[48px] touch-manipulation"
+              className="flex-1 px-4 py-3 border border-[#5D0F17]/20 focus:border-[#5D0F17] focus:outline-none bg-transparent transition min-h-[48px] touch-manipulation"
               disabled={status === "loading"}
             />
             <button
@@ -202,7 +202,7 @@ export default function NewsletterSignup({
               disabled={status === "loading"}
               onClick={handleButtonInteraction}
               onTouchEnd={handleButtonInteraction}
-              className="px-6 py-3 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
+              className="px-6 py-3 bg-[#5D0F17] text-[#F7F3EA] text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition disabled:opacity-50 min-h-[48px] cursor-pointer touch-manipulation"
             >
               {status === "loading" ? "Joining..." : "Join Waitlist"}
             </button>

@@ -36,17 +36,18 @@ const stories = [
 
 export default function StoriesPage() {
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* Header */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-16 sm:py-24">
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-500 mb-4">
-            The Story Behind the Selection
-          </p>
-          <h1 className="text-3xl sm:text-5xl font-serif mb-4">
-            Why we chose them
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Featured</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
+            Stories
           </h1>
-          <p className="max-w-2xl text-neutral-600 text-base sm:text-lg">
+          <p className="max-w-2xl text-[#5D0F17]/60 text-base sm:text-lg">
             Every store on VIA has a story worth telling. Here&apos;s why we selected
             each one.
           </p>
@@ -74,10 +75,10 @@ export default function StoriesPage() {
                     className="object-cover"
                   />
                 </div>
-                <p className="text-sm text-neutral-600 leading-relaxed mb-3">
+                <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-3">
                   {story.teaser}
                 </p>
-                <span className="inline-block text-xs uppercase tracking-[0.15em] text-neutral-500 group-hover:text-black transition">
+                <span className="inline-block text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 group-hover:text-[#5D0F17] transition">
                   Read Story &rarr;
                 </span>
               </Link>

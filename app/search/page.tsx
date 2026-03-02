@@ -95,14 +95,14 @@ function SearchResults() {
   const hasQuickLinks = designers.length > 0 || categories.length > 0 || matchedStores.length > 0;
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      <section className="border-b border-neutral-200">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16">
           <h1 className="text-2xl sm:text-3xl font-serif mb-1">
             {q ? `Results for "${q}"` : "Search"}
           </h1>
           {!loading && q && (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-[#5D0F17]/50">
               {displayProducts.length}{" "}
               {displayProducts.length === 1 ? "item" : "items"}
               {selectedStore && ` from ${productStores.find((s) => s.slug === selectedStore)?.name}`}
@@ -114,21 +114,21 @@ function SearchResults() {
       <section className="py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-6">
           {loading && (
-            <p className="text-sm text-neutral-400">Searching...</p>
+            <p className="text-sm text-[#5D0F17]/40">Searching...</p>
           )}
 
           {/* Quick links: Designers, Categories, Stores */}
           {!loading && hasQuickLinks && (
-            <div className="flex flex-wrap gap-x-10 gap-y-6 mb-12 pb-10 border-b border-neutral-200">
+            <div className="flex flex-wrap gap-x-10 gap-y-6 mb-12 pb-10 border-b border-[#5D0F17]/10">
               {designers.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 mb-3">Designers</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Designers</p>
                   <div className="flex flex-wrap gap-2">
                     {designers.map((d) => (
                       <Link
                         key={d.slug}
                         href={`/brands/${d.slug}`}
-                        className="inline-block border border-neutral-200 px-4 py-2 text-sm hover:bg-black hover:text-white hover:border-black transition-colors"
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {d.label}
                       </Link>
@@ -139,13 +139,13 @@ function SearchResults() {
 
               {categories.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 mb-3">Categories</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Categories</p>
                   <div className="flex flex-wrap gap-2">
                     {categories.map((c) => (
                       <Link
                         key={c.slug}
                         href={`/categories/${c.slug}`}
-                        className="inline-block border border-neutral-200 px-4 py-2 text-sm hover:bg-black hover:text-white hover:border-black transition-colors"
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {c.label}
                       </Link>
@@ -156,13 +156,13 @@ function SearchResults() {
 
               {matchedStores.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 mb-3">Stores</p>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Stores</p>
                   <div className="flex flex-wrap gap-2">
                     {matchedStores.map((s) => (
                       <Link
                         key={s.slug}
                         href={`/stores/${s.slug}`}
-                        className="inline-block border border-neutral-200 px-4 py-2 text-sm hover:bg-black hover:text-white hover:border-black transition-colors"
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {s.name}
                       </Link>
@@ -176,14 +176,14 @@ function SearchResults() {
           {/* No results */}
           {!loading && products.length === 0 && q && (
             <div className="text-center py-16">
-              <p className="text-neutral-500 mb-2">No items found for &ldquo;{q}&rdquo;</p>
-              <p className="text-sm text-neutral-400 mb-8">Try a designer name, item type, or browse a category below.</p>
+              <p className="text-[#5D0F17]/50 mb-2">No items found for &ldquo;{q}&rdquo;</p>
+              <p className="text-sm text-[#5D0F17]/40 mb-8">Try a designer name, item type, or browse a category below.</p>
               <div className="flex flex-wrap justify-center gap-3 mb-8">
                 {["Clothing", "Bags", "Shoes", "Accessories"].map((cat) => (
                   <Link
                     key={cat}
                     href={`/categories/${cat.toLowerCase()}`}
-                    className="border border-neutral-200 px-5 py-2.5 text-sm hover:bg-black hover:text-white hover:border-black transition-colors"
+                    className="border border-[#5D0F17]/20 px-5 py-2.5 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                   >
                     {cat}
                   </Link>
@@ -191,7 +191,7 @@ function SearchResults() {
               </div>
               <Link
                 href="/stores"
-                className="inline-block text-sm text-neutral-500 underline hover:text-black transition-colors"
+                className="inline-block text-sm text-[#5D0F17]/50 underline hover:text-[#5D0F17] transition-colors"
               >
                 Browse all stores
               </Link>
@@ -208,8 +208,8 @@ function SearchResults() {
                     onClick={() => setSelectedStore(null)}
                     className={`px-4 py-1.5 text-xs uppercase tracking-wide border transition-colors ${
                       selectedStore === null
-                        ? "bg-black text-white border-black"
-                        : "border-neutral-300 hover:border-black"
+                        ? "bg-[#5D0F17] text-[#F7F3EA] border-[#5D0F17]"
+                        : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
                     }`}
                   >
                     All stores
@@ -220,8 +220,8 @@ function SearchResults() {
                       onClick={() => setSelectedStore(s.slug === selectedStore ? null : s.slug)}
                       className={`px-4 py-1.5 text-xs uppercase tracking-wide border transition-colors ${
                         selectedStore === s.slug
-                          ? "bg-black text-white border-black"
-                          : "border-neutral-300 hover:border-black"
+                          ? "bg-[#5D0F17] text-[#F7F3EA] border-[#5D0F17]"
+                          : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
                       }`}
                     >
                       {s.name}
@@ -234,7 +234,7 @@ function SearchResults() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortOption)}
-                className="text-xs uppercase tracking-wide border border-neutral-300 px-3 py-1.5 bg-white outline-none hover:border-black transition-colors cursor-pointer ml-auto"
+                className="text-xs uppercase tracking-wide border border-[#5D0F17]/20 px-3 py-1.5 bg-[#F7F3EA] text-[#5D0F17] outline-none hover:border-[#5D0F17] transition-colors cursor-pointer ml-auto"
               >
                 <option value="relevance">Sort: Relevance</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -252,7 +252,7 @@ function SearchResults() {
                   href={`/products/${p.storeSlug}-${p.id}`}
                   className="group block"
                 >
-                  <div className="aspect-[3/4] bg-neutral-100 overflow-hidden mb-3">
+                  <div className="aspect-[3/4] bg-[#D8CABD]/30 overflow-hidden mb-3">
                     {p.image ? (
                       <img
                         src={resizeImage(p.image, 600)}
@@ -262,18 +262,18 @@ function SearchResults() {
                         decoding="async"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-neutral-400 text-xs">
+                      <div className="w-full h-full flex items-center justify-center text-[#5D0F17]/40 text-xs">
                         No image
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] sm:text-xs uppercase tracking-wide text-black/50 mb-1">
+                  <p className="text-[11px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-1">
                     {p.storeName}
                   </p>
-                  <h3 className="font-serif text-sm sm:text-base text-black leading-snug line-clamp-2">
+                  <h3 className="font-serif text-sm sm:text-base text-[#5D0F17] leading-snug line-clamp-2">
                     {p.name}
                   </h3>
-                  <p className="text-sm mt-1 font-medium text-black">
+                  <p className="text-sm mt-1 font-medium text-[#5D0F17]">
                     {p.price}
                   </p>
                 </Link>
@@ -284,10 +284,10 @@ function SearchResults() {
           {/* Filtered to zero */}
           {!loading && products.length > 0 && displayProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-neutral-500 text-sm">No items match this filter.</p>
+              <p className="text-[#5D0F17]/50 text-sm">No items match this filter.</p>
               <button
                 onClick={() => setSelectedStore(null)}
-                className="mt-3 text-sm text-black underline"
+                className="mt-3 text-sm text-[#5D0F17] underline"
               >
                 Clear filter
               </button>
@@ -303,9 +303,9 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <main className="bg-white min-h-screen text-black">
+        <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
           <div className="max-w-7xl mx-auto px-6 py-12">
-            <p className="text-sm text-neutral-400">Loading...</p>
+            <p className="text-sm text-[#5D0F17]/40">Loading...</p>
           </div>
         </main>
       }

@@ -105,13 +105,13 @@ export default async function StorePage({ params }: StorePageProps) {
   brandCounts.sort((a, b) => b.count - a.count);
 
   return (
-    <main className="bg-white min-h-screen">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= STORE HEADER ================= */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <Link
             href="/stores"
-            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
           >
             &larr; All Stores
           </Link>
@@ -121,14 +121,14 @@ export default async function StorePage({ params }: StorePageProps) {
             <FavoriteButton type="store" targetId={store.slug} size="md" />
           </div>
 
-          <p className="text-sm text-neutral-500 mb-3">{store.location}</p>
+          <p className="text-sm text-[#5D0F17]/50 mb-3">{store.location}</p>
 
           {store.description && (
-            <p className="text-sm sm:text-base text-neutral-600 max-w-xl">{store.description}</p>
+            <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-xl">{store.description}</p>
           )}
 
           {"perk" in store && store.perk && (
-            <p className="mt-4 text-sm font-medium text-black italic">
+            <p className="mt-4 text-sm font-medium text-[#5D0F17] italic">
               {store.perk}
             </p>
           )}

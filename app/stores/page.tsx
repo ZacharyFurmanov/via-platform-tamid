@@ -4,19 +4,19 @@ import { stores } from "@/app/lib/stores";
 
 export default function StoresPage() {
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
 
       {/* ================= HEADER ================= */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-black/80">Explore</p>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Explore</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2 mb-4">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
             Stores
           </h1>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             A curated selection of independent vintage and secondhand stores,
             each with a distinct point of view.
           </p>
@@ -33,7 +33,7 @@ export default function StoresPage() {
 
                 {/* IMAGE (CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block mb-6">
-                  <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
+                  <div className="relative aspect-[3/4] bg-[#D8CABD]/30 overflow-hidden">
                     {store.image && (
                       <Image
                         src={store.image}
@@ -53,11 +53,11 @@ export default function StoresPage() {
                   </h2>
                 </Link>
 
-                <p className="text-sm text-neutral-500 mb-4">
+                <p className="text-sm text-[#5D0F17]/50 mb-4">
                   {store.location}
                 </p>
 
-                <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">
+                <p className="text-sm text-[#5D0F17]/70 leading-relaxed line-clamp-3">
                   {store.description}
                 </p>
 

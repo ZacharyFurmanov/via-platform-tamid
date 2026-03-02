@@ -21,11 +21,11 @@ function Avatar({ name, image, size = "md" }: { name: string | null; image: stri
   const dim = size === "sm" ? "w-8 h-8" : "w-12 h-12";
   const textSize = size === "sm" ? "text-sm" : "text-lg";
   if (image) {
-    return <img src={image} alt="" className={`${dim} rounded-full`} />;
+    return <img src={image} alt="" className={`${dim} object-cover`} />;
   }
   return (
-    <div className={`${dim} rounded-full bg-neutral-100 flex items-center justify-center`}>
-      <span className={`${textSize} font-serif text-black/40`}>
+    <div className={`${dim} bg-[#D8CABD]/40 flex items-center justify-center`}>
+      <span className={`${textSize} font-serif text-[#5D0F17]/40`}>
         {(name?.[0] || "?").toUpperCase()}
       </span>
     </div>
@@ -194,23 +194,27 @@ export default function FriendsPage() {
   if (status === "loading") return null;
 
   return (
-    <main className="bg-white min-h-screen">
-      <section className="border-b border-neutral-200">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
           <a
             href="/account"
-            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
           >
             &larr; Account
           </a>
-          <h1 className="font-serif text-2xl sm:text-3xl">Friends</h1>
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">My</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-serif text-[#5D0F17]/10 leading-none -mt-2">Friends</h1>
         </div>
       </section>
       <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
         {/* Find Friends */}
         <section className="mb-12">
           <h2 className="font-serif text-xl mb-4">Find Friends</h2>
-          <p className="text-sm text-black/50 mb-4">Search by phone number to find friends on VIA.</p>
+          <p className="text-sm text-[#5D0F17]/50 mb-4">Search by phone number to find friends on VIA.</p>
           <div className="flex items-center gap-3 mb-4">
             <input
               type="tel"
@@ -218,19 +222,19 @@ export default function FriendsPage() {
               onChange={(e) => setSearchPhone(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="e.g. +1 555 123 4567"
-              className="border border-neutral-300 px-3 py-2 text-sm w-64 outline-none focus:border-black transition"
+              className="border border-[#5D0F17]/20 px-3 py-2 text-sm w-64 outline-none focus:border-[#5D0F17] bg-transparent transition"
             />
             <button
               onClick={handleSearch}
               disabled={searching}
-              className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition disabled:opacity-50"
+              className="text-sm uppercase tracking-wide px-4 py-2 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition disabled:opacity-50"
             >
               {searching ? "Searching..." : "Search"}
             </button>
           </div>
 
           {searchResult && (
-            <div className="border border-neutral-200 p-4">
+            <div className="border border-[#5D0F17]/15 p-4">
               {searchResult.found && searchResult.user ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -239,12 +243,12 @@ export default function FriendsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {requestStatus && (
-                      <span className="text-xs text-black/50 capitalize">{requestStatus.replace("_", " ")}</span>
+                      <span className="text-xs text-[#5D0F17]/50 capitalize">{requestStatus.replace("_", " ")}</span>
                     )}
                     {!requestStatus && (
                       <button
                         onClick={() => handleSendRequest(searchResult.user!.id)}
-                        className="text-sm uppercase tracking-wide px-3 py-1.5 bg-black text-white hover:bg-black/80 transition"
+                        className="text-sm uppercase tracking-wide px-3 py-1.5 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
                       >
                         Add Friend
                       </button>
@@ -253,10 +257,10 @@ export default function FriendsPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-black/50">No user found with this number</span>
+                  <span className="text-sm text-[#5D0F17]/50">No user found with this number</span>
                   <button
                     onClick={handleInvite}
-                    className="text-sm uppercase tracking-wide px-3 py-1.5 border border-black hover:bg-black hover:text-white transition"
+                    className="text-sm uppercase tracking-wide px-3 py-1.5 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
                   >
                     Invite to VIA
                   </button>
@@ -271,26 +275,26 @@ export default function FriendsPage() {
                 <button
                   onClick={handleFindFromContacts}
                   disabled={contactSearching}
-                  className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition disabled:opacity-50"
+                  className="text-sm uppercase tracking-wide px-4 py-2 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition disabled:opacity-50"
                 >
                   {contactSearching ? "Searching..." : "Find Friends from Contacts"}
                 </button>
 
                 {contactMatches.length > 0 && (
                   <div className="mt-4 space-y-3">
-                    <p className="text-xs text-black/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
+                    <p className="text-xs text-[#5D0F17]/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
                     {contactMatches.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between border border-neutral-200 p-3">
+                      <div key={user.id} className="flex items-center justify-between border border-[#5D0F17]/15 p-3">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} image={user.image} size="sm" />
                           <span className="text-sm font-medium">{user.name || "VIA User"}</span>
                         </div>
                         {contactRequestStatuses[user.id] ? (
-                          <span className="text-xs text-black/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
+                          <span className="text-xs text-[#5D0F17]/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
                         ) : (
                           <button
                             onClick={() => handleContactSendRequest(user.id)}
-                            className="text-sm uppercase tracking-wide px-3 py-1.5 bg-black text-white hover:bg-black/80 transition"
+                            className="text-sm uppercase tracking-wide px-3 py-1.5 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
                           >
                             Add Friend
                           </button>
@@ -304,11 +308,11 @@ export default function FriendsPage() {
               <div>
                 <button
                   onClick={handleInvite}
-                  className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition"
+                  className="text-sm uppercase tracking-wide px-4 py-2 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
                 >
                   Invite Friends to VIA
                 </button>
-                <p className="text-xs text-black/50 mt-2">
+                <p className="text-xs text-[#5D0F17]/50 mt-2">
                   To find friends from your contacts, open this page on your phone.
                 </p>
               </div>
@@ -323,10 +327,10 @@ export default function FriendsPage() {
 
             {incoming.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-xs uppercase tracking-wide text-black/50 mb-3">Incoming</h3>
+                <h3 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">Incoming</h3>
                 <div className="space-y-3">
                   {incoming.map((req) => (
-                    <div key={req.id} className="flex items-center justify-between border border-neutral-200 p-3">
+                    <div key={req.id} className="flex items-center justify-between border border-[#5D0F17]/15 p-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={req.from_user?.name || null} image={req.from_user?.image || null} size="sm" />
                         <span className="text-sm">{req.from_user?.name || req.from_user?.email || "Someone"}</span>
@@ -334,13 +338,13 @@ export default function FriendsPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleAccept(req.id)}
-                          className="text-sm uppercase tracking-wide px-3 py-1 bg-black text-white hover:bg-black/80 transition"
+                          className="text-sm uppercase tracking-wide px-3 py-1 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => handleDecline(req.id)}
-                          className="text-sm uppercase tracking-wide px-3 py-1 border border-neutral-300 hover:border-black transition"
+                          className="text-sm uppercase tracking-wide px-3 py-1 border border-[#5D0F17]/20 hover:border-[#5D0F17] transition"
                         >
                           Decline
                         </button>
@@ -353,15 +357,15 @@ export default function FriendsPage() {
 
             {outgoing.length > 0 && (
               <div>
-                <h3 className="text-xs uppercase tracking-wide text-black/50 mb-3">Sent</h3>
+                <h3 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">Sent</h3>
                 <div className="space-y-3">
                   {outgoing.map((req) => (
-                    <div key={req.id} className="flex items-center justify-between border border-neutral-200 p-3">
+                    <div key={req.id} className="flex items-center justify-between border border-[#5D0F17]/15 p-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={req.to_user?.name || null} image={req.to_user?.image || null} size="sm" />
                         <span className="text-sm">{req.to_user?.name || req.to_user?.email || "Someone"}</span>
                       </div>
-                      <span className="text-xs text-black/40 uppercase tracking-wide">Pending</span>
+                      <span className="text-xs text-[#5D0F17]/40 uppercase tracking-wide">Pending</span>
                     </div>
                   ))}
                 </div>
@@ -374,13 +378,13 @@ export default function FriendsPage() {
         <section className="mb-12">
           <h2 className="font-serif text-xl mb-4">My Friends</h2>
           {friends.length === 0 ? (
-            <p className="text-sm text-black/50">
+            <p className="text-sm text-[#5D0F17]/50">
               No friends yet. Search by phone number above to find people you know.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {friends.map((friend) => (
-                <div key={friend.id} className="flex items-center justify-between border border-neutral-200 p-4">
+                <div key={friend.id} className="flex items-center justify-between border border-[#5D0F17]/15 p-4">
                   <div className="flex items-center gap-3">
                     <Avatar name={friend.name} image={friend.image} />
                     <div>
@@ -389,7 +393,7 @@ export default function FriendsPage() {
                   </div>
                   <button
                     onClick={() => handleRemove(friend.id)}
-                    className="text-xs uppercase tracking-wide text-black/40 hover:text-red-600 transition"
+                    className="text-xs uppercase tracking-wide text-[#5D0F17]/40 hover:text-red-600 transition"
                   >
                     Remove
                   </button>
@@ -403,7 +407,7 @@ export default function FriendsPage() {
         <section>
           <h2 className="font-serif text-xl mb-4">Friends Activity</h2>
           {feed.length === 0 ? (
-            <p className="text-sm text-black/50">
+            <p className="text-sm text-[#5D0F17]/50">
               {friends.length === 0
                 ? "Add friends to see what they're hearting and shopping."
                 : "No activity from your friends yet."}
@@ -411,20 +415,20 @@ export default function FriendsPage() {
           ) : (
             <div className="space-y-4">
               {feed.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 py-3 border-b border-neutral-100">
+                <div key={item.id} className="flex items-start gap-3 py-3 border-b border-[#5D0F17]/10">
                   <Avatar name={item.user_name} image={item.user_image} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">
                       <span className="font-medium">{item.user_name || "A friend"}</span>{" "}
                       {activityDescription(item)}
                     </p>
-                    <span className="text-xs text-black/40">{timeAgo(item.created_at)}</span>
+                    <span className="text-xs text-[#5D0F17]/40">{timeAgo(item.created_at)}</span>
                   </div>
                   {typeof item.metadata.productImage === "string" && (
                     <img
                       src={item.metadata.productImage}
                       alt=""
-                      className="w-10 h-10 object-cover rounded"
+                      className="w-10 h-10 object-cover"
                     />
                   )}
                 </div>

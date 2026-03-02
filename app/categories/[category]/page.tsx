@@ -113,24 +113,24 @@ export default async function CategoryPage({
   storeCounts.sort((a, b) => b.count - a.count);
 
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= CATEGORY HEADER ================= */}
-      <section className="border-b border-neutral-200">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <Link
             href="/categories"
-            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-neutral-500 hover:text-black transition"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
           >
             &larr; All Categories
           </Link>
           <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-black/80">Shop</p>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Shop</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2 mb-4">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
             {label}
           </h1>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             Curated {label.toLowerCase()} from independent vintage
             and secondhand stores.
           </p>
@@ -142,10 +142,10 @@ export default async function CategoryPage({
                 {storeCounts.map((s) => (
                   <span
                     key={s.label}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-100 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#D8CABD]/30 text-xs uppercase tracking-[0.1em] text-[#5D0F17]/70 whitespace-nowrap"
                   >
                     {s.label}
-                    <span className="text-black/40">{s.count}</span>
+                    <span className="text-[#5D0F17]/40">{s.count}</span>
                   </span>
                 ))}
               </div>
@@ -159,10 +159,10 @@ export default async function CategoryPage({
                 {brandCounts.map((brand) => (
                   <span
                     key={brand.label}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-neutral-200 text-xs uppercase tracking-[0.1em] text-black/70 whitespace-nowrap rounded-full"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-[#5D0F17]/15 text-xs uppercase tracking-[0.1em] text-[#5D0F17]/70 whitespace-nowrap"
                   >
                     {brand.label}
-                    <span className="text-black/40">{brand.count}</span>
+                    <span className="text-[#5D0F17]/40">{brand.count}</span>
                   </span>
                 ))}
               </div>

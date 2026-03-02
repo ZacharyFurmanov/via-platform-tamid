@@ -60,21 +60,35 @@ export default async function BrowsePage() {
   const categoryList = categories.map((c) => ({ slug: c.slug, label: c.label }));
 
   return (
-    <main className="bg-white min-h-screen text-black">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= HERO ================= */}
-      <section className="bg-white py-16 sm:py-24 border-b border-neutral-100">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-            Explore
-          </p>
-
-          <h1 className="text-5xl sm:text-6xl font-serif mb-6">
-            Browse All Pieces
-          </h1>
-
-          <p className="text-lg text-neutral-700 max-w-2xl mx-auto">
-            Discover curated vintage and secondhand from our network of independent
-            stores.
+      <section className="py-16 sm:py-24 border-b border-[#5D0F17]/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Explore</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
+              Browse All
+            </h1>
+            <div className="flex items-center gap-6 mb-2">
+              <Link
+                href="/categories"
+                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors"
+              >
+                Shop by Category
+              </Link>
+              <Link
+                href="/stores"
+                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors"
+              >
+                Shop by Store
+              </Link>
+            </div>
+          </div>
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
+            Discover curated vintage and secondhand from our network of independent stores.
           </p>
         </div>
       </section>
@@ -82,25 +96,6 @@ export default async function BrowsePage() {
       {/* ================= PRODUCTS WITH FILTERS ================= */}
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-end justify-between mb-8">
-            <h2 className="text-3xl font-serif">All Products</h2>
-
-            <div className="flex items-center gap-6">
-              <Link
-                href="/categories"
-                className="text-sm uppercase tracking-wide underline hover:no-underline"
-              >
-                Shop by Category
-              </Link>
-              <Link
-                href="/stores"
-                className="text-sm uppercase tracking-wide underline hover:no-underline"
-              >
-                Shop by Store
-              </Link>
-            </div>
-          </div>
-
           <FilteredProductGrid
             products={products}
             stores={storeList}

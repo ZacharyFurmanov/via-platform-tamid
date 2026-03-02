@@ -57,21 +57,21 @@ export default function ProductCard({
 
   return (
     <div className="relative group">
-      <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-black block">
+      <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-[#5D0F17] block">
         <ImageCarousel images={carouselImages} alt={name} variant="card" />
 
         {/* Product info */}
         <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">
-          <p className="text-[9px] sm:text-xs uppercase tracking-wide text-black/50 mb-0.5 sm:mb-1 transition-colors duration-300 group-hover:text-black/80">
+          <p className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-0.5 sm:mb-1 transition-colors duration-300 group-hover:text-[#5D0F17]/80">
             {storeName}
           </p>
 
-          <h3 className="font-serif text-xs sm:text-base text-black leading-snug line-clamp-2">
+          <h3 className="font-serif text-xs sm:text-base text-[#5D0F17] leading-snug line-clamp-2">
             {stripSizeFromTitle(name, size)}
           </h3>
 
-          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-black/80">
-            {price}{size ? <span className="ml-2 text-black/50">{size}</span> : null}
+          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-[#5D0F17]/80">
+            {price}{size ? <span className="ml-2 text-[#5D0F17]/50">{size}</span> : null}
           </p>
         </div>
       </Link>

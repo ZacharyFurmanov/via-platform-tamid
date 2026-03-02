@@ -73,18 +73,18 @@ export default function CartPage() {
 
   if (itemCount === 0) {
     return (
-      <main className="bg-white min-h-screen text-black">
+      <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-          <ShoppingCart size={48} className="mx-auto mb-6 text-neutral-300" />
+          <ShoppingCart size={48} className="mx-auto mb-6 text-[#5D0F17]/30" />
           <h1 className="text-2xl sm:text-3xl font-serif mb-4">
             Your cart is empty
           </h1>
-          <p className="text-neutral-500 mb-8">
+          <p className="text-[#5D0F17]/50 mb-8">
             Browse our stores and add items to your cart.
           </p>
           <Link
             href="/stores"
-            className="inline-block bg-black text-white px-8 py-3 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+            className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-8 py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
           >
             Explore Stores
           </Link>
@@ -94,19 +94,19 @@ export default function CartPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      <section className="border-b border-neutral-200">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-4xl mx-auto px-6 py-12 sm:py-16">
           <div className="flex items-end justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif mb-1">Your Cart</h1>
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-[#5D0F17]/50">
                 {itemCount} {itemCount === 1 ? "item" : "items"}
               </p>
             </div>
             <button
               onClick={clearCart}
-              className="text-xs uppercase tracking-wide text-neutral-500 hover:text-black transition underline"
+              className="text-xs uppercase tracking-wide text-[#5D0F17]/50 hover:text-[#5D0F17] transition underline"
             >
               Clear Cart
             </button>
@@ -122,29 +122,29 @@ export default function CartPage() {
             return (
               <div
                 key={group.storeSlug}
-                className="border border-neutral-200 rounded-sm overflow-hidden"
+                className="border border-[#5D0F17]/10 overflow-hidden"
               >
                 {/* Store header */}
-                <div className="bg-neutral-50 px-5 py-4 flex items-center justify-between">
+                <div className="bg-[#D8CABD]/20 px-5 py-4 flex items-center justify-between">
                   <Link
                     href={`/stores/${group.storeSlug}`}
                     className="hover:underline transition"
                   >
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-[#5D0F17]">
                       {group.storeName}
                     </span>
-                    <span className="text-neutral-500 text-sm ml-2">
+                    <span className="text-[#5D0F17]/50 text-sm ml-2">
                       {group.items.length}{" "}
                       {group.items.length === 1 ? "item" : "items"}
                     </span>
                   </Link>
-                  <span className="text-sm font-medium text-black">
+                  <span className="text-sm font-medium text-[#5D0F17]">
                     ${groupTotal.toFixed(2)}
                   </span>
                 </div>
 
                 {/* Items */}
-                <div className="divide-y divide-neutral-100">
+                <div className="divide-y divide-[#5D0F17]/10">
                   {group.items.map((item) => (
                     <div
                       key={item.compositeId}
@@ -155,7 +155,7 @@ export default function CartPage() {
                         href={`/products/${item.compositeId}`}
                         className="flex-shrink-0"
                       >
-                        <div className="w-16 h-20 sm:w-20 sm:h-24 bg-neutral-100 overflow-hidden">
+                        <div className="w-16 h-20 sm:w-20 sm:h-24 bg-[#D8CABD]/30 overflow-hidden">
                           {item.image ? (
                             <img
                               src={item.image}
@@ -163,7 +163,7 @@ export default function CartPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-neutral-400 text-xs">
+                            <div className="w-full h-full flex items-center justify-center text-[#5D0F17]/40 text-xs">
                               No image
                             </div>
                           )}
@@ -175,11 +175,11 @@ export default function CartPage() {
                         <div className="flex-1 min-w-0">
                           <Link
                             href={`/products/${item.compositeId}`}
-                            className="font-serif text-base text-black leading-snug line-clamp-2 hover:underline"
+                            className="font-serif text-base text-[#5D0F17] leading-snug line-clamp-2 hover:underline"
                           >
                             {item.title}
                           </Link>
-                          <p className="text-sm text-neutral-600 mt-0.5">
+                          <p className="text-sm text-[#5D0F17]/60 mt-0.5">
                             ${item.price}
                           </p>
                         </div>
@@ -187,7 +187,7 @@ export default function CartPage() {
                         {/* Remove */}
                         <button
                           onClick={() => removeItem(item.compositeId)}
-                          className="flex-shrink-0 p-2 text-neutral-400 hover:text-black transition ml-2"
+                          className="flex-shrink-0 p-2 text-[#5D0F17]/40 hover:text-[#5D0F17] transition ml-2"
                           aria-label={`Remove ${item.title}`}
                         >
                           <X size={16} />
@@ -198,7 +198,7 @@ export default function CartPage() {
                 </div>
 
                 {/* Store checkout button */}
-                <div className="px-5 py-4 border-t border-neutral-200 bg-neutral-50">
+                <div className="px-5 py-4 border-t border-[#5D0F17]/10 bg-[#D8CABD]/20">
                   <a
                     href={(() => {
                       const firstItem = group.items[0];
@@ -216,7 +216,7 @@ export default function CartPage() {
                     })()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-black text-white text-center py-3 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+                    className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
                   >
                     Checkout on {group.storeName} &rarr;
                   </a>
@@ -228,9 +228,9 @@ export default function CartPage() {
       </section>
 
       {/* Note */}
-      <section className="border-t border-neutral-200">
+      <section className="border-t border-[#5D0F17]/10">
         <div className="max-w-4xl mx-auto px-6 py-8 text-center">
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[#5D0F17]/40">
             Each item checks out directly on the store&apos;s website.
             Shipping and returns are handled by each store.
           </p>

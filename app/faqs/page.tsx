@@ -8,7 +8,7 @@ export default function FAQsPage() {
     },
     {
       q: "How does shopping on VIA work?",
-      a: "You can browse items and stores on VIA, then when you’re ready to purchase, you’ll be redirected to the store’s own website to complete checkout.",
+      a: "You can browse items and stores on VIA, then when you're ready to purchase, you'll be redirected to the store's own website to complete checkout.",
     },
     {
       q: "Do I buy items directly from VIA?",
@@ -24,7 +24,7 @@ export default function FAQsPage() {
     },
     {
       q: "What about returns or exchanges?",
-      a: "Return and exchange policies are set by each individual store. You’ll find the specific policy on the store’s website where you complete your purchase.",
+      a: "Return and exchange policies are set by each individual store. You'll find the specific policy on the store's website where you complete your purchase.",
     },
     {
       q: "Where do stores on VIA ship?",
@@ -47,43 +47,49 @@ export default function FAQsPage() {
       a: "Yes. Stores partner with VIA voluntarily and can choose to update or remove their presence at any time.",
     },
     {
-      q: "I’m a store owner, how can I partner with VIA?",
+      q: "I'm a store owner, how can I partner with VIA?",
       a: "You can visit our Partner With VIA page to learn more and get in touch about joining the platform.",
     },
   ];
 
   return (
-    <main className="bg-[#f7f6f3] py-32">
+    <main className="bg-[#F7F3EA] min-h-screen py-32">
       <div className="max-w-4xl mx-auto px-6">
-        <h1 className="text-6xl font-serif mb-6">FAQs</h1>
+        <div className="flex items-center gap-4 mb-1">
+          <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Have questions?</p>
+          <div className="flex-1 h-px bg-[#5D0F17]/15" />
+        </div>
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-8">
+          FAQs
+        </h1>
 
-        <p className="text-gray-700 mb-16 max-w-2xl">
+        <p className="text-[#5D0F17]/60 mb-16 max-w-2xl">
           Answers to common questions about shopping, shipping, and partnering with VIA.
         </p>
 
         <FAQAccordion faqs={faqs} />
 
         {/* ================= STILL HAVE QUESTIONS ================= */}
-        <div className="mt-24 border-t border-gray-200 pt-16 text-center">
-          <h3 className="text-3xl font-serif mb-4">
+        <div className="mt-24 border-t border-[#5D0F17]/10 pt-16 text-center">
+          <h3 className="text-3xl font-serif mb-4 text-[#5D0F17]">
             Still have questions?
           </h3>
 
-          <p className="text-gray-600 max-w-xl mx-auto mb-8">
-            If you’re a shopper or a store and need more information, we’re happy to help.
+          <p className="text-[#5D0F17]/60 max-w-xl mx-auto mb-8">
+            If you&apos;re a shopper or a store and need more information, we&apos;re happy to help.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="mailto:hana@theviaplatform.com"
-              className="bg-black text-white px-8 py-4 text-sm uppercase tracking-wide hover:bg-neutral-800 transition"
+              className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
             >
               Contact Us
             </a>
 
             <a
               href="/for-stores"
-              className="border border-black px-8 py-4 text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
+              className="border border-[#5D0F17] text-[#5D0F17] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
             >
               Partner With VIA
             </a>

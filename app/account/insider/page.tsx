@@ -35,12 +35,17 @@ export default async function InsiderPage() {
   }));
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      <section className="border-b border-neutral-200">
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <p className="text-xs uppercase tracking-widest text-black/40 mb-3">VIA Insider</p>
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">VIA Insider</h1>
-          <p className="text-sm sm:text-base text-neutral-600 max-w-2xl">
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">VIA Insider</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
+            Early Access
+          </h1>
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             Pieces added in the last 24 hours — yours before anyone else sees them.
           </p>
         </div>
@@ -50,10 +55,10 @@ export default async function InsiderPage() {
         <div className="max-w-7xl mx-auto px-6">
           {gridProducts.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-neutral-500 text-sm mb-2">
+              <p className="text-[#5D0F17]/50 text-sm mb-2">
                 No new arrivals in the last 24 hours.
               </p>
-              <p className="text-neutral-400 text-sm">
+              <p className="text-[#5D0F17]/40 text-sm">
                 Check back soon — new pieces drop regularly.
               </p>
             </div>

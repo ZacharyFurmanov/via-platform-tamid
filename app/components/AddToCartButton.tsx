@@ -28,8 +28,8 @@ export default function AddToCartButton({ item }: AddToCartButtonProps) {
         justAdded
           ? "bg-green-700 text-white"
           : alreadyInCart
-          ? "bg-neutral-300 text-white cursor-default"
-          : "bg-black text-white hover:bg-neutral-800"
+          ? "bg-[#5D0F17]/30 text-[#F7F3EA] cursor-default"
+          : "bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85"
       }`}
     >
       {justAdded ? "Added to Cart!" : alreadyInCart ? "In Cart" : "Add to Cart"}

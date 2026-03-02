@@ -153,19 +153,19 @@ export default function ProductFilter({
           <div className="relative flex-1 max-w-sm">
             <Search
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40"
             />
             <input
               type="text"
               value={filters.search}
               onChange={(e) => updateFilters({ search: e.target.value })}
               placeholder="Search products or stores..."
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-200 text-sm focus:border-black focus:outline-none transition"
+              className="w-full pl-10 pr-4 py-2.5 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-transparent transition"
             />
             {filters.search && (
               <button
                 onClick={() => updateFilters({ search: "" })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40 hover:text-[#5D0F17]"
               >
                 <X size={16} />
               </button>
@@ -182,8 +182,8 @@ export default function ProductFilter({
               }}
               className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                 filters.priceRange !== "all"
-                  ? "border-black bg-black text-white"
-                  : "border-neutral-200 hover:border-black"
+                  ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                  : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
               }`}
             >
               {priceRangeLabels[filters.priceRange]}
@@ -195,7 +195,7 @@ export default function ProductFilter({
                   className="fixed inset-0 z-10"
                   onClick={() => setPriceDropdownOpen(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[160px] animate-fade-in">
+                <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] animate-fade-in">
                   {(Object.keys(priceRangeLabels) as PriceRange[]).map(
                     (range) => (
                       <button
@@ -204,9 +204,9 @@ export default function ProductFilter({
                           updateFilters({ priceRange: range });
                           setPriceDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition ${
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition ${
                           filters.priceRange === range
-                            ? "bg-neutral-100 font-medium"
+                            ? "bg-[#D8CABD]/30 font-medium"
                             : ""
                         }`}
                       >
@@ -230,8 +230,8 @@ export default function ProductFilter({
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedCategories.length > 0
-                    ? "border-black bg-black text-white"
-                    : "border-neutral-200 hover:border-black"
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
                 }`}
               >
                 {filters.selectedCategories.length > 0
@@ -245,20 +245,20 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setCategoryDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px] animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[180px] animate-fade-in">
                     {categories.map((cat) => (
                       <button
                         key={cat.slug}
                         onClick={() => toggleCategory(cat.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
                           filters.selectedCategories.includes(cat.slug)
-                            ? "bg-neutral-100 font-medium"
+                            ? "bg-[#D8CABD]/30 font-medium"
                             : ""
                         }`}
                       >
                         {cat.label}
                         {filters.selectedCategories.includes(cat.slug) && (
-                          <span className="text-black">&#10003;</span>
+                          <span className="text-[#5D0F17]">&#10003;</span>
                         )}
                       </button>
                     ))}
@@ -279,8 +279,8 @@ export default function ProductFilter({
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedBrands.length > 0
-                    ? "border-black bg-black text-white"
-                    : "border-neutral-200 hover:border-black"
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
                 }`}
               >
                 {filters.selectedBrands.length > 0
@@ -294,20 +294,20 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setBrandDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {brands.map((brand) => (
                       <button
                         key={brand.slug}
                         onClick={() => toggleBrand(brand.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
                           filters.selectedBrands.includes(brand.slug)
-                            ? "bg-neutral-100 font-medium"
+                            ? "bg-[#D8CABD]/30 font-medium"
                             : ""
                         }`}
                       >
                         {brand.label}
                         {filters.selectedBrands.includes(brand.slug) && (
-                          <span className="text-black">&#10003;</span>
+                          <span className="text-[#5D0F17]">&#10003;</span>
                         )}
                       </button>
                     ))}
@@ -328,8 +328,8 @@ export default function ProductFilter({
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
                   filters.selectedStores.length > 0
-                    ? "border-black bg-black text-white"
-                    : "border-neutral-200 hover:border-black"
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
                 }`}
               >
                 {filters.selectedStores.length > 0
@@ -343,20 +343,20 @@ export default function ProductFilter({
                     className="fixed inset-0 z-10"
                     onClick={() => setStoreDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[200px] animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[200px] animate-fade-in">
                     {stores.map((store) => (
                       <button
                         key={store.slug}
                         onClick={() => toggleStore(store.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition flex items-center justify-between ${
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
                           filters.selectedStores.includes(store.slug)
-                            ? "bg-neutral-100 font-medium"
+                            ? "bg-[#D8CABD]/30 font-medium"
                             : ""
                         }`}
                       >
                         {store.name}
                         {filters.selectedStores.includes(store.slug) && (
-                          <span className="text-black">&#10003;</span>
+                          <span className="text-[#5D0F17]">&#10003;</span>
                         )}
                       </button>
                     ))}
@@ -374,7 +374,7 @@ export default function ProductFilter({
                 closeAllDropdowns();
                 setSortDropdownOpen(!wasOpen);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 border border-neutral-200 text-sm hover:border-black transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2.5 border border-[#5D0F17]/20 text-sm hover:border-[#5D0F17] transition-all duration-200"
             >
               Sort: {sortLabels[filters.sort]}
               <ChevronDown size={16} />
@@ -385,7 +385,7 @@ export default function ProductFilter({
                   className="fixed inset-0 z-10"
                   onClick={() => setSortDropdownOpen(false)}
                 />
-                <div className="absolute top-full right-0 mt-1 bg-white border border-neutral-200 shadow-lg z-20 min-w-[180px] animate-fade-in">
+                <div className="absolute top-full right-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[180px] animate-fade-in">
                   {(Object.keys(sortLabels) as SortOption[]).map((option) => (
                     <button
                       key={option}
@@ -393,9 +393,9 @@ export default function ProductFilter({
                         updateFilters({ sort: option });
                         setSortDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 transition ${
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition ${
                         filters.sort === option
-                          ? "bg-neutral-100 font-medium"
+                          ? "bg-[#D8CABD]/30 font-medium"
                           : ""
                       }`}
                     >
@@ -410,8 +410,8 @@ export default function ProductFilter({
 
         {/* Active Filters & Clear */}
         {hasActiveFilters && (
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-neutral-100">
-            <span className="text-xs uppercase tracking-wide text-neutral-500">
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#5D0F17]/10">
+            <span className="text-xs uppercase tracking-wide text-[#5D0F17]/50">
               {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}{" "}
               active
             </span>
@@ -422,7 +422,7 @@ export default function ProductFilter({
               Clear all
             </button>
             {productCount !== undefined && (
-              <span className="ml-auto text-sm text-neutral-600">
+              <span className="ml-auto text-sm text-[#5D0F17]/60">
                 {productCount} product{productCount !== 1 ? "s" : ""}
               </span>
             )}
@@ -436,14 +436,14 @@ export default function ProductFilter({
         <div className="relative mb-3">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40"
           />
           <input
             type="text"
             value={filters.search}
             onChange={(e) => updateFilters({ search: e.target.value })}
             placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-3 border border-neutral-200 text-sm focus:border-black focus:outline-none transition"
+            className="w-full pl-10 pr-4 py-3 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-transparent transition"
           />
         </div>
 
@@ -453,13 +453,13 @@ export default function ProductFilter({
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
             className={`flex-1 flex items-center justify-center gap-2 py-3 border text-sm transition ${
               hasActiveFilters
-                ? "border-black bg-black text-white"
-                : "border-neutral-200"
+                ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                : "border-[#5D0F17]/20"
             }`}
           >
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-white text-black px-1.5 py-0.5 text-xs rounded-full">
+              <span className="bg-[#F7F3EA] text-[#5D0F17] px-1.5 py-0.5 text-xs">
                 {activeFilterCount}
               </span>
             )}
@@ -471,7 +471,7 @@ export default function ProductFilter({
             onChange={(e) =>
               updateFilters({ sort: e.target.value as SortOption })
             }
-            className="flex-1 py-3 px-4 border border-neutral-200 text-sm focus:border-black focus:outline-none bg-white"
+            className="flex-1 py-3 px-4 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-[#F7F3EA]"
           >
             {(Object.keys(sortLabels) as SortOption[]).map((option) => (
               <option key={option} value={option}>
@@ -483,10 +483,10 @@ export default function ProductFilter({
 
         {/* Mobile Filter Panel */}
         {mobileFiltersOpen && (
-          <div className="mt-4 p-4 border border-neutral-200 bg-neutral-50">
+          <div className="mt-4 p-4 border border-[#5D0F17]/15 bg-[#D8CABD]/10">
             {/* Price Range */}
             <div className="mb-6">
-              <h4 className="text-xs uppercase tracking-wide text-neutral-500 mb-3">
+              <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
                 Price Range
               </h4>
               <div className="grid grid-cols-2 gap-2">
@@ -497,8 +497,8 @@ export default function ProductFilter({
                       onClick={() => updateFilters({ priceRange: range })}
                       className={`px-3 py-2 text-sm border transition ${
                         filters.priceRange === range
-                          ? "border-black bg-black text-white"
-                          : "border-neutral-200 bg-white hover:border-black"
+                          ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                          : "border-[#5D0F17]/20 bg-[#F7F3EA] hover:border-[#5D0F17]"
                       }`}
                     >
                       {priceRangeLabels[range]}
@@ -511,7 +511,7 @@ export default function ProductFilter({
             {/* Categories */}
             {showCategoryFilter && categories.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-neutral-500 mb-3">
+                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
                   Categories
                 </h4>
                 <div className="space-y-2">
@@ -524,7 +524,7 @@ export default function ProductFilter({
                         type="checkbox"
                         checked={filters.selectedCategories.includes(cat.slug)}
                         onChange={() => toggleCategory(cat.slug)}
-                        className="w-4 h-4 border-neutral-300 rounded focus:ring-black accent-black"
+                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
                       />
                       <span className="text-sm">{cat.label}</span>
                     </label>
@@ -536,7 +536,7 @@ export default function ProductFilter({
             {/* Brands */}
             {showBrandFilter && brands.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-neutral-500 mb-3">
+                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
                   Brands
                 </h4>
                 <div className="space-y-2">
@@ -549,7 +549,7 @@ export default function ProductFilter({
                         type="checkbox"
                         checked={filters.selectedBrands.includes(brand.slug)}
                         onChange={() => toggleBrand(brand.slug)}
-                        className="w-4 h-4 border-neutral-300 rounded focus:ring-black accent-black"
+                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
                       />
                       <span className="text-sm">{brand.label}</span>
                     </label>
@@ -561,7 +561,7 @@ export default function ProductFilter({
             {/* Stores */}
             {stores.length > 1 && (
               <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-neutral-500 mb-3">
+                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
                   Stores
                 </h4>
                 <div className="space-y-2">
@@ -574,7 +574,7 @@ export default function ProductFilter({
                         type="checkbox"
                         checked={filters.selectedStores.includes(store.slug)}
                         onChange={() => toggleStore(store.slug)}
-                        className="w-4 h-4 border-neutral-300 rounded focus:ring-black accent-black"
+                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
                       />
                       <span className="text-sm">{store.name}</span>
                     </label>
@@ -584,18 +584,18 @@ export default function ProductFilter({
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-neutral-200">
+            <div className="flex gap-3 pt-4 border-t border-[#5D0F17]/10">
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="flex-1 py-2.5 text-sm border border-neutral-200 hover:border-black transition"
+                  className="flex-1 py-2.5 text-sm border border-[#5D0F17]/20 hover:border-[#5D0F17] transition"
                 >
                   Clear All
                 </button>
               )}
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                className="flex-1 py-2.5 text-sm bg-black text-white"
+                className="flex-1 py-2.5 text-sm bg-[#5D0F17] text-[#F7F3EA]"
               >
                 Apply Filters
               </button>
@@ -605,7 +605,7 @@ export default function ProductFilter({
 
         {/* Results Count (Mobile) */}
         {productCount !== undefined && (
-          <p className="mt-3 text-sm text-neutral-600">
+          <p className="mt-3 text-sm text-[#5D0F17]/60">
             {productCount} product{productCount !== 1 ? "s" : ""}
           </p>
         )}

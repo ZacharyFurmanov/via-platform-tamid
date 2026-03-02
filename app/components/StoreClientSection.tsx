@@ -70,7 +70,7 @@ export default function StoreClientSection({
   return (
     <div>
       {/* Pills row */}
-      <div className="border-b border-neutral-100 bg-white">
+      <div className="border-b border-[#5D0F17]/10 bg-[#F7F3EA]">
         <div className="max-w-7xl mx-auto px-6">
           {/* Category pills */}
           {categoryCounts.length > 0 && (
@@ -80,14 +80,14 @@ export default function StoreClientSection({
                   <button
                     key={cat.label}
                     onClick={() => toggleCategory(cat.label)}
-                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-[11px] uppercase tracking-widest whitespace-nowrap transition-all duration-150 ${
+                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 border text-[11px] uppercase tracking-widest whitespace-nowrap transition-all duration-150 ${
                       activeCategory === cat.label
-                        ? "border-black text-black"
-                        : "border-neutral-200 text-black/50 hover:border-neutral-400 hover:text-black/70"
+                        ? "border-[#5D0F17] text-[#5D0F17]"
+                        : "border-[#5D0F17]/20 text-[#5D0F17]/50 hover:border-[#5D0F17]/40 hover:text-[#5D0F17]/70"
                     }`}
                   >
                     {cat.label}
-                    <span className={activeCategory === cat.label ? "text-black/40" : "text-black/25"}>
+                    <span className={activeCategory === cat.label ? "text-[#5D0F17]/40" : "text-[#5D0F17]/25"}>
                       {cat.count}
                     </span>
                   </button>
@@ -104,14 +104,14 @@ export default function StoreClientSection({
                   <button
                     key={brand.label}
                     onClick={() => toggleBrand(brand.label)}
-                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-[11px] uppercase tracking-widest whitespace-nowrap transition-all duration-150 ${
+                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 border text-[11px] uppercase tracking-widest whitespace-nowrap transition-all duration-150 ${
                       activeBrand === brand.label
-                        ? "border-black text-black"
-                        : "border-neutral-200 text-black/50 hover:border-neutral-400 hover:text-black/70"
+                        ? "border-[#5D0F17] text-[#5D0F17]"
+                        : "border-[#5D0F17]/20 text-[#5D0F17]/50 hover:border-[#5D0F17]/40 hover:text-[#5D0F17]/70"
                     }`}
                   >
                     {brand.label}
-                    <span className={activeBrand === brand.label ? "text-black/40" : "text-black/25"}>
+                    <span className={activeBrand === brand.label ? "text-[#5D0F17]/40" : "text-[#5D0F17]/25"}>
                       {brand.count}
                     </span>
                   </button>

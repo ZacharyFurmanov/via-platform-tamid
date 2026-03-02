@@ -225,7 +225,7 @@ export default function FilteredProductGrid({
 
       {filteredProducts.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-black/70 mb-4">{emptyMessage}</p>
+          <p className="text-[#5D0F17]/70 mb-4">{emptyMessage}</p>
           {filters.search ||
           filters.priceRange !== "all" ||
           filters.selectedStores.length > 0 ||
