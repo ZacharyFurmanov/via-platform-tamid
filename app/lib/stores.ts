@@ -180,6 +180,28 @@ export const stores = [
       "All sales are final. Every item is authenticated and transparently presented. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "vangie",
+    dashboardToken: "vng-3a8c1d5e9b4f",
+    name: "Vangie",
+    location: "Philadelphia, PA",
+    description:
+      "Vangie is a Philadelphia-based vintage studio curating collectible, investment-worthy fashion — bold statement pieces and art-to-wear with real design integrity. Founded by Evan Noll after more than a decade in tech, Vangie is rooted in craftsmanship, sustainability, and personal storytelling. Named for Evan's grandmother (short for Evangeline), the studio honors a legacy of fearless self-expression — clothing as confidence and personality. Explore clothing, jewelry, and accessories ranging from the 1950s to Y2K.",
+    website: "https://vangie.co",
+    dataSource: "vangie",
+    image: "/stores/vangie.jpg",
+    logo: "/stores/vangie-logo.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "1",
+    collabsStoreId: "REPLACE_WITH_COLLABS_STORE_ID", // TODO: get from Shopify Collabs dashboard
+    authenticityPolicy:
+      "Every piece at Vangie is personally sourced and authenticated by Evan before listing. Specializing in collectible and investment-worthy vintage, each item is hand-selected for craftsmanship, condition, and design integrity — bold statement pieces chosen to be treasured for a lifetime.",
+    shippingPolicy:
+      "Ships from Philadelphia, PA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "vintari-vault",
     dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",
