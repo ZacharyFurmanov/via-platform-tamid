@@ -16,7 +16,7 @@ export default async function NewArrivalsSection() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1">Just Added</p>
-              <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">New Arrivals</h2>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">New Arrivals</h2>
             </div>
             <Link
               href="/new-arrivals"

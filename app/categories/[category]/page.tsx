@@ -123,13 +123,7 @@ export default async function CategoryPage({
           >
             &larr; All Categories
           </Link>
-          <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Shop</p>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
-            {label}
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">{label}</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             Curated {label.toLowerCase()} from independent vintage
             and secondhand stores.

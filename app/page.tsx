@@ -61,7 +61,7 @@ export default function HomePage() {
             <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Store</h2>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
               </div>
               <Link
                 href="/stores"
@@ -83,7 +83,7 @@ export default function HomePage() {
             <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Category</h2>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Category</h2>
               </div>
               <Link
                 href="/categories"
@@ -149,7 +149,7 @@ export default function HomePage() {
             <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
-                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Stories</h2>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
               </div>
               <Link
                 href="/stories"
