@@ -92,19 +92,40 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
   }).catch(console.error);
 
-  // ---- Cart URLs (multi-item checkout) ----
-  // For cart URLs like store.com/cart/VAR1:1,VAR2:1, we can't redirect through
-  // collabs.shop (that goes to a single product page). Instead, extract the
-  // dt_id tracking parameter from a collabs.shop link and append it to the
-  // cart URL. The Collabs embed on the store reads dt_id and sets the cookie.
+  // ---- Cart URLs (single and multi-item Shopify checkout) ----
+  // Extract the dt_id tracking parameter from a collabs.shop link and append
+  // it to the cart URL. The Collabs embed on the store reads dt_id and sets
+  // the 30-day attribution cookie. This sends users directly to cart (not the
+  // product page that collabs.shop redirects to).
   if (isCartUrl(parsedUrl) && storeSlug) {
-    const collabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
+    // For single items, prefer the product-specific collabs link (more reliable)
+    let collabsLink: string | null = null;
+    if (productId) {
+      const match = productId.match(/(\d+)$/);
+      const numericId = match ? parseInt(match[1], 10) : NaN;
+      if (!isNaN(numericId)) {
+        collabsLink = await getCollabsLink(numericId).catch(() => null);
+      }
+    }
+    // Fall back to any store collabs link (for multi-item carts)
+    if (!collabsLink) {
+      collabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
+    }
+
     if (collabsLink) {
       const dtId = await extractDtId(collabsLink);
       if (dtId) {
         parsedUrl.searchParams.set("dt_id", dtId);
         return NextResponse.redirect(parsedUrl.toString(), 302);
+      } else {
+        console.error(
+          `[track] extractDtId failed for store "${storeSlug}" — collabs link: ${collabsLink}. Commission will NOT be tracked for this checkout.`
+        );
       }
+    } else {
+      console.error(
+        `[track] No collabs link found in DB for store "${storeSlug}" — cannot extract dt_id. Commission will NOT be tracked. Run generate-collabs-links for this store.`
+      );
     }
 
     // Fallback: try discount code for cart URLs
@@ -121,21 +142,6 @@ export async function GET(request: NextRequest) {
 
     parsedUrl.searchParams.set("via_click_id", clickId);
     return NextResponse.redirect(parsedUrl.toString(), 302);
-  }
-
-  // ---- Single product URLs ----
-  // If this product has a collabs.shop link, redirect through it.
-  // The user's browser hitting collabs.shop registers the visit and sets
-  // a 30-day attribution cookie via dt_id.
-  if (productId) {
-    const match = productId.match(/(\d+)$/);
-    const numericId = match ? parseInt(match[1], 10) : NaN;
-    if (!isNaN(numericId)) {
-      const collabsLink = await getCollabsLink(numericId).catch(() => null);
-      if (collabsLink) {
-        return NextResponse.redirect(collabsLink, 302);
-      }
-    }
   }
 
   // Fallback: apply discount code if store has one, otherwise redirect directly.
