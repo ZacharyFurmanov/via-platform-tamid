@@ -137,9 +137,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     productImages = [product.image];
   }
 
-  // Build direct checkout URL for Shopify stores (uses variant ID + discount code)
+  // Build checkout URL — prefer collabs_link (sets affiliate tracking cookie) over direct cart URL
   let checkoutUrl = product.external_url || "";
-  if (product.variant_id && product.external_url) {
+  if (product.collabs_link) {
+    checkoutUrl = product.collabs_link;
+  } else if (product.variant_id && product.external_url) {
     try {
       const productUrl = new URL(product.external_url);
       const storeConfig = stores.find((s) => s.slug === product.store_slug);
