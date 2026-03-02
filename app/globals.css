@@ -5,26 +5,26 @@
 ================================ */
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
 
-/* PP Eiko — place files in /public/fonts/ */
+/* PP Eiko */
 @font-face {
   font-family: 'PP Eiko';
-  src: url('/fonts/PPEiko-Regular.woff2') format('woff2');
+  src: url('/fonts/ppeiko-medium.otf') format('opentype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'PP Eiko';
-  src: url('/fonts/PPEiko-RegularItalic.woff2') format('woff2');
+  src: url('/fonts/ppeiko-lightitalic.otf') format('opentype');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
-/* Dreame Avenue — place file in /public/fonts/ */
+/* Dreame Avenue */
 @font-face {
   font-family: 'Dreame Avenue';
-  src: url('/fonts/DreameAvenue.woff2') format('woff2');
+  src: url('/fonts/dream-avenue.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
