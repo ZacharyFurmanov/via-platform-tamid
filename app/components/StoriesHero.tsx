@@ -56,7 +56,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
         </div>
 
         {/* Logo + text panel — below image on mobile, left side for desktop */}
-        <div className="flex flex-col justify-center items-center text-center px-6 sm:px-12 py-10 sm:py-16 bg-white md:order-1">
+        <div className="flex flex-col justify-center items-center text-center px-6 sm:px-12 py-10 sm:py-16 bg-[#F7F3EA] md:order-1">
           {/* Logo */}
           <div
             key={story.slug + "-logo"}
@@ -75,14 +75,14 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
           {/* Teaser */}
           <p
             key={story.slug + "-teaser"}
-            className="animate-fade-in max-w-sm text-black/60 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 italic font-serif"
+            className="animate-fade-in max-w-sm text-[#5D0F17]/60 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 italic font-serif"
           >
             &ldquo;{story.teaser}&rdquo;
           </p>
 
           <Link
             href={`/stories/${story.slug}`}
-            className="inline-block bg-black text-white px-8 py-3 text-xs uppercase tracking-[0.15em] hover:bg-neutral-800 transition"
+            className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-8 py-3 text-xs uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition"
           >
             Read Story
           </Link>
@@ -92,7 +92,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
             <button
               onClick={prev}
               aria-label="Previous story"
-              className="text-black/30 hover:text-black transition text-sm"
+              className="text-[#5D0F17]/30 hover:text-[#5D0F17] transition text-sm"
             >
               &larr;
             </button>
@@ -104,8 +104,8 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
                   aria-label={`Go to story ${i + 1}`}
                   className={`h-[2px] transition-all duration-500 ${
                     i === current
-                      ? "w-8 bg-black"
-                      : "w-4 bg-black/20 hover:bg-black/40"
+                      ? "w-8 bg-[#5D0F17]"
+                      : "w-4 bg-[#5D0F17]/20 hover:bg-[#5D0F17]/40"
                   }`}
                 />
               ))}
@@ -113,7 +113,7 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
             <button
               onClick={next}
               aria-label="Next story"
-              className="text-black/30 hover:text-black transition text-sm"
+              className="text-[#5D0F17]/30 hover:text-[#5D0F17] transition text-sm"
             >
               &rarr;
             </button>

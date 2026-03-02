@@ -10,20 +10,20 @@ export default async function NewArrivalsSection() {
   if (products.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="bg-white pt-16 pb-20 sm:pt-24 sm:pb-28 border-t border-neutral-100">
+    <section id="new-arrivals" className="bg-[#F7F3EA] pt-16 pb-20 sm:pt-24 sm:pb-28 border-t border-[#5D0F17]/10">
       <div className="max-w-7xl mx-auto">
         <div className="px-6 mb-8 sm:mb-12">
           <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-black/80">Just Added</p>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Just Added</p>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-black/10 leading-none -mt-2">
+            <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2">
               New Arrivals
             </h2>
             <Link
               href="/new-arrivals"
-              className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] hover:text-black/60 transition-colors min-h-[44px] flex items-center"
+              className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center"
             >
               Shop New Arrivals
             </Link>
