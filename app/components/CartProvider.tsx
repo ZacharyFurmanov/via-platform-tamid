@@ -11,6 +11,7 @@ export type CartItem = {
   storeSlug: string;
   externalUrl: string;
   checkoutUrl: string;
+  collabsLink?: string;
 };
 
 type CartContextType = {

@@ -202,7 +202,13 @@ export default function CartPage() {
                   <a
                     href={(() => {
                       const firstItem = group.items[0];
-                      const cartUrl = buildGroupCheckoutUrl(group.items);
+                      // Single item with a collabs link → route through it to set affiliate cookie
+                      // Multi-item → build direct multi-cart URL (collabs cookie may already be set
+                      // if the user browsed through VIA first)
+                      const cartUrl =
+                        group.items.length === 1 && firstItem.collabsLink
+                          ? firstItem.collabsLink
+                          : buildGroupCheckoutUrl(group.items);
                       const params = new URLSearchParams({
                         pid: firstItem.compositeId,
                         pn: group.items.length > 1
