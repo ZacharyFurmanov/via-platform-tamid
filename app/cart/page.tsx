@@ -205,22 +205,14 @@ export default function CartPage() {
                       const multiCartUrl = buildGroupCheckoutUrl(group.items);
 
                       let cartUrl: string;
-                      if (firstItem.collabsLink) {
-                        if (group.items.length === 1) {
-                          // Single item: route straight through the collabs link
-                          cartUrl = firstItem.collabsLink;
-                        } else {
-                          // Multi-item: use collabs link + return_to so the affiliate cookie
-                          // is set AND the user lands on the full multi-item cart
-                          try {
-                            const parsed = new URL(multiCartUrl);
-                            const returnPath = parsed.pathname + parsed.search;
-                            cartUrl = `${firstItem.collabsLink}?return_to=${encodeURIComponent(returnPath)}`;
-                          } catch {
-                            cartUrl = multiCartUrl;
-                          }
-                        }
+                      if (firstItem.collabsLink && group.items.length === 1) {
+                        // Single item: route straight through the collabs link so
+                        // collabs.shop registers the visit and sets the attribution cookie
+                        cartUrl = firstItem.collabsLink;
                       } else {
+                        // Multi-item (or no collabs link): use direct cart URL.
+                        // /api/track will extract dt_id from the store's collabs link
+                        // and append it, setting the attribution cookie on the store page.
                         cartUrl = multiCartUrl;
                       }
 
