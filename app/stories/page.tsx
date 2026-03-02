@@ -39,15 +39,9 @@ export default function StoriesPage() {
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* Header */}
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-16 sm:py-24">
-          <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Featured</p>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
-            Stories
-          </h1>
-          <p className="max-w-2xl text-[#5D0F17]/60 text-base sm:text-lg">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">Stories</h1>
+          <p className="max-w-2xl text-[#5D0F17]/60 text-sm sm:text-base">
             Every store on VIA has a story worth telling. Here&apos;s why we selected
             each one.
           </p>

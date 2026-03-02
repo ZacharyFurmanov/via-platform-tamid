@@ -17,13 +17,7 @@ export default async function NewArrivalsPage() {
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Just Added</p>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
-            New Arrivals
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">New Arrivals</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             The latest pieces added by our stores this week.
           </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -56,7 +55,6 @@ function WaitlistContent() {
     }
   };
 
-  // Check for returning user
   useEffect(() => {
     const storedCode = localStorage.getItem("via_giveaway_code");
     const storedEmail = localStorage.getItem("via_giveaway_email");
@@ -78,7 +76,6 @@ function WaitlistContent() {
     }
   }, []);
 
-  // Poll for status updates on confirmation page
   useEffect(() => {
     if (phase !== "confirmation" || !referralCode) return;
 
@@ -102,7 +99,6 @@ function WaitlistContent() {
     setIsSubmitting(true);
 
     try {
-      // Step 1: Join waitlist
       const waitlistRes = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,14 +107,12 @@ function WaitlistContent() {
 
       if (!waitlistRes.ok) {
         const data = await waitlistRes.json();
-        // If already on waitlist, that's fine — continue to giveaway entry
         if (!data.error?.includes("already")) {
           setErrorMsg(data.error || "Something went wrong.");
           return;
         }
       }
 
-      // Step 2: Auto-enter giveaway
       const giveawayRes = await fetch("/api/giveaway/enter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,7 +126,6 @@ function WaitlistContent() {
         return;
       }
 
-      // Store giveaway info
       setReferralCode(giveawayData.referralCode);
       setReferralLink(giveawayData.referralLink);
       localStorage.setItem("via_giveaway_entered", "true");
@@ -204,378 +197,332 @@ function WaitlistContent() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
-      {/* Hero background image */}
-      <div className="fixed inset-0">
-        <Image
-          src="/hero-v3.jpeg"
-          alt="VIA curated vintage"
-          fill
-          priority
-          className="object-cover object-top md:object-center"
-        />
-        <div className="absolute inset-0 bg-black/60" />
+    <div className="min-h-full bg-[#F7F3EA] text-[#5D0F17]">
+      {/* Header */}
+      <div className="border-b border-[#5D0F17]/10 px-6 py-5 flex items-center justify-between">
+        <span
+          className="text-[#5D0F17] text-3xl leading-none tracking-wide"
+          style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
+        >
+          VIA.
+        </span>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50">Coming Soon</p>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-full flex flex-col justify-between px-6 sm:px-16 py-10 sm:py-16 text-white">
-        {/* Main Content */}
-        <div className="flex-1 flex items-start pt-6 sm:pt-12">
-          <div className="w-full max-w-xl text-left">
+      <div className="max-w-xl mx-auto px-6 py-12 sm:py-20">
 
-            {/* Phase: Waitlist */}
-            {phase === "waitlist" && (
-              <div className="animate-[fadeIn_0.6s_ease-out]">
-                <p className="text-[12px] sm:text-[17px] font-semibold uppercase tracking-[0.3rem] sm:tracking-[0.5rem] mb-6 sm:mb-8">
-                  Coming Soon
-                </p>
+        {/* Phase: Waitlist */}
+        {phase === "waitlist" && (
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-serif mb-4 leading-snug">
+              Shop vintage &amp; secondhand,<br />all in one place.
+            </h1>
+            <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
+              VIA lets you browse independent vintage and secondhand stores across
+              the country in one seamless experience. Join the waitlist and enter
+              our giveaway — invite 2 friends to win a $1,000 shopping spree.
+            </p>
 
-                <Image
-                  src="/via-logo-white.png"
-                  alt="VIA"
-                  width={990}
-                  height={492}
-                  className="w-[160px] sm:w-[240px] h-auto mb-6 sm:mb-8 -ml-7 sm:-ml-10"
-                  priority
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrorMsg("");
+                  }}
+                  placeholder="Enter your email"
+                  required
+                  className="flex-1 px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition min-h-[48px]"
+                  disabled={isSubmitting}
                 />
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !email.trim()}
+                  className="px-8 py-3.5 bg-[#5D0F17] text-[#F7F3EA] text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition disabled:opacity-50 whitespace-nowrap min-h-[48px]"
+                >
+                  {isSubmitting ? "Joining..." : "Join the Waitlist"}
+                </button>
+              </div>
+              {errorMsg && (
+                <p className="text-red-600 text-sm mt-3">{errorMsg}</p>
+              )}
+            </form>
 
-                <p className="text-[15px] sm:text-[17px] leading-[1.9] sm:leading-[2] font-light tracking-normal sm:tracking-wide mb-10 sm:mb-12">
-                  VIA lets you shop independent secondhand and vintage stores across the
-                  country, all in one place. Browse multiple stores at once and
-                  discover unique pieces you won&apos;t find anywhere else.
-                </p>
-
-                <form onSubmit={handleSubmit}>
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setErrorMsg("");
-                      }}
-                      placeholder="Enter your email"
-                      required
-                      className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
-                      disabled={isSubmitting}
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !email.trim()}
-                      className="h-12 sm:h-14 px-6 sm:px-7 bg-white text-black text-[11px] sm:text-[12px] uppercase tracking-[0.25rem] sm:tracking-[0.4rem] font-semibold rounded-full hover:scale-[1.04] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {isSubmitting ? "Joining..." : "Join the wait"}
-                    </button>
-                  </div>
-
-                  {errorMsg && (
-                    <p className="text-red-400 text-sm mt-3 sm:mt-4 tracking-wide">
-                      {errorMsg}
-                    </p>
-                  )}
-                </form>
-
-                <p className="text-white text-[15px] sm:text-[17px] mt-6 sm:mt-8 font-light tracking-wide leading-relaxed">
-                  Join the waitlist to enter our giveaway. Invite 2 friends to sign up and you&apos;re officially entered to win a $1,000 shopping spree on VIA.
-                </p>
-
-                {/* Access Code */}
-                <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/20">
-                  <p className="text-[13px] sm:text-[14px] text-white/70 font-light tracking-wide mb-3">
-                    Have an access code?
-                  </p>
-                  <form onSubmit={handleAccessCode}>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <input
-                        type="text"
-                        value={accessCode}
-                        onChange={(e) => {
-                          setAccessCode(e.target.value);
-                          setAccessError("");
-                        }}
-                        placeholder="Enter code"
-                        className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
-                        disabled={accessLoading}
-                      />
-                      <button
-                        type="submit"
-                        disabled={accessLoading || !accessCode.trim()}
-                        className="h-12 sm:h-14 px-6 sm:px-7 bg-white text-black text-[11px] sm:text-[12px] uppercase tracking-[0.25rem] sm:tracking-[0.4rem] font-semibold rounded-full hover:scale-[1.04] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {accessLoading ? "Checking..." : "Enter"}
-                      </button>
-                    </div>
-                    {accessError && (
-                      <p className="text-red-400 text-sm mt-3 tracking-wide">{accessError}</p>
-                    )}
-                  </form>
+            {/* Access Code */}
+            <div className="mt-12 pt-8 border-t border-[#5D0F17]/10">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-4">
+                Have an access code?
+              </p>
+              <form onSubmit={handleAccessCode}>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => {
+                      setAccessCode(e.target.value);
+                      setAccessError("");
+                    }}
+                    placeholder="Enter code"
+                    className="flex-1 px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition min-h-[48px]"
+                    disabled={accessLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={accessLoading || !accessCode.trim()}
+                    className="px-8 py-3.5 border border-[#5D0F17] text-[#5D0F17] text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition disabled:opacity-50 whitespace-nowrap min-h-[48px]"
+                  >
+                    {accessLoading ? "Checking..." : "Enter"}
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {/* Phase: Invite */}
-            {phase === "invite" && (
-              <div className="animate-[fadeIn_0.4s_ease-out]">
-                {pendingPhone ? (
-                  <>
-                    <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
-                      Enter to Win a $1,000 Giveaway Shopping Spree on Us
-                    </p>
-
-                    <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
-                      Now Send to<br />Friend 2
-                    </h2>
-
-                    <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
-                      Tap below to open a message to your second friend. They need to sign up for you to be entered.
-                    </p>
-
-                    <button
-                      onClick={handleSendSecond}
-                      className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition font-medium"
-                    >
-                      Send to Friend 2
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setPendingPhone("");
-                        goToConfirmation();
-                      }}
-                      className="mt-3 text-sm text-white/70 hover:text-white transition py-2 block mx-auto"
-                    >
-                      Skip for now
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
-                      Enter to Win a $1,000 Giveaway Shopping Spree on Us
-                    </p>
-
-                    <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
-                      Invite Two Friends<br />to Sign Up
-                    </h2>
-
-                    <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
-                      Enter your 2 friends&apos; phone numbers below so we can send them an invite. Both friends need to sign up for you to be officially entered in the giveaway.
-                    </p>
-
-                    {/* Phone inputs */}
-                    <div className="space-y-3 mb-6">
-                      <input
-                        type="tel"
-                        value={phone1}
-                        onChange={(e) => setPhone1(e.target.value)}
-                        placeholder="Friend 1's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-white/30 text-white placeholder-white/60 text-[15px] focus:outline-none focus:border-white/60 transition-colors font-light"
-                      />
-                      <input
-                        type="tel"
-                        value={phone2}
-                        onChange={(e) => setPhone2(e.target.value)}
-                        placeholder="Friend 2's phone number"
-                        className="w-full px-5 py-3 bg-transparent border border-white/30 text-white placeholder-white/60 text-[15px] focus:outline-none focus:border-white/60 transition-colors font-light"
-                      />
-                    </div>
-
-                    {/* Copy link */}
-                    <div className="mb-6">
-                      <p className="text-sm text-white/70 mb-2 font-light">Or copy your unique link</p>
-                      <div className="flex items-center border border-white/30 overflow-hidden">
-                        <span className="flex-1 px-3 py-2.5 text-xs text-white/70 truncate text-left font-light">
-                          {referralLink}
-                        </span>
-                        <button
-                          onClick={handleCopyLink}
-                          className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
-                        >
-                          {copied ? "Copied!" : "Copy"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handleSendInvites}
-                      className="w-full bg-white text-black py-4 text-sm uppercase tracking-wide hover:bg-neutral-200 transition font-medium"
-                    >
-                      Send Invites
-                    </button>
-
-                    <button
-                      onClick={() => goToConfirmation()}
-                      className="mt-3 text-sm text-white/70 hover:text-white transition py-2 block mx-auto"
-                    >
-                      Skip for now
-                    </button>
-                  </>
+                {accessError && (
+                  <p className="text-red-600 text-sm mt-3">{accessError}</p>
                 )}
-              </div>
-            )}
+              </form>
+            </div>
+          </div>
+        )}
 
-            {/* Phase: Confirmation */}
-            {phase === "confirmation" && (
-              <div className="animate-[fadeIn_0.4s_ease-out]">
-                <p className="text-[14px] sm:text-[17px] uppercase tracking-[0.25em] text-white mb-4 sm:mb-5">
-                  VIA Giveaway
+        {/* Phase: Invite */}
+        {phase === "invite" && (
+          <div>
+            {pendingPhone ? (
+              <>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-4">
+                  $1,000 Giveaway
                 </p>
-
-                <h2 className="text-3xl sm:text-5xl font-serif mb-4 sm:mb-5 leading-tight">
-                  You&apos;re in the queue
+                <h2 className="text-2xl sm:text-3xl font-serif mb-4 leading-snug">
+                  Now send to Friend 2
                 </h2>
-
-                <p className="text-white mb-8 sm:mb-10 text-[15px] sm:text-lg font-light leading-relaxed max-w-md">
-                  {status && status.referralCount >= 2
-                    ? "You\u2019re officially entered! Keep sharing \u2014 every referral gives you another chance to win."
-                    : "Get 2 friends to sign up using your link to be entered. The more friends you refer, the more chances you get to win!"}
+                <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
+                  Tap below to open a message to your second friend. They need to sign up for you to be entered.
                 </p>
 
-                {/* Referral count */}
-                <div className="mb-8 sm:mb-10">
-                  <p className="text-[15px] text-white mb-3 font-light">
-                    {status?.referralCount || 0} friend{(status?.referralCount || 0) !== 1 ? "s" : ""} referred
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        status && status.referralCount >= 1
-                          ? "border-white bg-white text-black"
-                          : "border-neutral-600 text-neutral-600"
-                      }`}
-                    >
-                      {status && status.referralCount >= 1 ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <span className="text-sm">1</span>
-                      )}
-                    </div>
-                    <div className={`w-8 h-px ${status && status.referralCount >= 1 ? "bg-white" : "bg-neutral-600"}`} />
-                    <div
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        status && status.referralCount >= 2
-                          ? "border-white bg-white text-black"
-                          : "border-neutral-600 text-neutral-600"
-                      }`}
-                    >
-                      {status && status.referralCount >= 2 ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <span className="text-sm">2</span>
-                      )}
-                    </div>
-                    {status && status.referralCount > 2 && (
-                      <>
-                        <div className="w-8 h-px bg-white" />
-                        <div className="h-10 px-4 rounded-full border-2 border-white bg-white text-black flex items-center justify-center transition-colors">
-                          <span className="text-sm font-semibold">+{status.referralCount - 2}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  {status && status.referralCount >= 2 && (
-                    <p className="text-[13px] text-white/60 mt-3 font-light">
-                      You have {status.referralCount} {status.referralCount === 1 ? "entry" : "entries"} in the giveaway
-                    </p>
-                  )}
+                <button
+                  onClick={handleSendSecond}
+                  className="w-full bg-[#5D0F17] text-[#F7F3EA] py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
+                >
+                  Send to Friend 2
+                </button>
+
+                <button
+                  onClick={() => { setPendingPhone(""); goToConfirmation(); }}
+                  className="mt-4 text-sm text-[#5D0F17]/50 hover:text-[#5D0F17] transition py-2 block mx-auto"
+                >
+                  Skip for now
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-4">
+                  $1,000 Giveaway
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-serif mb-4 leading-snug">
+                  Invite two friends<br />to sign up
+                </h2>
+                <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
+                  Enter your friends&apos; phone numbers below. Both need to sign up for you to be officially entered in the giveaway.
+                </p>
+
+                <div className="space-y-3 mb-6">
+                  <input
+                    type="tel"
+                    value={phone1}
+                    onChange={(e) => setPhone1(e.target.value)}
+                    placeholder="Friend 1's phone number"
+                    className="w-full px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition"
+                  />
+                  <input
+                    type="tel"
+                    value={phone2}
+                    onChange={(e) => setPhone2(e.target.value)}
+                    placeholder="Friend 2's phone number"
+                    className="w-full px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition"
+                  />
                 </div>
 
                 {/* Copy link */}
-                {referralLink && (
-                  <div className="mb-8">
-                    <p className="text-sm text-white/70 mb-2 font-light">Your unique referral link</p>
-                    <div className="flex items-center border border-white/30 overflow-hidden">
-                      <span className="flex-1 px-3 py-2.5 text-xs text-white/70 truncate text-left font-light">
-                        {referralLink}
-                      </span>
-                      <button
-                        onClick={handleCopyLink}
-                        className="flex-shrink-0 px-4 py-2.5 bg-white text-black text-xs uppercase tracking-wide hover:bg-neutral-200 transition"
-                      >
-                        {copied ? "Copied!" : "Copy"}
-                      </button>
-                    </div>
+                <div className="mb-8">
+                  <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-3">Or copy your unique link</p>
+                  <div className="flex items-center border border-[#5D0F17]/20 overflow-hidden">
+                    <span className="flex-1 px-4 py-3 text-xs text-[#5D0F17]/50 truncate">
+                      {referralLink}
+                    </span>
+                    <button
+                      onClick={handleCopyLink}
+                      className="flex-shrink-0 px-5 py-3 bg-[#5D0F17] text-[#F7F3EA] text-xs uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
                   </div>
-                )}
+                </div>
 
-                <p className="text-white/50 text-[11px] sm:text-[12px] leading-relaxed font-light">
-                  By entering, you agree to VIA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random — the more referrals you have, the more chances you get. Giveaway credit must be used on items listed on VIA.
-                </p>
+                <button
+                  onClick={handleSendInvites}
+                  className="w-full bg-[#5D0F17] text-[#F7F3EA] py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
+                >
+                  Send Invites
+                </button>
 
-                {/* Access Code */}
-                <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/20">
-                  <p className="text-[13px] sm:text-[14px] text-white/70 font-light tracking-wide mb-3">
-                    Have an access code?
-                  </p>
-                  <form onSubmit={handleAccessCode}>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <input
-                        type="text"
-                        value={accessCode}
-                        onChange={(e) => {
-                          setAccessCode(e.target.value);
-                          setAccessError("");
-                        }}
-                        placeholder="Enter code"
-                        className="w-full sm:flex-1 px-5 h-12 sm:h-14 bg-transparent border border-neutral-700 text-white placeholder-neutral-400 text-[14px] sm:text-[15px] tracking-wide outline-none focus:border-neutral-400 transition-colors font-light"
-                        disabled={accessLoading}
-                      />
-                      <button
-                        type="submit"
-                        disabled={accessLoading || !accessCode.trim()}
-                        className="h-12 sm:h-14 px-6 sm:px-7 bg-white text-black text-[11px] sm:text-[12px] uppercase tracking-[0.25rem] sm:tracking-[0.4rem] font-semibold rounded-full hover:scale-[1.04] transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {accessLoading ? "Checking..." : "Enter"}
-                      </button>
+                <button
+                  onClick={() => goToConfirmation()}
+                  className="mt-4 text-sm text-[#5D0F17]/50 hover:text-[#5D0F17] transition py-2 block mx-auto"
+                >
+                  Skip for now
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Phase: Confirmation */}
+        {phase === "confirmation" && (
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-4">
+              VIA Giveaway
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-serif mb-4 leading-snug">
+              You&apos;re in the queue
+            </h2>
+            <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
+              {status && status.referralCount >= 2
+                ? "You\u2019re officially entered! Keep sharing \u2014 every referral gives you another chance to win."
+                : "Get 2 friends to sign up using your link to be entered. The more friends you refer, the more chances you get to win!"}
+            </p>
+
+            {/* Referral progress */}
+            <div className="mb-10">
+              <p className="text-sm text-[#5D0F17]/60 mb-4">
+                {status?.referralCount || 0} friend{(status?.referralCount || 0) !== 1 ? "s" : ""} referred
+              </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 border-2 flex items-center justify-center transition-colors ${
+                    status && status.referralCount >= 1
+                      ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                      : "border-[#5D0F17]/20 text-[#5D0F17]/30"
+                  }`}
+                >
+                  {status && status.referralCount >= 1 ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className="text-sm">1</span>
+                  )}
+                </div>
+                <div className={`w-8 h-px ${status && status.referralCount >= 1 ? "bg-[#5D0F17]" : "bg-[#5D0F17]/20"}`} />
+                <div
+                  className={`w-10 h-10 border-2 flex items-center justify-center transition-colors ${
+                    status && status.referralCount >= 2
+                      ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                      : "border-[#5D0F17]/20 text-[#5D0F17]/30"
+                  }`}
+                >
+                  {status && status.referralCount >= 2 ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className="text-sm">2</span>
+                  )}
+                </div>
+                {status && status.referralCount > 2 && (
+                  <>
+                    <div className="w-8 h-px bg-[#5D0F17]" />
+                    <div className="h-10 px-4 border-2 border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center">
+                      <span className="text-sm font-medium">+{status.referralCount - 2}</span>
                     </div>
-                    {accessError && (
-                      <p className="text-red-400 text-sm mt-3 tracking-wide">{accessError}</p>
-                    )}
-                  </form>
+                  </>
+                )}
+              </div>
+              {status && status.referralCount >= 2 && (
+                <p className="text-xs text-[#5D0F17]/50 mt-3">
+                  You have {status.referralCount} {status.referralCount === 1 ? "entry" : "entries"} in the giveaway
+                </p>
+              )}
+            </div>
+
+            {/* Copy link */}
+            {referralLink && (
+              <div className="mb-10">
+                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-3">Your unique referral link</p>
+                <div className="flex items-center border border-[#5D0F17]/20 overflow-hidden">
+                  <span className="flex-1 px-4 py-3 text-xs text-[#5D0F17]/50 truncate">
+                    {referralLink}
+                  </span>
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex-shrink-0 px-5 py-3 bg-[#5D0F17] text-[#F7F3EA] text-xs uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
+                  >
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
                 </div>
               </div>
             )}
 
-          </div>
-        </div>
+            <p className="text-[11px] text-[#5D0F17]/40 leading-relaxed mb-10">
+              By entering, you agree to VIA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random. Giveaway credit must be used on items listed on VIA.
+            </p>
 
-        {/* Footer */}
-        <footer className="pt-10 sm:pt-16">
-          <div className="max-w-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 text-neutral-600 text-[10px] sm:text-[11px] tracking-wider">
-            <div className="flex items-center gap-5 sm:gap-6">
-              <Link
-                href="/terms"
-                className="hover:text-neutral-400 transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                href="/privacy"
-                className="hover:text-neutral-400 transition-colors"
-              >
-                Privacy
-              </Link>
-              <a
-                href="https://www.instagram.com/theviaplatform/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-neutral-400 transition-colors"
-              >
-                Instagram
-              </a>
+            {/* Access Code */}
+            <div className="pt-8 border-t border-[#5D0F17]/10">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-4">
+                Have an access code?
+              </p>
+              <form onSubmit={handleAccessCode}>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => {
+                      setAccessCode(e.target.value);
+                      setAccessError("");
+                    }}
+                    placeholder="Enter code"
+                    className="flex-1 px-4 py-3.5 bg-transparent border border-[#5D0F17]/20 text-[#5D0F17] placeholder:text-[#5D0F17]/40 focus:outline-none focus:border-[#5D0F17] transition min-h-[48px]"
+                    disabled={accessLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={accessLoading || !accessCode.trim()}
+                    className="px-8 py-3.5 border border-[#5D0F17] text-[#5D0F17] text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition disabled:opacity-50 whitespace-nowrap min-h-[48px]"
+                  >
+                    {accessLoading ? "Checking..." : "Enter"}
+                  </button>
+                </div>
+                {accessError && (
+                  <p className="text-red-600 text-sm mt-3">{accessError}</p>
+                )}
+              </form>
             </div>
-            <Link
-              href="/admin/login?redirect=/admin/sync"
-              className="hover:text-neutral-400 transition-colors"
-            >
-              Staff Access
-            </Link>
           </div>
-        </footer>
+        )}
+
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-[#5D0F17]/10 px-6 py-6">
+        <div className="max-w-xl mx-auto flex items-center justify-between text-[10px] uppercase tracking-wider text-[#5D0F17]/40">
+          <div className="flex items-center gap-6">
+            <Link href="/terms" className="hover:text-[#5D0F17] transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-[#5D0F17] transition-colors">Privacy</Link>
+            <a
+              href="https://www.instagram.com/theviaplatform/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#5D0F17] transition-colors"
+            >
+              Instagram
+            </a>
+          </div>
+          <Link href="/admin/login?redirect=/admin/sync" className="hover:text-[#5D0F17] transition-colors">
+            Staff Access
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

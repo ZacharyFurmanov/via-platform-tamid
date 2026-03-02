@@ -33,7 +33,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-[#D8CABD] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden">
+    <div className="fixed top-0 z-50 w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden">
       <div className="relative h-full flex items-center">
         <span
           className={`transition-all duration-500 ease-in-out ${
@@ -231,7 +231,7 @@ export default function HeaderClient({
       <AnnouncementBar />
 
       {/* Header */}
-      <header className="fixed top-8 z-50 w-full bg-[#D8CABD]">
+      <header className="fixed top-8 z-50 w-full bg-[#F7F3EA]">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
@@ -394,7 +394,7 @@ export default function HeaderClient({
                 <User size={20} />
               )}
               {pendingCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-[#5D0F17] rounded-full border-2 border-[#D8CABD]" />
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-[#5D0F17] rounded-full border-2 border-[#F7F3EA]" />
               )}
             </Link>
 

@@ -24,7 +24,7 @@ export default function HomePage() {
                 Stop digging. Start shopping.
               </p>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-[3.25rem] font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight whitespace-nowrap">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
                 The home of curated vintage &amp; secondhand.
               </h1>
 
@@ -58,22 +58,17 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-16 sm:py-24">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
-            <div className="px-6 mb-10 sm:mb-14">
-              <div className="flex items-center gap-4 mb-1">
-                <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Shop by</p>
-                <div className="flex-1 h-px bg-[#5D0F17]/15" />
+            <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Store</h2>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
-                <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2">
-                  Store
-                </h2>
-                <Link
-                  href="/stores"
-                  className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-                >
-                  Shop All Stores
-                </Link>
-              </div>
+              <Link
+                href="/stores"
+                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+              >
+                Shop All Stores
+              </Link>
             </div>
           </ScrollReveal>
 
@@ -85,22 +80,17 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
-            <div className="px-6 mb-10 sm:mb-14">
-              <div className="flex items-center gap-4 mb-1">
-                <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Shop by</p>
-                <div className="flex-1 h-px bg-[#5D0F17]/15" />
+            <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Category</h2>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
-                <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2">
-                  Category
-                </h2>
-                <Link
-                  href="/categories"
-                  className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-                >
-                  Shop All Categories
-                </Link>
-              </div>
+              <Link
+                href="/categories"
+                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+              >
+                Shop All Categories
+              </Link>
             </div>
           </ScrollReveal>
 
@@ -156,22 +146,17 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
-            <div className="mb-10 sm:mb-14">
-              <div className="flex items-center gap-4 mb-1">
-                <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Featured</p>
-                <div className="flex-1 h-px bg-[#5D0F17]/15" />
+            <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
+                <h2 className="text-2xl sm:text-3xl font-serif text-[#5D0F17]">Stories</h2>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
-                <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2">
-                  Stories
-                </h2>
-                <Link
-                  href="/stories"
-                  className="mt-2 sm:mt-0 text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-                >
-                  View All Stories
-                </Link>
-              </div>
+              <Link
+                href="/stories"
+                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+              >
+                View All Stories
+              </Link>
             </div>
           </ScrollReveal>
 

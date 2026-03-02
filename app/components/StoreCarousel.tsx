@@ -12,7 +12,7 @@ export default function StoreCarousel() {
             href={`/stores/${store.slug}`}
             className="group block"
           >
-            <div className="aspect-[3/4] relative overflow-hidden mb-3 sm:mb-4 rounded-sm bg-[#D8CABD]/30">
+            <div className="aspect-[3/4] relative overflow-hidden bg-[#D8CABD]/30">
               <Image
                 src={store.image}
                 alt={store.name}
@@ -21,12 +21,14 @@ export default function StoreCarousel() {
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
             </div>
-            <h3 className="font-serif text-lg text-[#5D0F17] mb-0.5">
-              {store.name}
-            </h3>
-            <p className="text-sm text-[#5D0F17]/50">
-              {store.location}
-            </p>
+            <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">
+              <p className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-0.5 sm:mb-1">
+                {store.location}
+              </p>
+              <h3 className="font-serif text-xs sm:text-base text-[#5D0F17] leading-snug">
+                {store.name}
+              </h3>
+            </div>
           </Link>
         ))}
       </div>
