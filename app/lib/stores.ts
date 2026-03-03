@@ -114,6 +114,28 @@ export const stores = [
       "All sales are final. Refunds or exchanges are only issued if the wrong item was sent or if there is a significant discrepancy from the product description. Contact contact@scarzvintage.com within 7 days of receiving your order.",
   },
   {
+    slug: "house-on-a-chain",
+    dashboardToken: "hoac-2f7e1b9d4c3a",
+    name: "House on a Chain",
+    location: "London, UK",
+    description:
+      "House on a Chain is a London-based curated vintage store specialising in rare archival designer and elevated wardrobe pieces. The curation centres on 90s and early 2000s luxury — from Galliano-era Dior and Prada to Chanel and La Perla — chosen for craftsmanship, femininity and elevation.",
+    website: "https://www.houseonachain.com",
+    dataSource: "house-on-a-chain",
+    image: "/stores/house-on-a-chain.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "GBP",
+    affiliatePath: "VIA-7",
+    collabsStoreId: "230455",
+    authenticityPolicy:
+      "Every piece at House on a Chain is personally sourced and curated for authenticity and quality. Specialising in rare archival designer pieces from the 90s and early 2000s, each item is carefully selected and accurately described before listing.",
+    shippingPolicy:
+      "Orders ship from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "source-twenty-four",
     dashboardToken: "s24-7d1f8c4a2b9e",
     name: "Source Twenty Four",
