@@ -27,6 +27,7 @@ export type DBProduct = {
   shopify_product_id: string | null;
   collabs_link: string | null;
   size: string | null;
+  insider_notified: boolean;
   synced_at: Date;
   created_at: Date;
 };
@@ -90,6 +91,11 @@ export async function initDatabase() {
   // Add size column for product sizing info (e.g. "38.5", "M", "US 8")
   await sql`
     ALTER TABLE products ADD COLUMN IF NOT EXISTS size TEXT
+  `;
+
+  // Add insider_notified column to track which products have been emailed to Insiders
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS insider_notified BOOLEAN DEFAULT FALSE
   `;
 
   // Clear created_at for existing products so they don't all appear as new arrivals
@@ -328,6 +334,38 @@ export async function getInsiderProducts(limit: number = 48): Promise<DBProduct[
   } catch {
     return [];
   }
+}
+
+/**
+ * Get new products that have not yet been emailed to Insiders.
+ * Only products with a created_at (i.e. genuinely new, not pre-existing) qualify.
+ */
+export async function getUnnotifiedInsiderProducts(limit: number = 50): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+  try {
+    const result = await sql`
+      SELECT * FROM products
+      WHERE created_at IS NOT NULL
+        AND insider_notified = FALSE
+        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
+    return result as DBProduct[];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Mark a list of product IDs as having been included in an Insider new-arrivals email.
+ */
+export async function markProductsAsInsiderNotified(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    UPDATE products SET insider_notified = TRUE WHERE id = ANY(${ids})
+  `;
 }
 
 /**

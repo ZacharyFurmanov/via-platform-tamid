@@ -103,6 +103,18 @@ export async function getUserByEmail(
   };
 }
 
+/**
+ * Get emails of all active VIA Insider members.
+ */
+export async function getInsiderUserEmails(): Promise<string[]> {
+  await initMembershipColumns();
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`
+    SELECT email FROM users WHERE is_member = TRUE AND email IS NOT NULL
+  `;
+  return rows.map((r) => r.email as string);
+}
+
 export async function saveStripeCustomerId(
   userId: string,
   stripeCustomerId: string
