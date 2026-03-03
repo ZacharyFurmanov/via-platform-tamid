@@ -96,6 +96,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "house-on-a-chain",
     storeDomain: "www.houseonachain.com",
   },
+  {
+    type: "shopify",
+    name: "To Us Vintage",
+    slug: "to-us-vintage",
+    storeDomain: "tousvintage.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

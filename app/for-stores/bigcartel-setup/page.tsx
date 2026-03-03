@@ -6,51 +6,45 @@ import { useState } from "react";
 export default function BigCartelSetupPage() {
   const [storeSlug, setStoreSlug] = useState("");
   const [storeName, setStoreName] = useState("");
-  const [copied, setCopied] = useState<"header" | "confirmation" | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const isFilled = storeSlug.length > 0 && storeName.length > 0;
   const displaySlug = storeSlug || "your-store-id";
   const displayName = storeName || "Your Store Name";
 
-  // Header code — goes in Big Cartel Theme footer or Custom Code
-  // Captures via_click_id from URL into a 30-day cookie on any page visit
-  const headerCode = `<!-- VIA Click Tracking -->
+  // Combined snippet — click tracking on all pages + conversion on /success
+  const trackingCode = `<!-- VIA Tracking -->
 <script>
 (function() {
-  var params = new URLSearchParams(window.location.search);
-  var clickId = params.get('via_click_id');
-  if (clickId) {
-    document.cookie = 'via_click_id=' + clickId + ';max-age=2592000;path=/;SameSite=Lax';
-  }
-})();
-</script>`;
+  // Capture VIA click ID into a 30-day cookie on any page visit
+  var p = new URLSearchParams(window.location.search);
+  var c = p.get('via_click_id');
+  if (c) document.cookie = 'via_click_id=' + c + ';max-age=2592000;path=/;SameSite=Lax';
 
-  // Order confirmation code — goes in Settings → Tracking & Analytics → Custom Thank You Page Code
-  const confirmationCode = `<script>
-(function() {
+  // Only continue on the order success page
+  if (!window.location.pathname.match(/\\/success/)) return;
+
   try {
-    // Prevent double-firing in the same session
-    if (sessionStorage.getItem('via_conv_done')) return;
-    sessionStorage.setItem('via_conv_done', '1');
+    var orderId = p.get('o') || ('bc_' + Date.now());
+    if (sessionStorage.getItem('via_conv_' + orderId)) return;
+    sessionStorage.setItem('via_conv_' + orderId, '1');
 
-    // Read via_click_id from cookie
     var viaClickId = null;
-    document.cookie.split(';').forEach(function(c) {
-      c = c.trim();
-      if (c.indexOf('via_click_id=') === 0) viaClickId = c.slice(13);
+    document.cookie.split(';').forEach(function(s) {
+      s = s.trim();
+      if (s.indexOf('via_click_id=') === 0) viaClickId = s.slice(13);
     });
 
-    // Find the largest dollar amount on the page as the order total
-    var matches = document.body.innerText.match(/\\$[\\d,]+\\.\\d{2}/g) || [];
-    var total = Math.max.apply(null, matches.map(function(m) {
+    var amounts = document.body.innerText.match(/\\$[\\d,]+\\.\\d{2}/g) || [];
+    var total = amounts.length ? Math.max.apply(null, amounts.map(function(m) {
       return parseFloat(m.replace(/[\\$,]/g, ''));
-    })) || 0;
+    })) : 0;
 
     fetch('https://theviaplatform.com/api/conversion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId: 'bc_' + Date.now(),
+        orderId: orderId,
         orderTotal: total,
         currency: 'USD',
         items: [],
@@ -63,16 +57,10 @@ export default function BigCartelSetupPage() {
 })();
 </script>`;
 
-  function copyHeader() {
-    navigator.clipboard.writeText(headerCode);
-    setCopied("header");
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  function copyConfirmation() {
-    navigator.clipboard.writeText(confirmationCode);
-    setCopied("confirmation");
-    setTimeout(() => setCopied(null), 2000);
+  function copyCode() {
+    navigator.clipboard.writeText(trackingCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -102,8 +90,8 @@ export default function BigCartelSetupPage() {
       <section className="border-b border-[#5D0F17]/10 bg-[#5D0F17]/5">
         <div className="max-w-3xl mx-auto px-6 py-4">
           <p className="text-sm text-[#5D0F17]/60">
-            This takes about <strong className="text-[#5D0F17]">5 minutes</strong>. You&apos;ll
-            paste two small code snippets into your Big Cartel settings.
+            This takes about <strong className="text-[#5D0F17]">2 minutes</strong>. You&apos;ll
+            paste one small code snippet into your Big Cartel theme settings.
           </p>
         </div>
       </section>
@@ -120,7 +108,7 @@ export default function BigCartelSetupPage() {
               <h2 className="text-xl sm:text-2xl font-serif">Enter Your Store Info</h2>
             </div>
             <p className="text-[#5D0F17]/60 mb-6">
-              The code snippets below will automatically update with your store details.
+              The code snippet below will automatically update with your store details.
             </p>
             <div className="space-y-4">
               <div>
@@ -157,61 +145,13 @@ export default function BigCartelSetupPage() {
             )}
           </div>
 
-          {/* Step 2: Header tracking code */}
+          {/* Step 2: Add tracking code */}
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
               <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
                 2
               </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Add the Click Tracking Code</h2>
-            </div>
-
-            <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-5 space-y-3 mb-6">
-              <p className="text-sm font-medium">Where to paste this:</p>
-              <ol className="space-y-2 text-sm text-[#5D0F17]/60">
-                <li className="flex gap-3">
-                  <span className="font-medium text-[#5D0F17] flex-shrink-0">a.</span>
-                  <span>In your Big Cartel dashboard, go to <strong className="text-[#5D0F17]">Theme</strong> &rarr; <strong className="text-[#5D0F17]">Edit Code</strong></span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-medium text-[#5D0F17] flex-shrink-0">b.</span>
-                  <span>Open the <strong className="text-[#5D0F17]">layout.html</strong> file</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-medium text-[#5D0F17] flex-shrink-0">c.</span>
-                  <span>Paste the code just before the <code className="bg-[#5D0F17]/10 px-1 text-xs">&lt;/body&gt;</code> tag</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-medium text-[#5D0F17] flex-shrink-0">d.</span>
-                  <span>Click <strong className="text-[#5D0F17]">Save</strong></span>
-                </li>
-              </ol>
-            </div>
-
-            <div className="relative">
-              <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                <code>{headerCode}</code>
-              </pre>
-              <button
-                onClick={copyHeader}
-                className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
-                  copied === "header"
-                    ? "bg-green-500 text-white"
-                    : "bg-[#F7F3EA] text-[#5D0F17] hover:bg-[#5D0F17]/10"
-                }`}
-              >
-                {copied === "header" ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          </div>
-
-          {/* Step 3: Order confirmation code */}
-          <div className="mb-12 sm:mb-16">
-            <div className="flex items-center gap-4 mb-6">
-              <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
-                3
-              </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Add the Order Tracking Code</h2>
+              <h2 className="text-xl sm:text-2xl font-serif">Add the VIA Tracking Code</h2>
             </div>
 
             {!isFilled && (
@@ -227,32 +167,36 @@ export default function BigCartelSetupPage() {
               <ol className="space-y-2 text-sm text-[#5D0F17]/60">
                 <li className="flex gap-3">
                   <span className="font-medium text-[#5D0F17] flex-shrink-0">a.</span>
-                  <span>In your Big Cartel dashboard, go to <strong className="text-[#5D0F17]">Settings</strong> &rarr; <strong className="text-[#5D0F17]">Tracking &amp; Analytics</strong></span>
+                  <span>In your Big Cartel dashboard, click <strong className="text-[#5D0F17]">Shop Settings</strong> (the gear icon in the left sidebar)</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-medium text-[#5D0F17] flex-shrink-0">b.</span>
-                  <span>Find the box labeled <strong className="text-[#5D0F17]">Custom Thank You Page Code</strong></span>
+                  <span>Click <strong className="text-[#5D0F17]">Shop Designer</strong>, then select the <strong className="text-[#5D0F17]">Code</strong> tab at the top</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-medium text-[#5D0F17] flex-shrink-0">c.</span>
-                  <span>Paste the code below into that box and click <strong className="text-[#5D0F17]">Save</strong></span>
+                  <span>Under <strong className="text-[#5D0F17]">Integration Code</strong>, click the <strong className="text-[#5D0F17]">Body</strong> button</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-medium text-[#5D0F17] flex-shrink-0">d.</span>
+                  <span>Paste the code below into the text box, click <strong className="text-[#5D0F17]">Done</strong>, then click <strong className="text-[#5D0F17]">Publish</strong></span>
                 </li>
               </ol>
             </div>
 
             <div className="relative">
               <pre className="bg-neutral-900 text-neutral-100 p-4 text-xs overflow-x-auto rounded">
-                <code>{confirmationCode}</code>
+                <code>{trackingCode}</code>
               </pre>
               <button
-                onClick={copyConfirmation}
+                onClick={copyCode}
                 className={`absolute top-3 right-3 px-4 py-2 text-sm font-medium transition rounded ${
-                  copied === "confirmation"
+                  copied
                     ? "bg-green-500 text-white"
                     : "bg-[#F7F3EA] text-[#5D0F17] hover:bg-[#5D0F17]/10"
                 }`}
               >
-                {copied === "confirmation" ? "Copied!" : "Copy"}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
           </div>
@@ -261,13 +205,13 @@ export default function BigCartelSetupPage() {
           <div className="mb-12 sm:mb-16">
             <div className="flex items-center gap-4 mb-6">
               <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
-                4
+                3
               </span>
               <h2 className="text-xl sm:text-2xl font-serif">You&apos;re All Set!</h2>
             </div>
             <div className="bg-green-50 border border-green-200 p-4">
               <p className="text-sm text-green-800">
-                Once both snippets are saved, VIA will automatically know when a customer
+                Once the snippet is saved and published, VIA will automatically know when a customer
                 we send to your store places an order. No other steps needed.
               </p>
             </div>
@@ -280,16 +224,16 @@ export default function BigCartelSetupPage() {
             <h2 className="text-xl sm:text-2xl font-serif mb-6">Questions</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-medium mb-2">I can&apos;t find Edit Code in my theme — what plan do I need?</h3>
+                <h3 className="font-medium mb-2">I can&apos;t find Shop Designer or the Code tab — what plan do I need?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  Big Cartel&apos;s theme code editor is available on the Platinum plan ($9.99/mo) and above.
-                  If you&apos;re on the free plan, email us and we can work out an alternative.
+                  The Integration Code section is available on Big Cartel&apos;s paid plans (Platinum and Diamond).
+                  If you&apos;re on the free plan or don&apos;t see the Code tab, email us and we&apos;ll help you out.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Will this affect my website or checkout?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  No. Both snippets are tiny and run silently in the background. Your customers won&apos;t notice anything.
+                  No. The snippet is tiny and runs silently in the background. Your customers won&apos;t notice anything.
                 </p>
               </div>
               <div>

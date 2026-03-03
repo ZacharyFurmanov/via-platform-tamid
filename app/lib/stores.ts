@@ -224,6 +224,28 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "to-us-vintage",
+    dashboardToken: "tuv-5d2a8c1e9b7f",
+    name: "To Us Vintage",
+    location: "New York, NY",
+    description:
+      "To Us Vintage is a vintage boutique specializing in timeless designer and statement pieces. From iconic Thierry Mugler tailored blazers to rare Dolce & Gabbana Y2K mini dresses and elevated accessories, each item is hand-selected for quality, character, and individuality. To Us Vintage celebrates fashion with history, bringing standout pieces from the past into modern wardrobes spearheaded by founder and head curator, Kathleen Scarrone.",
+    website: "https://tousvintage.com",
+    dataSource: "to-us-vintage",
+    image: "/stores/to-us-vintage.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "HANA",
+    collabsStoreId: "228807",
+    authenticityPolicy:
+      "Every piece at To Us Vintage is hand-selected and personally inspected by Kathleen before listing. Specializing in timeless designer and statement pieces, each item is accurately described with any notable condition details clearly disclosed.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "vintari-vault",
     dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",

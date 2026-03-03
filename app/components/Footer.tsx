@@ -54,6 +54,22 @@ export default function Footer() {
                   />
                 </svg>
               </a>
+              <a
+                href="https://www.tiktok.com/@theviaplatform"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center w-10 h-10 border border-[#5D0F17]/30 hover:border-[#5D0F17] hover:bg-[#5D0F17] transition-all duration-300"
+                aria-label="Follow us on TikTok"
+              >
+                <svg
+                  className="w-5 h-5 text-[#5D0F17] group-hover:text-[#D8CABD] transition-colors duration-300"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -120,6 +136,19 @@ export default function Footer() {
                   className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
                 >
                   <span>Instagram</span>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tiktok.com/@theviaplatform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
+                >
+                  <span>TikTok</span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
