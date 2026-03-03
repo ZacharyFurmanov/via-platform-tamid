@@ -111,14 +111,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
 ];
 
 // Big Cartel stores (public JSON API — no token required)
-export const BIGCARTEL_STORES: BigCartelStore[] = [
-  {
-    type: "bigcartel",
-    name: "Kiki D Design and Consign",
-    slug: "kiki-d-design-and-consign",
-    storeSlug: "kikiddesignandconsign",
-  },
-];
+export const BIGCARTEL_STORES: BigCartelStore[] = [];
 
 export const ALL_STORES: Store[] = [
   ...SQUARESPACE_STORES,
