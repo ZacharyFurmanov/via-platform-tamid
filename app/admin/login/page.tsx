@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
-  const [step, setStep] = useState<"password" | "totp">("password");
+  const [step, setStep] = useState<"password" | "otp">("password");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
 
     try {
       const body =
-        step === "totp" ? { password, totpCode } : { password };
+        step === "otp" ? { password, otpCode: totpCode } : { password };
 
       const res = await fetch("/api/admin/auth", {
         method: "POST",
@@ -34,8 +34,8 @@ export default function AdminLoginPage() {
       if (data.success) {
         router.push(redirect);
         router.refresh();
-      } else if (data.requireTotp) {
-        setStep("totp");
+      } else if (data.requireOtp) {
+        setStep("otp");
       } else {
         setError(data.error || "Invalid credentials");
       }
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
           <p className="text-neutral-500 text-sm">
             {step === "password"
               ? "Enter password to continue"
-              : "Enter the 6-digit code from Authy"}
+              : "Check hana@theviaplatform.com for your code"}
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
           ) : (
             <div>
               <label htmlFor="totp" className="sr-only">
-                Authenticator code
+                Email code
               </label>
               <input
                 id="totp"
@@ -109,7 +109,7 @@ export default function AdminLoginPage() {
             {loading ? "Verifying…" : step === "password" ? "Continue" : "Sign In"}
           </button>
 
-          {step === "totp" && (
+          {step === "otp" && (
             <button
               type="button"
               onClick={() => {
