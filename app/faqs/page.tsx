@@ -4,7 +4,7 @@ export default function FAQsPage() {
   const faqs = [
     {
       q: "What is VIA?",
-      a: "VIA is a curated platform that brings together independent vintage and secondhand stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
+      a: "VIA is a platform that brings together independent vintage and secondhand stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
     },
     {
       q: "How does shopping on VIA work?",

@@ -51,7 +51,7 @@ export async function sendGiveawayConfirmation(email: string, referralCode: stri
       <a href="${referralLink}" class="btn">Share Your Link</a>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>
@@ -103,7 +103,7 @@ export async function sendFriendEnteredEmail(
       ${body}
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>
@@ -174,7 +174,7 @@ export async function sendGiveawayReminder(
       ${body}
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>
@@ -199,13 +199,13 @@ export async function sendMembershipConfirmation(email: string) {
     <div class="header"><h1>VIA</h1></div>
     <div class="content">
       <h2>You're in.</h2>
-      <p>Welcome to VIA Insider. You now have 24-hour early access to new arrivals from all of our curated stores — before anyone else sees them.</p>
+      <p>Welcome to VIA Insider. You now have 24-hour early access to new arrivals from all of our stores — before anyone else sees them.</p>
       <p>Head to your Insider page to see what's just dropped.</p>
       <a href="${insiderUrl}" class="btn">View New Arrivals</a>
       <p style="font-size: 13px; color: #999; margin-top: 24px;">You'll be billed $10/month. You can cancel anytime from your account page.</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>
@@ -247,7 +247,7 @@ export async function sendFavoriteActivityNotification(
       <a href="${productUrl}" class="btn">Shop Now</a>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA. Curated vintage & secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VIA. Vintage & secondhand, worldwide.</p>
     </div>
   </div>
 </body>

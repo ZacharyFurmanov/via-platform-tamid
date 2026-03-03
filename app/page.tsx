@@ -25,7 +25,7 @@ export default function HomePage() {
               </p>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
-                The home of curated vintage &amp; secondhand.
+                The home of vintage &amp; secondhand.
               </h1>
 
               <p className="max-w-xl mb-8 sm:mb-12 text-sm sm:text-base text-[#D8CABD] font-sans leading-relaxed">

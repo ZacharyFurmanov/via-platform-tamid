@@ -168,7 +168,7 @@ export default function FriendsPage() {
   }
 
   function handleInvite() {
-    const text = "Join me on VIA — curated vintage & secondhand from independent stores across the country, all in one place! https://theviaplatform.com";
+    const text = "Join me on VIA — vintage & secondhand from independent stores across the country, all in one place! https://theviaplatform.com";
     if (navigator.share) {
       navigator.share({ title: "Join VIA", text }).catch(() => {});
     } else {

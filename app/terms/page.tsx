@@ -36,7 +36,7 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              VIA is a curated marketplace that connects shoppers with independent
+              VIA is a marketplace that connects shoppers with independent
               vintage and secondhand stores across the United States. We aggregate and
               display product listings from partner stores, allowing users to
               browse, discover, and purchase items. VIA does not directly sell
@@ -88,7 +88,7 @@ export default function TermsPage() {
               </li>
               <li>
                 <strong>Marketing and promotional emails</strong> — updates
-                about new stores, products, features, and curated picks. You
+                about new stores, products, features, and picks. You
                 can unsubscribe from these at any time via your account
                 settings or the unsubscribe link included in each email.
               </li>

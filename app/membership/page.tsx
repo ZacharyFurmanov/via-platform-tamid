@@ -25,7 +25,7 @@ export default async function MembershipPage() {
           <p className="text-xs uppercase tracking-widest text-[#5D0F17]/40 mb-4">Membership</p>
           <h1 className="text-3xl sm:text-4xl font-serif mb-6">VIA Insider</h1>
           <p className="text-base sm:text-lg text-[#5D0F17]/60 max-w-xl mx-auto leading-relaxed">
-            Be first to see new arrivals from VIA's curated stores — 24 hours before everyone else.
+            Be first to see new arrivals from VIA's stores — 24 hours before everyone else.
           </p>
         </div>
       </section>

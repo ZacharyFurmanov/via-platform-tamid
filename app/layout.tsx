@@ -15,7 +15,7 @@ import ScrollToTop from "./components/ScrollToTop";
 
 export const metadata: Metadata = {
   title: "VIA",
-  description: "Curated vintage & secondhand, worldwide.",
+  description: "Vintage & secondhand, worldwide.",
   other: {
     "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",
   },

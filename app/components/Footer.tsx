@@ -27,15 +27,10 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
-              <span
-                className="text-3xl text-[#5D0F17] leading-none tracking-wide"
-                style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
-              >
-                VIA.
-              </span>
+              <img src="/via-logo.png" alt="VIA" className="h-8 w-auto" />
             </Link>
             <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
-              Curated vintage and secondhand from independent stores across the country. Discover pieces with stories.
+              Vintage and secondhand from independent stores across the country. Discover pieces with stories.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-4">
@@ -143,7 +138,7 @@ export default function Footer() {
               {currentYear} VIA. All rights reserved.
             </p>
             <p className="text-[#5D0F17]/50 text-xs tracking-wide">
-              Curated with care in the USA
+              Made with care in the USA
             </p>
           </div>
         </div>

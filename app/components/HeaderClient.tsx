@@ -23,7 +23,7 @@ type SearchResult =
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 const ANNOUNCEMENTS = [
-  { text: "Curated Vintage & Secondhand", href: null },
+  { text: "Vintage & Secondhand", href: null },
   { text: "New Arrivals Added Weekly", href: "/new-arrivals" },
   { text: "NYC Pop Up March 29th! Click here for tickets", href: "https://posh.vip/e/via-nyc-pop-up" },
 ];
@@ -242,12 +242,7 @@ export default function HeaderClient({
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
-            <span
-              className="text-[#5D0F17] text-3xl sm:text-4xl leading-none tracking-wide"
-              style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
-            >
-              VIA.
-            </span>
+            <img src="/via-logo.png" alt="VIA" className="h-8 sm:h-10 w-auto" />
           </Link>
 
           <div className="flex items-center gap-3 md:gap-8">

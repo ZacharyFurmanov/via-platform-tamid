@@ -11,7 +11,7 @@ export default function StoresPage() {
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">All Stores</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            A curated selection of independent vintage and secondhand stores,
+            A selection of independent vintage and secondhand stores,
             each with a distinct point of view.
           </p>
         </div>

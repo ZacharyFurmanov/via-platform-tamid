@@ -125,7 +125,7 @@ export default async function CategoryPage({
           </Link>
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">{label}</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            Curated {label.toLowerCase()} from independent vintage
+            {label} from independent vintage
             and secondhand stores.
           </p>
 

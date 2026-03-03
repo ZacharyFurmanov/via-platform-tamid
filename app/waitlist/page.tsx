@@ -153,7 +153,7 @@ function WaitlistContent() {
       }
     }
 
-    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     const first = phone1.trim() || phone2.trim();
     const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
@@ -169,7 +169,7 @@ function WaitlistContent() {
   };
 
   const handleSendSecond = () => {
-    const message = `Check out VIA — curated vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
     setPendingPhone("");
     goToConfirmation();
@@ -198,14 +198,19 @@ function WaitlistContent() {
 
   return (
     <div className="min-h-full bg-[#F7F3EA] text-[#5D0F17]">
+      {/* Pop Up Banner */}
+      <a
+        href="https://posh.vip/e/via-nyc-pop-up"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center text-xs tracking-[0.15em] uppercase py-2.5 hover:bg-[#5D0F17]/90 transition"
+      >
+        Discover VIA in person — NYC Pop Up March 29th. Click here for tickets.
+      </a>
+
       {/* Header */}
       <div className="border-b border-[#5D0F17]/10 px-6 py-5 flex items-center justify-between">
-        <span
-          className="text-[#5D0F17] text-3xl leading-none tracking-wide"
-          style={{ fontFamily: "'Dreame Avenue', 'PP Eiko', Georgia, serif" }}
-        >
-          VIA.
-        </span>
+        <img src="/via-logo.png" alt="VIA" className="h-8 w-auto" />
         <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50">Coming Soon</p>
       </div>
 
