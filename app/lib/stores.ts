@@ -232,7 +232,7 @@ export const stores = [
       "Sourced by Scottie is a Washington, DC-based vintage and secondhand shop specializing in hand-picked designer and statement pieces. Each item is personally sourced and selected for quality, character, and style — bringing standout vintage finds to modern wardrobes.",
     website: "https://sourcedbyscottie.com",
     dataSource: "sourced-by-scottie",
-    image: "/stores/sourced-by-scottie.png",
+    image: "/stores/sourced-by-scottie.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
