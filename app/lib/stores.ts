@@ -224,6 +224,28 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "sourced-by-scottie",
+    dashboardToken: "sbs-3e7a1c5d9f2b",
+    name: "Sourced by Scottie",
+    location: "Washington, DC",
+    description:
+      "Sourced by Scottie is a Washington, DC-based vintage and secondhand shop specializing in hand-picked designer and statement pieces. Each item is personally sourced and selected for quality, character, and style — bringing standout vintage finds to modern wardrobes.",
+    website: "https://sourcedbyscottie.com",
+    dataSource: "sourced-by-scottie",
+    image: "/stores/sourced-by-scottie.png",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "VIACONNECT",
+    collabsStoreId: "230428",
+    authenticityPolicy:
+      "Every piece is personally sourced and inspected before listing. Each item is accurately described with any notable condition details clearly disclosed.",
+    shippingPolicy:
+      "Ships from Washington, DC. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "to-us-vintage",
     dashboardToken: "tuv-5d2a8c1e9b7f",
     name: "To Us Vintage",

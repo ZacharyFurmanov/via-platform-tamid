@@ -102,6 +102,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "to-us-vintage",
     storeDomain: "tousvintage.com",
   },
+  {
+    type: "shopify",
+    name: "Sourced by Scottie",
+    slug: "sourced-by-scottie",
+    storeDomain: "sourcedbyscottie.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
