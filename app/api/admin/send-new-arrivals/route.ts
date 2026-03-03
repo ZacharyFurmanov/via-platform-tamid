@@ -46,11 +46,12 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const preview = body?.preview === true;
+  const testEmail: string | undefined = body?.testEmail;
 
   await initDatabase();
   await initMembershipColumns();
 
-  const [products, emails] = await Promise.all([
+  const [products, members] = await Promise.all([
     getUnnotifiedInsiderProducts(50),
     getInsiderUserEmails(),
   ]);
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "No new products to notify about.",
       products: 0,
-      members: emails.length,
+      members: members.length,
       sent: 0,
     });
   }
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       preview: true,
       products: products.length,
-      members: emails.length,
+      members: members.length,
       productList: products.map((p) => ({
         id: p.id,
         title: p.title,
@@ -78,11 +79,24 @@ export async function POST(request: NextRequest) {
         currency: p.currency,
         created_at: p.created_at,
       })),
-      memberEmails: emails,
+      memberEmails: members,
     });
   }
 
-  const { sent, failed } = await sendInsiderNewArrivalsEmail(emails, products);
+  // Test send — send only to the provided email, don't mark products as notified
+  if (testEmail) {
+    const { sent, failed } = await sendInsiderNewArrivalsEmail([testEmail], products);
+    return NextResponse.json({
+      success: true,
+      test: true,
+      testEmail,
+      products: products.length,
+      sent,
+      failed,
+    });
+  }
+
+  const { sent, failed } = await sendInsiderNewArrivalsEmail(members, products);
 
   // Mark products as notified so they're not included in future sends
   await markProductsAsInsiderNotified(products.map((p) => p.id));
@@ -90,7 +104,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     products: products.length,
-    members: emails.length,
+    members: members.length,
     sent,
     failed,
   });

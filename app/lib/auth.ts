@@ -47,25 +47,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           to: email,
           subject: "Sign in to VIA",
           html: `<!DOCTYPE html>
-<html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<style>${baseStyles()}</style>
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+<style>
+:root { color-scheme: light only; }
+${baseStyles()}
+@media (prefers-color-scheme: dark) {
+  body, .wrapper { background-color: #F7F3EA !important; }
+  .content { background-color: #ffffff !important; }
+  .content h2 { color: #5D0F17 !important; }
+  .content p { color: #5D0F17 !important; }
+  .btn { background-color: #5D0F17 !important; color: #F7F3EA !important; }
+  .footer { color: rgba(93,15,23,0.45) !important; }
+}
+</style>
 </head>
-<body>
-<div class="wrapper">
-  <div class="container">
-    <div class="header">
-      <img src="${BASE_URL}/via-logo.png" alt="VIA" width="120" style="display: block; margin: 0 auto; max-height: 80px; width: auto;" border="0" />
+<body style="margin:0;padding:0;background-color:#F7F3EA;">
+<div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
+  <div class="container" style="max-width:600px;margin:0 auto;">
+    <div class="header" style="text-align:center;padding:32px 0 28px;">
+      <img src="${BASE_URL}/via-logo.png" alt="VIA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
     </div>
-    <div class="content">
+    <div class="content" style="background:#ffffff;padding:40px 32px;">
       <h2>Sign in to VIA</h2>
       <p>Click the button below to sign in to your VIA account. This link expires in 24 hours.</p>
       <a href="${url}" class="btn">Sign In</a>
-      <p style="font-size: 12px; color: rgba(93,15,23,0.45); margin-top: 24px;">If you didn't request this email, you can safely ignore it.</p>
+      <p style="font-size:12px;color:rgba(93,15,23,0.45);margin-top:24px;">If you didn't request this email, you can safely ignore it.</p>
     </div>
-    <div class="footer">
+    <div class="footer" style="text-align:center;margin-top:32px;font-size:11px;color:rgba(93,15,23,0.45);padding-bottom:24px;">
       <p>&copy; ${new Date().getFullYear()} VIA. Vintage &amp; secondhand, worldwide.</p>
     </div>
   </div>
