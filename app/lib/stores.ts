@@ -3,7 +3,7 @@ export const stores = [
     slug: "ascensio-vintage",
     dashboardToken: "av-2b7c9d1e4f8a",
     name: "Ascensio Vintage",
-    location: "Shropshire, England",
+    location: "London, UK",
     description:
       "Ascensio's goal is to push away from fast-moving trends and unethically produced fast fashion, championing timeless style that transcends the decades. Our ethos centers on delivering authentic brands while promoting sustainable shopping, celebrating the beauty of pre-loved and archival pieces from the most well-known and loved brands. Each item is thoroughly checked by our team, ensuring quality and authenticity.",
     website: "https://ascensiovintage.com",
