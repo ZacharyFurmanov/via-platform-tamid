@@ -13,6 +13,16 @@ export async function initAnalyticsTables() {
   const sql = neon(getDatabaseUrl());
 
   await sql`
+    CREATE TABLE IF NOT EXISTS product_views (
+      id SERIAL PRIMARY KEY,
+      product_id VARCHAR(255) NOT NULL,
+      timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_product_views_product_id ON product_views(product_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_product_views_timestamp ON product_views(timestamp)`;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS clicks (
       id SERIAL PRIMARY KEY,
       click_id VARCHAR(32) NOT NULL UNIQUE,
@@ -238,6 +248,23 @@ export async function getConversionAnalytics(range: string) {
 }
 
 /**
+ * Record a product page view. Called fire-and-forget from the product page.
+ */
+export async function saveProductView(productId: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  // CREATE IF NOT EXISTS is idempotent — safe to call each time
+  await sql`
+    CREATE TABLE IF NOT EXISTS product_views (
+      id SERIAL PRIMARY KEY,
+      product_id VARCHAR(255) NOT NULL,
+      timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_product_views_product_id ON product_views(product_id)`;
+  await sql`INSERT INTO product_views (product_id) VALUES (${productId})`;
+}
+
+/**
  * Compute popularity scores for a set of products.
  * Returns a map of dbId -> score.
  */
@@ -266,8 +293,8 @@ export async function getProductPopularityScores(
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
   const ninetyDaysAgo = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [clickRows, favCounts, conversionRows] = await Promise.all([
-    // Clicks with recency weighting
+  const [clickRows, favCounts, conversionRows, viewRows] = await Promise.all([
+    // Clicks with recency weighting (strong signal: user went to buy)
     sql`
       SELECT product_id,
         SUM(CASE WHEN timestamp >= ${sevenDaysAgo}::timestamptz THEN 3
@@ -279,7 +306,7 @@ export async function getProductPopularityScores(
     `,
     // Favorites
     getProductFavoriteCounts(dbIds),
-    // Conversions (items JSONB contains productId field)
+    // Conversions
     sql`
       SELECT item->>'productId' AS product_id, COUNT(*)::int AS count
       FROM conversions, jsonb_array_elements(items) AS item
@@ -287,11 +314,21 @@ export async function getProductPopularityScores(
         AND item->>'productId' = ANY(${compositeIds})
       GROUP BY item->>'productId'
     `,
+    // Page views with recency weighting (softer signal: user was interested)
+    sql`
+      SELECT product_id,
+        SUM(CASE WHEN timestamp >= ${sevenDaysAgo}::timestamptz THEN 2
+                 WHEN timestamp >= ${thirtyDaysAgo}::timestamptz THEN 1
+                 ELSE 0 END)::int AS score
+      FROM product_views
+      WHERE product_id = ANY(${compositeIds})
+      GROUP BY product_id
+    `.catch(() => [] as { product_id: string; score: number }[]),
   ]);
 
   const scores: Record<number, number> = {};
 
-  // Click scores
+  // Click scores (high intent: user went to buy)
   for (const row of clickRows) {
     const dbId = compositeIdMap.get(row.product_id as string);
     if (dbId != null) {
@@ -310,6 +347,14 @@ export async function getProductPopularityScores(
     const dbId = compositeIdMap.get(row.product_id as string);
     if (dbId != null) {
       scores[dbId] = (scores[dbId] ?? 0) + (row.count as number) * 5;
+    }
+  }
+
+  // Page view scores (lower weight than clicks — interest signal only)
+  for (const row of viewRows) {
+    const dbId = compositeIdMap.get((row as { product_id: string; score: number }).product_id);
+    if (dbId != null) {
+      scores[dbId] = (scores[dbId] ?? 0) + ((row as { product_id: string; score: number }).score ?? 0);
     }
   }
 

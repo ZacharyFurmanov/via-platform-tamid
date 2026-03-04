@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
-import { saveClick } from "@/app/lib/analytics-db";
+import { saveClick, saveProductView } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 import { getCollabsLink, getAnyCollabsLinkForStore } from "@/app/lib/db";
+
+/** POST /api/track — record a product page view (fire-and-forget from client) */
+export async function POST(request: NextRequest) {
+  try {
+    const { productId } = await request.json();
+    if (!productId || typeof productId !== "string") {
+      return NextResponse.json({ ok: false }, { status: 400 });
+    }
+    await saveProductView(productId);
+  } catch {
+    // Silently swallow — view tracking should never break the page
+  }
+  return NextResponse.json({ ok: true });
+}
 
 /**
  * Get the discount config for a store (if any).

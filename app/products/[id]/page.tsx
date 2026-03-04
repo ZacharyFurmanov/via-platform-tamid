@@ -12,6 +12,7 @@ import AddToCartButton from "@/app/components/AddToCartButton";
 import { getProductFavoriteCount } from "@/app/lib/favorites-db";
 import ProductQuestion from "@/app/components/ProductQuestion";
 import ProductAccordion from "@/app/components/ProductAccordion";
+import TrackProductView from "@/app/components/TrackProductView";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -170,6 +171,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen">
+      <TrackProductView productId={compositeId} />
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
         <BackButton
