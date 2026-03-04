@@ -321,7 +321,6 @@ export const stores = [
     website: "https://vintarivault.com",
     dataSource: "vintari-vault",
     image: "/stores/vintari-vault.png",
-    imageFit: "contain" as const,
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
