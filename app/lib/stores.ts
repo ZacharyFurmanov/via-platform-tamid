@@ -268,6 +268,28 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "moonstruck-vintage",
+    dashboardToken: "mv-7e2a9c4b1d8f",
+    name: "Moonstruck Vintage",
+    location: "New York, NY",
+    description:
+      "Moonstruck Vintage is dedicated to curating unique accessories for everyone. We aim to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. We focus on bags, but also love a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
+    website: "https://moonstruckvintagenyc.com",
+    dataSource: "moonstruck-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "VIA",
+    collabsStoreId: "230452",
+    authenticityPolicy:
+      "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind. Specializing in bags and shoes, each item is personally selected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "maison-optimism-vintage",
     dashboardToken: "mo-6b3d9f1c8e2a",
     name: "Maison Optimism Vintage",

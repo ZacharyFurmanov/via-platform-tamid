@@ -114,6 +114,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "maison-optimism-vintage",
     storeDomain: "maisonoptimismvintage.com",
   },
+  {
+    type: "shopify",
+    name: "Moonstruck Vintage",
+    slug: "moonstruck-vintage",
+    storeDomain: "moonstruckvintagenyc.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
