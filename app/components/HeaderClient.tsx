@@ -242,7 +242,7 @@ export default function HeaderClient({
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
-            <img src="/via-logo.png" alt="VIA" className="h-10 sm:h-12 w-auto" />
+            <img src="/via-logo.png" alt="VIA" className="h-14 sm:h-16 w-auto" />
           </Link>
 
           <div className="flex items-center gap-3 md:gap-8">
