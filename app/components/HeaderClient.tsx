@@ -271,9 +271,9 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className={`bg-[#F7F3EA] text-[#5D0F17] shadow-xl border border-[#5D0F17]/10 ${stores.length >= 7 ? 'min-w-[420px]' : 'min-w-[220px]'}`}>
-                    <div className={`py-2 ${stores.length >= 7 ? 'grid grid-cols-2' : ''}`}>
-                      {stores.slice(0, 7).map((store) => (
+                  <div style={{ minWidth: `${Math.ceil(stores.length / 7) * 210}px` }} className="bg-[#F7F3EA] text-[#5D0F17] shadow-xl border border-[#5D0F17]/10">
+                    <div className="py-2 grid grid-flow-col" style={{ gridTemplateRows: 'repeat(7, auto)' }}>
+                      {stores.map((store) => (
                         <Link
                           key={store.slug}
                           href={`/stores/${store.slug}`}
@@ -476,7 +476,7 @@ export default function HeaderClient({
                     }`}
                   >
                     <div className="pb-4 pl-4 space-y-1">
-                      {stores.slice(0, 7).map((store) => (
+                      {stores.map((store) => (
                         <Link
                           key={store.slug}
                           href={`/stores/${store.slug}`}
