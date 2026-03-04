@@ -18,7 +18,7 @@ export default function StoreCarousel() {
                 alt={store.name}
                 fill
                 sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className={`${store.imageFit === "contain" ? "object-contain p-2 sm:p-3" : "object-cover"} transition-transform duration-700 ease-out group-hover:scale-105`}
               />
             </div>
             <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">

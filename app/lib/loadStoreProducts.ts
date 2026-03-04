@@ -141,9 +141,11 @@ export const inferBrandFromTitle = (title: string): string | null => {
   const t = title.toLowerCase();
   for (const brand of brandDefs) {
     for (const keyword of brand.keywords) {
-      if (t.includes(keyword)) {
-        return brand.slug;
-      }
+      const matches =
+        keyword.length <= 3
+          ? new RegExp(`(?<![a-z])${keyword}(?![a-z])`).test(t)
+          : t.includes(keyword);
+      if (matches) return brand.slug;
     }
   }
   return null;

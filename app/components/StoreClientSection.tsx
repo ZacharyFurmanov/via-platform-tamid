@@ -130,6 +130,7 @@ export default function StoreClientSection({
             stores={[store]}
             showCategoryFilter
             showBrandFilter
+            showSizeFilter
             emptyMessage="No products found."
             from="store"
           />

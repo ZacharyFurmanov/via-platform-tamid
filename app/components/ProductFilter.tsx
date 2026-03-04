@@ -12,6 +12,7 @@ export type FilterState = {
   selectedStores: string[];
   selectedCategories: string[];
   selectedBrands: string[];
+  selectedSizes: string[];
   sort: SortOption;
 };
 
@@ -19,11 +20,13 @@ type ProductFilterProps = {
   stores: { slug: string; name: string }[];
   categories?: { slug: string; label: string }[];
   brands?: { slug: string; label: string }[];
+  sizes?: string[];
   onFilterChange: (filters: FilterState) => void;
   initialFilters?: Partial<FilterState>;
   productCount?: number;
   showCategoryFilter?: boolean;
   showBrandFilter?: boolean;
+  showSizeFilter?: boolean;
 };
 
 const priceRangeLabels: Record<PriceRange, string> = {
@@ -45,11 +48,13 @@ export default function ProductFilter({
   stores,
   categories = [],
   brands = [],
+  sizes = [],
   onFilterChange,
   initialFilters,
   productCount,
   showCategoryFilter = false,
   showBrandFilter = false,
+  showSizeFilter = false,
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
@@ -57,6 +62,7 @@ export default function ProductFilter({
     selectedStores: initialFilters?.selectedStores ?? [],
     selectedCategories: initialFilters?.selectedCategories ?? [],
     selectedBrands: initialFilters?.selectedBrands ?? [],
+    selectedSizes: initialFilters?.selectedSizes ?? [],
     sort: initialFilters?.sort ?? "popular",
   });
 
@@ -65,6 +71,7 @@ export default function ProductFilter({
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
+  const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   const closeAllDropdowns = useCallback(() => {
@@ -72,6 +79,7 @@ export default function ProductFilter({
     setCategoryDropdownOpen(false);
     setBrandDropdownOpen(false);
     setStoreDropdownOpen(false);
+    setSizeDropdownOpen(false);
     setSortDropdownOpen(false);
   }, []);
 
@@ -117,6 +125,17 @@ export default function ProductFilter({
     [filters.selectedBrands, updateFilters]
   );
 
+  const toggleSize = useCallback(
+    (size: string) => {
+      const current = filters.selectedSizes;
+      const updated = current.includes(size)
+        ? current.filter((s) => s !== size)
+        : [...current, size];
+      updateFilters({ selectedSizes: updated });
+    },
+    [filters.selectedSizes, updateFilters]
+  );
+
   const clearFilters = useCallback(() => {
     const cleared: FilterState = {
       search: "",
@@ -124,6 +143,7 @@ export default function ProductFilter({
       selectedStores: [],
       selectedCategories: [],
       selectedBrands: [],
+      selectedSizes: [],
       sort: "popular",
     };
     setFilters(cleared);
@@ -135,14 +155,16 @@ export default function ProductFilter({
     filters.priceRange !== "all" ||
     filters.selectedStores.length > 0 ||
     filters.selectedCategories.length > 0 ||
-    filters.selectedBrands.length > 0;
+    filters.selectedBrands.length > 0 ||
+    filters.selectedSizes.length > 0;
 
   const activeFilterCount =
     (filters.search ? 1 : 0) +
     (filters.priceRange !== "all" ? 1 : 0) +
     filters.selectedStores.length +
     filters.selectedCategories.length +
-    filters.selectedBrands.length;
+    filters.selectedBrands.length +
+    filters.selectedSizes.length;
 
   return (
     <div className="mb-8">
@@ -366,6 +388,55 @@ export default function ProductFilter({
             </div>
           )}
 
+          {/* Size Dropdown */}
+          {showSizeFilter && sizes.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = sizeDropdownOpen;
+                  closeAllDropdowns();
+                  setSizeDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
+                  filters.selectedSizes.length > 0
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
+                }`}
+              >
+                {filters.selectedSizes.length > 0
+                  ? `Size (${filters.selectedSizes.length})`
+                  : "Size"}
+                <ChevronDown size={16} />
+              </button>
+              {sizeDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setSizeDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                    {sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => toggleSize(size)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
+                          filters.selectedSizes.includes(size)
+                            ? "bg-[#D8CABD]/30 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {size}
+                        {filters.selectedSizes.includes(size) && (
+                          <span className="text-[#5D0F17]">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Sort Dropdown */}
           <div className="relative ml-auto">
             <button
@@ -552,6 +623,31 @@ export default function ProductFilter({
                         className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
                       />
                       <span className="text-sm">{brand.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sizes */}
+            {showSizeFilter && sizes.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
+                  Size
+                </h4>
+                <div className="space-y-2">
+                  {sizes.map((size) => (
+                    <label
+                      key={size}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.selectedSizes.includes(size)}
+                        onChange={() => toggleSize(size)}
+                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                      />
+                      <span className="text-sm">{size}</span>
                     </label>
                   ))}
                 </div>

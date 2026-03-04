@@ -173,6 +173,7 @@ export default async function CategoryPage({
             stores={storeList}
             categories={isClothing ? clothingFilterCategories : []}
             showCategoryFilter={isClothing}
+            showSizeFilter
             from={`/categories/${category}`}
             emptyMessage="No products found in this category."
           />

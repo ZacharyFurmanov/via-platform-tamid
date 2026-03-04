@@ -26,7 +26,7 @@ export default async function BrandsPage() {
               <Link
                 key={brand.slug}
                 href={`/brands/${brand.slug}`}
-                className="group block border border-[#5D0F17]/20 p-6 sm:p-8 text-center hover:bg-[#5D0F17] hover:border-[#5D0F17] transition-all duration-300"
+                className="group block border border-[#5D0F17]/20 p-4 sm:p-8 text-center hover:bg-[#5D0F17] hover:border-[#5D0F17] transition-all duration-300"
               >
                 <h2 className="font-serif text-lg sm:text-xl text-[#5D0F17] group-hover:text-[#F7F3EA] transition-colors duration-300">
                   {brand.label}

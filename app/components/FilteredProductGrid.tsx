@@ -6,6 +6,7 @@ import ProductFilter, {
   PriceRange,
   SortOption,
 } from "./ProductFilter";
+import { normalizeSize, sortSizes } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import { diversityInterleave } from "@/app/lib/productRanking";
@@ -35,6 +36,7 @@ type FilteredProductGridProps = {
   categories?: { slug: string; label: string }[];
   showCategoryFilter?: boolean;
   showBrandFilter?: boolean;
+  showSizeFilter?: boolean;
   emptyMessage?: string;
   from?: string;
 };
@@ -89,6 +91,7 @@ export default function FilteredProductGrid({
   categories = [],
   showCategoryFilter = false,
   showBrandFilter = false,
+  showSizeFilter = false,
   emptyMessage = "No products found.",
   from,
 }: FilteredProductGridProps) {
@@ -98,6 +101,7 @@ export default function FilteredProductGrid({
     selectedStores: [],
     selectedCategories: [],
     selectedBrands: [],
+    selectedSizes: [],
     sort: "popular",
   });
 
@@ -148,6 +152,13 @@ export default function FilteredProductGrid({
       );
     }
 
+    // Size filter
+    if (filters.selectedSizes.length > 0) {
+      result = result.filter(
+        (p) => p.size && filters.selectedSizes.includes(normalizeSize(p.size))
+      );
+    }
+
     // Sort
     result = sortProducts(result, filters.sort);
 
@@ -187,6 +198,15 @@ export default function FilteredProductGrid({
     return Array.from(bMap.values());
   }, [products]);
 
+  // Get unique normalized sizes from products for the filter
+  const availableSizes = useMemo(() => {
+    const seen = new Set<string>();
+    products.forEach((p) => {
+      if (p.size) seen.add(normalizeSize(p.size));
+    });
+    return sortSizes(Array.from(seen));
+  }, [products]);
+
   // Fetch favorite counts for all products
   const [favCounts, setFavCounts] = useState<Record<number, number>>({});
 
@@ -217,8 +237,10 @@ export default function FilteredProductGrid({
           availableCategories.length > 0 ? availableCategories : categories
         }
         brands={availableBrands}
+        sizes={availableSizes}
         showCategoryFilter={showCategoryFilter}
         showBrandFilter={showBrandFilter}
+        showSizeFilter={showSizeFilter}
         onFilterChange={handleFilterChange}
         productCount={filteredProducts.length}
       />
@@ -230,7 +252,8 @@ export default function FilteredProductGrid({
           filters.priceRange !== "all" ||
           filters.selectedStores.length > 0 ||
           filters.selectedCategories.length > 0 ||
-          filters.selectedBrands.length > 0 ? (
+          filters.selectedBrands.length > 0 ||
+          filters.selectedSizes.length > 0 ? (
             <button
               onClick={() =>
                 handleFilterChange({
@@ -239,6 +262,7 @@ export default function FilteredProductGrid({
                   selectedStores: [],
                   selectedCategories: [],
                   selectedBrands: [],
+                  selectedSizes: [],
                   sort: filters.sort,
                 })
               }

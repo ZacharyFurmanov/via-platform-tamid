@@ -26,7 +26,7 @@ export default function StoresPage() {
               <div key={store.slug} className="group">
 
                 {/* IMAGE (CLICKABLE) */}
-                <Link href={`/stores/${store.slug}`} className="block mb-6">
+                <Link href={`/stores/${store.slug}`} className="block mb-3 sm:mb-6">
                   <div className="relative aspect-[3/4] bg-[#D8CABD]/30 overflow-hidden">
                     {store.image && (
                       <Image
@@ -34,7 +34,7 @@ export default function StoresPage() {
                         alt={store.name}
                         fill
                         sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                        className={`${store.imageFit === "contain" ? "object-contain p-2 sm:p-4" : "object-cover"} transition-transform duration-700 ease-out group-hover:scale-[1.03]`}
                       />
                     )}
                   </div>
@@ -42,16 +42,16 @@ export default function StoresPage() {
 
                 {/* TEXT (ALSO CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block">
-                  <h2 className="text-lg font-serif mb-1 link-underline">
+                  <h2 className="text-sm sm:text-lg font-serif mb-1 link-underline">
                     {store.name}
                   </h2>
                 </Link>
 
-                <p className="text-sm text-[#5D0F17]/50 mb-4">
+                <p className="text-xs sm:text-sm text-[#5D0F17]/50 mb-2 sm:mb-4">
                   {store.location}
                 </p>
 
-                <p className="text-sm text-[#5D0F17]/70 leading-relaxed line-clamp-3">
+                <p className="hidden sm:block text-sm text-[#5D0F17]/70 leading-relaxed line-clamp-3">
                   {store.description}
                 </p>
 
