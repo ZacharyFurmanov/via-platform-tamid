@@ -268,14 +268,14 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
-    slug: "maison-optimism",
+    slug: "maison-optimism-vintage",
     dashboardToken: "mo-6b3d9f1c8e2a",
     name: "Maison Optimism Vintage",
     location: "Houston, TX",
     description:
       "Maison Optimism Vintage is a Houston-based luxury vintage brand specializing in 90s and early 2000s designer bags, shoes, and accessories. Each piece is hand-picked and curated for an iconic, timeless style.",
     website: "https://www.maisonoptimismvintage.com",
-    dataSource: "maison-optimism",
+    dataSource: "maison-optimism-vintage",
     image: "/stores/maison-optimism.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",

@@ -111,7 +111,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   {
     type: "shopify",
     name: "Maison Optimism Vintage",
-    slug: "maison-optimism",
+    slug: "maison-optimism-vintage",
     storeDomain: "maisonoptimismvintage.com",
   },
 ];
