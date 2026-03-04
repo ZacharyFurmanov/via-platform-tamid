@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
+import { normalizeSize } from "@/app/lib/inventory";
 
 // Strip "Size X" patterns from a product title when size is already shown separately
 function stripSizeFromTitle(title: string, size: string | null | undefined): string {
@@ -70,9 +71,14 @@ export default function ProductCard({
             {stripSizeFromTitle(name, size)}
           </h3>
 
-          <p className="text-xs sm:text-sm mt-0.5 sm:mt-1 text-[#5D0F17]/80">
-            {price}{size ? <span className="ml-2 text-[#5D0F17]/50">{size}</span> : null}
-          </p>
+          <div className="flex items-baseline gap-2 mt-0.5 sm:mt-1">
+            <p className="text-xs sm:text-sm text-[#5D0F17]/80">{price}</p>
+            {size && (
+              <span className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50">
+                {normalizeSize(size)}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
 
