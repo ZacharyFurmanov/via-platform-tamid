@@ -10,6 +10,12 @@ const getDatabaseUrl = () => {
   return url;
 };
 
+// Words to strip from multi-word queries before building AND-match patterns.
+// "dolce and gabbana" → ["dolce", "gabbana"] so "&" vs "and" doesn't break brand searches.
+const STOP_WORDS = new Set([
+  "and", "or", "the", "a", "an", "in", "of", "for", "with", "by", "de", "et", "le", "la", "von",
+]);
+
 // Aliases: common search terms → category slug
 const categoryAliases: Record<string, string> = {
   // bags
@@ -99,11 +105,17 @@ export async function GET(request: Request) {
     const sql = neon(getDatabaseUrl());
 
     // 1. Match designers/brands
+    // Also handle "dolce and gabbana" → matches "Dolce & Gabbana" by checking significant words
+    const qSignificantWords = q.split(/[\s&]+/).filter((w) => w.length > 1 && !STOP_WORDS.has(w));
     const matchedDesigners = brands
-      .filter((b) =>
-        b.label.toLowerCase().includes(q) ||
-        b.keywords.some((kw) => kw.includes(q) || q.includes(kw))
-      )
+      .filter((b) => {
+        const bLabel = b.label.toLowerCase();
+        if (bLabel.includes(q)) return true;
+        if (b.keywords.some((kw) => kw.includes(q) || q.includes(kw))) return true;
+        // Match if all significant query words appear in the brand label (handles "and" vs "&")
+        if (qSignificantWords.length > 1 && qSignificantWords.every((w) => bLabel.includes(w))) return true;
+        return false;
+      })
       .slice(0, 5)
       .map((b) => ({ slug: b.slug, label: b.label }));
 
@@ -147,29 +159,32 @@ export async function GET(request: Request) {
 
     if (catSlug && categoryKeywords[catSlug]) {
       // Single-word category search (e.g. "dress", "top", "bag")
+      // Search bypasses the 24h Insider filter — explicit lookups should always find items.
       const catRegex = buildCatRegex(catSlug);
       products = await sql`
         SELECT id, store_slug, store_name, title, price, currency, image, created_at
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
     } else {
-      const words = q.split(/\s+/).filter((w) => w.length > 0);
+      // Strip stop words so "dolce and gabbana" → ["dolce", "gabbana"]
+      const allWords = q.split(/\s+/).filter((w) => w.length > 0);
+      const words = allWords.filter((w) => !STOP_WORDS.has(w));
+      const searchWords = words.length > 0 ? words : allWords; // fallback if all stop words
 
-      if (words.length > 1) {
+      if (searchWords.length > 1) {
         // Check if any word is a category alias (e.g. "black dress" → "dress" → "dresses")
-        const catWord = words.find(
+        const catWord = searchWords.find(
           (w) => categoryAliases[w] && categoryKeywords[categoryAliases[w]]
         );
 
         if (catWord) {
           const targetSlug = categoryAliases[catWord];
           const catRegex = buildCatRegex(targetSlug);
-          const modifiers = words.filter((w) => w !== catWord);
+          const modifiers = searchWords.filter((w) => w !== catWord);
 
           if (modifiers.length === 1) {
             // e.g. "black dress" → category regex + modifier LIKE
@@ -180,7 +195,6 @@ export async function GET(request: Request) {
               WHERE LOWER(title) ~* ${catRegex}
                 AND LOWER(title) LIKE ${modPattern}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -191,15 +205,14 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
           }
         } else {
-          // No category word — AND search with word-start boundaries to avoid
-          // partial matches (e.g. "top" matching "laptop")
-          const wordPatterns = words.map(
+          // No category word — AND search with word-start boundaries
+          // Stop words already stripped, so "dolce and gabbana" → matches "Dolce & Gabbana ..."
+          const wordPatterns = searchWords.map(
             (w) => `\\m${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`
           );
           products = await sql`
@@ -207,7 +220,6 @@ export async function GET(request: Request) {
             FROM products
             WHERE LOWER(title) ~* ALL(${wordPatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -221,7 +233,6 @@ export async function GET(request: Request) {
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST
