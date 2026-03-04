@@ -22,6 +22,8 @@ const PUBLIC_ROUTES = [
   "/api/admin/collabs-product-ids",
   "/api/admin/import-collabs-links",
   "/api/admin/import-collabs-links-by-shopify-id",
+  "/api/admin/purge-store",
+  "/api/admin/send-new-arrivals",
 ];
 
 // Routes that require the access code cookie but not a full user session
