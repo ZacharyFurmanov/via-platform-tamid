@@ -18,6 +18,9 @@ type ProductPageProps = {
   searchParams: Promise<{ from?: string }>;
 };
 
+// Guard against non-size values (like colors) that may have been stored as size in older syncs
+const VALID_SIZE_RE = /^(?:(?:US|UK|EU|IT)\s*)?\d[\d.]*$|^(?:XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
+
 const MEASUREMENT_KEYWORDS = [
   "shoulder", "sleeve", "bust", "chest", "waist", "hip", "inseam",
   "outseam", "rise", "hem", "thigh", "knee", "pit", "armhole",
@@ -203,7 +206,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
             <p className="text-sm text-black/50 mb-1">{categoryLabel}</p>
 
-            {product.size && (
+            {product.size && VALID_SIZE_RE.test(product.size.trim()) && (
               <p className="text-sm text-black/70 mb-1">
                 Size: <span className="font-medium">{product.size}</span>
               </p>
@@ -225,6 +228,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                         className="product-description prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
                         dangerouslySetInnerHTML={{ __html: detailsHtml }}
                       />
+                    ) : sizingItems.length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1">
+                        {sizingItems.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
                     ) : (
                       <p>Details not available for this item. Visit {store.name} for more information.</p>
                     ),
@@ -233,7 +242,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     title: "Sizing & Measurements",
                     content: (
                       <div>
-                        {product.size && (
+                        {product.size && VALID_SIZE_RE.test(product.size.trim()) && (
                           <p className="mb-3">
                             <span className="font-medium">Size:</span> {product.size}
                           </p>
@@ -249,7 +258,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                           This is a vintage or secondhand item. Sizing may vary from modern standards.
                           We recommend checking measurements carefully before purchasing.
                         </p>
-                        {sizingItems.length === 0 && !product.size && (
+                        {sizingItems.length === 0 && (!product.size || !VALID_SIZE_RE.test(product.size.trim())) && (
                           <p className="mt-2 text-sm">
                             For specific measurements,{" "}
                             <a href="#more-info" className="underline hover:text-black transition">

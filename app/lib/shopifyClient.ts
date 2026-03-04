@@ -135,6 +135,10 @@ const PRODUCTS_QUERY = `
 `;
 
 const SIZE_VALUE_PATTERN = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\\s+Size`;
+// Matches sizes that are ONLY generic clothing letters (not numeric, not EU/UK etc.)
+const GENERIC_CLOTHING_SIZE = /^(XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
+// Full-string size validator — used to reject color/other values stored as size
+const SIZE_VALUE_REGEX = new RegExp(`^(${SIZE_VALUE_PATTERN})$`, "i");
 
 /**
  * Extracts a size from a product title as a fallback when no variant size option exists.
@@ -159,7 +163,8 @@ function extractSizeFromDescription(description: string | null): string | null {
   if (!description) return null;
   // Strip HTML tags and decode common entities
   const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
-  const re = new RegExp(`(?:tagged\\s+size|labeled\\s+size|marked\\s+size|size)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
+  // Also matches "Label: EU 37" and "Label size: 38" patterns common in vintage listings
+  const re = new RegExp(`(?:tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
   const match = re.exec(text);
   if (match) return match[1].trim();
   return null;
@@ -277,10 +282,15 @@ export async function fetchShopifyProducts(
         (opt) => /size/i.test(opt.name)
       );
       const sizeFromVariant = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
-      // Fallbacks: title then description (common in vintage stores with single "Default Title" variants)
-      const size = sizeFromVariant
-        ?? extractSizeFromTitle(node.title)
-        ?? extractSizeFromDescription(node.descriptionHtml || null);
+      const sizeFromTitle = extractSizeFromTitle(node.title);
+      const sizeFromDescription = extractSizeFromDescription(node.descriptionHtml || null);
+      // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), it may be wrong
+      // for accessories/shoes. Prefer the more specific description/title size when available.
+      const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
+      const specificSize = sizeFromDescription ?? sizeFromTitle;
+      const size = (sizeFromVariant && !isGenericOnly)
+        ? sizeFromVariant
+        : specificSize ?? (isGenericOnly ? sizeFromVariant : null);
 
       products.push({
         title: node.title,
@@ -472,10 +482,12 @@ export async function fetchShopifyProductsPublic(
         if (val && val !== "Default Title") sizeFromVariant = val;
       }
       // Check variant.title as another source (e.g. "M", "US 8") before falling back to text extraction
-      const variantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
-      // Fallbacks: variant title → product title → description
+      // Only accept variant.title as a size if it actually looks like a size (not a color like "Green")
+      const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
+      const variantTitleIfSize = rawVariantTitle && SIZE_VALUE_REGEX.test(rawVariantTitle.trim()) ? rawVariantTitle : null;
+      // Fallbacks: variant size → validated variant title → product title → description
       const size = sizeFromVariant
-        ?? variantTitle
+        ?? variantTitleIfSize
         ?? extractSizeFromTitle(product.title)
         ?? extractSizeFromDescription(product.body_html || null);
       const allImageUrls: string[] = (product.images || [])

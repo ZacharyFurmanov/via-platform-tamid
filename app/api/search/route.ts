@@ -30,18 +30,34 @@ const categoryAliases: Record<string, string> = {
   sweater: "sweaters", sweaters: "sweaters", knitwear: "sweaters",
   short: "shorts",
   jumpsuit: "jumpsuits", romper: "jumpsuits",
-  // accessories
+  // accessories (generic)
   accessory: "accessories", accessories: "accessories",
-  belt: "accessories", belts: "accessories",
-  scarf: "accessories", scarves: "accessories",
   hat: "accessories", hats: "accessories",
-  jewelry: "accessories", jewellery: "accessories",
-  ring: "accessories", rings: "accessories",
-  necklace: "accessories", necklaces: "accessories",
-  bracelet: "accessories", bracelets: "accessories",
-  earring: "accessories", earrings: "accessories",
-  watch: "accessories", watches: "accessories",
-  sunglasses: "accessories",
+  // jewelry
+  jewelry: "jewelry", jewellery: "jewelry",
+  ring: "jewelry", rings: "jewelry",
+  necklace: "jewelry", necklaces: "jewelry",
+  bracelet: "jewelry", bracelets: "jewelry",
+  earring: "jewelry", earrings: "jewelry",
+  brooch: "jewelry", brooches: "jewelry",
+  bangle: "jewelry", bangles: "jewelry",
+  pendant: "jewelry", pendants: "jewelry",
+  choker: "jewelry", anklet: "jewelry",
+  // belts
+  belt: "belts", belts: "belts",
+  // scarves
+  scarf: "scarves", scarves: "scarves",
+  shawl: "scarves", wrap: "scarves",
+  // sunglasses
+  sunglasses: "sunglasses", sunglass: "sunglasses",
+  // watches
+  watch: "watches", watches: "watches",
+  // headpieces
+  headpiece: "headpieces", headpieces: "headpieces",
+  headband: "headpieces", fascinator: "headpieces", tiara: "headpieces",
+  // home
+  home: "home", decor: "home",
+  // wallets
   wallet: "wallets", wallets: "wallets",
   "coin purse": "wallets", cardholder: "wallets", "card holder": "wallets",
 };
@@ -50,7 +66,14 @@ const categoryAliases: Record<string, string> = {
 const categoryKeywords: Record<string, string[]> = {
   bags: ["bag", "clutch", "tote", "purse", "handbag", "pouch", "backpack", "rucksack", "satchel", "crossbody", "wristlet", "minaudiere"],
   shoes: ["heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer", "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford", "derby", "brogue", "trainer", "slide", "slingback", "mary jane", "moccasin"],
-  accessories: ["belt", "scarf", "hat", "sunglasses", "jewelry", "necklace", "bracelet", "earring", "watch", "ring", "wallet", "brooch", "pendant", "bangle", "choker", "anklet"],
+  accessories: ["belt", "scarf", "hat", "sunglass", "necklace", "bracelet", "earring", "watch", "ring", "brooch", "pendant", "bangle", "choker", "anklet", "jewelry", "jewel"],
+  jewelry: ["necklace", "bracelet", "earring", "ring", "brooch", "pendant", "bangle", "choker", "anklet", "locket", "cameo", "jewel", "gemstone", "pearl", "charm", "cuff", "stud", "pin", "jewellery"],
+  belts: ["belt"],
+  scarves: ["scarf", "shawl", "stole", "wrap", "pashmina", "bandana"],
+  sunglasses: ["sunglass", "eyewear", "eyeglasses"],
+  watches: ["watch", "timepiece"],
+  headpieces: ["headpiece", "headband", "barrette", "hairpin", "fascinator", "tiara", "hair clip", "hair bow", "hair comb", "hair slide", "scrunchie", "hair pin"],
+  home: ["vase", "plate", "cup", "mug", "bowl", "pitcher", "dish", "candle", "book", "figurine", "sculpture", "lamp", "mirror", "tray", "blanket", "pillow", "cushion", "ceramic", "pottery", "platter", "tumbler", "glassware", "kitchenware", "tableware", "decor", "frame", "basket", "textile", "linen", "napkin", "teapot", "carafe", "ashtray", "inkwell"],
   clothing: ["jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers", "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit", "jumpsuit", "romper", "shorts", "cape", "top", "hoodie", "sweatshirt", "tee", "t-shirt", "bodysuit", "corset", "tunic", "cami", "kimono"],
   tops: ["top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami", "bodysuit", "corset", "bustier", "halter", "polo", "henley", "tunic"],
   dresses: ["dress", "gown", "kaftan", "sundress"],
