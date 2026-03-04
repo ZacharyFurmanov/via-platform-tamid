@@ -321,18 +321,54 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[200px] shadow-xl border border-[#5D0F17]/10">
-                    <div className="py-2">
-                      {categories.map((cat) => (
+                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[340px] shadow-xl border border-[#5D0F17]/10">
+                    {/* Top-level categories */}
+                    <div className="py-2 border-b border-[#5D0F17]/10">
+                      {[
+                        { slug: "clothing", label: "Clothing" },
+                        { slug: "bags", label: "Bags" },
+                        { slug: "shoes", label: "Shoes" },
+                      ].map((cat) => (
                         <Link
                           key={cat.slug}
                           href={`/categories/${cat.slug}`}
                           onClick={() => setCategoriesDropdownOpen(false)}
-                          className="block px-6 py-3 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
+                          className="block px-6 py-2.5 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
                         >
                           {cat.label}
                         </Link>
                       ))}
+                    </div>
+                    {/* Accessories with subcategories */}
+                    <div className="px-6 pt-4 pb-3">
+                      <Link
+                        href="/categories/accessories"
+                        onClick={() => setCategoriesDropdownOpen(false)}
+                        className="block text-sm font-medium mb-3 hover:text-[#5D0F17]/60 transition-colors"
+                      >
+                        Accessories
+                      </Link>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                        {[
+                          { label: "Jewelry", q: "jewelry" },
+                          { label: "Belts", q: "belts" },
+                          { label: "Wallets", q: "wallets" },
+                          { label: "Headpieces", q: "headpieces" },
+                          { label: "Home", q: "home" },
+                          { label: "Sunglasses", q: "sunglasses" },
+                          { label: "Scarves", q: "scarves" },
+                          { label: "Watches", q: "watches" },
+                        ].map((sub) => (
+                          <Link
+                            key={sub.q}
+                            href={`/search?q=${sub.q}`}
+                            onClick={() => setCategoriesDropdownOpen(false)}
+                            className="text-sm text-[#5D0F17]/65 hover:text-[#5D0F17] transition-colors py-0.5"
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                     <div className="border-t border-[#5D0F17]/10">
                       <Link
@@ -479,7 +515,12 @@ export default function HeaderClient({
                     }`}
                   >
                     <div className="pb-4 pl-4 space-y-1">
-                      {categories.map((cat) => (
+                      {[
+                        { slug: "clothing", label: "Clothing" },
+                        { slug: "bags", label: "Bags" },
+                        { slug: "shoes", label: "Shoes" },
+                        { slug: "accessories", label: "Accessories" },
+                      ].map((cat) => (
                         <Link
                           key={cat.slug}
                           href={`/categories/${cat.slug}`}
@@ -489,6 +530,30 @@ export default function HeaderClient({
                           {cat.label}
                         </Link>
                       ))}
+                      <div className="pt-1 pb-1">
+                        <p className="text-[10px] uppercase tracking-widest text-[#5D0F17]/40 py-1">Accessories</p>
+                        <div className="grid grid-cols-2 gap-x-4">
+                          {[
+                            { label: "Jewelry", q: "jewelry" },
+                            { label: "Belts", q: "belts" },
+                            { label: "Wallets", q: "wallets" },
+                            { label: "Headpieces", q: "headpieces" },
+                            { label: "Home", q: "home" },
+                            { label: "Sunglasses", q: "sunglasses" },
+                            { label: "Scarves", q: "scarves" },
+                            { label: "Watches", q: "watches" },
+                          ].map((sub) => (
+                            <Link
+                              key={sub.q}
+                              href={`/search?q=${sub.q}`}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="block py-1.5 text-sm text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
+                            >
+                              {sub.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                       <Link
                         href="/categories"
                         onClick={() => setMobileMenuOpen(false)}

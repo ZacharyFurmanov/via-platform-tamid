@@ -41,7 +41,9 @@ const categoryAliases: Record<string, string> = {
   bracelet: "accessories", bracelets: "accessories",
   earring: "accessories", earrings: "accessories",
   watch: "accessories", watches: "accessories",
-  sunglasses: "accessories", wallet: "accessories", wallets: "accessories",
+  sunglasses: "accessories",
+  wallet: "wallets", wallets: "wallets",
+  "coin purse": "wallets", cardholder: "wallets", "card holder": "wallets",
 };
 
 // Category slug → title keywords for DB search
@@ -59,6 +61,7 @@ const categoryKeywords: Record<string, string[]> = {
   skirts: ["skirt", "sarong"],
   shorts: ["shorts"],
   jumpsuits: ["jumpsuit", "romper", "playsuit", "overall", "matching set"],
+  wallets: ["wallet", "coin purse", "card holder", "cardholder", "billfold", "card case"],
 };
 
 export async function GET(request: Request) {
@@ -127,6 +130,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
@@ -153,6 +157,7 @@ export async function GET(request: Request) {
               WHERE LOWER(title) ~* ${catRegex}
                 AND LOWER(title) LIKE ${modPattern}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+                AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -163,6 +168,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+                AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -178,6 +184,7 @@ export async function GET(request: Request) {
             FROM products
             WHERE LOWER(title) ~* ALL(${wordPatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+              AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -191,6 +198,7 @@ export async function GET(request: Request) {
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+            AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST
