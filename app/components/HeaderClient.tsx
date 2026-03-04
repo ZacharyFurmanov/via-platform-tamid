@@ -238,11 +238,11 @@ export default function HeaderClient({
 
       {/* Header */}
       <header className="fixed top-8 z-50 w-full bg-[#D8CABD]">
-        <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-[100px] flex items-center justify-between">
 
           {/* LOGO */}
           <Link href="/" className="flex items-center">
-            <img src="/via-logo.png" alt="VIA" className="h-14 sm:h-16 w-auto" />
+            <img src="/via-logo.png" alt="VIA" className="h-24 w-auto mix-blend-multiply" />
           </Link>
 
           <div className="flex items-center gap-3 md:gap-8">
