@@ -11,7 +11,7 @@ export const stores = [
     image: "/stores/ascensio-vintage.jpg",
     logo: "/stores/ascensio-vintage-logo.jpg",
     logoBg: "#ffffff",
-    currency: "GBP",
+    currency: "USD",
     affiliatePath: "1234",
     collabsStoreId: "228601",
     authenticityPolicy:
@@ -125,7 +125,7 @@ export const stores = [
     image: "/stores/house-on-a-chain.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
-    currency: "GBP",
+    currency: "USD",
     affiliatePath: "VIA-7",
     collabsStoreId: "230455",
     authenticityPolicy:
