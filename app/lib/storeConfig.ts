@@ -108,6 +108,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "sourced-by-scottie",
     storeDomain: "sourcedbyscottie.com",
   },
+  {
+    type: "shopify",
+    name: "Maison Optimism Vintage",
+    slug: "maison-optimism",
+    storeDomain: "maisonoptimismvintage.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

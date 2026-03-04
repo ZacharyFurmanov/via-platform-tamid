@@ -268,6 +268,28 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "maison-optimism",
+    dashboardToken: "mo-6b3d9f1c8e2a",
+    name: "Maison Optimism Vintage",
+    location: "Houston, TX",
+    description:
+      "Maison Optimism Vintage is a Houston-based luxury vintage brand specializing in 90s and early 2000s designer bags, shoes, and accessories. Each piece is hand-picked and curated for an iconic, timeless style.",
+    website: "https://www.maisonoptimismvintage.com",
+    dataSource: "maison-optimism",
+    image: "/stores/maison-optimism.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    affiliatePath: "VIA2026",
+    collabsStoreId: "230654",
+    authenticityPolicy:
+      "Every piece at Maison Optimism Vintage is hand-picked and personally curated before listing. Specializing in 90s and early 2000s luxury designer bags, shoes, and accessories, each item is selected for its iconic style and accurately described with any notable condition details disclosed.",
+    shippingPolicy:
+      "Ships from Houston, TX. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "vintari-vault",
     dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",
