@@ -137,6 +137,13 @@ export default function SyncAdminPage() {
               >
                 Giveaway
               </Link>
+              <span className="text-neutral-300">/</span>
+              <Link
+                href="/admin/editors-picks"
+                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
+              >
+                Editor&apos;s Picks
+              </Link>
             </div>
             <button
               onClick={handleLogout}
@@ -475,6 +482,12 @@ export default function SyncAdminPage() {
               className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
             >
               Giveaway
+            </Link>
+            <Link
+              href="/admin/editors-picks"
+              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
+            >
+              Editor&apos;s Picks
             </Link>
           </div>
         </div>

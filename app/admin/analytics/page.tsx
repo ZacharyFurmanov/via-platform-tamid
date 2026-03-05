@@ -159,6 +159,13 @@ export default function AnalyticsPage() {
               >
                 Customers
               </Link>
+              <span className="text-neutral-300">/</span>
+              <Link
+                href="/admin/editors-picks"
+                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
+              >
+                Editor&apos;s Picks
+              </Link>
             </div>
             <button
               onClick={handleLogout}
