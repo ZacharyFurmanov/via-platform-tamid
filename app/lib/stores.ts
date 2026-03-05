@@ -335,6 +335,35 @@ export const stores = [
   },
 ];
 
+/**
+ * Store contact emails for sourcing request notifications.
+ * Fill in each store's email address — leave blank to skip that store.
+ */
+export const storeContactEmails: Record<string, string> = {
+  "ascensio-vintage": "info@ascensiovintage.com",
+  "lei-vintage": "shop@leivintage.com",
+  "lover-girl-vintage": "lexi.heuser@gmail.com",
+  "missi-archives": "missiarchives@gmail.com",
+  "scarz-vintage": "contact@scarzvintage.com",
+  "house-on-a-chain": "houseonachain@gmail.com",
+  "source-twenty-four": "sourcetwentyfour@gmail.com",
+  "vintage-archives-la": "vintagearchivesla@gmail.com",
+  "the-objects-of-affection": "mackenzie@theobjectsofaffection.com",
+  "vangie": "evan@vangie.co",
+  "sourced-by-scottie": "emma@scottiestudios.com",
+  "to-us-vintage": "KScarrone@gmail.com",
+  "moonstruck-vintage": "moonstruckvintagenyc@gmail.com",
+  "maison-optimism-vintage": "maisonoptimism@gmail.com",
+  "vintari-vault": "admin@vintarivault.com",
+  // Styelled — not yet on the site but included in sourcing notifications
+  "styelled": "Amandasweetwood@gmail.com",
+};
+
+/** Returns all non-empty store contact emails */
+export function getAllStoreEmails(): string[] {
+  return Object.values(storeContactEmails).filter(Boolean);
+}
+
 // Approximate exchange rates to USD (update periodically)
 const exchangeRatesToUSD: Record<string, number> = {
   USD: 1,

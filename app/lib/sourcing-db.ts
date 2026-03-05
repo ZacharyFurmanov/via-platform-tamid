@@ -21,6 +21,8 @@ export type SourcingRequest = {
   stripeSessionId: string | null;
   status: "pending_payment" | "paid" | "matched" | "refunded";
   createdAt: string;
+  matchedStoreSlug: string | null;
+  matchedStoreAt: string | null;
 };
 
 async function initSourcingTable(): Promise<void> {
@@ -50,6 +52,9 @@ async function initSourcingTable(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_sourcing_stripe_session ON sourcing_requests(stripe_session_id)
       WHERE stripe_session_id IS NOT NULL
   `;
+  // Idempotent migrations for store claiming
+  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_slug TEXT`;
+  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_at TIMESTAMPTZ`;
 }
 
 function generateRequestId(): string {
@@ -72,6 +77,10 @@ function mapRow(row: Record<string, unknown>): SourcingRequest {
     stripeSessionId: row.stripe_session_id as string | null,
     status: row.status as SourcingRequest["status"],
     createdAt: (row.created_at as Date).toISOString(),
+    matchedStoreSlug: row.matched_store_slug as string | null,
+    matchedStoreAt: row.matched_store_at
+      ? (row.matched_store_at as Date).toISOString()
+      : null,
   };
 }
 
@@ -149,4 +158,48 @@ export async function getUserSourcingRequests(userId: string): Promise<SourcingR
     ORDER BY created_at DESC
   `;
   return rows.map(mapRow);
+}
+
+export async function getOpenSourcingRequests(): Promise<SourcingRequest[]> {
+  const sql = neon(getDatabaseUrl());
+  await initSourcingTable();
+
+  const rows = await sql`
+    SELECT * FROM sourcing_requests
+    WHERE status = 'paid' AND matched_store_slug IS NULL
+    ORDER BY created_at ASC
+  `;
+  return rows.map(mapRow);
+}
+
+export async function getSourcingRequestsByStore(storeSlug: string): Promise<SourcingRequest[]> {
+  const sql = neon(getDatabaseUrl());
+  await initSourcingTable();
+
+  const rows = await sql`
+    SELECT * FROM sourcing_requests
+    WHERE matched_store_slug = ${storeSlug}
+    ORDER BY matched_store_at DESC
+  `;
+  return rows.map(mapRow);
+}
+
+export async function claimSourcingRequest(
+  id: string,
+  storeSlug: string
+): Promise<{ success: boolean; error?: string }> {
+  const sql = neon(getDatabaseUrl());
+  await initSourcingTable();
+
+  const rows = await sql`
+    UPDATE sourcing_requests
+    SET status = 'matched', matched_store_slug = ${storeSlug}, matched_store_at = NOW()
+    WHERE id = ${id} AND status = 'paid' AND matched_store_slug IS NULL
+    RETURNING id
+  `;
+
+  if (rows.length === 0) {
+    return { success: false, error: "Already claimed" };
+  }
+  return { success: true };
 }

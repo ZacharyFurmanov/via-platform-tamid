@@ -116,31 +116,6 @@ export default function AccountActions({
           </button>
         </div>
 
-        {/* Your Data */}
-        <div className="flex items-center justify-between pb-6 border-b border-neutral-100">
-          <div>
-            <h3 className="text-sm font-medium mb-1">Your Data</h3>
-            <p className="text-xs text-black/50">Download a copy of everything VIA stores about you</p>
-          </div>
-          <button
-            onClick={async () => {
-              const res = await fetch("/api/account/data");
-              if (res.ok) {
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `via-data-export-${new Date().toISOString().split("T")[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }
-            }}
-            className="text-sm uppercase tracking-wide px-4 py-2 border border-black hover:bg-black hover:text-white transition"
-          >
-            Download
-          </button>
-        </div>
-
         {/* Sign Out & Delete */}
         <div className="flex items-center justify-between pt-2">
           <button

@@ -3,6 +3,7 @@ import { generateClickId } from "@/app/lib/track";
 import { saveClick, saveProductView } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 import { getCollabsLink, getAnyCollabsLinkForStore } from "@/app/lib/db";
+import { auth } from "@/app/lib/auth";
 
 /** POST /api/track — record a product page view (fire-and-forget from client) */
 export async function POST(request: NextRequest) {
@@ -91,6 +92,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
+  // Resolve logged-in user (non-blocking — anonymous clicks still work)
+  const session = await auth().catch(() => null);
+  const userId = session?.user?.id ?? null;
+
   // Generate click ID for attribution
   const clickId = generateClickId();
 
@@ -104,6 +109,7 @@ export async function GET(request: NextRequest) {
     storeSlug: storeSlug || "unknown",
     externalUrl,
     userAgent: request.headers.get("user-agent") || undefined,
+    userId,
   }).catch(console.error);
 
   // ---- Cart URLs (single and multi-item Shopify checkout) ----

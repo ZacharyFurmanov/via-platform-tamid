@@ -4,7 +4,9 @@ import {
   setMemberActive,
   setMemberCancelled,
 } from "@/app/lib/membership-db";
-import { sendMembershipConfirmation } from "@/app/lib/email";
+import { sendMembershipConfirmation, sendSourcingConfirmationToUser, sendSourcingRequestToStores } from "@/app/lib/email";
+import { markSourcingRequestPaid, getSourcingRequestBySession } from "@/app/lib/sourcing-db";
+import { getAllStoreEmails } from "@/app/lib/stores";
 
 // Verify Stripe webhook signature without the SDK
 async function verifyStripeSignature(
@@ -64,6 +66,43 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
+
+        // Handle sourcing request payment
+        if (session.mode === "payment" && (session.metadata as Record<string, string>)?.type === "sourcing_request") {
+          const stripeSessionId = session.id as string;
+          const request = await markSourcingRequestPaid(stripeSessionId);
+          if (request) {
+            const details = {
+              userEmail: request.userEmail,
+              userName: request.userName,
+              description: request.description,
+              priceMin: request.priceMin,
+              priceMax: request.priceMax,
+              condition: request.condition,
+              size: request.size,
+              deadline: request.deadline,
+              imageUrl: request.imageUrl,
+            };
+            // Send confirmation to customer
+            try {
+              await sendSourcingConfirmationToUser(details);
+            } catch (err) {
+              console.error("Failed to send sourcing confirmation to user:", err);
+            }
+            // Send notification to VIA + all stores
+            try {
+              await sendSourcingRequestToStores(getAllStoreEmails(), details);
+            } catch (err) {
+              console.error("Failed to send sourcing request to stores:", err);
+            }
+          } else {
+            // May already be processed — look it up for logging
+            const existing = await getSourcingRequestBySession(stripeSessionId).catch(() => null);
+            console.log(`Sourcing webhook: session ${stripeSessionId} — status: ${existing?.status ?? "not found"}`);
+          }
+          break;
+        }
+
         if (session.mode !== "subscription") break;
 
         const customerId = session.customer as string;

@@ -510,6 +510,102 @@ export async function getCustomerSummaries(): Promise<CustomerSummary[]> {
   }));
 }
 
+export type InventoryStats = {
+  productCount: number;
+  inventoryValue: number;
+  potentialCommission: number;
+  tier1Count: number; // < $1k @ 7%
+  tier2Count: number; // $1k–$5k @ 5%
+  tier3Count: number; // > $5k @ 3%
+  byStore: Array<{
+    storeSlug: string;
+    productCount: number;
+    inventoryValue: number;
+    potentialCommission: number;
+  }>;
+};
+
+export async function getInventoryStats(): Promise<InventoryStats> {
+  const sql = neon(getDatabaseUrl());
+
+  const [summaryRows, storeRows] = await Promise.all([
+    sql`
+      WITH converted AS (
+        SELECT
+          store_slug,
+          price * CASE currency
+            WHEN 'GBP' THEN 1.26
+            WHEN 'EUR' THEN 1.08
+            WHEN 'CAD' THEN 0.74
+            WHEN 'AUD' THEN 0.65
+            ELSE 1
+          END AS price_usd
+        FROM products
+        WHERE price > 0
+      )
+      SELECT
+        COUNT(*)::int AS product_count,
+        COALESCE(SUM(price_usd), 0)::numeric AS inventory_value,
+        COALESCE(SUM(
+          CASE
+            WHEN price_usd < 1000 THEN price_usd * 0.07
+            WHEN price_usd <= 5000 THEN price_usd * 0.05
+            ELSE price_usd * 0.03
+          END
+        ), 0)::numeric AS potential_commission,
+        COUNT(CASE WHEN price_usd < 1000 THEN 1 END)::int AS tier1_count,
+        COUNT(CASE WHEN price_usd >= 1000 AND price_usd <= 5000 THEN 1 END)::int AS tier2_count,
+        COUNT(CASE WHEN price_usd > 5000 THEN 1 END)::int AS tier3_count
+      FROM converted
+    `,
+    sql`
+      WITH converted AS (
+        SELECT
+          store_slug,
+          price * CASE currency
+            WHEN 'GBP' THEN 1.26
+            WHEN 'EUR' THEN 1.08
+            WHEN 'CAD' THEN 0.74
+            WHEN 'AUD' THEN 0.65
+            ELSE 1
+          END AS price_usd
+        FROM products
+        WHERE price > 0
+      )
+      SELECT
+        store_slug,
+        COUNT(*)::int AS product_count,
+        COALESCE(SUM(price_usd), 0)::numeric AS inventory_value,
+        COALESCE(SUM(
+          CASE
+            WHEN price_usd < 1000 THEN price_usd * 0.07
+            WHEN price_usd <= 5000 THEN price_usd * 0.05
+            ELSE price_usd * 0.03
+          END
+        ), 0)::numeric AS potential_commission
+      FROM converted
+      GROUP BY store_slug
+      ORDER BY inventory_value DESC
+    `,
+  ]);
+
+  const s = summaryRows[0];
+  return {
+    productCount: s.product_count as number,
+    inventoryValue: Number(s.inventory_value),
+    potentialCommission: Number(s.potential_commission),
+    tier1Count: s.tier1_count as number,
+    tier2Count: s.tier2_count as number,
+    tier3Count: s.tier3_count as number,
+    byStore: storeRows.map((r) => ({
+      storeSlug: r.store_slug as string,
+      productCount: r.product_count as number,
+      inventoryValue: Number(r.inventory_value),
+      potentialCommission: Number(r.potential_commission),
+    })),
+  };
+}
+
 function mapConversionRow(row: Record<string, unknown>): ConversionRecord {
   return {
     conversionId: row.conversion_id as string,

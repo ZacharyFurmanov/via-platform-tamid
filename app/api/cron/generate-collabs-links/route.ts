@@ -46,10 +46,14 @@ export async function GET(request: Request) {
 
   // Get all products missing collabs links from VIA's database
   const missingProducts = await getProductsMissingCollabsLink();
-  const missingByShopifyId = new Set(
+  const missingByShopifyId = new Map<string, string>(
     missingProducts
       .filter((p) => p.shopify_product_id && COLLABS_STORE_SLUGS.has(p.store_slug))
-      .map((p) => p.shopify_product_id!)
+      .map((p) => {
+        const dbId = p.shopify_product_id!;
+        const numericId = dbId.match(/(\d+)$/)?.[1] ?? dbId;
+        return [numericId, dbId] as [string, string];
+      })
   );
 
   console.log(
@@ -92,7 +96,8 @@ export async function GET(request: Request) {
 
     for (const product of collabsProducts) {
       const shopifyId = product.shopifyProductId?.match(/(\d+)$/)?.[1];
-      if (!shopifyId || !missingByShopifyId.has(shopifyId)) continue;
+      const dbShopifyId = shopifyId ? missingByShopifyId.get(shopifyId) : undefined;
+      if (!shopifyId || !dbShopifyId) continue;
 
       let collabsUrl = product.affiliateProduct?.url || null;
 
@@ -122,7 +127,7 @@ export async function GET(request: Request) {
       }
 
       if (collabsUrl) {
-        await updateCollabsLinkByShopifyProductId(shopifyId, collabsUrl);
+        await updateCollabsLinkByShopifyProductId(dbShopifyId, collabsUrl);
         storeSaved++;
         totalSaved++;
         missingByShopifyId.delete(shopifyId);

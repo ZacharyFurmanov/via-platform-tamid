@@ -33,13 +33,6 @@ export default function EditorsPicks() {
   const [toggling, setToggling] = useState<number | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Check admin auth on mount
-  useEffect(() => {
-    const cookie = document.cookie.split(";").find((c) => c.trim().startsWith("via_admin_token="));
-    if (!cookie) {
-      router.replace("/admin/login?redirect=/admin/editors-picks");
-    }
-  }, [router]);
 
   // Load current picks
   const loadPicks = useCallback(async () => {

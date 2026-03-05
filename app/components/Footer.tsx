@@ -27,7 +27,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
-              <img src="/via-logo.png" alt="VIA" className="h-8 sm:h-10 w-auto" />
+              <img src="/via-logo.png" alt="VIA" className="h-9 sm:h-11 w-auto" />
             </Link>
             <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
               Vintage and secondhand from independent stores across the country. Discover pieces with stories.
@@ -84,6 +84,7 @@ export default function Footer() {
                 { href: "/stores", label: "Our Stores" },
                 { href: "/categories", label: "Categories" },
                 { href: "/brands", label: "Designers" },
+                { href: "/account/sourcing", label: "Sourcing Request" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link

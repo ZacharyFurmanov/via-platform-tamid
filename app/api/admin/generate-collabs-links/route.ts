@@ -77,12 +77,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Get products missing collabs links from VIA's database
+  // Get products missing collabs links from VIA's database.
+  // Build a map from numeric Shopify ID → the exact DB value (may be a full GID
+  // like "gid://shopify/Product/12345" or just the numeric string — normalise
+  // to the numeric suffix so it matches what the Collabs API returns).
   const missingProducts = await getProductsMissingCollabsLink(storeSlug);
-  const missingByShopifyId = new Set(
+  // numericId → dbShopifyId (the exact string stored in the DB, used for the UPDATE)
+  const missingByShopifyId = new Map<string, string>(
     missingProducts
       .filter((p) => p.shopify_product_id && COLLABS_STORE_SLUGS.has(p.store_slug))
-      .map((p) => p.shopify_product_id!)
+      .map((p) => {
+        const dbId = p.shopify_product_id!;
+        const numericId = dbId.match(/(\d+)$/)?.[1] ?? dbId;
+        return [numericId, dbId] as [string, string];
+      })
   );
 
   const encoder = new TextEncoder();
@@ -100,6 +108,7 @@ export async function POST(request: NextRequest) {
       }
 
       send({ type: "start", stores: targetStores.length, missingInDb: missingByShopifyId.size });
+
 
       for (const store of targetStores) {
         send({ type: "store", store: store.name, slug: store.slug });
@@ -129,7 +138,8 @@ export async function POST(request: NextRequest) {
         for (const product of collabsProducts) {
           // Extract the numeric Shopify product ID from the GID
           const shopifyId = product.shopifyProductId?.match(/(\d+)$/)?.[1];
-          if (!shopifyId || !missingByShopifyId.has(shopifyId)) {
+          const dbShopifyId = shopifyId ? missingByShopifyId.get(shopifyId) : undefined;
+          if (!shopifyId || !dbShopifyId) {
             skipped++;
             continue;
           }
@@ -175,9 +185,9 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Save to VIA's database
+          // Save to VIA's database using the exact ID stored in DB
           if (collabsUrl) {
-            await updateCollabsLinkByShopifyProductId(shopifyId, collabsUrl);
+            await updateCollabsLinkByShopifyProductId(dbShopifyId, collabsUrl);
             saved++;
             missingByShopifyId.delete(shopifyId);
 

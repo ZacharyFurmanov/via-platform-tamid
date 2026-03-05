@@ -58,12 +58,29 @@ type ConversionData = {
 
 type DateRange = "7d" | "30d" | "all";
 
+type InventoryStats = {
+  productCount: number;
+  inventoryValue: number;
+  potentialCommission: number;
+  tier1Count: number;
+  tier2Count: number;
+  tier3Count: number;
+  byStore: Array<{
+    storeSlug: string;
+    productCount: number;
+    inventoryValue: number;
+    potentialCommission: number;
+  }>;
+};
+
 export default function AnalyticsPage() {
   const [clickData, setClickData] = useState<AnalyticsData | null>(null);
   const [conversionData, setConversionData] = useState<ConversionData | null>(null);
+  const [inventoryData, setInventoryData] = useState<InventoryStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [inventoryLoading, setInventoryLoading] = useState(true);
   const [range, setRange] = useState<DateRange>("all");
-  const [activeTab, setActiveTab] = useState<"clicks" | "conversions">("clicks");
+  const [activeTab, setActiveTab] = useState<"clicks" | "conversions" | "inventory">("clicks");
   const router = useRouter();
 
   async function handleLogout() {
@@ -92,6 +109,21 @@ export default function AnalyticsPage() {
     }
     fetchAnalytics();
   }, [range]);
+
+  useEffect(() => {
+    async function fetchInventory() {
+      setInventoryLoading(true);
+      try {
+        const res = await fetch("/api/admin/inventory");
+        if (res.ok) setInventoryData(await res.json());
+      } catch {
+        // ignore
+      } finally {
+        setInventoryLoading(false);
+      }
+    }
+    fetchInventory();
+  }, []);
 
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -232,6 +264,16 @@ export default function AnalyticsPage() {
                 }`}
               >
                 Conversions
+              </button>
+              <button
+                onClick={() => setActiveTab("inventory")}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeTab === "inventory"
+                    ? "bg-white shadow-sm"
+                    : "hover:bg-neutral-200"
+                }`}
+              >
+                Inventory
               </button>
             </div>
 
@@ -395,6 +437,108 @@ export default function AnalyticsPage() {
             </>
           )}
         </>
+      ) : activeTab === "inventory" ? (
+        /* ==================== INVENTORY TAB ==================== */
+        inventoryLoading ? (
+          <div className="max-w-7xl mx-auto px-6 py-16 text-center text-neutral-500">
+            Loading inventory...
+          </div>
+        ) : !inventoryData ? (
+          <div className="max-w-7xl mx-auto px-6 py-16 text-center text-neutral-500">
+            Failed to load inventory data.
+          </div>
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <section className="py-12 sm:py-16 border-b border-neutral-200">
+              <div className="max-w-7xl mx-auto px-6">
+                <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Inventory Overview</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+                  <div className="bg-neutral-50 p-6">
+                    <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Total Products</p>
+                    <p className="text-3xl font-serif">{inventoryData.productCount.toLocaleString()}</p>
+                    <p className="text-sm text-neutral-500 mt-1">live across all stores</p>
+                  </div>
+                  <div className="bg-neutral-50 p-6">
+                    <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Inventory Value</p>
+                    <p className="text-3xl font-serif">{formatCurrency(inventoryData.inventoryValue)}</p>
+                    <p className="text-sm text-neutral-500 mt-1">total retail (USD equiv.)</p>
+                  </div>
+                  <div className="bg-green-50 p-6">
+                    <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Potential Commission</p>
+                    <p className="text-3xl font-serif text-green-800">{formatCurrency(inventoryData.potentialCommission)}</p>
+                    <p className="text-sm text-green-600 mt-1">if all inventory sells</p>
+                  </div>
+                </div>
+
+                {/* Commission Tiers */}
+                <h3 className="text-sm font-medium uppercase tracking-wide text-neutral-500 mb-4">By Commission Tier</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="border border-neutral-200 p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs uppercase tracking-wide text-neutral-500">Tier 1 · 7%</p>
+                      <span className="text-xs bg-neutral-100 px-2 py-0.5">Under $1,000</span>
+                    </div>
+                    <p className="text-2xl font-serif mb-1">{inventoryData.tier1Count.toLocaleString()}</p>
+                    <p className="text-sm text-neutral-400">products</p>
+                  </div>
+                  <div className="border border-neutral-200 p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs uppercase tracking-wide text-neutral-500">Tier 2 · 5%</p>
+                      <span className="text-xs bg-neutral-100 px-2 py-0.5">$1,000–$5,000</span>
+                    </div>
+                    <p className="text-2xl font-serif mb-1">{inventoryData.tier2Count.toLocaleString()}</p>
+                    <p className="text-sm text-neutral-400">products</p>
+                  </div>
+                  <div className="border border-neutral-200 p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs uppercase tracking-wide text-neutral-500">Tier 3 · 3%</p>
+                      <span className="text-xs bg-neutral-100 px-2 py-0.5">Over $5,000</span>
+                    </div>
+                    <p className="text-2xl font-serif mb-1">{inventoryData.tier3Count.toLocaleString()}</p>
+                    <p className="text-sm text-neutral-400">products</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* By Store */}
+            <section className="py-12 sm:py-16">
+              <div className="max-w-7xl mx-auto px-6">
+                <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Inventory by Store</h2>
+                <div className="border border-neutral-200">
+                  <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 border-b border-neutral-200">
+                    <div className="col-span-4">Store</div>
+                    <div className="col-span-2 text-right">Products</div>
+                    <div className="col-span-3 text-right">Inventory Value</div>
+                    <div className="col-span-3 text-right">Potential Commission</div>
+                  </div>
+                  {inventoryData.byStore.map((store) => (
+                    <div key={store.storeSlug} className="px-4 sm:px-6 py-4 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50">
+                      <div className="sm:hidden">
+                        <p className="font-medium text-sm mb-1">{store.storeSlug}</p>
+                        <div className="flex justify-between text-sm text-neutral-600">
+                          <span>{store.productCount.toLocaleString()} products</span>
+                          <span className="text-green-700 font-medium">{formatCurrency(store.potentialCommission)}</span>
+                        </div>
+                        <p className="text-xs text-neutral-400 mt-0.5">{formatCurrency(store.inventoryValue)} inventory</p>
+                      </div>
+                      <div className="hidden sm:grid grid-cols-12 gap-4 items-center text-sm">
+                        <div className="col-span-4 font-medium">{store.storeSlug}</div>
+                        <div className="col-span-2 text-right tabular-nums">{store.productCount.toLocaleString()}</div>
+                        <div className="col-span-3 text-right tabular-nums">{formatCurrency(store.inventoryValue)}</div>
+                        <div className="col-span-3 text-right tabular-nums text-green-700 font-medium">{formatCurrency(store.potentialCommission)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-neutral-400 mt-4">
+                  Commission rates: 7% on items under $1,000 · 5% on $1,000–$5,000 · 3% on items over $5,000. Values converted to USD.
+                </p>
+              </div>
+            </section>
+          </>
+        )
       ) : (
         /* ==================== CONVERSIONS TAB ==================== */
         <>

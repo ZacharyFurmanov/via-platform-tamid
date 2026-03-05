@@ -318,3 +318,91 @@ export async function sendInsiderNewArrivalsEmail(
 
   return { sent, failed };
 }
+
+export type SourcingEmailDetails = {
+  userEmail: string;
+  userName: string | null;
+  description: string;
+  priceMin: number;
+  priceMax: number;
+  condition: string;
+  size: string | null;
+  deadline: string;
+  imageUrl: string | null;
+};
+
+/** Confirmation email sent to the user after payment */
+export async function sendSourcingConfirmationToUser(details: SourcingEmailDetails) {
+  const resend = getResend();
+
+  const imageBlock = details.imageUrl
+    ? `<div style="text-align: center; margin: 20px 0;">
+         <img src="${details.imageUrl}" alt="Your sourcing request" style="max-width: 100%; max-height: 320px; object-fit: contain;" />
+       </div>`
+    : "";
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: details.userEmail,
+    subject: "Your sourcing request has been received — VIA",
+    html: emailShell(`
+      <h2>We're on it.</h2>
+      <p>Your sourcing request has been received and your $20 fee has been processed. We'll reach out within 14 business days if we find a match.</p>
+      ${imageBlock}
+      <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+        <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Description</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.description}</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Budget</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">$${details.priceMin} – $${details.priceMax}</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Condition</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.condition}</td></tr>
+        ${details.size ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Size</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.size}</td></tr>` : ""}
+        <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
+      </table>
+      <p class="muted" style="font-size:13px;">If we can't find a match within 14 business days, your $20 fee will be fully refunded.</p>
+    `),
+  });
+}
+
+/** Notification sent to hana@ and all store emails */
+export async function sendSourcingRequestToStores(
+  storeEmails: string[],
+  details: SourcingEmailDetails
+): Promise<void> {
+  const resend = getResend();
+  const VIA_EMAIL = "hana@theviaplatform.com";
+
+  const imageBlock = details.imageUrl
+    ? `<div style="text-align: center; margin: 20px 0;">
+         <img src="${details.imageUrl}" alt="Sourcing request item" style="max-width: 100%; max-height: 320px; object-fit: contain;" />
+       </div>`
+    : "";
+
+  const html = emailShell(`
+    <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);margin:0 0 8px;">Sourcing Request from VIA</p>
+    <h2 style="margin-bottom:20px;">New Sourcing Request</h2>
+    ${imageBlock}
+    <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);width:120px;">Customer</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.userName || "—"} &lt;${details.userEmail}&gt;</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Description</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.description}</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Budget</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">$${details.priceMin} – $${details.priceMax}</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Condition</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.condition}</td></tr>
+      ${details.size ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Size</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.size}</td></tr>` : ""}
+      <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
+    </table>
+    <p class="muted" style="font-size:13px;">If you have an item that matches this request, reply directly to the customer at <a href="mailto:${details.userEmail}" style="color:#5D0F17;">${details.userEmail}</a>.</p>
+  `);
+
+  const isDev = process.env.NODE_ENV === "development";
+  const allRecipients = isDev ? [VIA_EMAIL] : [VIA_EMAIL, ...storeEmails];
+
+  for (const email of allRecipients) {
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "Sourcing Request from VIA",
+        html,
+      });
+    } catch (err) {
+      console.error(`Failed to send sourcing request email to ${email}:`, err);
+    }
+  }
+}

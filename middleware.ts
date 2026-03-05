@@ -26,6 +26,12 @@ const PUBLIC_ROUTES = [
   "/api/admin/send-new-arrivals",
   "/api/editors-picks",
   "/api/admin/editors-picks",
+  // Store API routes do their own session auth
+  "/api/store/me",
+  "/api/store/analytics",
+  "/api/store/sourcing",
+  // Store login page — accessible to anyone (no access code needed)
+  "/store/login",
 ];
 
 // Routes that require the access code cookie but not a full user session
@@ -45,7 +51,7 @@ const ACCESS_CODE_ROUTES = [
 
 // Routes that require user authentication (Auth.js session)
 // Now all non-public, non-admin routes require auth
-const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends", "/api/membership"];
+const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends", "/api/membership", "/store/dashboard"];
 
 // Simple hash function for admin password comparison
 function hashPassword(password: string): string {
@@ -151,6 +157,10 @@ export function middleware(request: NextRequest) {
   // User-auth routes: require Auth.js session
   if (isUserAuthRoute(pathname)) {
     if (!hasUserSession(request)) {
+      // Store dashboard always redirects to store login (no access code required)
+      if (pathname.startsWith("/store/")) {
+        return NextResponse.redirect(new URL("/store/login", request.url));
+      }
       if (!hasAccessCode(request)) {
         return NextResponse.redirect(new URL("/waitlist", request.url));
       }
