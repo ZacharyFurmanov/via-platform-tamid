@@ -154,6 +154,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    // Dev bypass: skip OTP on localhost
+    if (process.env.NODE_ENV === "development") {
+      const cookieStore = await cookies();
+      cookieStore.set("via_admin_token", hashPassword(expectedPassword), {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+      return NextResponse.json({ success: true });
+    }
+
     // Step 1: password only — generate and send OTP
     const otp = generateOtp();
     const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes

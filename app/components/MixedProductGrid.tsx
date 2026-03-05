@@ -24,9 +24,11 @@ function isFeature(index: number): boolean {
 export default function MixedProductGrid({
   products,
   from,
+  allEditorsPicks,
 }: {
   products: GridProduct[];
   from?: string;
+  allEditorsPicks?: boolean;
 }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -54,6 +56,7 @@ export default function MixedProductGrid({
               images={images}
               size={product.size}
               from={from}
+              isEditorsPick={allEditorsPicks}
             />
           </div>
         );

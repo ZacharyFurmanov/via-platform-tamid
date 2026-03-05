@@ -152,6 +152,13 @@ export default function AnalyticsPage() {
               >
                 Giveaway
               </Link>
+              <span className="text-neutral-300">/</span>
+              <Link
+                href="/admin/customers"
+                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
+              >
+                Customers
+              </Link>
             </div>
             <button
               onClick={handleLogout}
@@ -587,6 +594,12 @@ export default function AnalyticsPage() {
               className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
             >
               Giveaway
+            </Link>
+            <Link
+              href="/admin/customers"
+              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
+            >
+              Customers
             </Link>
           </div>
         </div>

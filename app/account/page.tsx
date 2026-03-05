@@ -3,6 +3,8 @@ import Link from "next/link";
 import { auth } from "@/app/lib/auth";
 import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
+import { getUserPurchaseHistory, getUserClickHistory } from "@/app/lib/analytics-db";
+import { getUserSourcingRequests, type SourcingRequest } from "@/app/lib/sourcing-db";
 import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
@@ -38,14 +40,20 @@ export default async function AccountPage() {
   let favCounts: Record<number, number> = {};
   let isMember = false;
   let memberSince: Date | null = null;
+  let purchases: Awaited<ReturnType<typeof getUserPurchaseHistory>> = [];
+  let recentClicks: Awaited<ReturnType<typeof getUserClickHistory>> = [];
+  let sourcingRequests: SourcingRequest[] = [];
 
   if (userId) {
     try {
-      const [products, storeSlugs, settings, membershipStatus] = await Promise.all([
+      const [products, storeSlugs, settings, membershipStatus, userPurchases, userClicks, userSourcing] = await Promise.all([
         getUserFavoritedProducts(userId),
         getUserStoreFavoriteIds(userId),
         getUserSettings(userId),
         getUserMembershipStatus(userId).catch(() => ({ isMember: false, memberSince: null })),
+        getUserPurchaseHistory(userId).catch(() => []),
+        getUserClickHistory(userId).catch(() => []),
+        getUserSourcingRequests(userId).catch(() => []),
       ]);
       favProducts = products;
       favStoreSlugs = storeSlugs;
@@ -53,6 +61,9 @@ export default async function AccountPage() {
       userPhone = settings.phone;
       isMember = membershipStatus.isMember;
       memberSince = membershipStatus.memberSince;
+      purchases = userPurchases;
+      recentClicks = userClicks;
+      sourcingRequests = userSourcing;
       if (favProducts.length > 0) {
         favCounts = await getProductFavoriteCounts(favProducts.map((p) => p.id));
       }
@@ -241,6 +252,160 @@ export default async function AccountPage() {
                   <p className="text-sm text-[#5D0F17]/50">{store.location}</p>
                 </a>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* ===== Purchase History ===== */}
+        {(purchases.length > 0 || recentClicks.length > 0) && (
+          <section className="py-12 border-b border-[#5D0F17]/10">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="font-serif text-xl italic text-[#5D0F17]/80">Purchase History</h2>
+              <div className="flex-1 h-px bg-[#5D0F17]/15" />
+            </div>
+
+            {purchases.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {purchases.map((p) => (
+                  <div
+                    key={p.conversionId}
+                    className="border border-[#5D0F17]/15 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {p.matchedClickData?.productName || p.storeName}
+                      </p>
+                      <p className="text-xs text-[#5D0F17]/50 mt-0.5">
+                        {p.storeName} &middot;{" "}
+                        {new Date(p.timestamp).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium tabular-nums shrink-0">
+                      ${p.orderTotal.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mb-8">
+                <p className="text-sm text-[#5D0F17]/40">No confirmed purchases yet.</p>
+              </div>
+            )}
+
+            {recentClicks.length > 0 && (
+              <>
+                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/40 mt-8 mb-4">
+                  Recently Browsed
+                </p>
+                <div className="flex flex-col gap-2">
+                  {recentClicks.slice(0, 10).map((c) => (
+                    <div
+                      key={c.clickId}
+                      className="flex items-center justify-between py-2.5 border-b border-[#5D0F17]/5 last:border-0"
+                    >
+                      <div>
+                        <p className="text-sm">{c.productName}</p>
+                        <p className="text-xs text-[#5D0F17]/40">{c.store}</p>
+                      </div>
+                      <p className="text-xs text-[#5D0F17]/40 shrink-0 ml-4">
+                        {new Date(c.timestamp).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* ===== Sourcing Requests ===== */}
+        <section className="py-12 border-b border-[#5D0F17]/10">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">Sourcing Requests</h2>
+            <div className="flex-1 h-px bg-[#5D0F17]/15" />
+            <Link
+              href="/account/sourcing"
+              className="shrink-0 text-xs uppercase tracking-[0.15em] px-4 py-2 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
+            >
+              + New Request
+            </Link>
+          </div>
+
+          {sourcingRequests.length === 0 ? (
+            <div className="border border-[#5D0F17]/15 p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <p className="font-serif text-lg mb-1">Can&apos;t find what you&apos;re looking for?</p>
+                <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
+                  Submit a sourcing request and we&apos;ll find it from our network of stores within 14 business days.
+                </p>
+              </div>
+              <Link
+                href="/account/sourcing"
+                className="shrink-0 text-center text-sm uppercase tracking-[0.15em] px-6 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
+              >
+                Request Here
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {sourcingRequests.map((req) => (
+                  <Link
+                    key={req.id}
+                    href={`/account/sourcing/${req.id}`}
+                    className="border border-[#5D0F17]/15 p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 hover:border-[#5D0F17] hover:bg-[#D8CABD]/10 transition"
+                  >
+                    <div className="flex gap-4">
+                      {req.imageUrl && (
+                        <img
+                          src={req.imageUrl}
+                          alt=""
+                          className="w-14 h-14 object-cover shrink-0 border border-[#5D0F17]/10"
+                        />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium leading-snug line-clamp-2">{req.description}</p>
+                        <p className="text-xs text-[#5D0F17]/50 mt-1">
+                          ${req.priceMin}–${req.priceMax} &middot; {req.condition}
+                          {req.size ? ` · Size ${req.size}` : ""} &middot; by {req.deadline}
+                        </p>
+                        <p className="text-xs text-[#5D0F17]/30 mt-1">
+                          {new Date(req.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 self-start text-[9px] uppercase tracking-widest px-2 py-1 ${
+                        req.status === "matched"
+                          ? "bg-green-100 text-green-800"
+                          : req.status === "refunded"
+                          ? "bg-[#D8CABD]/50 text-[#5D0F17]/50"
+                          : "bg-[#5D0F17]/10 text-[#5D0F17]/70"
+                      }`}
+                    >
+                      {req.status === "paid" ? "Searching" : req.status === "pending_payment" ? "Payment Processing" : req.status}
+                    </span>
+                  </Link>
+                ))}
+              <Link
+                href="/account/sourcing"
+                className="self-start text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 hover:text-[#5D0F17] transition mt-1"
+              >
+                + New Request
+              </Link>
             </div>
           )}
         </section>

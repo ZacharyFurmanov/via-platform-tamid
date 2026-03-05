@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof orderTotal !== "number" || orderTotal < 0) {
+    if (typeof orderTotal !== "number" || orderTotal <= 0) {
       return NextResponse.json(
         { error: "orderTotal must be a positive number" },
         { status: 400 }
@@ -38,11 +38,13 @@ export async function POST(request: NextRequest) {
     // Try to match the viaClickId to a click record
     let matched = false;
     let matchedClickData: { clickId: string; clickTimestamp: string; productName: string } | undefined;
+    let userId: string | null = null;
 
     if (viaClickId) {
       const matchingClick = await getClickByClickId(viaClickId);
       if (matchingClick) {
         matched = true;
+        userId = matchingClick.userId ?? null;
         matchedClickData = {
           clickId: matchingClick.clickId,
           clickTimestamp: matchingClick.timestamp,
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest) {
       storeSlug,
       storeName,
       matched,
+      userId,
       matchedClickData,
     });
 

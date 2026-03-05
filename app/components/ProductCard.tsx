@@ -32,6 +32,7 @@ type ProductCardProps = {
   favoriteCount?: number;
   from?: string;
   size?: string | null;
+  isEditorsPick?: boolean;
 };
 
 export default function ProductCard({
@@ -46,6 +47,7 @@ export default function ProductCard({
   favoriteCount,
   from,
   size,
+  isEditorsPick,
 }: ProductCardProps) {
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
@@ -79,6 +81,11 @@ export default function ProductCard({
               </span>
             )}
           </div>
+          {isEditorsPick && (
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/60 mt-1">
+              Editor&apos;s Pick
+            </p>
+          )}
         </div>
       </Link>
 

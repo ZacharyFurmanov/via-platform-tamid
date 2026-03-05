@@ -59,6 +59,12 @@ export async function initAnalyticsTables() {
   await sql`CREATE INDEX IF NOT EXISTS idx_conversions_timestamp ON conversions(timestamp)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_conversions_store ON conversions(store_slug)`;
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_conversions_order_store ON conversions(order_id, store_slug)`;
+
+  // Migrations: add user_id to clicks and conversions (safe to run repeatedly)
+  await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS user_id TEXT`;
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS user_id TEXT`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_clicks_user_id ON clicks(user_id) WHERE user_id IS NOT NULL`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_conversions_user_id ON conversions(user_id) WHERE user_id IS NOT NULL`;
 }
 
 export type ClickRecord = {
@@ -70,6 +76,7 @@ export type ClickRecord = {
   storeSlug: string;
   externalUrl: string;
   userAgent?: string;
+  userId?: string | null;
 };
 
 export async function saveClick(click: ClickRecord): Promise<void> {
@@ -77,8 +84,8 @@ export async function saveClick(click: ClickRecord): Promise<void> {
   await initAnalyticsTables();
 
   await sql`
-    INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent)
-    VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${click.storeSlug}, ${click.externalUrl}, ${click.userAgent || null})
+    INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id)
+    VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${click.storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null})
     ON CONFLICT (click_id) DO NOTHING
   `;
 }
@@ -152,6 +159,7 @@ export type ConversionRecord = {
   storeSlug: string;
   storeName: string;
   matched: boolean;
+  userId?: string | null;
   matchedClickData?: {
     clickId: string;
     clickTimestamp: string;
@@ -179,7 +187,7 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
   }
 
   await sql`
-    INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, items, via_click_id, store_slug, store_name, matched, matched_click_data)
+    INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id)
     VALUES (
       ${conversion.conversionId},
       ${conversion.timestamp},
@@ -191,7 +199,8 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
       ${conversion.storeSlug},
       ${conversion.storeName},
       ${conversion.matched},
-      ${conversion.matchedClickData ? JSON.stringify(conversion.matchedClickData) : null}
+      ${conversion.matchedClickData ? JSON.stringify(conversion.matchedClickData) : null},
+      ${conversion.userId || null}
     )
   `;
 
@@ -210,8 +219,8 @@ export async function getConversionAnalytics(range: string) {
   }
 
   const rows = cutoff
-    ? await sql`SELECT * FROM conversions WHERE timestamp >= ${cutoff} ORDER BY timestamp DESC`
-    : await sql`SELECT * FROM conversions ORDER BY timestamp DESC`;
+    ? await sql`SELECT * FROM conversions WHERE order_total > 0 AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
+    : await sql`SELECT * FROM conversions WHERE order_total > 0 ORDER BY timestamp DESC`;
 
   const conversions = rows.map(mapConversionRow);
 
@@ -383,8 +392,8 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
       ? sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} ORDER BY timestamp DESC LIMIT 20`
       : sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} ORDER BY timestamp DESC LIMIT 20`,
     cutoff
-      ? sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
-      : sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} ORDER BY timestamp DESC`,
+      ? sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
+      : sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 ORDER BY timestamp DESC`,
   ]);
 
   const totalClicks = clickCountRows[0].total as number;
@@ -419,7 +428,86 @@ function mapClickRow(row: Record<string, unknown>): ClickRecord {
     storeSlug: row.store_slug as string,
     externalUrl: row.external_url as string,
     userAgent: row.user_agent as string | undefined,
+    userId: row.user_id as string | null | undefined,
   };
+}
+
+/**
+ * Get a user's full click history (products they browsed and clicked through to buy).
+ */
+export async function getUserClickHistory(userId: string): Promise<ClickRecord[]> {
+  const sql = neon(getDatabaseUrl());
+  await initAnalyticsTables();
+  const rows = await sql`
+    SELECT * FROM clicks
+    WHERE user_id = ${userId}
+    ORDER BY timestamp DESC
+    LIMIT 100
+  `;
+  return rows.map(mapClickRow);
+}
+
+/**
+ * Get confirmed purchases (conversions) attributed to a user.
+ */
+export async function getUserPurchaseHistory(userId: string): Promise<ConversionRecord[]> {
+  const sql = neon(getDatabaseUrl());
+  await initAnalyticsTables();
+  const rows = await sql`
+    SELECT * FROM conversions
+    WHERE user_id = ${userId}
+    ORDER BY timestamp DESC
+  `;
+  return rows.map(mapConversionRow);
+}
+
+export type CustomerSummary = {
+  userId: string;
+  email: string | null;
+  name: string | null;
+  clickCount: number;
+  purchaseCount: number;
+  totalSpend: number;
+  lastSeen: string;
+  firstSeen: string;
+};
+
+/**
+ * Admin: all users who have at least one tracked click, with purchase stats.
+ * Joins clicks/conversions against the users table.
+ */
+export async function getCustomerSummaries(): Promise<CustomerSummary[]> {
+  const sql = neon(getDatabaseUrl());
+  await initAnalyticsTables();
+
+  const rows = await sql`
+    SELECT
+      u.id AS user_id,
+      u.email,
+      u.name,
+      COUNT(DISTINCT c.click_id)::int AS click_count,
+      COUNT(DISTINCT cv.conversion_id)::int AS purchase_count,
+      COALESCE(SUM(cv.order_total), 0)::numeric AS total_spend,
+      MAX(GREATEST(c.timestamp, COALESCE(cv.timestamp, c.timestamp)))::text AS last_seen,
+      MIN(c.timestamp)::text AS first_seen
+    FROM users u
+    LEFT JOIN clicks c ON c.user_id = u.id
+    LEFT JOIN conversions cv ON cv.user_id = u.id
+    WHERE c.user_id IS NOT NULL
+    GROUP BY u.id, u.email, u.name
+    ORDER BY purchase_count DESC, click_count DESC
+  `;
+
+  return rows.map((row) => ({
+    userId: row.user_id as string,
+    email: row.email as string | null,
+    name: row.name as string | null,
+    clickCount: row.click_count as number,
+    purchaseCount: row.purchase_count as number,
+    totalSpend: Number(row.total_spend),
+    lastSeen: row.last_seen as string,
+    firstSeen: row.first_seen as string,
+  }));
 }
 
 function mapConversionRow(row: Record<string, unknown>): ConversionRecord {
@@ -434,6 +522,7 @@ function mapConversionRow(row: Record<string, unknown>): ConversionRecord {
     storeSlug: row.store_slug as string,
     storeName: row.store_name as string,
     matched: row.matched as boolean,
+    userId: row.user_id as string | null | undefined,
     matchedClickData: row.matched_click_data as ConversionRecord["matchedClickData"],
   };
 }
