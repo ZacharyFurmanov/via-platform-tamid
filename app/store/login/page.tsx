@@ -25,7 +25,7 @@ export default function StoreLoginPage() {
   const isLoading = status === "loading";
   const isSignedInNonPartner =
     status === "authenticated" &&
-    session?.user?.email;
+    !!session?.user?.email;
 
   return (
     <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#F7F3EA" }}>
@@ -56,7 +56,7 @@ export default function StoreLoginPage() {
           {isSignedInNonPartner ? (
             <div className="text-center">
               <p className="text-sm mb-4" style={{ color: "#5D0F17" }}>
-                Your account ({session.user.email}) is not linked to a partner
+                Your account ({session?.user?.email}) is not linked to a partner
                 store.
               </p>
               <button
