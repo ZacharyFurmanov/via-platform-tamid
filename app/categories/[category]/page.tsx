@@ -12,6 +12,8 @@ import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import { auth } from "@/app/lib/auth";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 const ACCESSORY_TYPE_RULES: [string, RegExp][] = [
   ["Jewelry", /necklace|ring|bracelet|earring|brooch|pendant|choker|cuff|anklet|charm|locket|pearl/i],
@@ -52,7 +54,12 @@ export default async function CategoryPage({
   const isClothing = category === "clothing";
   const isAccessories = category === "accessories";
 
-  const inventory = await getInventory();
+  const session = await auth();
+  const isMember = session?.user?.id
+    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+    : false;
+
+  const inventory = await getInventory(isMember);
 
   // Filter inventory: "clothing" matches all clothing subcategories, others match exact slug
   const categoryItems = isClothing

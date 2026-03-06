@@ -10,9 +10,16 @@ import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import { auth } from "@/app/lib/auth";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 export default async function BrowsePage() {
-  const inventory = await getInventory();
+  const session = await auth();
+  const isMember = session?.user?.id
+    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+    : false;
+
+  const inventory = await getInventory(isMember);
 
   // Extract DB IDs and fetch popularity scores
   const dbIdMap = new Map<string, number>();

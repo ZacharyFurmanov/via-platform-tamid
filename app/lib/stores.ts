@@ -12,6 +12,7 @@ export const stores = [
     logo: "/stores/ascensio-vintage-logo.jpg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "1234",
     collabsStoreId: "228601",
     authenticityPolicy:
@@ -40,6 +41,7 @@ export const stores = [
       "Shipping rates are calculated at checkout. Orders ship to the address provided at checkout.",
     returnPolicy:
       "All sales are final. If your item arrives significantly damaged or materially different from its description, contact info@shoplei.com within 48 hours of delivery with photos for review.",
+    commissionType: "squarespace-manual" as const,
     // No affiliatePath — uses Squarespace pixel for conversion tracking
   },
   {
@@ -55,6 +57,7 @@ export const stores = [
     logo: "/stores/lover-girl-vintage.jpg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIAPARTNER",
     collabsStoreId: "229026",
     authenticityPolicy:
@@ -78,6 +81,7 @@ export const stores = [
     logoBg: "#722f37",
     logoDark: true,
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "0001",
     collabsStoreId: "228526",
     discountCode: "0001",
@@ -102,6 +106,7 @@ export const stores = [
     logo: "/stores/scarz-vintage-logo.jpg",
     logoBg: "#ffffff",
     currency: "GBP",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIAXSCARZ",
     collabsStoreId: "228153",
     discountCode: "VIAXSCARZ",
@@ -126,6 +131,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIA-7",
     collabsStoreId: "230455",
     authenticityPolicy:
@@ -148,6 +154,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIAPLATFORM",
     collabsStoreId: "229322",
     authenticityPolicy:
@@ -170,6 +177,7 @@ export const stores = [
     logo: "/stores/vintage-archives-la-logo.jpg",
     logoBg: "#fdf8d8",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIAPARTNER", // Shopify Collabs affiliate handle
     collabsStoreId: "227548",
     authenticityPolicy:
@@ -192,6 +200,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "001",
     collabsStoreId: "5662739",
     authenticityPolicy:
@@ -214,6 +223,7 @@ export const stores = [
     logo: "/stores/vangie-logo.jpg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "1",
     collabsStoreId: "230072",
     authenticityPolicy:
@@ -236,6 +246,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIACONNECT",
     collabsStoreId: "230428",
     authenticityPolicy:
@@ -258,6 +269,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "HANA",
     collabsStoreId: "228807",
     authenticityPolicy:
@@ -280,6 +292,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIA",
     collabsStoreId: "230452",
     authenticityPolicy:
@@ -302,6 +315,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIA2026",
     collabsStoreId: "230654",
     authenticityPolicy:
@@ -324,6 +338,7 @@ export const stores = [
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
+    commissionType: "shopify-collabs" as const,
     affiliatePath: "VIA",
     collabsStoreId: "5668014",
     authenticityPolicy:
@@ -334,6 +349,26 @@ export const stores = [
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
 ];
+
+/**
+ * Commission tiers (% of sale price that VIA earns).
+ * Applies to all stores regardless of payout method.
+ */
+export const COMMISSION_TIERS = [
+  { maxPrice: 1000, rate: 0.07 },   // Under $1k → 7%
+  { maxPrice: 5000, rate: 0.05 },   // $1k–$5k  → 5%
+  { maxPrice: Infinity, rate: 0.03 }, // $5k+     → 3%
+] as const;
+
+/** Returns the commission rate (0–1) for a given sale price. */
+export function getCommissionRate(price: number): number {
+  return COMMISSION_TIERS.find((t) => price < t.maxPrice)?.rate ?? 0.03;
+}
+
+/** Returns the commission dollar amount VIA earns on a sale. */
+export function getCommissionAmount(price: number): number {
+  return price * getCommissionRate(price);
+}
 
 /**
  * Store contact emails for sourcing request notifications.

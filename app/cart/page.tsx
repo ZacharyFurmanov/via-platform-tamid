@@ -15,14 +15,12 @@ import { useSignUp } from "@/app/components/SignUpProvider";
 function buildGroupCheckoutUrl(items: CartItem[]): string {
   const variantEntries: string[] = [];
   let storeOrigin = "";
-  let discountCode = "";
 
   for (const item of items) {
     if (!item.checkoutUrl) return items[0].externalUrl;
     try {
       const url = new URL(item.checkoutUrl);
       if (!storeOrigin) storeOrigin = url.origin;
-      if (!discountCode) discountCode = url.searchParams.get("discount") || "";
       const cartMatch = url.pathname.match(/^\/cart\/(\d+):(\d+)/);
       if (!cartMatch) return items[0].externalUrl;
       variantEntries.push(`${cartMatch[1]}:${cartMatch[2]}`);
@@ -31,9 +29,10 @@ function buildGroupCheckoutUrl(items: CartItem[]): string {
     }
   }
 
+  // Return a clean cart URL — the /api/track route handles the /discount/ redirect
+  // for attribution, so we don't need to embed the discount code here.
   if (!storeOrigin || variantEntries.length === 0) return items[0].externalUrl;
-  const discountParam = discountCode ? `?discount=${discountCode}` : "";
-  return `${storeOrigin}/cart/${variantEntries.join(",")}${discountParam}`;
+  return `${storeOrigin}/cart/${variantEntries.join(",")}`;
 }
 
 export default function CartPage() {

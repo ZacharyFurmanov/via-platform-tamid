@@ -49,10 +49,18 @@ async function extractDtId(collabsLink: string): Promise<string | null> {
   try {
     const res = await fetch(collabsLink, { redirect: "manual" });
     const location = res.headers.get("location");
-    if (!location) return null;
+    if (!location) {
+      console.error(`[track] extractDtId: no location header (status ${res.status}) for ${collabsLink}`);
+      return null;
+    }
     const url = new URL(location);
-    return url.searchParams.get("dt_id");
-  } catch {
+    const dtId = url.searchParams.get("dt_id");
+    if (!dtId) {
+      console.error(`[track] extractDtId: location has no dt_id param. location=${location}`);
+    }
+    return dtId;
+  } catch (e) {
+    console.error(`[track] extractDtId fetch error for ${collabsLink}:`, e);
     return null;
   }
 }
@@ -113,49 +121,58 @@ export async function GET(request: NextRequest) {
   }).catch(console.error);
 
   // ---- Cart URLs (single and multi-item Shopify checkout) ----
-  // Extract the dt_id tracking parameter from a collabs.shop link and append
-  // it to the cart URL. The Collabs embed on the store reads dt_id and sets
-  // the 30-day attribution cookie. This sends users directly to cart (not the
-  // product page that collabs.shop redirects to).
+  //
+  // Attribution strategy:
+  //
+  // Single item: always redirect through the product's collabs.shop link.
+  //   collabs.shop → store product page (Collabs cookie set on store domain)
+  //   → user adds to cart → checks out via any method (Shop Pay included).
+  //   Cookie is set before Shop Pay can intercept, so attribution is reliable.
+  //   UX tradeoff: user lands on product page and must click "Add to Cart" once.
+  //
+  // Multi-item cart: can't use a single collabs.shop link, so fall back to
+  //   appending dt_id to the cart URL. Shop Pay preserves dt_id (we've seen
+  //   it in shop.app URLs), and Shopify should attribute it at order creation.
+  //
   if (isCartUrl(parsedUrl) && storeSlug) {
-    // For single items, prefer the product-specific collabs link (more reliable)
-    let collabsLink: string | null = null;
+    // Look up the product-specific collabs link (single-item path)
+    let productCollabsLink: string | null = null;
     if (productId) {
       const match = productId.match(/(\d+)$/);
       const numericId = match ? parseInt(match[1], 10) : NaN;
       if (!isNaN(numericId)) {
-        collabsLink = await getCollabsLink(numericId).catch(() => null);
+        productCollabsLink = await getCollabsLink(numericId).catch(() => null);
       }
     }
-    // Fall back to any store collabs link (for multi-item carts)
-    if (!collabsLink) {
-      collabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
+
+    // ── Single item: go through collabs.shop for reliable cookie attribution ──
+    if (productCollabsLink) {
+      return NextResponse.redirect(productCollabsLink, 302);
     }
 
-    if (collabsLink) {
-      const dtId = await extractDtId(collabsLink);
+    // ── Multi-item cart: append dt_id to the cart URL ─────────────────────────
+    const storeCollabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
+    if (storeCollabsLink) {
+      const dtId = await extractDtId(storeCollabsLink);
       if (dtId) {
         parsedUrl.searchParams.set("dt_id", dtId);
         return NextResponse.redirect(parsedUrl.toString(), 302);
       } else {
         console.error(
-          `[track] extractDtId failed for store "${storeSlug}" — collabs link: ${collabsLink}. Commission will NOT be tracked for this checkout.`
+          `[track] extractDtId failed for multi-item cart, store "${storeSlug}". Commission may not be tracked. Link: ${storeCollabsLink}`
         );
       }
     } else {
       console.error(
-        `[track] No collabs link found in DB for store "${storeSlug}" — cannot extract dt_id. Commission will NOT be tracked. Run generate-collabs-links for this store.`
+        `[track] No collabs link for store "${storeSlug}" — commission cannot be tracked.`
       );
     }
 
-    // Fallback: try discount code for cart URLs
+    // Fallback: discount code redirect (only for stores that actually have one)
     const discount = getDiscountConfig(storeSlug);
     if (discount) {
       const cartPath = parsedUrl.pathname + parsedUrl.search;
-      const discountUrl = new URL(
-        `/discount/${discount.discountCode}`,
-        discount.origin
-      );
+      const discountUrl = new URL(`/discount/${discount.discountCode}`, discount.origin);
       discountUrl.searchParams.set("redirect", cartPath);
       return NextResponse.redirect(discountUrl.toString(), 302);
     }

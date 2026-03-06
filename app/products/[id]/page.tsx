@@ -141,15 +141,13 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     productImages = [product.image];
   }
 
-  // Build direct cart URL for multi-item checkout building
+  // Build direct cart URL. The /api/track route handles attribution (collabs.shop
+  // redirect for single items, dt_id for multi-item carts).
   let checkoutUrl = product.external_url || "";
   if (product.variant_id && product.external_url) {
     try {
       const productUrl = new URL(product.external_url);
-      const storeConfig = stores.find((s) => s.slug === product.store_slug);
-      const discountCode = storeConfig && "discountCode" in storeConfig ? storeConfig.discountCode : null;
-      const discountParam = discountCode ? `?discount=${discountCode}` : "";
-      checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1${discountParam}`;
+      checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1`;
     } catch {}
   }
   const { detailsHtml, sizingItems } = splitDescriptionBySizing(product.description);

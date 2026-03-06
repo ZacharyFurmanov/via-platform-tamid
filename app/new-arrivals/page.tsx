@@ -4,9 +4,16 @@ import { getNewArrivals } from "@/app/lib/db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import MixedProductGrid from "@/app/components/MixedProductGrid";
+import { auth } from "@/app/lib/auth";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 export default async function NewArrivalsPage() {
-  const products = await getNewArrivals(48, 7);
+  const session = await auth();
+  const isMember = session?.user?.id
+    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+    : false;
+
+  const products = await getNewArrivals(48, 7, isMember);
 
   const gridProducts = products.map((p) => ({
     ...p,

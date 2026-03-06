@@ -3,6 +3,8 @@ import { neon } from "@neondatabase/serverless";
 import { stores } from "@/app/lib/stores";
 import { brands } from "@/app/lib/brandData";
 import { categoryMap } from "@/app/lib/categoryMap";
+import { auth } from "@/app/lib/auth";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -132,6 +134,17 @@ export async function GET(request: Request) {
   try {
     const sql = neon(getDatabaseUrl());
 
+    // Check membership — members see products added in the last 24h (Insider access)
+    const session = await auth().catch(() => null);
+    const isMember = session?.user?.id
+      ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+      : false;
+
+    // Insider filter: passes isMember as a boolean parameter.
+    // PostgreSQL evaluates (true OR ...) as always-true (no filter for members)
+    // and (false OR condition) as just the condition (24h filter for non-members).
+    const insiderFilter = sql`(${isMember} OR created_at IS NULL OR created_at <= NOW() - interval '24 hours')`;
+
     // ─── 1. Designer / brand matching ────────────────────────────────────────
     // Strip stop words and "&" for word-level brand matching
     // so "dolce and gabbana" → ["dolce", "gabbana"] matches "Dolce & Gabbana"
@@ -181,10 +194,6 @@ export async function GET(request: Request) {
       .map((s) => ({ slug: s.slug, name: s.name, location: s.location }));
 
     // ─── 4. Product search ────────────────────────────────────────────────────
-    // Note: the 24h VIA Insider filter is intentionally NOT applied here.
-    // Browse All / category pages use it; explicit search always returns results.
-    const PRODUCT_FILTER = sql`(shopify_product_id IS NULL OR collabs_link IS NOT NULL)`;
-
     // Resolve query to a category slug if it matches an alias or is a known slug
     const catSlug = categoryAliases[q] || (categoryKeywords[q] ? q : null);
     let products;
@@ -197,6 +206,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND ${insiderFilter}
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
@@ -225,6 +235,7 @@ export async function GET(request: Request) {
             WHERE LOWER(title) ~* ${catRegex}
               AND LOWER(title) LIKE ALL(${modLike})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+              AND ${insiderFilter}
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -236,6 +247,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+                AND ${insiderFilter}
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -249,6 +261,7 @@ export async function GET(request: Request) {
             FROM products
             WHERE LOWER(title) LIKE ALL(${likePatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+              AND ${insiderFilter}
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -260,6 +273,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) LIKE ANY(${likePatterns})
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+                AND ${insiderFilter}
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -275,6 +289,7 @@ export async function GET(request: Request) {
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+            AND ${insiderFilter}
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/lib/auth";
 import { stores, storeContactEmails } from "@/app/lib/stores";
+import { neon } from "@neondatabase/serverless";
+
+function getDatabaseUrl() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return url;
+}
 
 function getStoreSlugFromEmail(email: string): string | null {
   for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
@@ -25,6 +32,30 @@ export async function GET() {
     return NextResponse.json({ error: "Store not found" }, { status: 404 });
   }
 
+  // Calculate total inventory value and VIA's tiered commission potential
+  let totalInventoryValue = 0;
+  let viaCommissionPotential = 0;
+  try {
+    const sql = neon(getDatabaseUrl());
+    const rows = await sql`
+      SELECT
+        COALESCE(SUM(price), 0) AS total_inventory_value,
+        COALESCE(SUM(
+          CASE
+            WHEN price < 1000 THEN price * 0.07
+            WHEN price < 5000 THEN price * 0.05
+            ELSE price * 0.03
+          END
+        ), 0) AS via_commission_potential
+      FROM products
+      WHERE store_slug = ${storeSlug}
+    `;
+    totalInventoryValue = Math.round(Number(rows[0]?.total_inventory_value ?? 0));
+    viaCommissionPotential = Math.round(Number(rows[0]?.via_commission_potential ?? 0));
+  } catch {
+    // Non-fatal — dashboard still loads without these figures
+  }
+
   return NextResponse.json({
     storeSlug: store.slug,
     storeName: store.name,
@@ -33,5 +64,8 @@ export async function GET() {
     website: store.website,
     logo: store.logo,
     logoBg: store.logoBg,
+    commissionType: store.commissionType,
+    totalInventoryValue,
+    viaCommissionPotential,
   });
 }

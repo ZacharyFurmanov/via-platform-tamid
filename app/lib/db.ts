@@ -203,7 +203,6 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
     SELECT * FROM products
     WHERE store_slug = ${storeSlug}
       AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-      AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
     ORDER BY id
   `;
   return result as DBProduct[];
@@ -222,19 +221,24 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
 }
 
 /**
- * Get all products from all stores
+ * Get all products from all stores.
+ * Members see everything; non-members only see products older than 24 hours.
  */
-export async function getAllProducts(): Promise<DBProduct[]> {
+export async function getAllProducts(isMember: boolean = false): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  // Exclude products added in the last 24 hours — those are Insider-only.
-  // Products with created_at = NULL are pre-existing and always visible.
-  const result = await sql`
-    SELECT * FROM products
-    WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-      AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
-    ORDER BY store_slug, id
-  `;
+  const result = isMember
+    ? await sql`
+        SELECT * FROM products
+        WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        ORDER BY store_slug, id
+      `
+    : await sql`
+        SELECT * FROM products
+        WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
+        ORDER BY store_slug, id
+      `;
   return result as DBProduct[];
 }
 

@@ -13,6 +13,9 @@ type StoreInfo = {
   website: string;
   logo: string;
   logoBg: string;
+  commissionType: "shopify-collabs" | "squarespace-manual";
+  totalInventoryValue: number;
+  viaCommissionPotential: number;
 };
 
 type Analytics = {
@@ -178,6 +181,47 @@ export default function StoreDashboardPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+        {/* Revenue Potential */}
+        {store.totalInventoryValue > 0 && (
+          <section>
+            <h2 className="text-lg font-serif uppercase tracking-wide mb-4" style={{ color: "#5D0F17" }}>
+              Revenue Potential
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white p-6 shadow-sm text-center">
+                <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                  ${store.totalInventoryValue.toLocaleString()}
+                </p>
+                <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                  Total Listed Inventory
+                </p>
+              </div>
+              <div className="bg-white p-6 shadow-sm text-center">
+                <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                  ${store.viaCommissionPotential.toLocaleString()}
+                </p>
+                <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                  VIA Commission (if sold)
+                </p>
+              </div>
+              <div className="bg-white p-6 shadow-sm text-center">
+                <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                  {store.commissionType === "shopify-collabs" ? "Automatic" : "Manual Invoice"}
+                </p>
+                <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                  Payout Method
+                </p>
+                <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
+                  {store.commissionType === "shopify-collabs" ? "Via Shopify Collabs" : "Via Squarespace Invoice"}
+                </p>
+              </div>
+            </div>
+            <p className="text-[11px] mt-3" style={{ color: "rgba(93,15,23,0.4)" }}>
+              Commission rates: 7% under $1k · 5% $1k–$5k · 3% $5k+
+            </p>
+          </section>
+        )}
+
         {/* Analytics Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
