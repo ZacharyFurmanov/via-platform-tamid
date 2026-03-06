@@ -13,6 +13,7 @@ export type FilterState = {
   selectedCategories: string[];
   selectedBrands: string[];
   selectedSizes: string[];
+  selectedTypes: string[];
   sort: SortOption;
 };
 
@@ -21,12 +22,14 @@ type ProductFilterProps = {
   categories?: { slug: string; label: string }[];
   brands?: { slug: string; label: string }[];
   sizes?: string[];
+  types?: string[];
   onFilterChange: (filters: FilterState) => void;
   initialFilters?: Partial<FilterState>;
   productCount?: number;
   showCategoryFilter?: boolean;
   showBrandFilter?: boolean;
   showSizeFilter?: boolean;
+  showTypeFilter?: boolean;
 };
 
 const priceRangeLabels: Record<PriceRange, string> = {
@@ -49,12 +52,14 @@ export default function ProductFilter({
   categories = [],
   brands = [],
   sizes = [],
+  types = [],
   onFilterChange,
   initialFilters,
   productCount,
   showCategoryFilter = false,
   showBrandFilter = false,
   showSizeFilter = false,
+  showTypeFilter = false,
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
@@ -63,6 +68,7 @@ export default function ProductFilter({
     selectedCategories: initialFilters?.selectedCategories ?? [],
     selectedBrands: initialFilters?.selectedBrands ?? [],
     selectedSizes: initialFilters?.selectedSizes ?? [],
+    selectedTypes: initialFilters?.selectedTypes ?? [],
     sort: initialFilters?.sort ?? "popular",
   });
 
@@ -72,6 +78,7 @@ export default function ProductFilter({
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
   const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   const closeAllDropdowns = useCallback(() => {
@@ -80,6 +87,7 @@ export default function ProductFilter({
     setBrandDropdownOpen(false);
     setStoreDropdownOpen(false);
     setSizeDropdownOpen(false);
+    setTypeDropdownOpen(false);
     setSortDropdownOpen(false);
   }, []);
 
@@ -136,6 +144,17 @@ export default function ProductFilter({
     [filters.selectedSizes, updateFilters]
   );
 
+  const toggleType = useCallback(
+    (type: string) => {
+      const current = filters.selectedTypes;
+      const updated = current.includes(type)
+        ? current.filter((t) => t !== type)
+        : [...current, type];
+      updateFilters({ selectedTypes: updated });
+    },
+    [filters.selectedTypes, updateFilters]
+  );
+
   const clearFilters = useCallback(() => {
     const cleared: FilterState = {
       search: "",
@@ -144,6 +163,7 @@ export default function ProductFilter({
       selectedCategories: [],
       selectedBrands: [],
       selectedSizes: [],
+      selectedTypes: [],
       sort: "popular",
     };
     setFilters(cleared);
@@ -156,7 +176,8 @@ export default function ProductFilter({
     filters.selectedStores.length > 0 ||
     filters.selectedCategories.length > 0 ||
     filters.selectedBrands.length > 0 ||
-    filters.selectedSizes.length > 0;
+    filters.selectedSizes.length > 0 ||
+    filters.selectedTypes.length > 0;
 
   const activeFilterCount =
     (filters.search ? 1 : 0) +
@@ -164,7 +185,8 @@ export default function ProductFilter({
     filters.selectedStores.length +
     filters.selectedCategories.length +
     filters.selectedBrands.length +
-    filters.selectedSizes.length;
+    filters.selectedSizes.length +
+    filters.selectedTypes.length;
 
   return (
     <div className="mb-8">
@@ -437,6 +459,55 @@ export default function ProductFilter({
             </div>
           )}
 
+          {/* Type Dropdown */}
+          {showTypeFilter && types.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = typeDropdownOpen;
+                  closeAllDropdowns();
+                  setTypeDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
+                  filters.selectedTypes.length > 0
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
+                }`}
+              >
+                {filters.selectedTypes.length > 0
+                  ? `Type (${filters.selectedTypes.length})`
+                  : "Type"}
+                <ChevronDown size={16} />
+              </button>
+              {typeDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setTypeDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                    {types.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
+                          filters.selectedTypes.includes(type)
+                            ? "bg-[#D8CABD]/30 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {type}
+                        {filters.selectedTypes.includes(type) && (
+                          <span className="text-[#5D0F17]">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Sort Dropdown */}
           <div className="relative ml-auto">
             <button
@@ -648,6 +719,31 @@ export default function ProductFilter({
                         className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
                       />
                       <span className="text-sm">{size}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Types */}
+            {showTypeFilter && types.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
+                  Type
+                </h4>
+                <div className="space-y-2">
+                  {types.map((type) => (
+                    <label
+                      key={type}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.selectedTypes.includes(type)}
+                        onChange={() => toggleType(type)}
+                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                      />
+                      <span className="text-sm">{type}</span>
                     </label>
                   ))}
                 </div>

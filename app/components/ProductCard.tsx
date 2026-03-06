@@ -61,7 +61,7 @@ export default function ProductCard({
   return (
     <div className="relative group">
       <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-[#5D0F17] block">
-        <ImageCarousel images={carouselImages} alt={name} variant="card" />
+        <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} />
 
         {/* Product info */}
         <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">
@@ -81,11 +81,6 @@ export default function ProductCard({
               </span>
             )}
           </div>
-          {isEditorsPick && (
-            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/60 mt-1">
-              Editor&apos;s Pick
-            </p>
-          )}
         </div>
       </Link>
 

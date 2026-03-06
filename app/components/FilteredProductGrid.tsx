@@ -28,6 +28,8 @@ export type FilterableProduct = {
   createdAt?: number; // timestamp for sorting by newest
   popularityScore?: number;
   size?: string | null;
+  accessoryType?: string | null;
+  isEditorsPick?: boolean;
 };
 
 type FilteredProductGridProps = {
@@ -37,6 +39,7 @@ type FilteredProductGridProps = {
   showCategoryFilter?: boolean;
   showBrandFilter?: boolean;
   showSizeFilter?: boolean;
+  showTypeFilter?: boolean;
   emptyMessage?: string;
   from?: string;
 };
@@ -92,6 +95,7 @@ export default function FilteredProductGrid({
   showCategoryFilter = false,
   showBrandFilter = false,
   showSizeFilter = false,
+  showTypeFilter = false,
   emptyMessage = "No products found.",
   from,
 }: FilteredProductGridProps) {
@@ -102,6 +106,7 @@ export default function FilteredProductGrid({
     selectedCategories: [],
     selectedBrands: [],
     selectedSizes: [],
+    selectedTypes: [],
     sort: "popular",
   });
 
@@ -159,6 +164,13 @@ export default function FilteredProductGrid({
       );
     }
 
+    // Type filter (accessories)
+    if (filters.selectedTypes.length > 0) {
+      result = result.filter(
+        (p) => p.accessoryType && filters.selectedTypes.includes(p.accessoryType)
+      );
+    }
+
     // Sort
     result = sortProducts(result, filters.sort);
 
@@ -207,6 +219,15 @@ export default function FilteredProductGrid({
     return sortSizes(Array.from(seen));
   }, [products]);
 
+  // Get unique accessory types from products for the filter
+  const availableTypes = useMemo(() => {
+    const seen = new Set<string>();
+    products.forEach((p) => {
+      if (p.accessoryType) seen.add(p.accessoryType);
+    });
+    return Array.from(seen).sort();
+  }, [products]);
+
   // Fetch favorite counts for all products
   const [favCounts, setFavCounts] = useState<Record<number, number>>({});
 
@@ -238,9 +259,11 @@ export default function FilteredProductGrid({
         }
         brands={availableBrands}
         sizes={availableSizes}
+        types={availableTypes}
         showCategoryFilter={showCategoryFilter}
         showBrandFilter={showBrandFilter}
         showSizeFilter={showSizeFilter}
+        showTypeFilter={showTypeFilter}
         onFilterChange={handleFilterChange}
         productCount={filteredProducts.length}
       />
@@ -253,7 +276,8 @@ export default function FilteredProductGrid({
           filters.selectedStores.length > 0 ||
           filters.selectedCategories.length > 0 ||
           filters.selectedBrands.length > 0 ||
-          filters.selectedSizes.length > 0 ? (
+          filters.selectedSizes.length > 0 ||
+          filters.selectedTypes.length > 0 ? (
             <button
               onClick={() =>
                 handleFilterChange({
@@ -263,6 +287,7 @@ export default function FilteredProductGrid({
                   selectedCategories: [],
                   selectedBrands: [],
                   selectedSizes: [],
+                  selectedTypes: [],
                   sort: filters.sort,
                 })
               }
@@ -291,6 +316,7 @@ export default function FilteredProductGrid({
                 image={product.image}
                 images={product.images}
                 size={product.size}
+                isEditorsPick={product.isEditorsPick}
                 from={from}
                 favoriteCount={
                   favCounts[

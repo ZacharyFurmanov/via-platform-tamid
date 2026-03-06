@@ -9,6 +9,7 @@ import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
+import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 
 export default async function BrowsePage() {
   const inventory = await getInventory();
@@ -20,7 +21,11 @@ export default async function BrowsePage() {
     if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
   }
   const dbIds = Array.from(dbIdMap.values());
-  const popularityScores = await getProductPopularityScores(dbIds);
+  const [popularityScores, editorsPicks] = await Promise.all([
+    getProductPopularityScores(dbIds),
+    getAllEditorsPicks().catch(() => []),
+  ]);
+  const editorsPickIds = new Set(editorsPicks.map((p) => p.product.id));
 
   // Transform inventory with composite ranking scores
   const products: FilterableProduct[] = inventory.map((item) => {
@@ -41,6 +46,7 @@ export default async function BrowsePage() {
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
+      isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),
       createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
       popularityScore: computeProductScore({
         engagementScore,

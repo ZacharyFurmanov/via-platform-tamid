@@ -113,8 +113,8 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   // Run all three DB queries in parallel to minimize load time
   const [product, favoriteCount, allCandidates] = await Promise.all([
     getProductById(dbId),
-    getProductFavoriteCount(dbId),
-    getRecommendedProducts(dbId, 50),
+    getProductFavoriteCount(dbId).catch(() => 0),
+    getRecommendedProducts(dbId, 50).catch(() => []),
   ]);
   if (!product) return notFound();
 

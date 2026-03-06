@@ -12,6 +12,7 @@ import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 import { brandMap } from "@/app/lib/brandData";
+import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 
 type StorePageProps = {
   params: Promise<{
@@ -31,7 +32,7 @@ export default async function StorePage({ params }: StorePageProps) {
   const store = stores.find((s) => s.slug === slug);
   if (!store) return notFound();
 
-  const storeProducts: StoreProduct[] = await loadStoreProducts(slug);
+  const storeProducts: StoreProduct[] = await loadStoreProducts(slug).catch(() => []);
 
   // Extract DB IDs from composite IDs (format: store_slug-dbId)
   const dbIdMap = new Map<string, number>();
@@ -40,9 +41,13 @@ export default async function StorePage({ params }: StorePageProps) {
     if (match) dbIdMap.set(product.id, parseInt(match[1], 10));
   }
 
-  // Fetch popularity scores
+  // Fetch popularity scores and editor's picks in parallel
   const dbIds = Array.from(dbIdMap.values());
-  const popularityScores = await getProductPopularityScores(dbIds);
+  const [popularityScores, editorsPicks] = await Promise.all([
+    getProductPopularityScores(dbIds).catch(() => ({} as Record<number, number>)),
+    getAllEditorsPicks().catch(() => []),
+  ]);
+  const editorsPickIds = new Set(editorsPicks.map((p) => p.product.id));
 
   // Transform to FilterableProduct format with composite ranking
   const products: FilterableProduct[] = storeProducts.map((product) => {
@@ -67,6 +72,7 @@ export default async function StorePage({ params }: StorePageProps) {
       image: product.image ?? "",
       images,
       size: product.size ?? null,
+      isEditorsPick: editorsPickIds.has(dbIdMap.get(product.id) ?? -1),
       createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
       popularityScore: computeProductScore({
         engagementScore,

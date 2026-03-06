@@ -11,6 +11,26 @@ import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
+import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+
+const ACCESSORY_TYPE_RULES: [string, RegExp][] = [
+  ["Jewelry", /necklace|ring|bracelet|earring|brooch|pendant|choker|cuff|anklet|charm|locket|pearl/i],
+  ["Belt", /\bbelt\b/i],
+  ["Wallet", /wallet|coin purse|cardholder|card holder|card case/i],
+  ["Sunglasses", /sunglass|shades|eyewear|spectacle|eyeglass/i],
+  ["Scarf", /scarf|scarve|stole|shawl|wrap/i],
+  ["Watch", /\bwatch\b|timepiece|wristwatch/i],
+  ["Hat", /\bhat\b|cap\b|beanie|beret|fedora|cloche|bucket hat|visor/i],
+  ["Gloves", /\bgloves?\b|mittens?\b/i],
+  ["Hair Accessory", /hair clip|hairpin|hair pin|barrette|headband|scrunchie|hair tie/i],
+];
+
+function inferAccessoryType(title: string): string {
+  for (const [label, pattern] of ACCESSORY_TYPE_RULES) {
+    if (pattern.test(title)) return label;
+  }
+  return "Other";
+}
 
 export default async function CategoryPage({
   params,
@@ -30,6 +50,7 @@ export default async function CategoryPage({
 
   const label = displayMeta?.label ?? subcategoryMeta!.label;
   const isClothing = category === "clothing";
+  const isAccessories = category === "accessories";
 
   const inventory = await getInventory();
 
@@ -45,7 +66,11 @@ export default async function CategoryPage({
     if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
   }
   const dbIds = Array.from(dbIdMap.values());
-  const popularityScores = await getProductPopularityScores(dbIds);
+  const [popularityScores, editorsPicks] = await Promise.all([
+    getProductPopularityScores(dbIds),
+    getAllEditorsPicks().catch(() => []),
+  ]);
+  const editorsPickIds = new Set(editorsPicks.map((p) => p.product.id));
 
   // Transform for FilteredProductGrid with composite ranking
   const filteredProducts: FilterableProduct[] = categoryItems.map((item) => {
@@ -67,6 +92,8 @@ export default async function CategoryPage({
       image: item.image,
       images: item.images,
       size: item.size,
+      accessoryType: isAccessories ? inferAccessoryType(item.title) : null,
+      isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),
       createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
       popularityScore: computeProductScore({
         engagementScore,
@@ -173,7 +200,8 @@ export default async function CategoryPage({
             stores={storeList}
             categories={isClothing ? clothingFilterCategories : []}
             showCategoryFilter={isClothing}
-            showSizeFilter
+            showSizeFilter={!isAccessories}
+            showTypeFilter={isAccessories}
             from={`/categories/${category}`}
             emptyMessage="No products found in this category."
           />

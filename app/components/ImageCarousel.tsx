@@ -7,12 +7,14 @@ type ImageCarouselProps = {
   images: string[];
   alt: string;
   variant: "card" | "detail";
+  isEditorsPick?: boolean;
 };
 
 export default function ImageCarousel({
   images,
   alt,
   variant,
+  isEditorsPick,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -103,6 +105,13 @@ export default function ImageCarousel({
           <div className="absolute inset-0 bg-[#D8CABD]/50 z-10" />
         )}
 
+        {isEditorsPick && (
+          <div className="absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">
+            <span className="text-[#F7F3EA] text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-medium">
+              Editor&apos;s Pick
+            </span>
+          </div>
+        )}
 
         {hasMultiple && (
           <>
