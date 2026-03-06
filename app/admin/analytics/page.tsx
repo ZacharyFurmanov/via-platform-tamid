@@ -58,6 +58,23 @@ type ConversionData = {
 
 type DateRange = "7d" | "30d" | "all";
 
+type CollabsPartnership = {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  totalCommissionEarned: string;
+  currency: string;
+  totalLinkVisits: number;
+  totalOrders: number;
+};
+
+type CollabsSyncResult = {
+  ok: boolean;
+  syncedAt?: string;
+  partnerships?: CollabsPartnership[];
+  error?: string;
+};
+
 type InventoryStats = {
   productCount: number;
   inventoryValue: number;
@@ -79,8 +96,15 @@ export default function AnalyticsPage() {
   const [inventoryData, setInventoryData] = useState<InventoryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [inventoryLoading, setInventoryLoading] = useState(true);
+  const [collabsData, setCollabsData] = useState<CollabsSyncResult | null>(null);
+  const [collabsLoading, setCollabsLoading] = useState(false);
+  const [collabsSyncing, setCollabsSyncing] = useState(false);
+  const [showCredentialForm, setShowCredentialForm] = useState(false);
+  const [credCookie, setCredCookie] = useState("");
+  const [credCsrf, setCredCsrf] = useState("");
+  const [credSaving, setCredSaving] = useState(false);
   const [range, setRange] = useState<DateRange>("all");
-  const [activeTab, setActiveTab] = useState<"clicks" | "conversions" | "inventory">("clicks");
+  const [activeTab, setActiveTab] = useState<"clicks" | "conversions" | "collabs" | "inventory">("clicks");
   const router = useRouter();
 
   async function handleLogout() {
@@ -124,6 +148,50 @@ export default function AnalyticsPage() {
     }
     fetchInventory();
   }, []);
+
+  async function fetchCollabsData() {
+    setCollabsLoading(true);
+    try {
+      const res = await fetch("/api/admin/sync-collabs");
+      const data = await res.json();
+      setCollabsData(data);
+    } catch {
+      setCollabsData({ ok: false, error: "Failed to fetch Collabs data." });
+    } finally {
+      setCollabsLoading(false);
+    }
+  }
+
+  async function handleCollabsSync() {
+    setCollabsSyncing(true);
+    try {
+      const res = await fetch("/api/admin/sync-collabs");
+      const data = await res.json();
+      setCollabsData(data);
+    } catch {
+      setCollabsData({ ok: false, error: "Sync failed." });
+    } finally {
+      setCollabsSyncing(false);
+    }
+  }
+
+  async function handleSaveCredentials() {
+    if (!credCookie.trim() || !credCsrf.trim()) return;
+    setCredSaving(true);
+    try {
+      await fetch("/api/admin/sync-collabs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cookie: credCookie.trim(), csrfToken: credCsrf.trim() }),
+      });
+      setShowCredentialForm(false);
+      setCredCookie("");
+      setCredCsrf("");
+      await handleCollabsSync();
+    } finally {
+      setCredSaving(false);
+    }
+  }
 
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -264,6 +332,16 @@ export default function AnalyticsPage() {
                 }`}
               >
                 Conversions
+              </button>
+              <button
+                onClick={() => { setActiveTab("collabs"); if (!collabsData) fetchCollabsData(); }}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeTab === "collabs"
+                    ? "bg-white shadow-sm"
+                    : "hover:bg-neutral-200"
+                }`}
+              >
+                Collabs Revenue
               </button>
               <button
                 onClick={() => setActiveTab("inventory")}
@@ -437,6 +515,127 @@ export default function AnalyticsPage() {
             </>
           )}
         </>
+      ) : activeTab === "collabs" ? (
+        /* ==================== COLLABS REVENUE TAB ==================== */
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <h2 className="text-xl sm:text-2xl font-serif">Shopify Collabs Revenue</h2>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => setShowCredentialForm((v) => !v)}
+                className="px-4 py-2 border border-neutral-300 text-sm hover:border-black transition"
+              >
+                {showCredentialForm ? "Cancel" : "Update Credentials"}
+              </button>
+              <button
+                onClick={handleCollabsSync}
+                disabled={collabsSyncing}
+                className="px-4 py-2 bg-black text-white text-sm hover:bg-neutral-800 transition disabled:opacity-50"
+              >
+                {collabsSyncing ? "Syncing…" : "Sync Now"}
+              </button>
+            </div>
+          </div>
+
+          {/* Credential form */}
+          {showCredentialForm && (
+            <div className="border border-neutral-200 p-6 mb-8 bg-neutral-50">
+              <h3 className="text-sm font-medium mb-1">Update Shopify Collabs Credentials</h3>
+              <p className="text-xs text-neutral-500 mb-4">
+                Go to collabs.shopify.com/analytics → DevTools → Network → click any graphql request → Headers tab.
+                Copy the full <strong>cookie</strong> request header value and the <strong>x-csrf-token</strong> request header value.
+                Session expires every ~24 hours — refresh when Sync Now fails.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-neutral-500 block mb-1">Cookie Header Value</label>
+                  <textarea
+                    value={credCookie}
+                    onChange={(e) => setCredCookie(e.target.value)}
+                    rows={3}
+                    placeholder="_dovetale_session=...; signed_user_id=...; ..."
+                    className="w-full border border-neutral-300 px-3 py-2 text-xs font-mono resize-none focus:outline-none focus:border-black"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-neutral-500 block mb-1">x-csrf-token Request Header</label>
+                  <input
+                    type="text"
+                    value={credCsrf}
+                    onChange={(e) => setCredCsrf(e.target.value)}
+                    placeholder="vfMui6cdM1b1V_..."
+                    className="w-full border border-neutral-300 px-3 py-2 text-sm font-mono focus:outline-none focus:border-black"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveCredentials}
+                  disabled={credSaving || !credCookie.trim() || !credCsrf.trim()}
+                  className="px-5 py-2 bg-black text-white text-sm hover:bg-neutral-800 transition disabled:opacity-50"
+                >
+                  {credSaving ? "Saving…" : "Save & Sync"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {collabsLoading ? (
+            <div className="text-center py-16 text-neutral-500">Syncing from Shopify Collabs…</div>
+          ) : collabsData?.error ? (
+            <div className="border border-dashed border-neutral-300 p-8 text-center">
+              <p className="text-neutral-600 mb-2">{collabsData.error}</p>
+              <p className="text-sm text-neutral-400">
+                Click <strong>Update Credentials</strong> to paste fresh session cookies from collabs.shopify.com.
+              </p>
+            </div>
+          ) : collabsData?.partnerships && collabsData.partnerships.length > 0 ? (
+            <>
+              {collabsData.syncedAt && (
+                <p className="text-xs text-neutral-400 mb-4">
+                  Last synced {formatDate(collabsData.syncedAt)}
+                </p>
+              )}
+              <div className="border border-neutral-200">
+                <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 border-b border-neutral-200">
+                  <div className="col-span-5">Store</div>
+                  <div className="col-span-2 text-right">Visits</div>
+                  <div className="col-span-2 text-right">Orders</div>
+                  <div className="col-span-3 text-right">Earned</div>
+                </div>
+                {collabsData.partnerships
+                  .sort((a, b) => b.totalOrders - a.totalOrders)
+                  .map((p) => (
+                    <div key={p.id} className="px-4 sm:px-6 py-4 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50">
+                      <div className="sm:hidden">
+                        <p className="font-medium text-sm">{p.name}</p>
+                        <div className="flex justify-between mt-1 text-sm text-neutral-600">
+                          <span>{p.totalLinkVisits.toLocaleString()} visits · {p.totalOrders} orders</span>
+                          <span className={p.totalOrders > 0 ? "text-green-700 font-medium" : "text-neutral-400"}>
+                            {p.totalCommissionEarned}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="hidden sm:grid grid-cols-12 gap-4 items-center text-sm">
+                        <div className="col-span-5 font-medium">{p.name}</div>
+                        <div className="col-span-2 text-right tabular-nums text-neutral-600">{p.totalLinkVisits.toLocaleString()}</div>
+                        <div className="col-span-2 text-right tabular-nums">{p.totalOrders}</div>
+                        <div className={`col-span-3 text-right tabular-nums font-medium ${p.totalOrders > 0 ? "text-green-700" : "text-neutral-400"}`}>
+                          {p.totalCommissionEarned}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <p className="text-xs text-neutral-400 mt-3">
+                Data pulled directly from Shopify Collabs. Earnings reflect actual commission, not order total.
+              </p>
+            </>
+          ) : (
+            <div className="border border-dashed border-neutral-300 p-8 text-center">
+              <p className="text-neutral-500 mb-2">No Collabs data yet.</p>
+              <p className="text-sm text-neutral-400">Click <strong>Update Credentials</strong> to connect your Shopify Collabs account.</p>
+            </div>
+          )}
+        </div>
       ) : activeTab === "inventory" ? (
         /* ==================== INVENTORY TAB ==================== */
         inventoryLoading ? (
