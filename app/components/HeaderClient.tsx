@@ -76,10 +76,8 @@ export default function HeaderClient({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [storesDropdownOpen, setStoresDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
-  const [accessoriesDropdownOpen, setAccessoriesDropdownOpen] = useState(false);
   const [mobileStoresExpanded, setMobileStoresExpanded] = useState(false);
   const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
-  const [mobileAccessoriesExpanded, setMobileAccessoriesExpanded] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
   const { itemCount } = useCart();
@@ -87,7 +85,6 @@ export default function HeaderClient({
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
-  const accessoriesDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -96,9 +93,6 @@ export default function HeaderClient({
       }
       if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(e.target as Node)) {
         setCategoriesDropdownOpen(false);
-      }
-      if (accessoriesDropdownRef.current && !accessoriesDropdownRef.current.contains(e.target as Node)) {
-        setAccessoriesDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -310,7 +304,6 @@ export default function HeaderClient({
                   onClick={() => {
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
-                    setAccessoriesDropdownOpen(false);
                   }}
                   className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
                 >
@@ -334,6 +327,7 @@ export default function HeaderClient({
                         { slug: "clothing", label: "Clothing" },
                         { slug: "bags", label: "Bags" },
                         { slug: "shoes", label: "Shoes" },
+                        { slug: "accessories", label: "Accessories" },
                       ].map((cat) => (
                         <Link
                           key={cat.slug}
@@ -352,65 +346,6 @@ export default function HeaderClient({
                         className="block px-6 py-3 text-xs uppercase tracking-wide text-[#5D0F17]/60 hover:text-[#5D0F17] hover:bg-[#D8CABD]/50 transition-colors"
                       >
                         All Categories
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ACCESSORIES DROPDOWN */}
-              <div className="relative" ref={accessoriesDropdownRef}>
-                <button
-                  onClick={() => {
-                    setAccessoriesDropdownOpen(!accessoriesDropdownOpen);
-                    setStoresDropdownOpen(false);
-                    setCategoriesDropdownOpen(false);
-                  }}
-                  className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
-                >
-                  Accessories
-                  <ChevronDown
-                    size={14}
-                    className={`transition-transform duration-200 ${accessoriesDropdownOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                <div
-                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                    accessoriesDropdownOpen
-                      ? 'opacity-100 visible translate-y-0'
-                      : 'opacity-0 invisible -translate-y-2'
-                  }`}
-                >
-                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[180px] shadow-xl border border-[#5D0F17]/10">
-                    <div className="py-2">
-                      {[
-                        { label: "Jewelry", q: "jewelry" },
-                        { label: "Belts", q: "belts" },
-                        { label: "Wallets", q: "wallets" },
-                        { label: "Headpieces", q: "headpieces" },
-                        { label: "Home", q: "home" },
-                        { label: "Sunglasses", q: "sunglasses" },
-                        { label: "Scarves", q: "scarves" },
-                        { label: "Watches", q: "watches" },
-                      ].map((sub) => (
-                        <Link
-                          key={sub.q}
-                          href={`/search?q=${sub.q}`}
-                          onClick={() => setAccessoriesDropdownOpen(false)}
-                          className="block px-6 py-2.5 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="border-t border-[#5D0F17]/10">
-                      <Link
-                        href="/categories/accessories"
-                        onClick={() => setAccessoriesDropdownOpen(false)}
-                        className="block px-6 py-3 text-xs uppercase tracking-wide text-[#5D0F17]/60 hover:text-[#5D0F17] hover:bg-[#D8CABD]/50 transition-colors"
-                      >
-                        All Accessories
                       </Link>
                     </div>
                   </div>
@@ -572,53 +507,13 @@ export default function HeaderClient({
                         </Link>
                       ))}
 
-                      {/* Accessories sub-accordion */}
-                      <div>
-                        <button
-                          onClick={() => setMobileAccessoriesExpanded(!mobileAccessoriesExpanded)}
-                          className="w-full flex items-center justify-between py-2 text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors"
-                        >
-                          Accessories
-                          <ChevronDown
-                            size={14}
-                            className={`transition-transform duration-200 ${mobileAccessoriesExpanded ? 'rotate-180' : ''}`}
-                          />
-                        </button>
-                        <div
-                          className={`overflow-hidden transition-all duration-300 ease-out ${
-                            mobileAccessoriesExpanded ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-                          }`}
-                        >
-                          <div className="pl-3 pt-1 pb-2 grid grid-cols-2 gap-x-4">
-                            {[
-                              { label: "Jewelry", q: "jewelry" },
-                              { label: "Belts", q: "belts" },
-                              { label: "Wallets", q: "wallets" },
-                              { label: "Headpieces", q: "headpieces" },
-                              { label: "Home", q: "home" },
-                              { label: "Sunglasses", q: "sunglasses" },
-                              { label: "Scarves", q: "scarves" },
-                              { label: "Watches", q: "watches" },
-                            ].map((sub) => (
-                              <Link
-                                key={sub.q}
-                                href={`/search?q=${sub.q}`}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="block py-1.5 text-sm text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
-                              >
-                                {sub.label}
-                              </Link>
-                            ))}
-                            <Link
-                              href="/categories/accessories"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="col-span-2 block py-1.5 text-xs uppercase tracking-wide text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
-                            >
-                              All Accessories
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        <Link
+                        href="/categories/accessories"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block py-2 text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors"
+                      >
+                        Accessories
+                      </Link>
 
                       <Link
                         href="/categories"

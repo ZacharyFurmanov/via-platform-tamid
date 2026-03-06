@@ -6,29 +6,11 @@ const getDatabaseUrl = () => {
   return url;
 };
 
-/** Most recent past Sunday (UTC) — used by the public page */
-export function getCurrentSunday(): string {
-  const now = new Date();
-  const day = now.getUTCDay(); // 0 = Sunday
-  const diff = day === 0 ? 0 : day;
-  const sunday = new Date(now);
-  sunday.setUTCDate(now.getUTCDate() - diff);
-  return sunday.toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-/** Next Sunday, or today if today is Sunday — used by admin */
-export function getUpcomingSunday(): string {
-  const now = new Date();
-  const day = now.getUTCDay();
-  const diff = day === 0 ? 0 : 7 - day;
-  const sunday = new Date(now);
-  sunday.setUTCDate(now.getUTCDate() + diff);
-  return sunday.toISOString().slice(0, 10);
-}
+// Sentinel value — no week concept, picks are always live
+const FIXED_WEEK = "1970-01-01";
 
 export type PickWithProduct = {
   pickId: number;
-  weekStart: string;
   position: number;
   product: {
     id: number;
@@ -56,16 +38,17 @@ export async function initEditorsPicks(): Promise<void> {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_editors_picks_week ON editors_picks(week_start)`;
+  // Migration: consolidate all picks to the fixed sentinel week
+  await sql`UPDATE editors_picks SET week_start = ${FIXED_WEEK} WHERE week_start != ${FIXED_WEEK}`;
 }
 
-export async function getPicksForWeek(weekStart: string): Promise<PickWithProduct[]> {
+export async function getAllEditorsPicks(): Promise<PickWithProduct[]> {
   const sql = neon(getDatabaseUrl());
   await initEditorsPicks();
 
   const rows = await sql`
     SELECT
       ep.id AS pick_id,
-      ep.week_start,
       ep.position,
       p.id AS product_id,
       p.store_slug,
@@ -78,15 +61,12 @@ export async function getPicksForWeek(weekStart: string): Promise<PickWithProduc
       p.external_url
     FROM editors_picks ep
     JOIN products p ON p.id = ep.product_id
-    WHERE ep.week_start = ${weekStart}
+    WHERE ep.week_start = ${FIXED_WEEK}
     ORDER BY ep.position ASC
   `;
 
   return rows.map((r) => ({
     pickId: r.pick_id as number,
-    weekStart: typeof r.week_start === "object" && r.week_start !== null
-      ? (r.week_start as Date).toISOString().slice(0, 10)
-      : String(r.week_start).slice(0, 10),
     position: r.position as number,
     product: {
       id: r.product_id as number,
@@ -102,40 +82,30 @@ export async function getPicksForWeek(weekStart: string): Promise<PickWithProduc
   }));
 }
 
-export async function getCurrentEditorsPicks(): Promise<PickWithProduct[]> {
-  return getPicksForWeek(getCurrentSunday());
-}
-
-export async function getUpcomingEditorsPicks(): Promise<PickWithProduct[]> {
-  return getPicksForWeek(getUpcomingSunday());
-}
-
 export async function addEditorsPick(productId: number): Promise<void> {
   const sql = neon(getDatabaseUrl());
   await initEditorsPicks();
 
-  const weekStart = getUpcomingSunday();
-
   const countRows = await sql`
-    SELECT COUNT(*)::int AS cnt FROM editors_picks WHERE week_start = ${weekStart}
+    SELECT COALESCE(MAX(position), -1)::int AS max_pos
+    FROM editors_picks
+    WHERE week_start = ${FIXED_WEEK}
   `;
-  const count = countRows[0].cnt as number;
-  if (count >= 20) {
-    throw new Error("Maximum of 20 picks allowed per week");
-  }
+  const nextPos = (countRows[0].max_pos as number) + 1;
 
   await sql`
     INSERT INTO editors_picks (product_id, week_start, position)
-    VALUES (${productId}, ${weekStart}, ${count})
+    VALUES (${productId}, ${FIXED_WEEK}, ${nextPos})
     ON CONFLICT (product_id, week_start) DO NOTHING
   `;
 }
 
-export async function removeEditorsPick(productId: number, weekStart: string): Promise<void> {
+export async function removeEditorsPick(productId: number): Promise<void> {
   const sql = neon(getDatabaseUrl());
   await initEditorsPicks();
   await sql`
-    DELETE FROM editors_picks WHERE product_id = ${productId} AND week_start = ${weekStart}
+    DELETE FROM editors_picks
+    WHERE product_id = ${productId} AND week_start = ${FIXED_WEEK}
   `;
 }
 
@@ -159,7 +129,6 @@ function mapProductRow(r: Record<string, unknown>): ProductResult {
   };
 }
 
-/** Browse all products for a store (no search query needed) */
 export async function getProductsByStore(storeSlug: string, limit = 200): Promise<ProductResult[]> {
   const sql = neon(getDatabaseUrl());
   const rows = await sql`

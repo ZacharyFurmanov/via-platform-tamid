@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getUpcomingEditorsPicks,
-  getPicksForWeek,
+  getAllEditorsPicks,
   addEditorsPick,
   removeEditorsPick,
-  getUpcomingSunday,
 } from "@/app/lib/editors-picks-db";
 
 function hashPassword(password: string): string {
@@ -33,10 +31,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { searchParams } = new URL(request.url);
-    const week = searchParams.get("week");
-    const picks = week ? await getPicksForWeek(week) : await getUpcomingEditorsPicks();
-    return NextResponse.json({ picks, weekStart: week || getUpcomingSunday() });
+    const picks = await getAllEditorsPicks();
+    return NextResponse.json({ picks });
   } catch (error) {
     console.error("Failed to fetch editor's picks:", error);
     return NextResponse.json({ error: "Failed to fetch picks" }, { status: 500 });
@@ -57,8 +53,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to add pick";
-    const status = msg.includes("Maximum") ? 400 : 500;
-    return NextResponse.json({ error: msg }, { status });
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -68,11 +63,11 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const { productId, weekStart } = await request.json();
-    if (!productId || !weekStart) {
-      return NextResponse.json({ error: "productId and weekStart required" }, { status: 400 });
+    const { productId } = await request.json();
+    if (!productId) {
+      return NextResponse.json({ error: "productId required" }, { status: 400 });
     }
-    await removeEditorsPick(productId, weekStart);
+    await removeEditorsPick(productId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to remove editor's pick:", error);

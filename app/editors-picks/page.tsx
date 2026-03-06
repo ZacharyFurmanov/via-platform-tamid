@@ -1,12 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import { getCurrentEditorsPicks } from "@/app/lib/editors-picks-db";
+import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import MixedProductGrid from "@/app/components/MixedProductGrid";
 
 export default async function EditorsPicksPage() {
-  const picks = await getCurrentEditorsPicks();
+  const picks = await getAllEditorsPicks();
 
   const gridProducts = picks.map((pick) => ({
     id: pick.product.id,
