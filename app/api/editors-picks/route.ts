@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getCurrentEditorsPicks } from "@/app/lib/editors-picks-db";
+import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 
 export async function GET() {
   try {
-    const picks = await getCurrentEditorsPicks();
+    const picks = await getAllEditorsPicks();
     return NextResponse.json({ picks });
   } catch (error) {
     console.error("Failed to fetch editor's picks:", error);
