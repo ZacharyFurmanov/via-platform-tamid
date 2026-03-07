@@ -348,6 +348,29 @@ export const stores = [
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
+  {
+    slug: "blodas-choice",
+    dashboardToken: "bc-3d7a1e9f4c2b",
+    name: "Bloda's Choice",
+    location: "New York, NY",
+    description:
+      "Anna Bloda — NYC-based photographer, model, and vintage collector. Born in Poland in 1975, she studied art and photography and discovered her love for fashion while styling her models. Moving to New York City opened a new chapter: the world of vintage became her playground. Her curated finds became Bloda's Choice, a Chinatown boutique celebrating quality, color therapy, and self-expression. With a Y3K lens and an eye for the unusual, Anna transforms timeless pieces into art, making her a legend in fashion and photography.",
+    website: "https://blodaschoice.com",
+    dataSource: "blodas-choice",
+    image: "/stores/blodas-choice.jpg",
+    logo: "/stores/blodas-choice.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VIA",
+    collabsStoreId: "230978",
+    authenticityPolicy:
+      "Every piece at Bloda's Choice is personally sourced and selected by Anna. Each item is chosen for its character, quality, and story — accurately described so you always know exactly what you're getting.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**
@@ -390,6 +413,7 @@ export const storeContactEmails: Record<string, string> = {
   "moonstruck-vintage": "moonstruckvintagenyc@gmail.com",
   "maison-optimism-vintage": "maisonoptimism@gmail.com",
   "vintari-vault": "admin@vintarivault.com",
+  "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
 };
