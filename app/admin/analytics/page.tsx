@@ -238,10 +238,16 @@ export default function AnalyticsPage() {
       : "0.00";
 
   const parseCommission = (s: string) => parseFloat(s.replace(/[^0-9.]/g, "")) || 0;
-  const collabsTotalRevenue = collabsData?.partnerships
+  const collabsCommission = collabsData?.partnerships
     ? collabsData.partnerships.reduce((sum, p) => sum + parseCommission(p.totalCommissionEarned), 0)
     : 0;
-  const totalTrackedRevenue = (conversionData?.matchedRevenue ?? 0) + collabsTotalRevenue;
+  const collabsTotalOrders = collabsData?.partnerships
+    ? collabsData.partnerships.reduce((sum, p) => sum + p.totalOrders, 0)
+    : 0;
+  const totalConversions = (conversionData?.matchedConversions ?? 0) + collabsTotalOrders;
+  const totalConversionRate = clickData && clickData.totalClicks > 0 && totalConversions > 0
+    ? ((totalConversions / clickData.totalClicks) * 100).toFixed(2)
+    : conversionRate;
   const maxCollabsRevenue = collabsData?.partnerships
     ? Math.max(...collabsData.partnerships.map((p) => parseCommission(p.totalCommissionEarned)), 1)
     : 1;
@@ -308,22 +314,26 @@ export default function AnalyticsPage() {
       {!loading && clickData && conversionData && (
         <section className="border-b border-neutral-200 bg-neutral-50">
           <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-8">
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Total Clicks</p>
                 <p className="text-2xl sm:text-3xl font-serif">{clickData.totalClicks.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Conversions</p>
-                <p className="text-2xl sm:text-3xl font-serif">{conversionData.matchedConversions.toLocaleString()}</p>
+                <p className="text-2xl sm:text-3xl font-serif">{totalConversions.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Conversion Rate</p>
-                <p className="text-2xl sm:text-3xl font-serif">{conversionRate}%</p>
+                <p className="text-2xl sm:text-3xl font-serif">{totalConversionRate}%</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Tracked Revenue</p>
-                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(totalTrackedRevenue)}</p>
+                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(conversionData.matchedRevenue)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Collabs Commission</p>
+                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(collabsCommission)}</p>
               </div>
             </div>
           </div>
@@ -877,7 +887,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="bg-green-50 p-6">
                       <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Collabs Commission</p>
-                      <p className="text-3xl font-serif text-green-800">{formatCurrency(collabsTotalRevenue)}</p>
+                      <p className="text-3xl font-serif text-green-800">{formatCurrency(collabsCommission)}</p>
                       <p className="text-sm text-green-600 mt-1">from Shopify Collabs</p>
                     </div>
                   </div>
