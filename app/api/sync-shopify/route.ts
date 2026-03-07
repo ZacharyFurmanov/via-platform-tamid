@@ -11,7 +11,7 @@ import { convertToUSD } from "@/app/lib/stores";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { storeName, storeDomain, storefrontAccessToken, maxProducts } = body;
+    const { storeName, storeSlug: providedSlug, storeDomain, storefrontAccessToken, maxProducts } = body;
 
     // Validate inputs
     if (!storeName || typeof storeName !== "string") {
@@ -83,11 +83,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create store slug from store name (kebab-case)
-    const storeSlug = storeName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+    // Use provided slug if available, otherwise derive from store name (kebab-case)
+    const storeSlug = (providedSlug && typeof providedSlug === "string")
+      ? providedSlug
+      : storeName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
     // Convert to standard format for storage, filtering out null prices
     const rawProducts = fetchResult.products.map(toRSSProductFormat);

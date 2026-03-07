@@ -70,6 +70,7 @@ export default function SyncAdminPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             storeName: store.name,
+            storeSlug: store.slug,
             storeDomain: store.storeDomain,
             storefrontAccessToken: store.storefrontAccessToken,
           }),

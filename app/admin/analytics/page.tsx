@@ -103,6 +103,7 @@ export default function AnalyticsPage() {
   const [credCookie, setCredCookie] = useState("");
   const [credCsrf, setCredCsrf] = useState("");
   const [credSaving, setCredSaving] = useState(false);
+  const [credError, setCredError] = useState<string | null>(null);
   const [range, setRange] = useState<DateRange>("all");
   const [activeTab, setActiveTab] = useState<"clicks" | "conversions" | "collabs" | "inventory">("clicks");
   const router = useRouter();
@@ -178,16 +179,24 @@ export default function AnalyticsPage() {
   async function handleSaveCredentials() {
     if (!credCookie.trim() || !credCsrf.trim()) return;
     setCredSaving(true);
+    setCredError(null);
     try {
-      await fetch("/api/admin/sync-collabs", {
+      const res = await fetch("/api/admin/sync-collabs", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ cookie: credCookie.trim(), csrfToken: credCsrf.trim() }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCredError(data.error || `Failed to save credentials (${res.status}). Try logging out and back in.`);
+        return;
+      }
       setShowCredentialForm(false);
       setCredCookie("");
       setCredCsrf("");
       await handleCollabsSync();
+    } catch {
+      setCredError("Network error — could not save credentials.");
     } finally {
       setCredSaving(false);
     }
@@ -567,6 +576,9 @@ export default function AnalyticsPage() {
                     className="w-full border border-neutral-300 px-3 py-2 text-sm font-mono focus:outline-none focus:border-black"
                   />
                 </div>
+                {credError && (
+                  <p className="text-xs text-red-600">{credError}</p>
+                )}
                 <button
                   onClick={handleSaveCredentials}
                   disabled={credSaving || !credCookie.trim() || !credCsrf.trim()}
