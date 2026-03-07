@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
 import { auth } from "@/app/lib/auth";
-
-function getDatabaseUrl() {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) throw new Error("DATABASE_URL or POSTGRES_URL not set");
-  return url;
-}
+import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { getDb } from "@/app/lib/firebase-db";
 
 export async function DELETE() {
   const session = await auth();
@@ -15,18 +10,55 @@ export async function DELETE() {
   }
 
   const userId = session.user.id;
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
 
-  // Delete from all tables that reference this user
-  // Order matters: delete from leaf tables first, then the user row
-  await sql`DELETE FROM favorite_notifications WHERE user_id = ${userId}`;
-  await sql`DELETE FROM friend_activity WHERE user_id = ${userId}`;
-  await sql`DELETE FROM friend_requests WHERE from_user_id = ${userId} OR to_user_id = ${userId}`;
-  await sql`DELETE FROM friendships WHERE user_a_id = ${userId} OR user_b_id = ${userId}`;
-  await sql`DELETE FROM product_favorites WHERE user_id = ${userId}`;
-  await sql`DELETE FROM store_favorites WHERE user_id = ${userId}`;
-  await sql`DELETE FROM accounts WHERE user_id = ${userId}`;
-  await sql`DELETE FROM users WHERE id = ${userId}`;
+  const [notificationSnaps, activitySnaps, requestSnaps, friendshipSnaps, productFavSnaps, storeFavSnaps, accountSnaps] =
+    await Promise.all([
+      getDocs(collection(db, "favorite_notifications")),
+      getDocs(collection(db, "friend_activity")),
+      getDocs(collection(db, "friend_requests")),
+      getDocs(collection(db, "friendships")),
+      getDocs(collection(db, "product_favorites")),
+      getDocs(collection(db, "store_favorites")),
+      getDocs(collection(db, "auth_accounts")),
+    ]);
+
+  for (const snap of notificationSnaps.docs) {
+    const row = snap.data() as { user_id?: string };
+    if (row.user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of activitySnaps.docs) {
+    const row = snap.data() as { user_id?: string };
+    if (row.user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of requestSnaps.docs) {
+    const row = snap.data() as { from_user_id?: string; to_user_id?: string };
+    if (row.from_user_id === userId || row.to_user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of friendshipSnaps.docs) {
+    const row = snap.data() as { user_a_id?: string; user_b_id?: string };
+    if (row.user_a_id === userId || row.user_b_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of productFavSnaps.docs) {
+    const row = snap.data() as { user_id?: string };
+    if (row.user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of storeFavSnaps.docs) {
+    const row = snap.data() as { user_id?: string };
+    if (row.user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  for (const snap of accountSnaps.docs) {
+    const row = snap.data() as { user_id?: string };
+    if (row.user_id === userId) await deleteDoc(snap.ref);
+  }
+
+  await deleteDoc(doc(collection(db, "users"), userId));
 
   return NextResponse.json({ ok: true });
 }

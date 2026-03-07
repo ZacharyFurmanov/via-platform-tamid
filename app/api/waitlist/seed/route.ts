@@ -1,49 +1,48 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { collection, doc, getDoc, setDoc } from "firebase/firestore";
 import fs from "fs";
 import path from "path";
+import { getDb, nowIso } from "@/app/lib/firebase-db";
+
+const WAITLIST_COLLECTION = "waitlist";
+
+type WaitlistSeedData = {
+  emails: Array<{
+    email: string;
+    signupDate?: string;
+    source?: string;
+  }>;
+};
 
 export async function POST() {
   try {
-    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-    if (!url) {
-      return NextResponse.json(
-        { error: "DATABASE_URL not set" },
-        { status: 500 }
-      );
-    }
-
-    const sql = neon(url);
-
-    // Create table
-    await sql`
-      CREATE TABLE IF NOT EXISTS waitlist (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        signup_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        source VARCHAR(50) DEFAULT 'waitlist'
-      )
-    `;
-
-    // Read existing JSON data
     const dataFile = path.join(process.cwd(), "app", "data", "waitlist.json");
     const content = fs.readFileSync(dataFile, "utf-8");
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as WaitlistSeedData;
 
     let inserted = 0;
     let skipped = 0;
 
     for (const entry of data.emails) {
-      try {
-        await sql`
-          INSERT INTO waitlist (email, signup_date, source)
-          VALUES (${entry.email}, ${entry.signupDate}, ${entry.source || "waitlist"})
-          ON CONFLICT (email) DO NOTHING
-        `;
-        inserted++;
-      } catch {
-        skipped++;
+      if (!entry.email) {
+        skipped += 1;
+        continue;
       }
+
+      const normalizedEmail = entry.email.toLowerCase();
+      const ref = doc(collection(getDb(), WAITLIST_COLLECTION), normalizedEmail);
+      const existing = await getDoc(ref);
+      if (existing.exists()) {
+        skipped += 1;
+        continue;
+      }
+
+      await setDoc(ref, {
+        email: normalizedEmail,
+        signup_date: entry.signupDate || nowIso(),
+        source: entry.source || "waitlist",
+      });
+      inserted += 1;
     }
 
     return NextResponse.json({
@@ -52,9 +51,6 @@ export async function POST() {
     });
   } catch (error) {
     console.error("[Waitlist Seed] Error:", error);
-    return NextResponse.json(
-      { error: "Seed failed", details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Seed failed", details: String(error) }, { status: 500 });
   }
 }

@@ -12,16 +12,16 @@ import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
 import MembershipPortalButton from "./MembershipPortalButton";
-import { neon } from "@neondatabase/serverless";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { getDb } from "@/app/lib/firebase-db";
 
 async function getUserSettings(userId: string): Promise<{ notificationsEnabled: boolean; phone: string }> {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) return { notificationsEnabled: true, phone: "" };
-  const sql = neon(url);
-  const rows = await sql`SELECT notification_emails_enabled, phone FROM users WHERE id = ${userId}`;
+  const snap = await getDoc(doc(collection(getDb(), "users"), userId));
+  if (!snap.exists()) return { notificationsEnabled: true, phone: "" };
+  const data = snap.data() as { notification_emails_enabled?: boolean; phone?: string | null };
   return {
-    notificationsEnabled: rows[0]?.notification_emails_enabled !== false,
-    phone: (rows[0]?.phone as string) || "",
+    notificationsEnabled: data.notification_emails_enabled !== false,
+    phone: data.phone || "",
   };
 }
 

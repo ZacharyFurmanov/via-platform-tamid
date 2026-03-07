@@ -1,32 +1,45 @@
-import { neon } from "@neondatabase/serverless";
+import { addDoc, collection, getDocs } from "firebase/firestore";
+import { getDb, nowIso } from "./firebase-db";
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  }
-  return url;
+const PRODUCT_FAVORITES_COLLECTION = "product_favorites";
+const USERS_COLLECTION = "users";
+const PRODUCTS_COLLECTION = "products";
+const CLICKS_COLLECTION = "clicks";
+const FAVORITE_NOTIFICATIONS_COLLECTION = "favorite_notifications";
+
+type ProductFavoriteDoc = {
+  user_id: string;
+  product_id: number;
+  created_at: string;
 };
 
-let tablesInitialized = false;
+type UserDoc = {
+  email?: string;
+  notification_emails_enabled?: boolean;
+};
+
+type ProductDoc = {
+  id: number;
+  title: string;
+  image: string | null;
+  store_name: string;
+  store_slug: string;
+};
+
+type ClickDoc = {
+  product_id: string;
+  timestamp: string;
+};
+
+type FavoriteNotificationDoc = {
+  user_id: string;
+  product_id: number;
+  sent_at: string;
+  click_count_at_send: number;
+};
 
 export async function initNotificationTables() {
-  if (tablesInitialized) return;
-  const sql = neon(getDatabaseUrl());
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS favorite_notifications (
-      id SERIAL PRIMARY KEY,
-      user_id UUID NOT NULL,
-      product_id INT NOT NULL,
-      sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      click_count_at_send INT NOT NULL DEFAULT 0
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_fav_notif_user_product ON favorite_notifications(user_id, product_id)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_fav_notif_sent_at ON favorite_notifications(sent_at)`;
-
-  tablesInitialized = true;
+  // Firestore collections are created implicitly.
 }
 
 export type NotificationCandidate = {
@@ -40,73 +53,138 @@ export type NotificationCandidate = {
   recent_click_count: number;
 };
 
-/**
- * Find products that have favorites AND recent clicks since last notification.
- * A product qualifies if it has 3+ clicks since the user was last notified
- * (or since they favorited it, if never notified).
- */
 export async function getFavoriteNotificationCandidates(): Promise<NotificationCandidate[]> {
   await initNotificationTables();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
 
-  // The clicks table stores product_id as composite string "store-slug-123"
-  // We need to join with products by extracting the numeric ID
-  const rows = await sql`
-    SELECT
-      pf.user_id,
-      u.email,
-      p.id AS product_id,
-      p.title AS product_title,
-      p.image AS product_image,
-      p.store_name,
-      p.store_slug,
-      COUNT(c.id) AS recent_click_count
-    FROM product_favorites pf
-    JOIN users u ON u.id = pf.user_id
-    JOIN products p ON p.id = pf.product_id
-    JOIN clicks c ON c.product_id = CONCAT(p.store_slug, '-', p.id::text)
-      AND c.timestamp > COALESCE(
-        (SELECT MAX(fn.sent_at) FROM favorite_notifications fn
-         WHERE fn.user_id = pf.user_id AND fn.product_id = pf.product_id),
-        pf.created_at
-      )
-    WHERE u.notification_emails_enabled = TRUE
-    GROUP BY pf.user_id, u.email, p.id, p.title, p.image, p.store_name, p.store_slug
-    HAVING COUNT(c.id) >= 3
-  `;
+  const [favoriteSnaps, userSnaps, productSnaps, clickSnaps, notifSnaps] = await Promise.all([
+    getDocs(collection(db, PRODUCT_FAVORITES_COLLECTION)),
+    getDocs(collection(db, USERS_COLLECTION)),
+    getDocs(collection(db, PRODUCTS_COLLECTION)),
+    getDocs(collection(db, CLICKS_COLLECTION)),
+    getDocs(collection(db, FAVORITE_NOTIFICATIONS_COLLECTION)),
+  ]);
 
-  return rows as NotificationCandidate[];
+  const favorites = favoriteSnaps.docs
+    .map((snap) => snap.data() as Partial<ProductFavoriteDoc>)
+    .filter(
+      (row): row is ProductFavoriteDoc =>
+        typeof row.user_id === "string" &&
+        typeof row.product_id === "number" &&
+        typeof row.created_at === "string"
+    );
+
+  const users = new Map(
+    userSnaps.docs.map((snap) => [snap.id, snap.data() as UserDoc])
+  );
+
+  const products = new Map<number, ProductDoc>();
+  for (const snap of productSnaps.docs) {
+    const row = snap.data() as Partial<ProductDoc>;
+    if (
+      typeof row.id === "number" &&
+      typeof row.title === "string" &&
+      typeof row.store_name === "string" &&
+      typeof row.store_slug === "string"
+    ) {
+      products.set(row.id, {
+        id: row.id,
+        title: row.title,
+        image: row.image ?? null,
+        store_name: row.store_name,
+        store_slug: row.store_slug,
+      });
+    }
+  }
+
+  const clicks = clickSnaps.docs
+    .map((snap) => snap.data() as Partial<ClickDoc>)
+    .filter(
+      (row): row is ClickDoc =>
+        typeof row.product_id === "string" && typeof row.timestamp === "string"
+    );
+
+  const notifications = notifSnaps.docs
+    .map((snap) => snap.data() as Partial<FavoriteNotificationDoc>)
+    .filter(
+      (row): row is FavoriteNotificationDoc =>
+        typeof row.user_id === "string" &&
+        typeof row.product_id === "number" &&
+        typeof row.sent_at === "string" &&
+        typeof row.click_count_at_send === "number"
+    );
+
+  const latestSent = new Map<string, string>();
+  for (const notif of notifications) {
+    const key = `${notif.user_id}__${notif.product_id}`;
+    const current = latestSent.get(key);
+    if (!current || notif.sent_at > current) {
+      latestSent.set(key, notif.sent_at);
+    }
+  }
+
+  const candidates: NotificationCandidate[] = [];
+
+  for (const favorite of favorites) {
+    const user = users.get(favorite.user_id);
+    if (!user) continue;
+    if (user.notification_emails_enabled === false) continue;
+    if (typeof user.email !== "string") continue;
+
+    const product = products.get(favorite.product_id);
+    if (!product) continue;
+
+    const since = latestSent.get(`${favorite.user_id}__${favorite.product_id}`) || favorite.created_at;
+    const compositeId = `${product.store_slug}-${product.id}`;
+
+    const recentClickCount = clicks.filter(
+      (click) => click.product_id === compositeId && click.timestamp > since
+    ).length;
+
+    if (recentClickCount < 3) continue;
+
+    candidates.push({
+      user_id: favorite.user_id,
+      email: user.email,
+      product_id: product.id,
+      product_title: product.title,
+      product_image: product.image,
+      store_name: product.store_name,
+      store_slug: product.store_slug,
+      recent_click_count: recentClickCount,
+    });
+  }
+
+  return candidates;
 }
 
-/**
- * Record that a notification was sent to a user for a product.
- */
 export async function recordNotificationSent(
   userId: string,
   productId: number,
   clickCount: number
 ): Promise<void> {
   await initNotificationTables();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
 
-  await sql`
-    INSERT INTO favorite_notifications (user_id, product_id, click_count_at_send)
-    VALUES (${userId}, ${productId}, ${clickCount})
-  `;
+  await addDoc(collection(db, FAVORITE_NOTIFICATIONS_COLLECTION), {
+    user_id: userId,
+    product_id: productId,
+    sent_at: nowIso(),
+    click_count_at_send: clickCount,
+  } satisfies FavoriteNotificationDoc);
 }
 
-/**
- * Get how many notification emails a user has received today (for daily cap).
- */
 export async function getNotificationsSentTodayCount(userId: string): Promise<number> {
   await initNotificationTables();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
 
-  const rows = await sql`
-    SELECT COUNT(*) as count FROM favorite_notifications
-    WHERE user_id = ${userId}
-      AND sent_at >= CURRENT_DATE
-  `;
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  const startIso = start.toISOString();
 
-  return Number(rows[0]?.count ?? 0);
+  const snaps = await getDocs(collection(db, FAVORITE_NOTIFICATIONS_COLLECTION));
+  return snaps.docs
+    .map((snap) => snap.data() as Partial<FavoriteNotificationDoc>)
+    .filter((row) => row.user_id === userId)
+    .filter((row) => typeof row.sent_at === "string" && row.sent_at >= startIso).length;
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { collection, deleteDoc, getDocs } from "firebase/firestore";
+import { getDb } from "@/app/lib/firebase-db";
 
 function hashPassword(password: string): string {
   let hash = 0;
@@ -32,13 +33,15 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "slug param required" }, { status: 400 });
   }
 
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) return NextResponse.json({ error: "No database URL" }, { status: 500 });
+  const snaps = await getDocs(collection(getDb(), "products"));
+  let deleted = 0;
 
-  const sql = neon(url);
-  const result = await sql`
-    DELETE FROM products WHERE store_slug = ${slug}
-  `;
+  for (const snap of snaps.docs) {
+    const row = snap.data() as { store_slug?: string };
+    if (row.store_slug !== slug) continue;
+    await deleteDoc(snap.ref);
+    deleted += 1;
+  }
 
-  return NextResponse.json({ success: true, deleted: result.length ?? 0, slug });
+  return NextResponse.json({ success: true, deleted, slug });
 }

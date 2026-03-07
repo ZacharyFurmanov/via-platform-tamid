@@ -1,12 +1,14 @@
-import { neon } from "@neondatabase/serverless";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { ensureCounterAtLeast, getDb, nextCounter, nowIso } from "./firebase-db";
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  }
-  return url;
-};
+const GIVEAWAY_COLLECTION = "giveaway_entries";
 
 export interface GiveawayEntry {
   id: number;
@@ -23,14 +25,28 @@ export interface GiveawayEntry {
   updatedAt: Date;
 }
 
-export type ReminderCategory = 'no_activity' | 'invited_no_entries' | 'one_referral';
+export type ReminderCategory = "no_activity" | "invited_no_entries" | "one_referral";
 
 export interface ReminderCandidate {
   entry: GiveawayEntry;
   category: ReminderCategory;
 }
 
-// Characters excluding ambiguous ones (O/0/I/1)
+type GiveawayDoc = {
+  id: number;
+  email: string;
+  referral_code: string;
+  referred_by_code: string | null;
+  referral_count: number;
+  friend_1_email: string | null;
+  friend_2_email: string | null;
+  phone_1: string | null;
+  phone_2: string | null;
+  reminder_sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function generateReferralCode(): string {
@@ -41,259 +57,277 @@ function generateReferralCode(): string {
   return code;
 }
 
+function entryDocId(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function mapDoc(row: GiveawayDoc): GiveawayEntry {
+  return {
+    id: row.id,
+    email: row.email,
+    referralCode: row.referral_code,
+    referredByCode: row.referred_by_code,
+    referralCount: row.referral_count,
+    friend1Email: row.friend_1_email,
+    friend2Email: row.friend_2_email,
+    phone1: row.phone_1,
+    phone2: row.phone_2,
+    reminderSentAt: row.reminder_sent_at ? new Date(row.reminder_sent_at) : null,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+async function getAllRows(): Promise<GiveawayDoc[]> {
+  const db = getDb();
+  const snaps = await getDocs(collection(db, GIVEAWAY_COLLECTION));
+
+  return snaps.docs
+    .map((snap) => snap.data() as Partial<GiveawayDoc>)
+    .filter(
+      (row): row is GiveawayDoc =>
+        typeof row.id === "number" &&
+        typeof row.email === "string" &&
+        typeof row.referral_code === "string" &&
+        typeof row.referral_count === "number" &&
+        typeof row.created_at === "string" &&
+        typeof row.updated_at === "string"
+    );
+}
+
+function referralCountByCode(rows: GiveawayDoc[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    const code = row.referred_by_code?.toUpperCase();
+    if (!code) continue;
+    map.set(code, (map.get(code) ?? 0) + 1);
+  }
+  return map;
+}
+
+async function syncStoredReferralCount(row: GiveawayDoc, realCount: number): Promise<void> {
+  if (realCount === row.referral_count) return;
+
+  const db = getDb();
+  const ref = doc(collection(db, GIVEAWAY_COLLECTION), entryDocId(row.email));
+  await updateDoc(ref, {
+    referral_count: realCount,
+    updated_at: nowIso(),
+  });
+}
+
 export async function initGiveawayDatabase() {
-  const sql = neon(getDatabaseUrl());
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS giveaway_entries (
-      id SERIAL PRIMARY KEY,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      referral_code VARCHAR(12) NOT NULL UNIQUE,
-      referred_by_code VARCHAR(12),
-      referral_count INT DEFAULT 0,
-      friend_1_email VARCHAR(255),
-      friend_2_email VARCHAR(255),
-      phone_1 VARCHAR(20),
-      phone_2 VARCHAR(20),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )
-  `;
-
-  await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_referral_code ON giveaway_entries(referral_code)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_email ON giveaway_entries(email)`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_referred_by ON giveaway_entries(referred_by_code)`;
-
-  await sql`ALTER TABLE giveaway_entries ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMP WITH TIME ZONE`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_giveaway_reminder_candidates ON giveaway_entries(updated_at) WHERE referral_count < 2 AND reminder_sent_at IS NULL`;
+  const rows = await getAllRows();
+  const maxId = rows.reduce((max, row) => (row.id > max ? row.id : max), 0);
+  await ensureCounterAtLeast("giveaway_entries", maxId);
 }
 
 export async function createGiveawayEntry(
   email: string,
   referredByCode?: string
 ): Promise<{ referralCode: string; isExisting: boolean }> {
-  const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
+  const db = getDb();
 
-  // Check if email already exists
-  const existing = await sql`
-    SELECT referral_code FROM giveaway_entries WHERE email = ${email.toLowerCase()}
-  `;
+  const normalizedEmail = email.toLowerCase();
+  const ref = doc(collection(db, GIVEAWAY_COLLECTION), entryDocId(normalizedEmail));
+  const existing = await getDoc(ref);
 
-  if (existing.length > 0) {
-    return { referralCode: existing[0].referral_code as string, isExisting: true };
+  if (existing.exists()) {
+    const data = existing.data() as GiveawayDoc;
+    return { referralCode: data.referral_code, isExisting: true };
   }
 
-  // Generate unique referral code with retry on collision
+  const existingRows = await getAllRows();
+  const existingCodes = new Set(existingRows.map((row) => row.referral_code.toUpperCase()));
+
   let referralCode = generateReferralCode();
   let attempts = 0;
-  while (attempts < 10) {
-    try {
-      await sql`
-        INSERT INTO giveaway_entries (email, referral_code, referred_by_code)
-        VALUES (${email.toLowerCase()}, ${referralCode}, ${referredByCode || null})
-      `;
-      return { referralCode, isExisting: false };
-    } catch (err: unknown) {
-      const error = err as { code?: string };
-      // Unique violation on referral_code — retry with new code
-      if (error.code === "23505") {
-        referralCode = generateReferralCode();
-        attempts++;
-        continue;
-      }
-      throw err;
-    }
+  while (attempts < 10 && existingCodes.has(referralCode.toUpperCase())) {
+    referralCode = generateReferralCode();
+    attempts += 1;
   }
 
-  throw new Error("Failed to generate unique referral code after 10 attempts");
+  if (existingCodes.has(referralCode.toUpperCase())) {
+    throw new Error("Failed to generate unique referral code after 10 attempts");
+  }
+
+  const id = await nextCounter("giveaway_entries");
+  const now = nowIso();
+
+  const payload: GiveawayDoc = {
+    id,
+    email: normalizedEmail,
+    referral_code: referralCode,
+    referred_by_code: referredByCode ? referredByCode.toUpperCase() : null,
+    referral_count: 0,
+    friend_1_email: null,
+    friend_2_email: null,
+    phone_1: null,
+    phone_2: null,
+    reminder_sent_at: null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  await setDoc(ref, payload);
+  return { referralCode, isExisting: false };
 }
 
 export async function getEntryByCode(code: string): Promise<GiveawayEntry | null> {
-  const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
   const upperCode = code.toUpperCase();
+  const rows = await getAllRows();
+  const row = rows.find((item) => item.referral_code.toUpperCase() === upperCode);
+  if (!row) return null;
 
-  const result = await sql`
-    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
-  `;
+  const counts = referralCountByCode(rows);
+  const realCount = counts.get(upperCode) ?? 0;
+  await syncStoredReferralCount(row, realCount);
 
-  if (result.length === 0) return null;
-
-  // Compute the true referral count from the actual referred entries
-  // (the referral_count column can drift due to race conditions)
-  const countResult = await sql`
-    SELECT COUNT(*)::int AS real_count
-    FROM giveaway_entries
-    WHERE UPPER(referred_by_code) = ${upperCode}
-  `;
-  const realCount = countResult[0]?.real_count ?? 0;
-
-  // Sync the column if it drifted
-  if (realCount !== result[0].referral_count) {
-    await sql`
-      UPDATE giveaway_entries
-      SET referral_count = ${realCount}
-      WHERE UPPER(referral_code) = ${upperCode}
-    `;
-  }
-
-  const entry = mapRow(result[0]);
-  entry.referralCount = realCount as number;
-  return entry;
+  return {
+    ...mapDoc(row),
+    referralCount: realCount,
+  };
 }
 
 export async function getEntryByEmail(email: string): Promise<GiveawayEntry | null> {
-  const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
-  const result = await sql`
-    SELECT * FROM giveaway_entries WHERE email = ${email.toLowerCase()}
-  `;
+  const ref = doc(collection(getDb(), GIVEAWAY_COLLECTION), entryDocId(email));
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
 
-  if (result.length === 0) return null;
+  const row = snap.data() as GiveawayDoc;
+  const rows = await getAllRows();
+  const counts = referralCountByCode(rows);
+  const upperCode = row.referral_code.toUpperCase();
+  const realCount = counts.get(upperCode) ?? 0;
+  await syncStoredReferralCount(row, realCount);
 
-  // Compute the true referral count from actual referred entries
-  const upperCode = (result[0].referral_code as string).toUpperCase();
-  const countResult = await sql`
-    SELECT COUNT(*)::int AS real_count
-    FROM giveaway_entries
-    WHERE UPPER(referred_by_code) = ${upperCode}
-  `;
-  const realCount = countResult[0]?.real_count ?? 0;
-
-  if (realCount !== result[0].referral_count) {
-    await sql`
-      UPDATE giveaway_entries
-      SET referral_count = ${realCount}
-      WHERE UPPER(referral_code) = ${upperCode}
-    `;
-  }
-
-  const entry = mapRow(result[0]);
-  entry.referralCount = realCount as number;
-  return entry;
+  return {
+    ...mapDoc(row),
+    referralCount: realCount,
+  };
 }
 
-export async function recordPhoneInvites(
-  code: string,
-  phone1: string,
-  phone2: string
-): Promise<void> {
-  const sql = neon(getDatabaseUrl());
+export async function recordPhoneInvites(code: string, phone1: string, phone2: string): Promise<void> {
   await initGiveawayDatabase();
+  const rows = await getAllRows();
+  const row = rows.find((item) => item.referral_code.toUpperCase() === code.toUpperCase());
+  if (!row) return;
 
-  await sql`
-    UPDATE giveaway_entries
-    SET phone_1 = ${phone1}, phone_2 = ${phone2}, updated_at = NOW()
-    WHERE referral_code = ${code}
-  `;
+  const ref = doc(collection(getDb(), GIVEAWAY_COLLECTION), entryDocId(row.email));
+  await updateDoc(ref, {
+    phone_1: phone1,
+    phone_2: phone2,
+    updated_at: nowIso(),
+  });
 }
 
 export async function processReferralEntry(
   newEmail: string,
   referrerCode: string
 ): Promise<{ referrerEntry: GiveawayEntry; friendNumber: 1 | 2 | null } | null> {
-  const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
   const upperCode = referrerCode.toUpperCase();
   const lowerEmail = newEmail.toLowerCase();
+  const rows = await getAllRows();
 
-  // Compute the true referral count from actual entries with this referred_by_code.
-  // The friend's entry was already created with referred_by_code set by
-  // createGiveawayEntry, so realCount already includes them.
-  const countResult = await sql`
-    SELECT COUNT(*)::int AS real_count
-    FROM giveaway_entries
-    WHERE UPPER(referred_by_code) = ${upperCode}
-  `;
-  const realCount = (countResult[0]?.real_count ?? 0) as number;
+  const referrer = rows.find((row) => row.referral_code.toUpperCase() === upperCode);
+  if (!referrer) return null;
 
-  // Get the referrer's current state
-  const referrerResult = await sql`
-    SELECT * FROM giveaway_entries WHERE UPPER(referral_code) = ${upperCode}
-  `;
-  if (referrerResult.length === 0) return null;
+  const counts = referralCountByCode(rows);
+  const realCount = counts.get(upperCode) ?? 0;
 
-  const storedCount = referrerResult[0].referral_count as number;
-
-  // If the true count hasn't increased, this referral was already processed
-  if (realCount <= storedCount) {
-    return { referrerEntry: mapRow(referrerResult[0]), friendNumber: null };
+  if (realCount <= referrer.referral_count) {
+    return {
+      referrerEntry: {
+        ...mapDoc(referrer),
+        referralCount: realCount,
+      },
+      friendNumber: null,
+    };
   }
 
-  // Update the referrer's count and fill friend email slots
-  const result = await sql`
-    UPDATE giveaway_entries
-    SET
-      referral_count = ${realCount},
-      friend_1_email = CASE WHEN friend_1_email IS NULL THEN ${lowerEmail} ELSE friend_1_email END,
-      friend_2_email = CASE WHEN friend_1_email IS NOT NULL AND friend_2_email IS NULL THEN ${lowerEmail} ELSE friend_2_email END,
-      updated_at = NOW()
-    WHERE UPPER(referral_code) = ${upperCode}
-    RETURNING *
-  `;
+  const friend1 = referrer.friend_1_email ?? lowerEmail;
+  const friend2 = referrer.friend_1_email && !referrer.friend_2_email ? lowerEmail : referrer.friend_2_email;
 
-  if (result.length === 0) return null;
+  const ref = doc(collection(getDb(), GIVEAWAY_COLLECTION), entryDocId(referrer.email));
+  await updateDoc(ref, {
+    referral_count: realCount,
+    friend_1_email: friend1,
+    friend_2_email: friend2,
+    updated_at: nowIso(),
+  });
 
-  const entry = mapRow(result[0]);
+  const updated: GiveawayDoc = {
+    ...referrer,
+    referral_count: realCount,
+    friend_1_email: friend1,
+    friend_2_email: friend2,
+    updated_at: nowIso(),
+  };
+
   const friendNumber = realCount === 1 ? 1 : realCount === 2 ? 2 : null;
-  return { referrerEntry: entry, friendNumber };
-}
-
-export async function setReferredByCode(email: string, refCode: string): Promise<void> {
-  const sql = neon(getDatabaseUrl());
-  await initGiveawayDatabase();
-
-  await sql`
-    UPDATE giveaway_entries
-    SET referred_by_code = ${refCode}, updated_at = NOW()
-    WHERE email = ${email.toLowerCase()} AND referred_by_code IS NULL
-  `;
-}
-
-function mapRow(row: Record<string, unknown>): GiveawayEntry {
   return {
-    id: row.id as number,
-    email: row.email as string,
-    referralCode: row.referral_code as string,
-    referredByCode: row.referred_by_code as string | null,
-    referralCount: row.referral_count as number,
-    friend1Email: row.friend_1_email as string | null,
-    friend2Email: row.friend_2_email as string | null,
-    phone1: row.phone_1 as string | null,
-    phone2: row.phone_2 as string | null,
-    reminderSentAt: row.reminder_sent_at ? new Date(row.reminder_sent_at as string) : null,
-    createdAt: new Date(row.created_at as string),
-    updatedAt: new Date(row.updated_at as string),
+    referrerEntry: mapDoc(updated),
+    friendNumber,
   };
 }
 
-export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
-  const sql = neon(getDatabaseUrl());
+export async function setReferredByCode(email: string, refCode: string): Promise<void> {
   await initGiveawayDatabase();
 
+  const normalizedEmail = email.toLowerCase();
+  const ref = doc(collection(getDb(), GIVEAWAY_COLLECTION), entryDocId(normalizedEmail));
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const row = snap.data() as GiveawayDoc;
+  if (row.referred_by_code) return;
+
+  await updateDoc(ref, {
+    referred_by_code: refCode.toUpperCase(),
+    updated_at: nowIso(),
+  });
+}
+
+export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
+  await initGiveawayDatabase();
+
+  const rows = await getAllRows();
+  const counts = referralCountByCode(rows);
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-  const rows = await sql`
-    SELECT *,
-      CASE
-        WHEN referral_count = 0 AND phone_1 IS NULL THEN 'no_activity'
-        WHEN referral_count = 0 AND phone_1 IS NOT NULL THEN 'invited_no_entries'
-        WHEN referral_count = 1 THEN 'one_referral'
-      END AS reminder_category
-    FROM giveaway_entries
-    WHERE referral_count < 2
-      AND reminder_sent_at IS NULL
-      AND updated_at <= ${twoDaysAgo}
-  `;
+  const candidates: ReminderCandidate[] = [];
 
-  return rows.map(row => ({
-    entry: mapRow(row),
-    category: row.reminder_category as ReminderCategory,
-  }));
+  for (const row of rows) {
+    const realCount = counts.get(row.referral_code.toUpperCase()) ?? 0;
+
+    if (realCount >= 2) continue;
+    if (row.reminder_sent_at) continue;
+    if (row.updated_at > twoDaysAgo) continue;
+
+    const category: ReminderCategory =
+      realCount === 0
+        ? row.phone_1
+          ? "invited_no_entries"
+          : "no_activity"
+        : "one_referral";
+
+    candidates.push({
+      entry: {
+        ...mapDoc(row),
+        referralCount: realCount,
+      },
+      category,
+    });
+  }
+
+  return candidates;
 }
 
 export async function getReminderStats(): Promise<{
@@ -303,37 +337,57 @@ export async function getReminderStats(): Promise<{
   tooRecent: number;
   eligible: number;
 }> {
-  const sql = neon(getDatabaseUrl());
   await initGiveawayDatabase();
 
+  const rows = await getAllRows();
+  const counts = referralCountByCode(rows);
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-  const rows = await sql`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE referral_count >= 2)::int AS completed,
-      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NOT NULL)::int AS already_reminded,
-      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NULL AND updated_at > ${twoDaysAgo})::int AS too_recent,
-      COUNT(*) FILTER (WHERE referral_count < 2 AND reminder_sent_at IS NULL AND updated_at <= ${twoDaysAgo})::int AS eligible
-    FROM giveaway_entries
-  `;
+  let completed = 0;
+  let alreadyReminded = 0;
+  let tooRecent = 0;
+  let eligible = 0;
 
-  const row = rows[0];
+  for (const row of rows) {
+    const realCount = counts.get(row.referral_code.toUpperCase()) ?? 0;
+
+    if (realCount >= 2) {
+      completed += 1;
+      continue;
+    }
+
+    if (row.reminder_sent_at) {
+      alreadyReminded += 1;
+      continue;
+    }
+
+    if (row.updated_at > twoDaysAgo) {
+      tooRecent += 1;
+      continue;
+    }
+
+    eligible += 1;
+  }
+
   return {
-    total: row.total as number,
-    completed: row.completed as number,
-    alreadyReminded: row.already_reminded as number,
-    tooRecent: row.too_recent as number,
-    eligible: row.eligible as number,
+    total: rows.length,
+    completed,
+    alreadyReminded,
+    tooRecent,
+    eligible,
   };
 }
 
 export async function markReminderSent(id: number): Promise<void> {
-  const sql = neon(getDatabaseUrl());
+  await initGiveawayDatabase();
 
-  await sql`
-    UPDATE giveaway_entries
-    SET reminder_sent_at = NOW()
-    WHERE id = ${id}
-  `;
+  const rows = await getAllRows();
+  const row = rows.find((item) => item.id === id);
+  if (!row) return;
+
+  const ref = doc(collection(getDb(), GIVEAWAY_COLLECTION), entryDocId(row.email));
+  await updateDoc(ref, {
+    reminder_sent_at: nowIso(),
+    updated_at: nowIso(),
+  });
 }

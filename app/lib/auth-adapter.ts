@@ -1,62 +1,55 @@
-import { neon } from "@neondatabase/serverless";
-import type { Adapter, AdapterUser, AdapterAccount } from "next-auth/adapters";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import type { Adapter, AdapterAccount, AdapterUser } from "next-auth/adapters";
+import { getDb, nowIso, toDate } from "./firebase-db";
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  }
-  return url;
+const USERS_COLLECTION = "users";
+const ACCOUNTS_COLLECTION = "auth_accounts";
+const VERIFICATION_TOKENS_COLLECTION = "verification_tokens";
+
+type UserDoc = {
+  name: string | null;
+  email: string;
+  email_verified: string | null;
+  image: string | null;
+  notification_emails_enabled: boolean;
+  phone: string | null;
+  is_member: boolean;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  member_since: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AccountDoc = {
+  user_id: string;
+  type: string;
+  provider: string;
+  provider_account_id: string;
+  refresh_token: string | null;
+  access_token: string | null;
+  expires_at: number | null;
+  token_type: string | null;
+  scope: string | null;
+  id_token: string | null;
+};
+
+type VerificationTokenDoc = {
+  identifier: string;
+  token: string;
+  expires: string;
 };
 
 export async function initAuthTables() {
-  const sql = neon(getDatabaseUrl());
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS users (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name VARCHAR(255),
-      email VARCHAR(255) NOT NULL UNIQUE,
-      email_verified TIMESTAMP WITH TIME ZONE,
-      image TEXT,
-      notification_emails_enabled BOOLEAN DEFAULT TRUE,
-      phone VARCHAR(20) UNIQUE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
-
-  // Add phone column to existing users table (CREATE TABLE IF NOT EXISTS won't add new columns)
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS accounts (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      type VARCHAR(50) NOT NULL,
-      provider VARCHAR(100) NOT NULL,
-      provider_account_id VARCHAR(255) NOT NULL,
-      refresh_token TEXT,
-      access_token TEXT,
-      expires_at BIGINT,
-      token_type VARCHAR(50),
-      scope TEXT,
-      id_token TEXT,
-      UNIQUE(provider, provider_account_id)
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id)`;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS verification_tokens (
-      identifier VARCHAR(255) NOT NULL,
-      token VARCHAR(255) NOT NULL UNIQUE,
-      expires TIMESTAMP WITH TIME ZONE NOT NULL,
-      PRIMARY KEY (identifier, token)
-    )
-  `;
+  // Firestore collections are created implicitly.
 }
 
 let tablesInitialized = false;
@@ -67,159 +60,201 @@ async function ensureTables() {
   }
 }
 
-function mapUser(row: Record<string, unknown>): AdapterUser {
+function accountDocId(provider: string, providerAccountId: string): string {
+  return `${provider}__${providerAccountId}`;
+}
+
+function mapUser(id: string, row: Partial<UserDoc>): AdapterUser {
   return {
-    id: row.id as string,
-    name: (row.name as string) ?? null,
-    email: row.email as string,
-    emailVerified: row.email_verified ? new Date(row.email_verified as string) : null,
-    image: (row.image as string) ?? null,
+    id,
+    name: row.name ?? null,
+    email: row.email ?? "",
+    emailVerified: toDate(row.email_verified),
+    image: row.image ?? null,
   };
 }
 
-export const neonAdapter: Adapter = {
+export const firebaseAdapter: Adapter = {
   async createUser(user) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`
-        INSERT INTO users (name, email, email_verified, image)
-        VALUES (${user.name ?? null}, ${user.email}, ${user.emailVerified?.toISOString() ?? null}, ${user.image ?? null})
-        RETURNING *
-      `;
-      return mapUser(rows[0]);
-    } catch (error) {
-      console.error("ADAPTER createUser ERROR:", error);
-      throw error;
-    }
+    await ensureTables();
+    const db = getDb();
+
+    const id = user.id || crypto.randomUUID();
+    const now = nowIso();
+
+    const payload: UserDoc = {
+      name: user.name ?? null,
+      email: user.email,
+      email_verified: user.emailVerified ? user.emailVerified.toISOString() : null,
+      image: user.image ?? null,
+      notification_emails_enabled: true,
+      phone: null,
+      is_member: false,
+      stripe_customer_id: null,
+      stripe_subscription_id: null,
+      member_since: null,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await setDoc(doc(collection(db, USERS_COLLECTION), id), payload, { merge: true });
+    return mapUser(id, payload);
   },
 
   async getUser(id) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`SELECT * FROM users WHERE id = ${id}`;
-    return rows[0] ? mapUser(rows[0]) : null;
+    const db = getDb();
+    const snap = await getDoc(doc(collection(db, USERS_COLLECTION), id));
+    if (!snap.exists()) return null;
+
+    return mapUser(snap.id, snap.data() as Partial<UserDoc>);
   },
 
   async getUserByEmail(email) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
-      return rows[0] ? mapUser(rows[0]) : null;
-    } catch (error) {
-      console.error("ADAPTER getUserByEmail ERROR:", error);
-      throw error;
+    await ensureTables();
+    const db = getDb();
+    const normalized = email.toLowerCase();
+
+    const snaps = await getDocs(collection(db, USERS_COLLECTION));
+    for (const snap of snaps.docs) {
+      const row = snap.data() as Partial<UserDoc>;
+      if (typeof row.email !== "string") continue;
+      if (row.email.toLowerCase() !== normalized) continue;
+      return mapUser(snap.id, row);
     }
+
+    return null;
   },
 
   async getUserByAccount({ provider, providerAccountId }) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`
-        SELECT u.* FROM users u
-        JOIN accounts a ON a.user_id = u.id
-        WHERE a.provider = ${provider} AND a.provider_account_id = ${providerAccountId}
-      `;
-      return rows[0] ? mapUser(rows[0]) : null;
-    } catch (error) {
-      console.error("ADAPTER getUserByAccount ERROR:", error);
-      throw error;
-    }
+    await ensureTables();
+    const db = getDb();
+
+    const accountSnap = await getDoc(
+      doc(collection(db, ACCOUNTS_COLLECTION), accountDocId(provider, providerAccountId))
+    );
+    if (!accountSnap.exists()) return null;
+
+    const account = accountSnap.data() as Partial<AccountDoc>;
+    if (!account.user_id) return null;
+
+    const userSnap = await getDoc(doc(collection(db, USERS_COLLECTION), account.user_id));
+    if (!userSnap.exists()) return null;
+
+    return mapUser(userSnap.id, userSnap.data() as Partial<UserDoc>);
   },
 
   async updateUser(user) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
+    const db = getDb();
 
-    // Build update fields dynamically to avoid COALESCE issues with undefined
-    const name = user.name !== undefined ? user.name : null;
-    const email = user.email !== undefined ? user.email : null;
-    const emailVerified = user.emailVerified !== undefined
-      ? (user.emailVerified ? user.emailVerified.toISOString() : null)
-      : null;
-    const image = user.image !== undefined ? user.image : null;
+    if (!user.id) {
+      throw new Error("updateUser requires a user id");
+    }
 
-    const rows = await sql`
-      UPDATE users SET
-        name = COALESCE(${name}, name),
-        email = COALESCE(${email}, email),
-        email_verified = COALESCE(${emailVerified}::timestamptz, email_verified),
-        image = COALESCE(${image}, image),
-        updated_at = NOW()
-      WHERE id = ${user.id!}
-      RETURNING *
-    `;
-    return mapUser(rows[0]);
+    const ref = doc(collection(db, USERS_COLLECTION), user.id);
+    const patch: Partial<UserDoc> = {
+      updated_at: nowIso(),
+    };
+
+    if (user.name !== undefined) patch.name = user.name;
+    if (user.email !== undefined) patch.email = user.email;
+    if (user.emailVerified !== undefined) {
+      patch.email_verified = user.emailVerified ? user.emailVerified.toISOString() : null;
+    }
+    if (user.image !== undefined) patch.image = user.image;
+
+    await setDoc(ref, patch, { merge: true });
+
+    const updated = await getDoc(ref);
+    if (!updated.exists()) {
+      throw new Error("Failed to update user");
+    }
+
+    return mapUser(updated.id, updated.data() as Partial<UserDoc>);
   },
 
   async linkAccount(account) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      await sql`
-        INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
-        VALUES (
-          ${account.userId},
-          ${account.type},
-          ${account.provider},
-          ${account.providerAccountId},
-          ${account.refresh_token ?? null},
-          ${account.access_token ?? null},
-          ${account.expires_at ?? null},
-          ${account.token_type ?? null},
-          ${account.scope ?? null},
-          ${account.id_token ?? null}
-        )
-      `;
-      return account as AdapterAccount;
-    } catch (error) {
-      console.error("ADAPTER linkAccount ERROR:", error);
-      throw error;
-    }
+    await ensureTables();
+    const db = getDb();
+
+    const payload: AccountDoc = {
+      user_id: account.userId,
+      type: account.type,
+      provider: account.provider,
+      provider_account_id: account.providerAccountId,
+      refresh_token: account.refresh_token ?? null,
+      access_token: account.access_token ?? null,
+      expires_at: account.expires_at ?? null,
+      token_type: account.token_type ?? null,
+      scope: account.scope ?? null,
+      id_token: account.id_token ?? null,
+    };
+
+    await setDoc(
+      doc(collection(db, ACCOUNTS_COLLECTION), accountDocId(account.provider, account.providerAccountId)),
+      payload
+    );
+
+    return account as AdapterAccount;
   },
 
   async createVerificationToken(token) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      INSERT INTO verification_tokens (identifier, token, expires)
-      VALUES (${token.identifier}, ${token.token}, ${token.expires.toISOString()})
-      RETURNING *
-    `;
+    const db = getDb();
+
+    const payload: VerificationTokenDoc = {
+      identifier: token.identifier,
+      token: token.token,
+      expires: token.expires.toISOString(),
+    };
+
+    await setDoc(doc(collection(db, VERIFICATION_TOKENS_COLLECTION), token.token), payload);
     return {
-      identifier: rows[0].identifier as string,
-      token: rows[0].token as string,
-      expires: new Date(rows[0].expires as string),
+      identifier: payload.identifier,
+      token: payload.token,
+      expires: new Date(payload.expires),
     };
   },
 
   async useVerificationToken({ identifier, token }) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      DELETE FROM verification_tokens
-      WHERE identifier = ${identifier} AND token = ${token}
-      RETURNING *
-    `;
-    if (!rows[0]) return null;
+    const db = getDb();
+
+    const ref = doc(collection(db, VERIFICATION_TOKENS_COLLECTION), token);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+
+    const row = snap.data() as Partial<VerificationTokenDoc>;
+    if (row.identifier !== identifier || !row.expires || !row.token) {
+      await deleteDoc(ref);
+      return null;
+    }
+
+    await deleteDoc(ref);
     return {
-      identifier: rows[0].identifier as string,
-      token: rows[0].token as string,
-      expires: new Date(rows[0].expires as string),
+      identifier: row.identifier,
+      token: row.token,
+      expires: new Date(row.expires),
     };
   },
 
   async deleteUser(userId) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    await sql`DELETE FROM users WHERE id = ${userId}`;
+    const db = getDb();
+    await deleteDoc(doc(collection(db, USERS_COLLECTION), userId));
+
+    const accountSnaps = await getDocs(collection(db, ACCOUNTS_COLLECTION));
+    for (const accountSnap of accountSnaps.docs) {
+      const row = accountSnap.data() as Partial<AccountDoc>;
+      if (row.user_id !== userId) continue;
+      await deleteDoc(accountSnap.ref);
+    }
   },
 
   async unlinkAccount({ provider, providerAccountId }) {
     await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    await sql`DELETE FROM accounts WHERE provider = ${provider} AND provider_account_id = ${providerAccountId}`;
+    const db = getDb();
+    await deleteDoc(doc(collection(db, ACCOUNTS_COLLECTION), accountDocId(provider, providerAccountId)));
   },
 };

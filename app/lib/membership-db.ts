@@ -1,41 +1,35 @@
-import { neon } from "@neondatabase/serverless";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { getDb, nowIso } from "./firebase-db";
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  }
-  return url;
+const USERS_COLLECTION = "users";
+
+type UserDoc = {
+  email?: string;
+  is_member?: boolean;
+  member_since?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
 };
 
-let columnsInitialized = false;
-
 export async function initMembershipColumns() {
-  if (columnsInitialized) return;
-  const sql = neon(getDatabaseUrl());
-
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_member BOOLEAN DEFAULT FALSE`;
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)`;
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)`;
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS member_since TIMESTAMP WITH TIME ZONE`;
-
-  columnsInitialized = true;
+  // Firestore is schemaless.
 }
 
 export async function getUserMembershipStatus(
   userId: string
 ): Promise<{ isMember: boolean; memberSince: Date | null }> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
+  const snap = await getDoc(doc(collection(db, USERS_COLLECTION), userId));
 
-  const rows = await sql`
-    SELECT is_member, member_since FROM users WHERE id = ${userId}
-  `;
-  if (!rows[0]) return { isMember: false, memberSince: null };
+  if (!snap.exists()) {
+    return { isMember: false, memberSince: null };
+  }
 
+  const user = snap.data() as UserDoc;
   return {
-    isMember: rows[0].is_member === true,
-    memberSince: rows[0].member_since ? new Date(rows[0].member_since as string) : null,
+    isMember: user.is_member === true,
+    memberSince: user.member_since ? new Date(user.member_since) : null,
   };
 }
 
@@ -45,74 +39,88 @@ export async function setMemberActive(
   stripeSubscriptionId: string
 ): Promise<void> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
+  const ref = doc(collection(db, USERS_COLLECTION), userId);
+  const snap = await getDoc(ref);
+  const existing = snap.exists() ? (snap.data() as UserDoc) : undefined;
 
-  await sql`
-    UPDATE users SET
-      is_member = TRUE,
-      stripe_customer_id = ${stripeCustomerId},
-      stripe_subscription_id = ${stripeSubscriptionId},
-      member_since = COALESCE(member_since, NOW()),
-      updated_at = NOW()
-    WHERE id = ${userId}
-  `;
+  await setDoc(
+    ref,
+    {
+      is_member: true,
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId,
+      member_since: existing?.member_since ?? nowIso(),
+      updated_at: nowIso(),
+    },
+    { merge: true }
+  );
 }
 
 export async function setMemberCancelled(userId: string): Promise<void> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
-
-  await sql`
-    UPDATE users SET
-      is_member = FALSE,
-      stripe_subscription_id = NULL,
-      updated_at = NOW()
-    WHERE id = ${userId}
-  `;
+  const db = getDb();
+  await setDoc(
+    doc(collection(db, USERS_COLLECTION), userId),
+    {
+      is_member: false,
+      stripe_subscription_id: null,
+      updated_at: nowIso(),
+    },
+    { merge: true }
+  );
 }
 
 export async function getUserByStripeCustomerId(
   stripeCustomerId: string
 ): Promise<{ id: string; email: string } | null> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
+  const snaps = await getDocs(collection(db, USERS_COLLECTION));
 
-  const rows = await sql`
-    SELECT id, email FROM users WHERE stripe_customer_id = ${stripeCustomerId}
-  `;
-  if (!rows[0]) return null;
+  for (const snap of snaps.docs) {
+    const user = snap.data() as UserDoc;
+    if (user.stripe_customer_id === stripeCustomerId && typeof user.email === "string") {
+      return { id: snap.id, email: user.email };
+    }
+  }
 
-  return { id: rows[0].id as string, email: rows[0].email as string };
+  return null;
 }
 
 export async function getUserByEmail(
   email: string
 ): Promise<{ id: string; email: string; stripe_customer_id: string | null } | null> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
+  const normalized = email.toLowerCase();
+  const snaps = await getDocs(collection(db, USERS_COLLECTION));
 
-  const rows = await sql`
-    SELECT id, email, stripe_customer_id FROM users WHERE email = ${email}
-  `;
-  if (!rows[0]) return null;
+  for (const snap of snaps.docs) {
+    const user = snap.data() as UserDoc;
+    if (typeof user.email !== "string") continue;
+    if (user.email.toLowerCase() !== normalized) continue;
 
-  return {
-    id: rows[0].id as string,
-    email: rows[0].email as string,
-    stripe_customer_id: (rows[0].stripe_customer_id as string) ?? null,
-  };
+    return {
+      id: snap.id,
+      email: user.email,
+      stripe_customer_id: user.stripe_customer_id ?? null,
+    };
+  }
+
+  return null;
 }
 
-/**
- * Get emails of all active VIA Insider members.
- */
 export async function getInsiderUserEmails(): Promise<string[]> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
-  const rows = await sql`
-    SELECT email FROM users WHERE is_member = TRUE AND email IS NOT NULL
-  `;
-  return rows.map((r) => r.email as string);
+  const db = getDb();
+  const snaps = await getDocs(collection(db, USERS_COLLECTION));
+
+  return snaps.docs
+    .map((snap) => snap.data() as UserDoc)
+    .filter((user) => user.is_member === true)
+    .map((user) => user.email)
+    .filter((email): email is string => typeof email === "string");
 }
 
 export async function saveStripeCustomerId(
@@ -120,10 +128,13 @@ export async function saveStripeCustomerId(
   stripeCustomerId: string
 ): Promise<void> {
   await initMembershipColumns();
-  const sql = neon(getDatabaseUrl());
-
-  await sql`
-    UPDATE users SET stripe_customer_id = ${stripeCustomerId}, updated_at = NOW()
-    WHERE id = ${userId}
-  `;
+  const db = getDb();
+  await setDoc(
+    doc(collection(db, USERS_COLLECTION), userId),
+    {
+      stripe_customer_id: stripeCustomerId,
+      updated_at: nowIso(),
+    },
+    { merge: true }
+  );
 }

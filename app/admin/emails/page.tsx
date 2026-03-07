@@ -113,7 +113,7 @@ export default function EmailsAdminPage() {
             Waitlist Emails
           </h1>
           <p className="text-neutral-600 text-base sm:text-lg">
-            All waitlist signups from the Neon database.
+            All waitlist signups stored in Firebase.
           </p>
         </div>
       </section>

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
-import { neonAdapter } from "@/app/lib/auth-adapter";
+import { firebaseAdapter } from "@/app/lib/auth-adapter";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
 
@@ -20,7 +20,7 @@ function baseStyles() {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: neonAdapter,
+  adapter: firebaseAdapter,
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   cookies: {
     sessionToken: {

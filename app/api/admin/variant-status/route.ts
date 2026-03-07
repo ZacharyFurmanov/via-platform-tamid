@@ -1,23 +1,66 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { collection, getDocs } from "firebase/firestore";
+import { getDb } from "@/app/lib/firebase-db";
+
+type ProductRow = {
+  store_slug?: string;
+  store_name?: string;
+  variant_id?: string | null;
+  shopify_product_id?: string | null;
+  collabs_link?: string | null;
+};
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
-    const rows = await sql`
-      SELECT
-        store_slug,
-        store_name,
-        COUNT(*) AS total,
-        COUNT(variant_id) AS with_variant_id,
-        COUNT(*) - COUNT(variant_id) AS missing_variant_id,
-        COUNT(shopify_product_id) AS with_shopify_product_id,
-        COUNT(*) - COUNT(shopify_product_id) AS missing_shopify_product_id,
-        COUNT(collabs_link) AS with_collabs_link
-      FROM products
-      GROUP BY store_slug, store_name
-      ORDER BY store_name
-    `;
+    const snaps = await getDocs(collection(getDb(), "products"));
+
+    const grouped = new Map<
+      string,
+      {
+        store_slug: string;
+        store_name: string;
+        total: number;
+        with_variant_id: number;
+        with_shopify_product_id: number;
+        with_collabs_link: number;
+      }
+    >();
+
+    for (const snap of snaps.docs) {
+      const row = snap.data() as ProductRow;
+      if (!row.store_slug || !row.store_name) continue;
+
+      const key = `${row.store_slug}__${row.store_name}`;
+      const existing = grouped.get(key) || {
+        store_slug: row.store_slug,
+        store_name: row.store_name,
+        total: 0,
+        with_variant_id: 0,
+        with_shopify_product_id: 0,
+        with_collabs_link: 0,
+      };
+
+      existing.total += 1;
+      if (row.variant_id) existing.with_variant_id += 1;
+      if (row.shopify_product_id) existing.with_shopify_product_id += 1;
+      if (row.collabs_link) existing.with_collabs_link += 1;
+
+      grouped.set(key, existing);
+    }
+
+    const rows = Array.from(grouped.values())
+      .map((row) => ({
+        store_slug: row.store_slug,
+        store_name: row.store_name,
+        total: row.total,
+        with_variant_id: row.with_variant_id,
+        missing_variant_id: row.total - row.with_variant_id,
+        with_shopify_product_id: row.with_shopify_product_id,
+        missing_shopify_product_id: row.total - row.with_shopify_product_id,
+        with_collabs_link: row.with_collabs_link,
+      }))
+      .sort((a, b) => a.store_name.localeCompare(b.store_name));
+
     return NextResponse.json(rows);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

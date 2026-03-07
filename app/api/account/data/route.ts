@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { auth } from "@/app/lib/auth";
-
-function getDatabaseUrl() {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) throw new Error("DATABASE_URL or POSTGRES_URL not set");
-  return url;
-}
+import { getDb } from "@/app/lib/firebase-db";
 
 export async function GET() {
   const session = await auth();
@@ -15,21 +10,85 @@ export async function GET() {
   }
 
   const userId = session.user.id;
-  const sql = neon(getDatabaseUrl());
+  const db = getDb();
 
-  const [userRows, favoriteProducts, favoriteStores, friendships, friendRequests, activity] =
+  const [userSnap, productFavSnaps, storeFavSnaps, friendshipSnaps, requestSnaps, activitySnaps] =
     await Promise.all([
-      sql`SELECT id, name, email, phone, created_at, updated_at FROM users WHERE id = ${userId}`,
-      sql`SELECT product_id, created_at FROM product_favorites WHERE user_id = ${userId} ORDER BY created_at DESC`,
-      sql`SELECT store_slug, created_at FROM store_favorites WHERE user_id = ${userId} ORDER BY created_at DESC`,
-      sql`SELECT user_a_id, user_b_id, created_at FROM friendships WHERE user_a_id = ${userId} OR user_b_id = ${userId}`,
-      sql`SELECT from_user_id, to_user_id, status, created_at FROM friend_requests WHERE from_user_id = ${userId} OR to_user_id = ${userId}`,
-      sql`SELECT activity_type, metadata, created_at FROM friend_activity WHERE user_id = ${userId} ORDER BY created_at DESC`,
+      getDoc(doc(collection(db, "users"), userId)),
+      getDocs(collection(db, "product_favorites")),
+      getDocs(collection(db, "store_favorites")),
+      getDocs(collection(db, "friendships")),
+      getDocs(collection(db, "friend_requests")),
+      getDocs(collection(db, "friend_activity")),
     ]);
+
+  const account = userSnap.exists()
+    ? {
+        id: userSnap.id,
+        ...(userSnap.data() as Record<string, unknown>),
+      }
+    : null;
+
+  const favoriteProducts = productFavSnaps.docs
+    .map((snap) => snap.data() as { user_id?: string; product_id?: number; created_at?: string })
+    .filter((row) => row.user_id === userId)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
+    .map((row) => ({ product_id: row.product_id, created_at: row.created_at }));
+
+  const favoriteStores = storeFavSnaps.docs
+    .map((snap) => snap.data() as { user_id?: string; store_slug?: string; created_at?: string })
+    .filter((row) => row.user_id === userId)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
+    .map((row) => ({ store_slug: row.store_slug, created_at: row.created_at }));
+
+  const friendships = friendshipSnaps.docs
+    .map((snap) => snap.data() as { user_a_id?: string; user_b_id?: string; created_at?: string })
+    .filter((row) => row.user_a_id === userId || row.user_b_id === userId)
+    .map((row) => ({
+      user_a_id: row.user_a_id,
+      user_b_id: row.user_b_id,
+      created_at: row.created_at,
+    }));
+
+  const friendRequests = requestSnaps.docs
+    .map(
+      (snap) =>
+        snap.data() as {
+          from_user_id?: string;
+          to_user_id?: string;
+          status?: string;
+          created_at?: string;
+        }
+    )
+    .filter((row) => row.from_user_id === userId || row.to_user_id === userId)
+    .map((row) => ({
+      from_user_id: row.from_user_id,
+      to_user_id: row.to_user_id,
+      status: row.status,
+      created_at: row.created_at,
+    }));
+
+  const activity = activitySnaps.docs
+    .map(
+      (snap) =>
+        snap.data() as {
+          user_id?: string;
+          activity_type?: string;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+        }
+    )
+    .filter((row) => row.user_id === userId)
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
+    .map((row) => ({
+      activity_type: row.activity_type,
+      metadata: row.metadata,
+      created_at: row.created_at,
+    }));
 
   const data = {
     exported_at: new Date().toISOString(),
-    account: userRows[0] || null,
+    account,
     favorite_products: favoriteProducts,
     favorite_stores: favoriteStores,
     friendships,
