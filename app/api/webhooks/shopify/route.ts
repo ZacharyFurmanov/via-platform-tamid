@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       ORDER BY timestamp DESC
       LIMIT 1
     `;
-    if (rows.length > 0) matchedClick = rows[0] as typeof matchedClick;
+    if (rows.length > 0) matchedClick = rows[0] as { click_id: string; timestamp: unknown; product_name: string };
   } catch (err) {
     console.error(`[shopify-webhook] Failed to query clicks for match:`, err);
   }
