@@ -120,6 +120,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "moonstruck-vintage",
     storeDomain: "moonstruckvintagenyc.com",
   },
+  {
+    type: "shopify",
+    name: "Bloda's Choice",
+    slug: "blodas-choice",
+    storeDomain: "blodaschoice.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
