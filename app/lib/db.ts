@@ -104,13 +104,6 @@ export async function initDatabase() {
     ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price DECIMAL(10, 2)
   `;
 
-  // Clear created_at for existing products so they don't all appear as new arrivals
-  // (only products inserted during subsequent syncs will have a non-NULL created_at)
-  await sql`
-    UPDATE products SET created_at = NULL WHERE created_at IS NOT NULL
-      AND created_at < NOW() - INTERVAL '1 hour'
-  `;
-
   // Index for new arrivals queries
   await sql`
     CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC)
