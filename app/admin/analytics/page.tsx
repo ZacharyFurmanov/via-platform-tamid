@@ -163,6 +163,11 @@ export default function AnalyticsPage() {
     }
   }
 
+  useEffect(() => {
+    fetchCollabsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleCollabsSync() {
     setCollabsSyncing(true);
     try {
@@ -231,6 +236,15 @@ export default function AnalyticsPage() {
     clickData && conversionData && clickData.totalClicks > 0
       ? ((conversionData.matchedConversions / clickData.totalClicks) * 100).toFixed(2)
       : "0.00";
+
+  const parseCommission = (s: string) => parseFloat(s.replace(/[^0-9.]/g, "")) || 0;
+  const collabsTotalRevenue = collabsData?.partnerships
+    ? collabsData.partnerships.reduce((sum, p) => sum + parseCommission(p.totalCommissionEarned), 0)
+    : 0;
+  const totalTrackedRevenue = (conversionData?.matchedRevenue ?? 0) + collabsTotalRevenue;
+  const maxCollabsRevenue = collabsData?.partnerships
+    ? Math.max(...collabsData.partnerships.map((p) => parseCommission(p.totalCommissionEarned)), 1)
+    : 1;
 
   return (
     <main className="bg-white min-h-screen text-black">
@@ -309,7 +323,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Tracked Revenue</p>
-                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(conversionData.matchedRevenue)}</p>
+                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(totalTrackedRevenue)}</p>
               </div>
             </div>
           </div>
@@ -805,11 +819,42 @@ export default function AnalyticsPage() {
                 </div>
               </section>
 
+              {/* Collabs Commission by Store */}
+              {collabsData?.partnerships && collabsData.partnerships.some((p) => parseCommission(p.totalCommissionEarned) > 0) && (
+                <section className="py-12 sm:py-16 border-b border-neutral-200">
+                  <div className="max-w-7xl mx-auto px-6">
+                    <h2 className="text-xl sm:text-2xl font-serif mb-2">Collabs Commission by Store</h2>
+                    <p className="text-sm text-neutral-500 mb-6 sm:mb-8">Shopify Collabs affiliate earnings</p>
+                    <div className="space-y-4">
+                      {collabsData.partnerships
+                        .filter((p) => parseCommission(p.totalCommissionEarned) > 0)
+                        .sort((a, b) => parseCommission(b.totalCommissionEarned) - parseCommission(a.totalCommissionEarned))
+                        .map((p) => (
+                          <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="sm:w-40 text-sm font-medium sm:font-normal truncate">{p.name}</div>
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="flex-1 h-6 sm:h-8 bg-neutral-100 relative">
+                                <div
+                                  className="h-full bg-green-600 transition-all duration-300"
+                                  style={{ width: `${(parseCommission(p.totalCommissionEarned) / maxCollabsRevenue) * 100}%` }}
+                                />
+                              </div>
+                              <div className="w-24 sm:w-28 text-right text-sm tabular-nums">
+                                {p.totalCommissionEarned}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* Conversion Stats */}
               <section className="py-12 sm:py-16 border-b border-neutral-200">
                 <div className="max-w-7xl mx-auto px-6">
                   <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Conversion Breakdown</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
                     <div className="bg-neutral-50 p-6">
                       <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Total Orders</p>
                       <p className="text-3xl font-serif">{conversionData.totalConversions}</p>
@@ -829,6 +874,11 @@ export default function AnalyticsPage() {
                         %
                       </p>
                       <p className="text-sm text-neutral-500 mt-1">of orders from VIA</p>
+                    </div>
+                    <div className="bg-green-50 p-6">
+                      <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Collabs Commission</p>
+                      <p className="text-3xl font-serif text-green-800">{formatCurrency(collabsTotalRevenue)}</p>
+                      <p className="text-sm text-green-600 mt-1">from Shopify Collabs</p>
                     </div>
                   </div>
                 </div>
