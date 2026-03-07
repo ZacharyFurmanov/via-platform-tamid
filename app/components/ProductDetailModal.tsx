@@ -11,6 +11,7 @@ type ProductDetailModalProps = {
     id: string;
     title: string;
     price: number;
+    compareAtPrice?: number | null;
     categoryLabel: CategoryLabel;
     store: string;
     storeSlug: string;
@@ -137,9 +138,16 @@ export default function ProductDetailModal({
 
           <p className="text-sm text-[#5D0F17]/60 mb-1">{product.categoryLabel}</p>
 
-          <p className="text-xl font-medium text-[#5D0F17] mb-6">
-            ${product.price}
-          </p>
+          <div className="flex items-baseline gap-3 mb-6">
+            <p className="text-xl font-medium text-[#5D0F17]">
+              ${product.price}
+            </p>
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+              <p className="text-base text-[#5D0F17]/40 line-through">
+                ${product.compareAtPrice}
+              </p>
+            )}
+          </div>
 
           {/* Checkout button */}
           {checkoutUrl ? (

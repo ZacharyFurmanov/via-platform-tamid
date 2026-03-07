@@ -16,6 +16,7 @@ export type FilterableProduct = {
   dbId?: number;
   title: string;
   price: number;
+  compareAtPrice?: number | null;
   category: string;
   categoryLabel: CategoryLabel;
   brand?: string | null;
@@ -177,7 +178,7 @@ export default function FilteredProductGrid({
     return result;
   }, [products, filters]);
 
-  // Get unique stores from products for the filter
+  // Get unique stores from products for the filter, sorted alphabetically
   const availableStores = useMemo(() => {
     const storeMap = new Map<string, { slug: string; name: string }>();
     products.forEach((p) => {
@@ -185,7 +186,7 @@ export default function FilteredProductGrid({
         storeMap.set(p.storeSlug, { slug: p.storeSlug, name: p.store });
       }
     });
-    return Array.from(storeMap.values());
+    return Array.from(storeMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
 
   // Get unique categories from products for the filter
@@ -309,6 +310,7 @@ export default function FilteredProductGrid({
                 dbId={product.dbId}
                 name={product.title}
                 price={`$${Math.round(product.price)}`}
+                compareAtPrice={product.compareAtPrice ? `$${Math.round(product.compareAtPrice)}` : undefined}
                 category={product.categoryLabel}
                 storeName={product.store}
                 storeSlug={product.storeSlug}

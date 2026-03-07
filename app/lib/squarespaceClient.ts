@@ -1,6 +1,7 @@
 export type SquarespaceProduct = {
   title: string;
   price: number;
+  compareAtPrice: number | null;
   image: string | null;
   images: string[];
   externalUrl: string;
@@ -144,6 +145,7 @@ export async function parseSquarespaceJSON(
     if (!variant) continue;
 
     const price = (variant.onSale ? variant.salePrice : variant.price) / 100;
+    const compareAtPrice = variant.onSale ? variant.price / 100 : null;
     if (price <= 0) continue;
 
     // Skip sold-out items
@@ -178,7 +180,7 @@ export async function parseSquarespaceJSON(
       ?? extractSizeFromText(title)
       ?? extractSizeFromText(description);
 
-    products.push({ title, price, image, images, externalUrl, store: storeName, description, size });
+    products.push({ title, price, compareAtPrice, image, images, externalUrl, store: storeName, description, size });
   }
 
   return { products, skippedCount };

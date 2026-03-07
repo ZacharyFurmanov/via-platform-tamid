@@ -23,6 +23,7 @@ export default async function CategoriesPage() {
       id: item.id,
       title: item.title,
       price: item.price,
+      compareAtPrice: item.compareAtPrice,
       category: displaySlug,
       categoryLabel: displayLabel,
       brand: item.brand,

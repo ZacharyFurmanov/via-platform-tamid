@@ -10,6 +10,7 @@
 export type ShopifyProduct = {
   title: string;
   price: number | null;
+  compareAtPrice: number | null;
   currency: string;
   image: string | null;
   images: string[];
@@ -42,6 +43,7 @@ type ShopifyPriceV2 = {
 type ShopifyVariantNode = {
   id: string;
   priceV2: ShopifyPriceV2;
+  compareAtPriceV2: ShopifyPriceV2 | null;
   availableForSale: boolean;
   selectedOptions: Array<{ name: string; value: string }>;
 };
@@ -112,6 +114,10 @@ const PRODUCTS_QUERY = `
               node {
                 id
                 priceV2 {
+                  amount
+                  currencyCode
+                }
+                compareAtPriceV2 {
                   amount
                   currencyCode
                 }
@@ -277,6 +283,11 @@ export async function fetchShopifyProducts(
       const variantGid = firstVariant?.id;
       const variantId = variantGid?.match(/(\d+)$/)?.[1] ?? null;
 
+      // Compare-at price (original price when on sale)
+      const compareAtRaw = firstVariant?.compareAtPriceV2?.amount;
+      const compareAtPrice = compareAtRaw ? parseFloat(compareAtRaw) : null;
+      const effectiveCompareAt = compareAtPrice && compareAtPrice > price ? compareAtPrice : null;
+
       // Extract size from variant options (look for "Size", "Shoe size", etc.)
       const sizeOption = firstVariant?.selectedOptions?.find(
         (opt) => /size/i.test(opt.name)
@@ -295,6 +306,7 @@ export async function fetchShopifyProducts(
       products.push({
         title: node.title,
         price: isNaN(price) ? null : price,
+        compareAtPrice: effectiveCompareAt,
         currency,
         image: imageUrl,
         images: allImageUrls,
@@ -471,6 +483,8 @@ export async function fetchShopifyProductsPublic(
       const price = variant?.price ? parseFloat(variant.price) : null;
       const variantId = variant?.id ? String(variant.id) : null;
       const shopifyProductId = product.id ? String(product.id) : null;
+      const compareAtRawPublic = variant?.compare_at_price ? parseFloat(variant.compare_at_price) : null;
+      const compareAtPricePublic = compareAtRawPublic && price && compareAtRawPublic > price ? compareAtRawPublic : null;
 
       // Extract size from variant options or product options
       let sizeFromVariant: string | null = null;
@@ -506,6 +520,7 @@ export async function fetchShopifyProductsPublic(
       products.push({
         title: product.title,
         price: isNaN(price as number) ? null : price,
+        compareAtPrice: compareAtPricePublic,
         currency: "USD", // Public endpoint doesn't include currency, default to USD
         image: imageUrl,
         images: allImageUrls,
@@ -539,6 +554,7 @@ export async function fetchShopifyProductsPublic(
 export function toRSSProductFormat(product: ShopifyProduct): {
   title: string;
   price: number | null;
+  compareAtPrice: number | null;
   currency: string;
   image: string | null;
   images: string[];
@@ -552,6 +568,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   return {
     title: product.title,
     price: product.price,
+    compareAtPrice: product.compareAtPrice,
     currency: product.currency,
     image: product.image,
     images: product.images,

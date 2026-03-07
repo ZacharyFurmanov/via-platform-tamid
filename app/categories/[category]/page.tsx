@@ -89,6 +89,7 @@ export default async function CategoryPage({
       dbId: dbIdMap.get(item.id),
       title: item.title,
       price: item.price,
+      compareAtPrice: item.compareAtPrice,
       category: item.category,
       categoryLabel: categoryMap[item.category as CategorySlug],
       brand: item.brand,

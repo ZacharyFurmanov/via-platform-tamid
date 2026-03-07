@@ -23,6 +23,7 @@ type ProductCardProps = {
   dbId?: number;
   name: string;
   price: string;
+  compareAtPrice?: string;
   category: CategoryLabel;
   storeName: string;
   storeSlug: string;
@@ -40,6 +41,7 @@ export default function ProductCard({
   dbId,
   name,
   price,
+  compareAtPrice,
   category,
   storeName,
   image,
@@ -75,6 +77,9 @@ export default function ProductCard({
 
           <div className="flex items-baseline gap-2 mt-0.5 sm:mt-1">
             <p className="text-xs sm:text-sm text-[#5D0F17]/80">{price}</p>
+            {compareAtPrice && (
+              <p className="text-xs sm:text-sm text-[#5D0F17]/40 line-through">{compareAtPrice}</p>
+            )}
             {size && (
               <span className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50">
                 {normalizeSize(size)}

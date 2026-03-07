@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
         images: p.images,
         externalUrl: p.externalUrl,
         description: p.description ?? undefined,
+        compareAtPrice: ("compareAtPrice" in p && typeof (p as { compareAtPrice?: unknown }).compareAtPrice === "number" ? (p as { compareAtPrice: number }).compareAtPrice : null) ?? undefined,
       }));
 
     // Create store slug from store name (kebab-case)
