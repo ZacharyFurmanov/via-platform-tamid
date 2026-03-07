@@ -289,10 +289,12 @@ export async function fetchShopifyProducts(
       const effectiveCompareAt = compareAtPrice && compareAtPrice > price ? compareAtPrice : null;
 
       // Extract size from variant options (look for "Size", "Shoe size", etc.)
+      // Validate with SIZE_VALUE_REGEX to reject non-size values like "ANIMAL", "Black", etc.
       const sizeOption = firstVariant?.selectedOptions?.find(
         (opt) => /size/i.test(opt.name)
       );
-      const sizeFromVariant = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
+      const sizeOptionRaw = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
+      const sizeFromVariant = sizeOptionRaw && SIZE_VALUE_REGEX.test(sizeOptionRaw.trim()) ? sizeOptionRaw : null;
       const sizeFromTitle = extractSizeFromTitle(node.title);
       const sizeFromDescription = extractSizeFromDescription(node.descriptionHtml || null);
       // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), it may be wrong
@@ -493,7 +495,8 @@ export async function fetchShopifyProductsPublic(
       if (sizeOptionIndex >= 0 && variant) {
         const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
         const val = variant[optionKey];
-        if (val && val !== "Default Title") sizeFromVariant = val;
+        // Validate value looks like an actual size (reject "ANIMAL", "Black", etc.)
+        if (val && val !== "Default Title" && SIZE_VALUE_REGEX.test(val.trim())) sizeFromVariant = val;
       }
       // Check variant.title as another source (e.g. "M", "US 8") before falling back to text extraction
       // Only accept variant.title as a size if it actually looks like a size (not a color like "Green")
