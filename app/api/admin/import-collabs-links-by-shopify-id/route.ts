@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateCollabsLinkByShopifyProductId } from "@/app/lib/db";
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "https://collabs.shopify.com",
@@ -12,10 +13,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword || authHeader !== `Bearer ${adminPassword}`) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401, headers: CORS_HEADERS }

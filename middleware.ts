@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isAdminSessionAuthorized } from "@/app/lib/admin-auth";
 
 // Routes accessible without any authentication
 const PUBLIC_ROUTES = [
@@ -54,23 +55,8 @@ const ACCESS_CODE_ROUTES = [
 // Now all non-public, non-admin routes require auth
 const USER_AUTH_ROUTES = ["/account", "/api/favorites", "/api/account", "/api/friends", "/api/membership", "/store/dashboard"];
 
-// Simple hash function for admin password comparison
-function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
 function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  const expectedToken = process.env.ADMIN_PASSWORD;
-
-  if (!expectedToken || !adminToken) return false;
-  return adminToken === hashPassword(expectedToken);
+  return isAdminSessionAuthorized(request);
 }
 
 function hasUserSession(request: NextRequest): boolean {

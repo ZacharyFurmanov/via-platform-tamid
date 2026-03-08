@@ -13,6 +13,7 @@ const CLICKS_COLLECTION = "clicks";
 const CONVERSIONS_COLLECTION = "conversions";
 const PRODUCT_VIEWS_COLLECTION = "product_views";
 const PRODUCTS_COLLECTION = "products";
+const USERS_COLLECTION = "users";
 
 export async function initAnalyticsTables() {
   // Firestore collections are created implicitly on first write.
@@ -27,6 +28,7 @@ export type ClickRecord = {
   storeSlug: string;
   externalUrl: string;
   userAgent?: string;
+  userId?: string | null;
 };
 
 type ClickDoc = {
@@ -38,6 +40,7 @@ type ClickDoc = {
   store_slug: string;
   external_url: string;
   user_agent?: string;
+  user_id?: string | null;
 };
 
 function mapClickDoc(data: Partial<ClickDoc>): ClickRecord {
@@ -50,6 +53,7 @@ function mapClickDoc(data: Partial<ClickDoc>): ClickRecord {
     storeSlug: data.store_slug || "unknown",
     externalUrl: data.external_url || "",
     userAgent: data.user_agent,
+    userId: typeof data.user_id === "string" ? data.user_id : null,
   };
 }
 
@@ -68,6 +72,7 @@ export async function saveClick(click: ClickRecord): Promise<void> {
     store_slug: click.storeSlug,
     external_url: click.externalUrl,
     user_agent: click.userAgent,
+    user_id: click.userId ?? null,
   };
 
   await setDoc(ref, payload);
@@ -96,6 +101,19 @@ async function getAllClicks(): Promise<ClickRecord[]> {
   const db = getDb();
   const snaps = await getDocs(collection(db, CLICKS_COLLECTION));
   return snaps.docs.map((snap) => mapClickDoc(snap.data() as Partial<ClickDoc>));
+}
+
+export async function getMostRecentClickForStore(
+  storeSlug: string,
+  sinceIso?: string
+): Promise<ClickRecord | null> {
+  const clicks = await getAllClicks();
+  const filtered = clicks
+    .filter((click) => click.storeSlug === storeSlug)
+    .filter((click) => (sinceIso ? click.timestamp >= sinceIso : true))
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+  return filtered[0] ?? null;
 }
 
 export async function getClickAnalytics(range: string) {
@@ -148,6 +166,7 @@ export type ConversionRecord = {
   storeSlug: string;
   storeName: string;
   matched: boolean;
+  userId?: string | null;
   matchedClickData?: {
     clickId: string;
     clickTimestamp: string;
@@ -173,6 +192,7 @@ type ConversionDoc = {
   store_slug: string;
   store_name: string;
   matched: boolean;
+  user_id?: string | null;
   matched_click_data?: ConversionRecord["matchedClickData"];
 };
 
@@ -188,6 +208,7 @@ function mapConversionDoc(data: Partial<ConversionDoc>): ConversionRecord {
     storeSlug: data.store_slug || "",
     storeName: data.store_name || "",
     matched: data.matched === true,
+    userId: typeof data.user_id === "string" ? data.user_id : null,
     matchedClickData: data.matched_click_data,
   };
 }
@@ -217,6 +238,7 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
     store_slug: conversion.storeSlug,
     store_name: conversion.storeName,
     matched: conversion.matched,
+    user_id: conversion.userId ?? null,
     matched_click_data: conversion.matchedClickData,
   };
 
@@ -275,12 +297,24 @@ export async function saveProductView(productId: string): Promise<void> {
 type ProductDoc = {
   id: number;
   store_slug: string;
+  price?: number;
 };
 
 type ProductViewDoc = {
   product_id: string;
   timestamp: string;
 };
+
+function numberValue(input: unknown): number {
+  const value = Number(input);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function commissionForPrice(price: number): number {
+  if (price < 1000) return price * 0.07;
+  if (price < 5000) return price * 0.05;
+  return price * 0.03;
+}
 
 export async function getProductPopularityScores(
   dbIds: number[]
@@ -372,6 +406,208 @@ export async function getProductPopularityScores(
   }
 
   return scores;
+}
+
+type UserDoc = {
+  email?: string;
+  name?: string | null;
+};
+
+export type CustomerSummary = {
+  userId: string;
+  email: string | null;
+  name: string | null;
+  clickCount: number;
+  purchaseCount: number;
+  totalSpend: number;
+  lastSeen: string;
+  firstSeen: string;
+};
+
+function resolveConversionUserId(
+  conversion: ConversionRecord,
+  clickUserById: Map<string, string>
+): string | null {
+  if (conversion.userId) return conversion.userId;
+  if (conversion.viaClickId) return clickUserById.get(conversion.viaClickId) ?? null;
+  return null;
+}
+
+export async function getUserClickHistory(userId: string): Promise<ClickRecord[]> {
+  const clicks = await getAllClicks();
+  return clicks
+    .filter((click) => click.userId === userId)
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+export async function getUserPurchaseHistory(userId: string): Promise<ConversionRecord[]> {
+  const [clicks, conversions] = await Promise.all([getAllClicks(), getAllConversions()]);
+  const clickUserById = new Map<string, string>();
+
+  for (const click of clicks) {
+    if (!click.userId) continue;
+    clickUserById.set(click.clickId, click.userId);
+  }
+
+  return conversions
+    .filter((conversion) => resolveConversionUserId(conversion, clickUserById) === userId)
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+export async function getCustomerSummaries(): Promise<CustomerSummary[]> {
+  const db = getDb();
+  const [clicks, conversions, userSnaps] = await Promise.all([
+    getAllClicks(),
+    getAllConversions(),
+    getDocs(collection(db, USERS_COLLECTION)),
+  ]);
+
+  const usersById = new Map<string, UserDoc>();
+  for (const snap of userSnaps.docs) {
+    usersById.set(snap.id, snap.data() as UserDoc);
+  }
+
+  const clickUserById = new Map<string, string>();
+  for (const click of clicks) {
+    if (!click.userId) continue;
+    clickUserById.set(click.clickId, click.userId);
+  }
+
+  const summaries = new Map<string, CustomerSummary>();
+
+  for (const click of clicks) {
+    if (!click.userId) continue;
+
+    const existing = summaries.get(click.userId);
+    if (!existing) {
+      const user = usersById.get(click.userId);
+      summaries.set(click.userId, {
+        userId: click.userId,
+        email: user?.email ?? null,
+        name: user?.name ?? null,
+        clickCount: 1,
+        purchaseCount: 0,
+        totalSpend: 0,
+        firstSeen: click.timestamp,
+        lastSeen: click.timestamp,
+      });
+      continue;
+    }
+
+    existing.clickCount += 1;
+    if (click.timestamp < existing.firstSeen) existing.firstSeen = click.timestamp;
+    if (click.timestamp > existing.lastSeen) existing.lastSeen = click.timestamp;
+  }
+
+  for (const conversion of conversions) {
+    const userId = resolveConversionUserId(conversion, clickUserById);
+    if (!userId) continue;
+
+    const existing = summaries.get(userId);
+    if (!existing) {
+      const user = usersById.get(userId);
+      summaries.set(userId, {
+        userId,
+        email: user?.email ?? null,
+        name: user?.name ?? null,
+        clickCount: 0,
+        purchaseCount: 1,
+        totalSpend: numberValue(conversion.orderTotal),
+        firstSeen: conversion.timestamp,
+        lastSeen: conversion.timestamp,
+      });
+      continue;
+    }
+
+    existing.purchaseCount += 1;
+    existing.totalSpend += numberValue(conversion.orderTotal);
+    if (conversion.timestamp < existing.firstSeen) existing.firstSeen = conversion.timestamp;
+    if (conversion.timestamp > existing.lastSeen) existing.lastSeen = conversion.timestamp;
+  }
+
+  return Array.from(summaries.values()).sort((a, b) => {
+    if (b.purchaseCount !== a.purchaseCount) return b.purchaseCount - a.purchaseCount;
+    if (b.totalSpend !== a.totalSpend) return b.totalSpend - a.totalSpend;
+    return b.clickCount - a.clickCount;
+  });
+}
+
+export async function getInventoryStats(): Promise<{
+  productCount: number;
+  inventoryValue: number;
+  potentialCommission: number;
+  tier1Count: number;
+  tier2Count: number;
+  tier3Count: number;
+  byStore: Array<{
+    storeSlug: string;
+    productCount: number;
+    inventoryValue: number;
+    potentialCommission: number;
+  }>;
+}> {
+  const db = getDb();
+  const snaps = await getDocs(collection(db, PRODUCTS_COLLECTION));
+
+  let productCount = 0;
+  let inventoryValue = 0;
+  let potentialCommission = 0;
+  let tier1Count = 0;
+  let tier2Count = 0;
+  let tier3Count = 0;
+
+  const byStoreMap = new Map<string, { productCount: number; inventoryValue: number; potentialCommission: number }>();
+
+  for (const snap of snaps.docs) {
+    const row = snap.data() as Partial<ProductDoc>;
+    const storeSlug = typeof row.store_slug === "string" && row.store_slug ? row.store_slug : "unknown";
+    const price = numberValue(row.price);
+
+    productCount += 1;
+    inventoryValue += price;
+
+    const commission = commissionForPrice(price);
+    potentialCommission += commission;
+
+    if (price < 1000) {
+      tier1Count += 1;
+    } else if (price < 5000) {
+      tier2Count += 1;
+    } else {
+      tier3Count += 1;
+    }
+
+    const existing = byStoreMap.get(storeSlug) || {
+      productCount: 0,
+      inventoryValue: 0,
+      potentialCommission: 0,
+    };
+
+    existing.productCount += 1;
+    existing.inventoryValue += price;
+    existing.potentialCommission += commission;
+
+    byStoreMap.set(storeSlug, existing);
+  }
+
+  const byStore = Array.from(byStoreMap.entries())
+    .map(([storeSlug, totals]) => ({
+      storeSlug,
+      productCount: totals.productCount,
+      inventoryValue: Math.round(totals.inventoryValue),
+      potentialCommission: Math.round(totals.potentialCommission),
+    }))
+    .sort((a, b) => b.inventoryValue - a.inventoryValue);
+
+  return {
+    productCount,
+    inventoryValue: Math.round(inventoryValue),
+    potentialCommission: Math.round(potentialCommission),
+    tier1Count,
+    tier2Count,
+    tier3Count,
+    byStore,
+  };
 }
 
 export async function getStoreAnalytics(storeSlug: string, range: string) {

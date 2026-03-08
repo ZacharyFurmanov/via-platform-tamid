@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveConversion } from "@/app/lib/analytics-db";
+import { getMostRecentClickForStore, saveConversion } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
-import { neon } from "@neondatabase/serverless";
 
 /**
  * Verify Shopify's HMAC-SHA256 webhook signature.
@@ -117,19 +116,12 @@ export async function POST(request: NextRequest) {
 
   // Try to find a matching VIA click — most recent click for this store in the
   // last 24 hours. Not a perfect match but covers the typical purchase window.
-  let matchedClick: { click_id: string; timestamp: unknown; product_name: string } | null = null;
+  let matchedClick:
+    | { clickId: string; timestamp: string; productName: string }
+    | null = null;
   try {
-    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const rows = await sql`
-      SELECT click_id, timestamp, product_name
-      FROM clicks
-      WHERE store_slug = ${storeSlug}
-        AND timestamp >= ${cutoff}
-      ORDER BY timestamp DESC
-      LIMIT 1
-    `;
-    if (rows.length > 0) matchedClick = rows[0] as { click_id: string; timestamp: unknown; product_name: string };
+    matchedClick = await getMostRecentClickForStore(storeSlug, cutoff);
   } catch (err) {
     console.error(`[shopify-webhook] Failed to query clicks for match:`, err);
   }
@@ -144,17 +136,15 @@ export async function POST(request: NextRequest) {
       orderTotal,
       currency,
       items,
-      viaClickId: matchedClick ? String(matchedClick.click_id) : null,
+      viaClickId: matchedClick ? matchedClick.clickId : null,
       storeSlug,
       storeName,
       matched: !!matchedClick,
       matchedClickData: matchedClick
         ? {
-            clickId: String(matchedClick.click_id),
-            clickTimestamp:
-              (matchedClick.timestamp as Date)?.toISOString?.() ||
-              String(matchedClick.timestamp),
-            productName: String(matchedClick.product_name),
+            clickId: matchedClick.clickId,
+            clickTimestamp: matchedClick.timestamp,
+            productName: matchedClick.productName,
           }
         : undefined,
     });

@@ -1,13 +1,15 @@
-import { neon } from "@neondatabase/serverless";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+} from "firebase/firestore";
+import { getDb, nowIso } from "./firebase-db";
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  return url;
-};
-
-// Sentinel value — no week concept, picks are always live
-const FIXED_WEEK = "1970-01-01";
+const EDITORS_PICKS_COLLECTION = "editors_picks";
+const PRODUCTS_COLLECTION = "products";
 
 export type PickWithProduct = {
   pickId: number;
@@ -25,89 +27,23 @@ export type PickWithProduct = {
   };
 };
 
-export async function initEditorsPicks(): Promise<void> {
-  const sql = neon(getDatabaseUrl());
-  await sql`
-    CREATE TABLE IF NOT EXISTS editors_picks (
-      id         SERIAL PRIMARY KEY,
-      product_id INTEGER NOT NULL,
-      week_start DATE NOT NULL,
-      position   SMALLINT NOT NULL DEFAULT 0,
-      added_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(product_id, week_start)
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_editors_picks_week ON editors_picks(week_start)`;
-  // Migration: consolidate all picks to the fixed sentinel week
-  await sql`UPDATE editors_picks SET week_start = ${FIXED_WEEK} WHERE week_start != ${FIXED_WEEK}`;
-}
+type EditorsPickDoc = {
+  product_id: number;
+  position: number;
+  added_at: string;
+};
 
-export async function getAllEditorsPicks(): Promise<PickWithProduct[]> {
-  const sql = neon(getDatabaseUrl());
-  await initEditorsPicks();
-
-  const rows = await sql`
-    SELECT
-      ep.id AS pick_id,
-      ep.position,
-      p.id AS product_id,
-      p.store_slug,
-      p.store_name,
-      p.title,
-      p.price,
-      p.image,
-      p.images,
-      p.size,
-      p.external_url
-    FROM editors_picks ep
-    JOIN products p ON p.id = ep.product_id
-    WHERE ep.week_start = ${FIXED_WEEK}
-    ORDER BY ep.position ASC
-  `;
-
-  return rows.map((r) => ({
-    pickId: r.pick_id as number,
-    position: r.position as number,
-    product: {
-      id: r.product_id as number,
-      storeSlug: r.store_slug as string,
-      storeName: r.store_name as string,
-      title: r.title as string,
-      price: Number(r.price),
-      image: r.image as string | null,
-      images: r.images as string | null,
-      size: r.size as string | null,
-      externalUrl: r.external_url as string | null,
-    },
-  }));
-}
-
-export async function addEditorsPick(productId: number): Promise<void> {
-  const sql = neon(getDatabaseUrl());
-  await initEditorsPicks();
-
-  const countRows = await sql`
-    SELECT COALESCE(MAX(position), -1)::int AS max_pos
-    FROM editors_picks
-    WHERE week_start = ${FIXED_WEEK}
-  `;
-  const nextPos = (countRows[0].max_pos as number) + 1;
-
-  await sql`
-    INSERT INTO editors_picks (product_id, week_start, position)
-    VALUES (${productId}, ${FIXED_WEEK}, ${nextPos})
-    ON CONFLICT (product_id, week_start) DO NOTHING
-  `;
-}
-
-export async function removeEditorsPick(productId: number): Promise<void> {
-  const sql = neon(getDatabaseUrl());
-  await initEditorsPicks();
-  await sql`
-    DELETE FROM editors_picks
-    WHERE product_id = ${productId} AND week_start = ${FIXED_WEEK}
-  `;
-}
+type ProductDoc = {
+  id: number;
+  store_slug: string;
+  store_name: string;
+  title: string;
+  price: number;
+  image: string | null;
+  images: string | null;
+  size: string | null;
+  external_url: string | null;
+};
 
 type ProductResult = {
   id: number;
@@ -118,48 +54,152 @@ type ProductResult = {
   image: string | null;
 };
 
-function mapProductRow(r: Record<string, unknown>): ProductResult {
+function numberValue(input: unknown): number {
+  const value = Number(input);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function mapProduct(data: Partial<ProductDoc>): ProductDoc {
   return {
-    id: r.id as number,
-    storeSlug: r.store_slug as string,
-    storeName: r.store_name as string,
-    title: r.title as string,
-    price: Number(r.price),
-    image: r.image as string | null,
+    id: numberValue(data.id),
+    store_slug: typeof data.store_slug === "string" ? data.store_slug : "",
+    store_name: typeof data.store_name === "string" ? data.store_name : "",
+    title: typeof data.title === "string" ? data.title : "",
+    price: numberValue(data.price),
+    image: typeof data.image === "string" ? data.image : null,
+    images: typeof data.images === "string" ? data.images : null,
+    size: typeof data.size === "string" ? data.size : null,
+    external_url: typeof data.external_url === "string" ? data.external_url : null,
   };
 }
 
+function mapProductResult(data: ProductDoc): ProductResult {
+  return {
+    id: data.id,
+    storeSlug: data.store_slug,
+    storeName: data.store_name,
+    title: data.title,
+    price: data.price,
+    image: data.image,
+  };
+}
+
+async function getAllProductDocs(): Promise<ProductDoc[]> {
+  const db = getDb();
+  const snaps = await getDocs(collection(db, PRODUCTS_COLLECTION));
+
+  return snaps.docs
+    .map((snap) => mapProduct(snap.data() as Partial<ProductDoc>))
+    .filter((row) => row.id > 0 && !!row.store_slug && !!row.title);
+}
+
+export async function initEditorsPicks(): Promise<void> {
+  // Firestore collections are created implicitly.
+}
+
+export async function getAllEditorsPicks(): Promise<PickWithProduct[]> {
+  await initEditorsPicks();
+  const db = getDb();
+
+  const [pickSnaps, products] = await Promise.all([
+    getDocs(collection(db, EDITORS_PICKS_COLLECTION)),
+    getAllProductDocs(),
+  ]);
+
+  const productsById = new Map<number, ProductDoc>();
+  for (const product of products) {
+    productsById.set(product.id, product);
+  }
+
+  const picks: PickWithProduct[] = [];
+  for (const snap of pickSnaps.docs) {
+    const row = snap.data() as Partial<EditorsPickDoc>;
+    const productId = numberValue(row.product_id) || numberValue(snap.id);
+    const position = numberValue(row.position);
+    const product = productsById.get(productId);
+    if (!product) continue;
+
+    picks.push({
+      pickId: productId,
+      position,
+      product: {
+        id: product.id,
+        storeSlug: product.store_slug,
+        storeName: product.store_name,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        images: product.images,
+        size: product.size,
+        externalUrl: product.external_url,
+      },
+    });
+  }
+
+  return picks.sort((a, b) => a.position - b.position);
+}
+
+export async function addEditorsPick(productId: number): Promise<void> {
+  await initEditorsPicks();
+  const db = getDb();
+
+  const productRef = doc(collection(db, PRODUCTS_COLLECTION), String(productId));
+  const productSnap = await getDoc(productRef);
+  if (!productSnap.exists()) {
+    // Product docs are keyed by store slug + title in this app.
+    // Fall back to scanning by numeric id.
+    const allProducts = await getAllProductDocs();
+    const exists = allProducts.some((product) => product.id === productId);
+    if (!exists) {
+      throw new Error("Product not found");
+    }
+  }
+
+  const pickRef = doc(collection(db, EDITORS_PICKS_COLLECTION), String(productId));
+  const existing = await getDoc(pickRef);
+  if (existing.exists()) return;
+
+  const pickSnaps = await getDocs(collection(db, EDITORS_PICKS_COLLECTION));
+  let maxPosition = -1;
+  for (const snap of pickSnaps.docs) {
+    const row = snap.data() as Partial<EditorsPickDoc>;
+    const position = numberValue(row.position);
+    if (position > maxPosition) maxPosition = position;
+  }
+
+  const payload: EditorsPickDoc = {
+    product_id: productId,
+    position: maxPosition + 1,
+    added_at: nowIso(),
+  };
+
+  await setDoc(pickRef, payload);
+}
+
+export async function removeEditorsPick(productId: number): Promise<void> {
+  await initEditorsPicks();
+  const db = getDb();
+  await deleteDoc(doc(collection(db, EDITORS_PICKS_COLLECTION), String(productId)));
+}
+
 export async function getProductsByStore(storeSlug: string, limit = 200): Promise<ProductResult[]> {
-  const sql = neon(getDatabaseUrl());
-  const rows = await sql`
-    SELECT id, store_slug, store_name, title, price, image
-    FROM products
-    WHERE store_slug = ${storeSlug}
-    ORDER BY title
-    LIMIT ${limit}
-  `;
-  return rows.map(mapProductRow);
+  const products = await getAllProductDocs();
+  return products
+    .filter((product) => product.store_slug === storeSlug)
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .slice(0, limit)
+    .map(mapProductResult);
 }
 
 export async function searchProducts(q: string, storeSlug?: string): Promise<ProductResult[]> {
-  const sql = neon(getDatabaseUrl());
+  const needle = q.trim().toLowerCase();
+  if (!needle) return [];
 
-  const rows = storeSlug
-    ? await sql`
-        SELECT id, store_slug, store_name, title, price, image
-        FROM products
-        WHERE title ILIKE ${"%" + q + "%"}
-          AND store_slug = ${storeSlug}
-        ORDER BY title
-        LIMIT 30
-      `
-    : await sql`
-        SELECT id, store_slug, store_name, title, price, image
-        FROM products
-        WHERE title ILIKE ${"%" + q + "%"}
-        ORDER BY title
-        LIMIT 30
-      `;
-
-  return rows.map(mapProductRow);
+  const products = await getAllProductDocs();
+  return products
+    .filter((product) => (storeSlug ? product.store_slug === storeSlug : true))
+    .filter((product) => product.title.toLowerCase().includes(needle))
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .slice(0, 30)
+    .map(mapProductResult);
 }

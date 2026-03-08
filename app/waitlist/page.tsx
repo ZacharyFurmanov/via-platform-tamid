@@ -287,6 +287,26 @@ function WaitlistContent() {
                 )}
               </form>
             </div>
+
+            <div className="mt-8 pt-8 border-t border-[#5D0F17]/10">
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-4">
+                Off the waitlist?
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Link
+                  href="/login?mode=signin"
+                  className="px-6 py-3.5 bg-[#5D0F17] text-[#F7F3EA] text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition text-center min-h-[48px] flex items-center justify-center"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login?mode=signup"
+                  className="px-6 py-3.5 border border-[#5D0F17] text-[#5D0F17] text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition text-center min-h-[48px] flex items-center justify-center"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 

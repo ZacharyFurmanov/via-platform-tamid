@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveSetting, getSetting } from "@/app/lib/settings-db";
-
-function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
-function isAuthorized(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-  const token = request.cookies.get("via_admin_token")?.value;
-  return token === hashPassword(adminPassword);
-}
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 const COLLABS_GRAPHQL_URL = "https://api.collabs.shopify.com/creator/graphql";
 
@@ -59,7 +43,7 @@ const PARTNERSHIPS_QUERY = `query PartnershipsAnalyticsQuery($first: Int, $last:
 
 /** Save credentials (cookie string + csrf token) */
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -78,7 +62,7 @@ export async function POST(request: NextRequest) {
 
 /** Trigger a sync using stored credentials */
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

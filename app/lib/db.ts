@@ -191,11 +191,11 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
   return first ? mapSnapshot(first) : null;
 }
 
-export async function getAllProducts(): Promise<DBProduct[]> {
+export async function getAllProducts(isMember: boolean = false): Promise<DBProduct[]> {
   const now = Date.now();
   const all = await getAllProductDocs();
   return all
-    .filter((p) => isVisibleToPublic(p, now))
+    .filter((p) => (isMember ? isVisibleRegardlessOfWindow(p) : isVisibleToPublic(p, now)))
     .sort((a, b) => {
       if (a.store_slug === b.store_slug) return a.id - b.id;
       return a.store_slug.localeCompare(b.store_slug);

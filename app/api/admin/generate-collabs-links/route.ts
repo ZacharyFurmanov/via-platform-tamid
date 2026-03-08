@@ -12,33 +12,10 @@ import {
   fetchCollabsProducts,
   createAffiliateLink,
 } from "@/app/lib/collabs";
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 // Allow up to 5 minutes for bulk generation
 export const maxDuration = 300;
-
-// Simple hash function — must match middleware
-function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
-function isAuthorized(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${adminPassword}`) return true;
-
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  if (adminToken && adminToken === hashPassword(adminPassword)) return true;
-
-  return false;
-}
 
 /**
  * POST /api/admin/generate-collabs-links
@@ -48,7 +25,7 @@ function isAuthorized(request: NextRequest): boolean {
  * Streams progress as newline-delimited JSON.
  */
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -235,7 +212,7 @@ export async function POST(request: NextRequest) {
  * Returns stats on how many products need collabs links generated.
  */
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

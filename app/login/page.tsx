@@ -2,13 +2,23 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirebaseApp } from "@/app/lib/firebase";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [firebaseMode, setFirebaseMode] = useState<"signin" | "signup">(
+    modeParam === "signup" ? "signup" : "signin"
+  );
+  const [firebaseError, setFirebaseError] = useState("");
+  const router = useRouter();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   async function handleEmailSignIn(e: React.FormEvent) {
@@ -16,6 +26,32 @@ export default function LoginPage() {
     if (!email.trim()) return;
     setLoading(true);
     await signIn("resend", { email, callbackUrl });
+  }
+
+  async function handleFirebaseAuth(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !password) return;
+
+    setLoading(true);
+    setFirebaseError("");
+
+    try {
+      const auth = getAuth(getFirebaseApp());
+
+      if (firebaseMode === "signup") {
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+      }
+
+      document.cookie = "via_access=1; path=/; max-age=31536000; SameSite=Lax";
+      router.push(callbackUrl);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Authentication failed.";
+      setFirebaseError(message);
+      setLoading(false);
+    }
   }
 
   return (
@@ -27,6 +63,73 @@ export default function LoginPage() {
         <p className="text-sm text-[#5D0F17]/50 text-center mb-10">
           Create an account to start shopping.
         </p>
+
+        {/* Firebase email/password auth */}
+        <div className="border border-[#5D0F17]/20 p-4 mb-6">
+          <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-3">
+            Off the waitlist?
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setFirebaseMode("signin")}
+              className={`py-2 text-xs uppercase tracking-wide border transition ${
+                firebaseMode === "signin"
+                  ? "bg-[#5D0F17] border-[#5D0F17] text-[#F7F3EA]"
+                  : "border-[#5D0F17]/30 text-[#5D0F17] hover:border-[#5D0F17]"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => setFirebaseMode("signup")}
+              className={`py-2 text-xs uppercase tracking-wide border transition ${
+                firebaseMode === "signup"
+                  ? "bg-[#5D0F17] border-[#5D0F17] text-[#F7F3EA]"
+                  : "border-[#5D0F17]/30 text-[#5D0F17] hover:border-[#5D0F17]"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <form onSubmit={handleFirebaseAuth}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+              className="w-full border border-[#5D0F17]/30 bg-transparent px-4 py-3.5 text-sm text-[#5D0F17] placeholder:text-[#5D0F17]/40 outline-none focus:border-[#5D0F17] transition mb-2"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+              minLength={6}
+              className="w-full border border-[#5D0F17]/30 bg-transparent px-4 py-3.5 text-sm text-[#5D0F17] placeholder:text-[#5D0F17]/40 outline-none focus:border-[#5D0F17] transition mb-3"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#5D0F17] text-[#F7F3EA] py-3.5 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition disabled:opacity-50"
+            >
+              {loading
+                ? "Please wait..."
+                : firebaseMode === "signup"
+                  ? "Create Firebase Account"
+                  : "Sign In with Firebase"}
+            </button>
+          </form>
+
+          {firebaseError && (
+            <p className="text-red-600 text-xs mt-3">{firebaseError}</p>
+          )}
+        </div>
 
         {/* Google */}
         <button

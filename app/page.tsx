@@ -49,6 +49,21 @@ export default function HomePage() {
                 </Link>
               </div>
 
+              <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:gap-4 animate-hero delay-200">
+                <Link
+                  href="/login"
+                  className="bg-[#D8CABD] text-[#5D0F17] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#C8B8AA] transition-colors duration-300 text-center font-sans"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login"
+                  className="border border-[#D8CABD]/70 text-[#D8CABD] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#D8CABD]/10 transition-colors duration-300 text-center font-sans"
+                >
+                  Sign Up
+                </Link>
+              </div>
+
             </div>
           </div>
         </div>

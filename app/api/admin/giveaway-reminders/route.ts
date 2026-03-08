@@ -1,9 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getReminderCandidates, getReminderStats, markReminderSent } from "@/app/lib/giveaway-db";
 import { sendGiveawayReminder } from "@/app/lib/email";
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 // GET: Preview candidates without sending (dry run)
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequestAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const [candidates, stats] = await Promise.all([
       getReminderCandidates(),
@@ -43,7 +48,11 @@ export async function GET() {
 }
 
 // POST: Actually send reminders to all candidates
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!isAdminRequestAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     if (!process.env.RESEND_API_KEY) {
       return NextResponse.json(

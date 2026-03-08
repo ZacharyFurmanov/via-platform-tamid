@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -28,9 +28,6 @@ type StoreStatus = {
 
 export default function SyncAdminPage() {
   const [statuses, setStatuses] = useState<Record<string, StoreStatus>>({});
-  const [showFirebaseAuth, setShowFirebaseAuth] = useState(false);
-  const [firebaseAuthMode, setFirebaseAuthMode] = useState<"signin" | "signup">("signin");
-  const [firebaseAuthMessage, setFirebaseAuthMessage] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleLogout() {
@@ -105,13 +102,6 @@ export default function SyncAdminPage() {
     }
   }
 
-  function handleFirebaseAuthSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFirebaseAuthMessage(
-      "Firebase auth is not connected yet. Hook up Firebase logic when you are ready.",
-    );
-  }
-
   return (
     <main className="bg-white min-h-screen text-black">
       {/* Header */}
@@ -158,15 +148,6 @@ export default function SyncAdminPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  setShowFirebaseAuth((prev) => !prev);
-                  setFirebaseAuthMessage(null);
-                }}
-                className="text-sm text-neutral-400 hover:text-black transition-colors"
-              >
-                {showFirebaseAuth ? "Hide Firebase Auth" : "Firebase Auth"}
-              </button>
-              <button
                 onClick={handleLogout}
                 className="text-sm text-neutral-400 hover:text-black transition-colors"
               >
@@ -180,85 +161,6 @@ export default function SyncAdminPage() {
           </p>
         </div>
       </section>
-
-      {/* Firebase Auth UI */}
-      {showFirebaseAuth && (
-        <section className="border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6 py-8 sm:py-10">
-            <div className="max-w-xl border border-neutral-200 p-5 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-serif mb-3">Firebase Auth</h2>
-              <p className="text-sm text-neutral-600 mb-5">
-                UI scaffold only. Firebase authentication logic is not integrated yet.
-              </p>
-
-              <div className="flex gap-2 mb-5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFirebaseAuthMode("signin");
-                    setFirebaseAuthMessage(null);
-                  }}
-                  className={`px-4 py-2 min-h-[44px] text-sm border transition-colors ${
-                    firebaseAuthMode === "signin"
-                      ? "bg-black text-white border-black"
-                      : "border-neutral-300 text-neutral-700 hover:border-black hover:text-black"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFirebaseAuthMode("signup");
-                    setFirebaseAuthMessage(null);
-                  }}
-                  className={`px-4 py-2 min-h-[44px] text-sm border transition-colors ${
-                    firebaseAuthMode === "signup"
-                      ? "bg-black text-white border-black"
-                      : "border-neutral-300 text-neutral-700 hover:border-black hover:text-black"
-                  }`}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              <form onSubmit={handleFirebaseAuthSubmit} className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  required
-                  className="w-full border border-neutral-300 px-3 py-2 min-h-[44px] text-sm focus:outline-none focus:border-black"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  required
-                  className="w-full border border-neutral-300 px-3 py-2 min-h-[44px] text-sm focus:outline-none focus:border-black"
-                />
-                {firebaseAuthMode === "signup" && (
-                  <input
-                    type="password"
-                    placeholder="Confirm password"
-                    required
-                    className="w-full border border-neutral-300 px-3 py-2 min-h-[44px] text-sm focus:outline-none focus:border-black"
-                  />
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-3 min-h-[48px] bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
-                >
-                  {firebaseAuthMode === "signin" ? "Sign In" : "Create Account"}
-                </button>
-              </form>
-
-              {firebaseAuthMessage && (
-                <p className="mt-4 text-sm text-neutral-500">{firebaseAuthMessage}</p>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Sync All Button */}
       <section className="border-b border-neutral-200">

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/app/lib/firebase-db";
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 type ProductRow = {
   store_slug?: string;
@@ -10,7 +11,11 @@ type ProductRow = {
   collabs_link?: string | null;
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequestAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const snaps = await getDocs(collection(getDb(), "products"));
 

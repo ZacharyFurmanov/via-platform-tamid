@@ -6,29 +6,10 @@ import {
 } from "@/app/lib/db";
 import { getInsiderUserEmails, initMembershipColumns } from "@/app/lib/membership-db";
 import { sendInsiderNewArrivalsEmail } from "@/app/lib/email";
+import { isAdminRequestAuthorized } from "@/app/lib/admin-auth";
 
 // Allow up to 5 minutes for bulk sending
 export const maxDuration = 300;
-
-function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
-function isAuthorized(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${adminPassword}`) return true;
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  if (adminToken && adminToken === hashPassword(adminPassword)) return true;
-  return false;
-}
 
 /**
  * POST /api/admin/send-new-arrivals
@@ -40,7 +21,7 @@ function isAuthorized(request: NextRequest): boolean {
  * Optional body: { preview: true } — returns data without sending or marking.
  */
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -115,7 +96,7 @@ export async function POST(request: NextRequest) {
  * Returns a preview of what would be sent without actually sending.
  */
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAdminRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

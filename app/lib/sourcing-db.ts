@@ -1,10 +1,14 @@
-import { neon } from "@neondatabase/serverless";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  runTransaction,
+  setDoc,
+} from "firebase/firestore";
+import { getDb, nowIso, toIso } from "./firebase-db";
 
-function getDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) throw new Error("No database URL configured");
-  return url;
-}
+const SOURCING_COLLECTION = "sourcing_requests";
 
 export type SourcingRequest = {
   id: string;
@@ -25,63 +29,77 @@ export type SourcingRequest = {
   matchedStoreAt: string | null;
 };
 
+type SourcingRequestDoc = {
+  user_id: string;
+  user_email: string;
+  user_name: string | null;
+  image_url: string | null;
+  description: string;
+  price_min: number;
+  price_max: number;
+  condition: string;
+  size: string | null;
+  deadline: string;
+  stripe_session_id: string | null;
+  status: SourcingRequest["status"];
+  created_at: string;
+  matched_store_slug: string | null;
+  matched_store_at: string | null;
+};
+
 async function initSourcingTable(): Promise<void> {
-  const sql = neon(getDatabaseUrl());
-  await sql`
-    CREATE TABLE IF NOT EXISTS sourcing_requests (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      user_email TEXT NOT NULL,
-      user_name TEXT,
-      image_url TEXT,
-      description TEXT NOT NULL,
-      price_min INTEGER NOT NULL,
-      price_max INTEGER NOT NULL,
-      condition TEXT NOT NULL,
-      size TEXT,
-      deadline TEXT NOT NULL,
-      stripe_session_id TEXT,
-      status TEXT NOT NULL DEFAULT 'pending_payment',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `;
-  await sql`
-    CREATE INDEX IF NOT EXISTS idx_sourcing_user_id ON sourcing_requests(user_id)
-  `;
-  await sql`
-    CREATE INDEX IF NOT EXISTS idx_sourcing_stripe_session ON sourcing_requests(stripe_session_id)
-      WHERE stripe_session_id IS NOT NULL
-  `;
-  // Idempotent migrations for store claiming
-  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_slug TEXT`;
-  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_at TIMESTAMPTZ`;
+  // Firestore collections are created implicitly.
 }
 
 function generateRequestId(): string {
   return `sr_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function mapRow(row: Record<string, unknown>): SourcingRequest {
+function toNullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function numberValue(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mapDoc(id: string, row: Partial<SourcingRequestDoc>): SourcingRequest {
   return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    userEmail: row.user_email as string,
-    userName: row.user_name as string | null,
-    imageUrl: row.image_url as string | null,
-    description: row.description as string,
-    priceMin: row.price_min as number,
-    priceMax: row.price_max as number,
-    condition: row.condition as string,
-    size: row.size as string | null,
-    deadline: row.deadline as string,
-    stripeSessionId: row.stripe_session_id as string | null,
-    status: row.status as SourcingRequest["status"],
-    createdAt: (row.created_at as Date).toISOString(),
-    matchedStoreSlug: row.matched_store_slug as string | null,
-    matchedStoreAt: row.matched_store_at
-      ? (row.matched_store_at as Date).toISOString()
-      : null,
+    id,
+    userId: typeof row.user_id === "string" ? row.user_id : "",
+    userEmail: typeof row.user_email === "string" ? row.user_email : "",
+    userName: toNullableString(row.user_name),
+    imageUrl: toNullableString(row.image_url),
+    description: typeof row.description === "string" ? row.description : "",
+    priceMin: numberValue(row.price_min),
+    priceMax: numberValue(row.price_max),
+    condition: typeof row.condition === "string" ? row.condition : "",
+    size: toNullableString(row.size),
+    deadline: typeof row.deadline === "string" ? row.deadline : "",
+    stripeSessionId: toNullableString(row.stripe_session_id),
+    status: (row.status as SourcingRequest["status"]) || "pending_payment",
+    createdAt: toIso(row.created_at) || nowIso(),
+    matchedStoreSlug: toNullableString(row.matched_store_slug),
+    matchedStoreAt: toIso(row.matched_store_at),
   };
+}
+
+async function getAllRows(): Promise<Array<{ id: string; data: SourcingRequestDoc }>> {
+  const db = getDb();
+  const snaps = await getDocs(collection(db, SOURCING_COLLECTION));
+
+  return snaps.docs
+    .map((snap) => ({ id: snap.id, data: snap.data() as Partial<SourcingRequestDoc> }))
+    .filter(
+      (row): row is { id: string; data: SourcingRequestDoc } =>
+        typeof row.data.user_id === "string" &&
+        typeof row.data.user_email === "string" &&
+        typeof row.data.description === "string" &&
+        typeof row.data.condition === "string" &&
+        typeof row.data.deadline === "string" &&
+        typeof row.data.created_at === "string"
+    );
 }
 
 export async function createSourcingRequest(data: {
@@ -97,109 +115,134 @@ export async function createSourcingRequest(data: {
   deadline: string;
   stripeSessionId: string;
 }): Promise<SourcingRequest> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const db = getDb();
 
   const id = generateRequestId();
-  const rows = await sql`
-    INSERT INTO sourcing_requests (
-      id, user_id, user_email, user_name, image_url, description,
-      price_min, price_max, condition, size, deadline, stripe_session_id, status
-    ) VALUES (
-      ${id}, ${data.userId}, ${data.userEmail}, ${data.userName},
-      ${data.imageUrl}, ${data.description}, ${data.priceMin}, ${data.priceMax},
-      ${data.condition}, ${data.size}, ${data.deadline}, ${data.stripeSessionId},
-      'pending_payment'
-    )
-    RETURNING *
-  `;
-  return mapRow(rows[0]);
+  const payload: SourcingRequestDoc = {
+    user_id: data.userId,
+    user_email: data.userEmail,
+    user_name: data.userName,
+    image_url: data.imageUrl,
+    description: data.description,
+    price_min: Number(data.priceMin),
+    price_max: Number(data.priceMax),
+    condition: data.condition,
+    size: data.size,
+    deadline: data.deadline,
+    stripe_session_id: data.stripeSessionId,
+    status: "pending_payment",
+    created_at: nowIso(),
+    matched_store_slug: null,
+    matched_store_at: null,
+  };
+
+  await setDoc(doc(collection(db, SOURCING_COLLECTION), id), payload);
+  return mapDoc(id, payload);
 }
 
 export async function markSourcingRequestPaid(stripeSessionId: string): Promise<SourcingRequest | null> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const db = getDb();
 
-  const rows = await sql`
-    UPDATE sourcing_requests
-    SET status = 'paid'
-    WHERE stripe_session_id = ${stripeSessionId} AND status = 'pending_payment'
-    RETURNING *
-  `;
-  return rows.length > 0 ? mapRow(rows[0]) : null;
+  const rows = await getAllRows();
+  const target = rows.find(
+    (row) =>
+      row.data.stripe_session_id === stripeSessionId &&
+      row.data.status === "pending_payment"
+  );
+
+  if (!target) return null;
+
+  const ref = doc(collection(db, SOURCING_COLLECTION), target.id);
+  await setDoc(ref, { status: "paid" }, { merge: true });
+
+  const updated = await getDoc(ref);
+  if (!updated.exists()) return null;
+  return mapDoc(updated.id, updated.data() as Partial<SourcingRequestDoc>);
 }
 
 export async function getSourcingRequestBySession(stripeSessionId: string): Promise<SourcingRequest | null> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
-
-  const rows = await sql`
-    SELECT * FROM sourcing_requests WHERE stripe_session_id = ${stripeSessionId} LIMIT 1
-  `;
-  return rows.length > 0 ? mapRow(rows[0]) : null;
+  const rows = await getAllRows();
+  const row = rows.find((item) => item.data.stripe_session_id === stripeSessionId);
+  return row ? mapDoc(row.id, row.data) : null;
 }
 
 export async function getSourcingRequestById(id: string, userId: string): Promise<SourcingRequest | null> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
-  const rows = await sql`
-    SELECT * FROM sourcing_requests WHERE id = ${id} AND user_id = ${userId} LIMIT 1
-  `;
-  return rows.length > 0 ? mapRow(rows[0]) : null;
+  const db = getDb();
+
+  const snap = await getDoc(doc(collection(db, SOURCING_COLLECTION), id));
+  if (!snap.exists()) return null;
+
+  const row = snap.data() as Partial<SourcingRequestDoc>;
+  if (row.user_id !== userId) return null;
+  return mapDoc(snap.id, row);
 }
 
 export async function getUserSourcingRequests(userId: string): Promise<SourcingRequest[]> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const rows = await getAllRows();
 
-  const rows = await sql`
-    SELECT * FROM sourcing_requests
-    WHERE user_id = ${userId}
-    ORDER BY created_at DESC
-  `;
-  return rows.map(mapRow);
+  return rows
+    .filter((row) => row.data.user_id === userId)
+    .sort((a, b) => b.data.created_at.localeCompare(a.data.created_at))
+    .map((row) => mapDoc(row.id, row.data));
 }
 
 export async function getOpenSourcingRequests(): Promise<SourcingRequest[]> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const rows = await getAllRows();
 
-  const rows = await sql`
-    SELECT * FROM sourcing_requests
-    WHERE status = 'paid' AND matched_store_slug IS NULL
-    ORDER BY created_at ASC
-  `;
-  return rows.map(mapRow);
+  return rows
+    .filter((row) => row.data.status === "paid" && !row.data.matched_store_slug)
+    .sort((a, b) => a.data.created_at.localeCompare(b.data.created_at))
+    .map((row) => mapDoc(row.id, row.data));
 }
 
 export async function getSourcingRequestsByStore(storeSlug: string): Promise<SourcingRequest[]> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const rows = await getAllRows();
 
-  const rows = await sql`
-    SELECT * FROM sourcing_requests
-    WHERE matched_store_slug = ${storeSlug}
-    ORDER BY matched_store_at DESC
-  `;
-  return rows.map(mapRow);
+  return rows
+    .filter((row) => row.data.matched_store_slug === storeSlug)
+    .sort((a, b) => (b.data.matched_store_at || "").localeCompare(a.data.matched_store_at || ""))
+    .map((row) => mapDoc(row.id, row.data));
 }
 
 export async function claimSourcingRequest(
   id: string,
   storeSlug: string
 ): Promise<{ success: boolean; error?: string }> {
-  const sql = neon(getDatabaseUrl());
   await initSourcingTable();
+  const db = getDb();
+  const ref = doc(collection(db, SOURCING_COLLECTION), id);
 
-  const rows = await sql`
-    UPDATE sourcing_requests
-    SET status = 'matched', matched_store_slug = ${storeSlug}, matched_store_at = NOW()
-    WHERE id = ${id} AND status = 'paid' AND matched_store_slug IS NULL
-    RETURNING id
-  `;
+  let claimed = false;
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
 
-  if (rows.length === 0) {
+    const row = snap.data() as Partial<SourcingRequestDoc>;
+    const canClaim = row.status === "paid" && !row.matched_store_slug;
+    if (!canClaim) return;
+
+    claimed = true;
+    tx.set(
+      ref,
+      {
+        status: "matched",
+        matched_store_slug: storeSlug,
+        matched_store_at: nowIso(),
+      },
+      { merge: true }
+    );
+  });
+
+  if (!claimed) {
     return { success: false, error: "Already claimed" };
   }
+
   return { success: true };
 }
