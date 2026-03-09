@@ -15,6 +15,7 @@ const stories = [
       "Some brands start with a new collection. LEI started with a realization.",
     logo: "/stores/lei-vintage-logo.jpg",
     logoBg: "#ffffff",
+    logoFit: "contain" as const,
   },
   {
     slug: "vintage-archives-la",
@@ -23,6 +24,7 @@ const stories = [
       "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
     logo: "/stores/vintage-archives-la-logo.jpg",
     logoBg: "#fdf8d8",
+    logoFit: "cover" as const,
   },
   {
     slug: "ascensio-vintage",
@@ -31,6 +33,43 @@ const stories = [
       "Championing timeless style that transcends the decades — authentic, high-quality vintage designer clothes sourced with intention.",
     logo: "/stores/ascensio-vintage-logo.jpg",
     logoBg: "#ffffff",
+    logoFit: "contain" as const,
+  },
+  {
+    slug: "scarz-vintage",
+    store: "Scarz Vintage",
+    teaser:
+      "Luxury fashion doesn't expire — it evolves. Curated vintage at its best: thoughtful, refined, and intentional.",
+    logo: "/stores/scarz-vintage-logo.jpg",
+    logoBg: "#ffffff",
+    logoFit: "contain" as const,
+  },
+  {
+    slug: "missi-archives",
+    store: "Missi Archives",
+    teaser:
+      "Designer secondhand with depth. Luxury resale with longevity. Curated vintage that feels modern.",
+    logo: "/stores/missi-archives-logo.jpg",
+    logoBg: "#722f37",
+    logoFit: "cover" as const,
+  },
+  {
+    slug: "blodas-choice",
+    store: "Bloda's Choice",
+    teaser:
+      "A creative platform built around the vision of photographer and founder Anna Bloda — vintage fashion, original design, and a singular point of view.",
+    logo: "/stores/blodas-choice-logo.png",
+    logoBg: "#ffffff",
+    logoFit: "contain" as const,
+  },
+  {
+    slug: "source-twenty-four",
+    store: "Source Twenty Four",
+    teaser:
+      "Founded by a mother–daughter duo in New Jersey, built on the idea that the best fashion already has a story.",
+    logo: "/stores/source-twenty-four.jpg",
+    logoBg: "#ffffff",
+    logoFit: "cover" as const,
   },
 ];
 
@@ -60,13 +99,14 @@ export default function StoriesPage() {
               >
                 <div
                   className="relative w-48 h-24 sm:w-56 sm:h-28 mx-auto mb-5 overflow-hidden"
+                  style={{ backgroundColor: story.logoBg ?? "#ffffff" }}
                 >
                   <Image
                     src={story.logo}
                     alt={story.store}
                     fill
                     sizes="224px"
-                    className="object-cover"
+                    className={story.logoFit === "cover" ? "object-cover" : "object-contain p-4"}
                   />
                 </div>
                 <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-3">

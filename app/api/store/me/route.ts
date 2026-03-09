@@ -27,6 +27,22 @@ export async function GET() {
     return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
   }
 
+  // Admin test account — return synthetic store data
+  if (storeSlug === "via-admin") {
+    return NextResponse.json({
+      storeSlug: "via-admin",
+      storeName: "VIA Admin",
+      location: "New York, NY",
+      currency: "USD",
+      website: "https://theviaplatform.com",
+      logo: "/via-logo.png",
+      logoBg: "#F7F3EA",
+      commissionType: "shopify-collabs",
+      totalInventoryValue: 0,
+      viaCommissionPotential: 0,
+    });
+  }
+
   const store = stores.find((s) => s.slug === storeSlug);
   if (!store) {
     return NextResponse.json({ error: "Store not found" }, { status: 404 });

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { imageUrl, description, priceMin, priceMax, condition, size, deadline } = body;
+    const { imageUrl, description, priceMin, priceMax, condition, size, deadline, preferredStoreSlugs } = body;
 
     if (!description || !priceMin || !priceMax || !condition || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -69,6 +69,9 @@ export async function POST(request: NextRequest) {
       size: size || null,
       deadline,
       stripeSessionId: checkoutSession.id,
+      preferredStoreSlugs: Array.isArray(preferredStoreSlugs) && preferredStoreSlugs.length > 0
+        ? preferredStoreSlugs
+        : null,
     });
 
     return NextResponse.json({ clientSecret: checkoutSession.client_secret });

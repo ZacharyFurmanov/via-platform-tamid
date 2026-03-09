@@ -126,6 +126,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "blodas-choice",
     storeDomain: "blodaschoice.com",
   },
+  {
+    type: "shopify",
+    name: "Rareality Archive",
+    slug: "rareality-archive",
+    storeDomain: "rarealityarchive.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

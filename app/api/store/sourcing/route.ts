@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   const [open, mine] = await Promise.all([
-    getOpenSourcingRequests(),
+    getOpenSourcingRequests(storeSlug),
     getSourcingRequestsByStore(storeSlug),
   ]);
 

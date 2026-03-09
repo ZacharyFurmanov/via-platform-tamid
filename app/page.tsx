@@ -204,6 +204,22 @@ export default function HomePage() {
                   logo: "/stores/ascensio-vintage-logo.jpg",
                   logoBg: "#ffffff",
                 },
+                {
+                  slug: "blodas-choice",
+                  store: "Bloda's Choice",
+                  teaser: "A creative platform built around the vision of photographer Anna Bloda — vintage fashion, original design, and a singular point of view.",
+                  image: "/stores/blodas-choice.jpg",
+                  logo: "/stores/blodas-choice-logo.png",
+                  logoBg: "#ffffff",
+                },
+                {
+                  slug: "source-twenty-four",
+                  store: "Source Twenty Four",
+                  teaser: "Founded by a mother–daughter duo in New Jersey, built on the idea that the best fashion already has a story.",
+                  image: "/stores/source-twenty-four.jpg",
+                  logo: "/stores/source-twenty-four.jpg",
+                  logoBg: "#ffffff",
+                },
               ]}
             />
           </ScrollReveal>

@@ -48,6 +48,14 @@ type SourcingData = {
 
 type RangeOption = "7d" | "30d" | "all";
 
+/** Tiered commission VIA earns on a given revenue total. */
+function calcViaCommission(revenue: number): number {
+  if (revenue <= 0) return 0;
+  if (revenue <= 1000) return revenue * 0.07;
+  if (revenue <= 5000) return 1000 * 0.07 + (revenue - 1000) * 0.05;
+  return 1000 * 0.07 + 4000 * 0.05 + (revenue - 5000) * 0.03;
+}
+
 export default function StoreDashboardPage() {
   const router = useRouter();
   const [store, setStore] = useState<StoreInfo | null>(null);
@@ -251,7 +259,7 @@ export default function StoreDashboardPage() {
 
           {analytics ? (
             <>
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white p-6 shadow-sm text-center">
                   <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
                     {analytics.totalClicks.toLocaleString()}
@@ -274,6 +282,17 @@ export default function StoreDashboardPage() {
                   </p>
                   <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
                     Revenue
+                  </p>
+                </div>
+                <div className="bg-white p-6 shadow-sm text-center">
+                  <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                    ${Math.round(calcViaCommission(analytics.totalRevenue)).toLocaleString()}
+                  </p>
+                  <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                    VIA Commission
+                  </p>
+                  <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.35)" }}>
+                    7% · 5% · 3% tiered
                   </p>
                 </div>
               </div>

@@ -37,6 +37,22 @@ export default function StoresPage() {
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
                     )}
+                    {/* Logo overlay on hover */}
+                    {"logo" in store && store.logo && !store.logo.includes("placeholder") && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div
+                          className="relative w-2/3 h-1/4"
+                          style={{ backgroundColor: store.logoBg ?? "#ffffff" }}
+                        >
+                          <Image
+                            src={store.logo}
+                            alt={`${store.name} logo`}
+                            fill
+                            className={"logoFit" in store && store.logoFit === "cover" ? "object-cover" : "object-contain p-3"}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Link>
 

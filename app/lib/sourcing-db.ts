@@ -23,6 +23,7 @@ export type SourcingRequest = {
   createdAt: string;
   matchedStoreSlug: string | null;
   matchedStoreAt: string | null;
+  preferredStoreSlugs: string[] | null;
 };
 
 async function initSourcingTable(): Promise<void> {
@@ -55,6 +56,8 @@ async function initSourcingTable(): Promise<void> {
   // Idempotent migrations for store claiming
   await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_slug TEXT`;
   await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_at TIMESTAMPTZ`;
+  // Idempotent migration for preferred store slugs (JSON array stored as text)
+  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS preferred_store_slugs TEXT`;
 }
 
 function generateRequestId(): string {
@@ -81,6 +84,9 @@ function mapRow(row: Record<string, unknown>): SourcingRequest {
     matchedStoreAt: row.matched_store_at
       ? (row.matched_store_at as Date).toISOString()
       : null,
+    preferredStoreSlugs: row.preferred_store_slugs
+      ? JSON.parse(row.preferred_store_slugs as string) as string[]
+      : null,
   };
 }
 
@@ -96,20 +102,25 @@ export async function createSourcingRequest(data: {
   size: string | null;
   deadline: string;
   stripeSessionId: string;
+  preferredStoreSlugs: string[] | null;
 }): Promise<SourcingRequest> {
   const sql = neon(getDatabaseUrl());
   await initSourcingTable();
 
   const id = generateRequestId();
+  const preferredJson = data.preferredStoreSlugs && data.preferredStoreSlugs.length > 0
+    ? JSON.stringify(data.preferredStoreSlugs)
+    : null;
   const rows = await sql`
     INSERT INTO sourcing_requests (
       id, user_id, user_email, user_name, image_url, description,
-      price_min, price_max, condition, size, deadline, stripe_session_id, status
+      price_min, price_max, condition, size, deadline, stripe_session_id, status,
+      preferred_store_slugs
     ) VALUES (
       ${id}, ${data.userId}, ${data.userEmail}, ${data.userName},
       ${data.imageUrl}, ${data.description}, ${data.priceMin}, ${data.priceMax},
       ${data.condition}, ${data.size}, ${data.deadline}, ${data.stripeSessionId},
-      'pending_payment'
+      'pending_payment', ${preferredJson}
     )
     RETURNING *
   `;
@@ -160,15 +171,26 @@ export async function getUserSourcingRequests(userId: string): Promise<SourcingR
   return rows.map(mapRow);
 }
 
-export async function getOpenSourcingRequests(): Promise<SourcingRequest[]> {
+export async function getOpenSourcingRequests(storeSlug?: string): Promise<SourcingRequest[]> {
   const sql = neon(getDatabaseUrl());
   await initSourcingTable();
 
-  const rows = await sql`
-    SELECT * FROM sourcing_requests
-    WHERE status = 'paid' AND matched_store_slug IS NULL
-    ORDER BY created_at ASC
-  `;
+  // "via-admin" and unfiltered calls see all open requests
+  const rows = !storeSlug || storeSlug === "via-admin"
+    ? await sql`
+        SELECT * FROM sourcing_requests
+        WHERE status = 'paid' AND matched_store_slug IS NULL
+        ORDER BY created_at ASC
+      `
+    : await sql`
+        SELECT * FROM sourcing_requests
+        WHERE status = 'paid' AND matched_store_slug IS NULL
+          AND (
+            preferred_store_slugs IS NULL
+            OR preferred_store_slugs::jsonb @> to_jsonb(${storeSlug}::text)
+          )
+        ORDER BY created_at ASC
+      `;
   return rows.map(mapRow);
 }
 

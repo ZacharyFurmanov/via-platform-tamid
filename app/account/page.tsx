@@ -11,6 +11,7 @@ import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
+import InviteButton from "./InviteButton";
 import MembershipPortalButton from "./MembershipPortalButton";
 import { neon } from "@neondatabase/serverless";
 
@@ -256,77 +257,6 @@ export default async function AccountPage() {
           )}
         </section>
 
-        {/* ===== Purchase History ===== */}
-        {(purchases.length > 0 || recentClicks.length > 0) && (
-          <section className="py-12 border-b border-[#5D0F17]/10">
-            <div className="flex items-center gap-4 mb-8">
-              <h2 className="font-serif text-xl italic text-[#5D0F17]/80">Purchase History</h2>
-              <div className="flex-1 h-px bg-[#5D0F17]/15" />
-            </div>
-
-            {purchases.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {purchases.map((p) => (
-                  <div
-                    key={p.conversionId}
-                    className="border border-[#5D0F17]/15 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {p.matchedClickData?.productName || p.storeName}
-                      </p>
-                      <p className="text-xs text-[#5D0F17]/50 mt-0.5">
-                        {p.storeName} &middot;{" "}
-                        {new Date(p.timestamp).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <p className="text-sm font-medium tabular-nums shrink-0">
-                      ${p.orderTotal.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mb-8">
-                <p className="text-sm text-[#5D0F17]/40">No confirmed purchases yet.</p>
-              </div>
-            )}
-
-            {recentClicks.length > 0 && (
-              <>
-                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/40 mt-8 mb-4">
-                  Recently Browsed
-                </p>
-                <div className="flex flex-col gap-2">
-                  {recentClicks.slice(0, 10).map((c) => (
-                    <div
-                      key={c.clickId}
-                      className="flex items-center justify-between py-2.5 border-b border-[#5D0F17]/5 last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm">{c.productName}</p>
-                        <p className="text-xs text-[#5D0F17]/40">{c.store}</p>
-                      </div>
-                      <p className="text-xs text-[#5D0F17]/40 shrink-0 ml-4">
-                        {new Date(c.timestamp).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-        )}
 
         {/* ===== Sourcing Requests ===== */}
         <section className="py-12 border-b border-[#5D0F17]/10">
@@ -410,40 +340,17 @@ export default async function AccountPage() {
           )}
         </section>
 
-        {/* ===== Refer + Invite ===== */}
+        {/* ===== Invite ===== */}
         <section className="py-12 border-b border-[#5D0F17]/10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col">
-              <h2 className="font-serif text-lg mb-2">Refer a Friend</h2>
-              <p className="text-sm text-[#5D0F17]/50 mb-6 leading-relaxed">
-                Share VIA with friends and help us grow the community.
-              </p>
-              <div className="mt-auto flex flex-col gap-3">
-                <a
-                  href="/waitlist"
-                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
-                >
-                  Get Your Referral Link
-                </a>
-                <p className="text-xs text-[#5D0F17]/40 text-center">
-                  Invite 2 friends to enter the $1,000 giveaway
-                </p>
-              </div>
-            </div>
-
-            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col">
+          <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
               <h2 className="font-serif text-lg mb-2">Invite a Friend</h2>
-              <p className="text-sm text-[#5D0F17]/50 mb-6 leading-relaxed">
-                Know someone who&apos;d love VIA? Send them an invite and shop together.
+              <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
+                Know someone who&apos;d love VIA? Share the link and shop together.
               </p>
-              <div className="mt-auto">
-                <a
-                  href="/account/friends"
-                  className="block text-center text-sm uppercase tracking-[0.15em] px-5 py-3 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
-                >
-                  Invite Friend
-                </a>
-              </div>
+            </div>
+            <div className="shrink-0 sm:w-48">
+              <InviteButton />
             </div>
           </div>
         </section>

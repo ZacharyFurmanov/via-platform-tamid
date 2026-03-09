@@ -204,7 +204,12 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
   const result = await sql`
     SELECT * FROM products
     WHERE store_slug = ${storeSlug}
-      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      AND (
+        shopify_product_id IS NULL
+        OR collabs_link IS NOT NULL
+        OR created_at IS NULL
+        OR created_at <= NOW() - interval '48 hours'
+      )
     ORDER BY id
   `;
   return result as DBProduct[];
@@ -232,13 +237,23 @@ export async function getAllProducts(isMember: boolean = false): Promise<DBProdu
   const result = isMember
     ? await sql`
         SELECT * FROM products
-        WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        WHERE (
+          shopify_product_id IS NULL
+          OR collabs_link IS NOT NULL
+          OR created_at IS NULL
+          OR created_at <= NOW() - interval '48 hours'
+        )
         ORDER BY store_slug, id
       `
     : await sql`
         SELECT * FROM products
-        WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
+        WHERE (
+          shopify_product_id IS NULL
+          OR collabs_link IS NOT NULL
+          OR created_at IS NULL
+          OR created_at <= NOW() - interval '48 hours'
+        )
+        AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
         ORDER BY store_slug, id
       `;
   return result as DBProduct[];
@@ -257,7 +272,12 @@ export async function getRecommendedProducts(
   const result = await sql`
     SELECT * FROM products TABLESAMPLE BERNOULLI(50)
     WHERE id != ${excludeId}
-      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      AND (
+        shopify_product_id IS NULL
+        OR collabs_link IS NOT NULL
+        OR created_at IS NULL
+        OR created_at <= NOW() - interval '48 hours'
+      )
       AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
     LIMIT ${limit}
   `;
@@ -282,7 +302,6 @@ export async function getNewArrivals(
           SELECT * FROM products
           WHERE created_at IS NOT NULL
             AND created_at >= NOW() - make_interval(days => ${days})
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           ORDER BY created_at DESC
           LIMIT ${limit}
         `
@@ -291,37 +310,28 @@ export async function getNewArrivals(
           WHERE created_at IS NOT NULL
             AND created_at >= NOW() - make_interval(days => ${days})
             AND created_at <= NOW() - interval '24 hours'
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           ORDER BY created_at DESC
           LIMIT ${limit}
         `;
 
-    // If no genuine new arrivals yet, show a random sample as fallback
+    // If no created_at-tracked new arrivals, fall back to most recently added products by DB id
     if (result.length === 0) {
-      try {
-        const fallback = await sql`
-          SELECT * FROM products TABLESAMPLE BERNOULLI(50)
-          WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL
-          LIMIT ${limit}
-        `;
-        return fallback as DBProduct[];
-      } catch {
-        return [];
-      }
-    }
-    return result as DBProduct[];
-  } catch {
-    // created_at column may not exist yet — try a simple fallback
-    try {
       const fallback = await sql`
-        SELECT * FROM products TABLESAMPLE BERNOULLI(50)
-        WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL
+        SELECT * FROM products
+        WHERE (
+          shopify_product_id IS NULL
+          OR collabs_link IS NOT NULL
+          OR created_at IS NULL
+          OR created_at <= NOW() - interval '48 hours'
+        )
+        ORDER BY id DESC
         LIMIT ${limit}
       `;
       return fallback as DBProduct[];
-    } catch {
-      return [];
     }
+    return result as DBProduct[];
+  } catch {
+    return [];
   }
 }
 
@@ -337,7 +347,6 @@ export async function getInsiderProducts(limit: number = 48): Promise<DBProduct[
       SELECT * FROM products
       WHERE created_at IS NOT NULL
         AND created_at >= NOW() - interval '24 hours'
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
@@ -358,7 +367,6 @@ export async function getUnnotifiedInsiderProducts(limit: number = 50): Promise<
       SELECT * FROM products
       WHERE created_at IS NOT NULL
         AND insider_notified = FALSE
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
