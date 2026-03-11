@@ -14,32 +14,32 @@ import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "VIA",
+  title: "VYA",
   description: "Vintage & secondhand, worldwide.",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
   },
   openGraph: {
-    title: "VIA",
+    title: "VYA",
     description: "Vintage & secondhand, worldwide.",
-    url: "https://theviaplatform.com",
-    siteName: "VIA",
+    url: "https://vyaplatform.com",
+    siteName: "VYA",
     images: [
       {
-        url: "https://theviaplatform.com/og-image.png",
+        url: "https://vyaplatform.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "VIA — Vintage & Secondhand",
+        alt: "VYA — Vintage & Secondhand",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "VIA",
+    title: "VYA",
     description: "Vintage & secondhand, worldwide.",
-    images: ["https://theviaplatform.com/og-image.png"],
+    images: ["https://vyaplatform.com/og-image.png"],
   },
   other: {
     "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",

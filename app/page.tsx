@@ -7,6 +7,7 @@ import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
 import BrandsSection from "./components/BrandsSection";
+import EditorsPicksSection from "./components/EditorsPicksSection";
 import { Suspense } from "react";
 
 export default function HomePage() {
@@ -142,6 +143,13 @@ export default function HomePage() {
         </Suspense>
       </ScrollReveal>
 
+      {/* ================= EDITOR'S PICKS ================= */}
+      <ScrollReveal>
+        <Suspense>
+          <EditorsPicksSection />
+        </Suspense>
+      </ScrollReveal>
+
       {/* ================= STORIES ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6">
@@ -239,7 +247,7 @@ export default function HomePage() {
               </h2>
               <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
                 Everything you need to know about shopping, shipping,
-                and how VIA works.
+                and how VYA works.
               </p>
             </div>
           </ScrollReveal>
@@ -278,12 +286,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= VIA EXPERIENCE ================= */}
+      {/* ================= VYA EXPERIENCE ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <ScrollReveal>
             <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
-              The VIA Experience
+              The VYA Experience
             </p>
 
             <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-[#5D0F17]">
@@ -291,7 +299,7 @@ export default function HomePage() {
             </h2>
 
             <p className="max-w-2xl mx-auto mb-12 sm:mb-16 text-[#5D0F17]/60 text-sm sm:text-base font-sans">
-              VIA brings together the best independent vintage and secondhand stores
+              VYA brings together the best independent vintage and secondhand stores
               into one seamless browsing experience, while keeping checkout
               with the store you love.
             </p>

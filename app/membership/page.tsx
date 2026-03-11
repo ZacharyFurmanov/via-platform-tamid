@@ -23,9 +23,9 @@ export default async function MembershipPage() {
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24 text-center">
           <p className="text-xs uppercase tracking-widest text-[#5D0F17]/40 mb-4">Membership</p>
-          <h1 className="text-3xl sm:text-4xl font-serif mb-6">VIA Insider</h1>
+          <h1 className="text-3xl sm:text-4xl font-serif mb-6">VYA Insider</h1>
           <p className="text-base sm:text-lg text-[#5D0F17]/60 max-w-xl mx-auto leading-relaxed">
-            Be first to see new arrivals from VIA's stores — 24 hours before everyone else.
+            Be first to see new arrivals from VYA's stores — 24 hours before everyone else.
           </p>
         </div>
       </section>
@@ -55,7 +55,7 @@ export default async function MembershipPage() {
         <div className="border border-[#5D0F17]/15 p-8 sm:p-12 text-center max-w-md mx-auto">
           {isMember ? (
             <div>
-              <p className="font-serif text-xl mb-3">You're a VIA Insider member.</p>
+              <p className="font-serif text-xl mb-3">You're a VYA Insider member.</p>
               <p className="text-sm text-[#5D0F17]/50 mb-8">
                 You have early access to new arrivals. Manage your subscription from your account.
               </p>
@@ -68,7 +68,7 @@ export default async function MembershipPage() {
             </div>
           ) : (
             <div>
-              <p className="font-serif text-xl mb-3">Join VIA Insider</p>
+              <p className="font-serif text-xl mb-3">Join VYA Insider</p>
               <p className="text-sm text-[#5D0F17]/50 mb-8">
                 $10/month · Cancel anytime
               </p>

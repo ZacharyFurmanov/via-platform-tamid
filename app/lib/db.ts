@@ -234,8 +234,8 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
 export async function getAllProducts(isMember: boolean = false): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  const result = isMember
-    ? await sql`
+  const query = async () => isMember
+    ? sql`
         SELECT * FROM products
         WHERE (
           shopify_product_id IS NULL
@@ -245,7 +245,7 @@ export async function getAllProducts(isMember: boolean = false): Promise<DBProdu
         )
         ORDER BY store_slug, id
       `
-    : await sql`
+    : sql`
         SELECT * FROM products
         WHERE (
           shopify_product_id IS NULL
@@ -256,7 +256,17 @@ export async function getAllProducts(isMember: boolean = false): Promise<DBProdu
         AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
         ORDER BY store_slug, id
       `;
-  return result as DBProduct[];
+
+  // Retry once on fetch failure — handles Neon cold-start / auto-suspend wakeup
+  try {
+    return (await query()) as DBProduct[];
+  } catch (err) {
+    if (err instanceof TypeError && err.message.includes("fetch failed")) {
+      await new Promise((r) => setTimeout(r, 2000));
+      return (await query()) as DBProduct[];
+    }
+    throw err;
+  }
 }
 
 /**
@@ -336,7 +346,7 @@ export async function getNewArrivals(
 }
 
 /**
- * Get products added in the last 24 hours — the VIA Insider early-access window.
+ * Get products added in the last 24 hours — the VYA Insider early-access window.
  * Only shown to active members.
  */
 export async function getInsiderProducts(limit: number = 48): Promise<DBProduct[]> {

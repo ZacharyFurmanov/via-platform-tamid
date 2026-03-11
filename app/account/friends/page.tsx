@@ -168,9 +168,9 @@ export default function FriendsPage() {
   }
 
   function handleInvite() {
-    const text = "Join me on VIA — vintage & secondhand from independent stores across the country, all in one place! https://theviaplatform.com";
+    const text = "Join me on VYA — vintage & secondhand from independent stores across the country, all in one place! https://vyaplatform.com";
     if (navigator.share) {
-      navigator.share({ title: "Join VIA", text }).catch(() => {});
+      navigator.share({ title: "Join VYA", text }).catch(() => {});
     } else {
       const normalized = searchPhone.replace(/\D/g, "");
       window.open(`sms:${normalized}?body=${encodeURIComponent(text)}`);
@@ -214,7 +214,7 @@ export default function FriendsPage() {
         {/* Find Friends */}
         <section className="mb-12">
           <h2 className="font-serif text-xl mb-4">Find Friends</h2>
-          <p className="text-sm text-[#5D0F17]/50 mb-4">Search by phone number to find friends on VIA.</p>
+          <p className="text-sm text-[#5D0F17]/50 mb-4">Search by phone number to find friends on VYA.</p>
           <div className="flex items-center gap-3 mb-4">
             <input
               type="tel"
@@ -239,7 +239,7 @@ export default function FriendsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar name={searchResult.user.name} image={searchResult.user.image} />
-                    <span className="text-sm font-medium">{searchResult.user.name || "VIA User"}</span>
+                    <span className="text-sm font-medium">{searchResult.user.name || "VYA User"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {requestStatus && (
@@ -262,7 +262,7 @@ export default function FriendsPage() {
                     onClick={handleInvite}
                     className="text-sm uppercase tracking-wide px-3 py-1.5 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
                   >
-                    Invite to VIA
+                    Invite to VYA
                   </button>
                 </div>
               )}
@@ -282,12 +282,12 @@ export default function FriendsPage() {
 
                 {contactMatches.length > 0 && (
                   <div className="mt-4 space-y-3">
-                    <p className="text-xs text-[#5D0F17]/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VIA</p>
+                    <p className="text-xs text-[#5D0F17]/50 uppercase tracking-wide">{contactMatches.length} contact{contactMatches.length !== 1 ? "s" : ""} on VYA</p>
                     {contactMatches.map((user) => (
                       <div key={user.id} className="flex items-center justify-between border border-[#5D0F17]/15 p-3">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} image={user.image} size="sm" />
-                          <span className="text-sm font-medium">{user.name || "VIA User"}</span>
+                          <span className="text-sm font-medium">{user.name || "VYA User"}</span>
                         </div>
                         {contactRequestStatuses[user.id] ? (
                           <span className="text-xs text-[#5D0F17]/50 capitalize">{contactRequestStatuses[user.id].replace("_", " ")}</span>
@@ -310,7 +310,7 @@ export default function FriendsPage() {
                   onClick={handleInvite}
                   className="text-sm uppercase tracking-wide px-4 py-2 border border-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
                 >
-                  Invite Friends to VIA
+                  Invite Friends to VYA
                 </button>
                 <p className="text-xs text-[#5D0F17]/50 mt-2">
                   To find friends from your contacts, open this page on your phone.
@@ -388,7 +388,7 @@ export default function FriendsPage() {
                   <div className="flex items-center gap-3">
                     <Avatar name={friend.name} image={friend.image} />
                     <div>
-                      <span className="text-sm font-medium block">{friend.name || "VIA User"}</span>
+                      <span className="text-sm font-medium block">{friend.name || "VYA User"}</span>
                     </div>
                   </div>
                   <button

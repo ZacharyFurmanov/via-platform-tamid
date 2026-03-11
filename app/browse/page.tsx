@@ -55,7 +55,8 @@ export default async function BrowsePage() {
       image: item.image,
       images: item.images,
       isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),
-      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      engagementScore,
+      createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),
       popularityScore: computeProductScore({
         engagementScore,
         syncedAt,

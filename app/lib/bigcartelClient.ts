@@ -48,7 +48,7 @@ export async function parseBigCartelJSON(
 
   const response = await fetch(apiUrl, {
     headers: {
-      "User-Agent": "VIA-Sync/1.0",
+      "User-Agent": "VYA-Sync/1.0",
       Accept: "application/json",
     },
     next: { revalidate: 0 },

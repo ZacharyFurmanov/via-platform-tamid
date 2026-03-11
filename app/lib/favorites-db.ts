@@ -21,9 +21,12 @@ export async function initFavoritesTables() {
       user_id UUID NOT NULL,
       product_id INT NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      product_snapshot JSONB,
       UNIQUE(user_id, product_id)
     )
   `;
+  // Add product_snapshot column for existing tables (safe migration)
+  await sql`ALTER TABLE product_favorites ADD COLUMN IF NOT EXISTS product_snapshot JSONB`;
   await sql`CREATE INDEX IF NOT EXISTS idx_product_favorites_user ON product_favorites(user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_product_favorites_product ON product_favorites(product_id)`;
 
@@ -58,7 +61,15 @@ export async function toggleProductFavorite(userId: string, productId: number): 
     await sql`DELETE FROM product_favorites WHERE user_id = ${userId} AND product_id = ${productId}`;
     return false;
   } else {
-    await sql`INSERT INTO product_favorites (user_id, product_id) VALUES (${userId}, ${productId})`;
+    // Store a snapshot of the product so we can show it even after it sells out
+    const productRows = await sql`
+      SELECT title, price, image, images, store_name, store_slug, size FROM products WHERE id = ${productId}
+    `;
+    const snapshot = productRows[0] ?? null;
+    await sql`
+      INSERT INTO product_favorites (user_id, product_id, product_snapshot)
+      VALUES (${userId}, ${productId}, ${snapshot ? JSON.stringify(snapshot) : null})
+    `;
     return true;
   }
 }
@@ -109,20 +120,57 @@ export async function getUserStoreFavoriteIds(userId: string): Promise<string[]>
   return rows.map((r) => r.store_slug as string);
 }
 
+export type FavoriteProductEntry = {
+  productId: number;
+  soldOut: boolean;
+  product: DBProduct | null;
+  snapshot: {
+    title: string;
+    price: string;
+    image: string | null;
+    images: string | null;
+    store_name: string;
+    store_slug: string;
+    size: string | null;
+  } | null;
+};
+
 /**
- * Get full product data for all of a user's favorited products.
+ * Get full product data for all of a user's favorited products,
+ * including sold-out items (those no longer in the products table).
  */
-export async function getUserFavoritedProducts(userId: string): Promise<DBProduct[]> {
+export async function getUserFavoritedProducts(userId: string): Promise<FavoriteProductEntry[]> {
   await initFavoritesTables();
   const sql = neon(getDatabaseUrl());
 
   const rows = await sql`
-    SELECT p.* FROM products p
-    JOIN product_favorites pf ON pf.product_id = p.id
+    SELECT
+      pf.product_id,
+      pf.product_snapshot,
+      p.*
+    FROM product_favorites pf
+    LEFT JOIN products p ON pf.product_id = p.id
     WHERE pf.user_id = ${userId}
     ORDER BY pf.created_at DESC
   `;
-  return rows as DBProduct[];
+
+  return rows.map((row) => {
+    const soldOut = row.id == null;
+    let snapshot: FavoriteProductEntry["snapshot"] = null;
+    if (row.product_snapshot) {
+      try {
+        snapshot = typeof row.product_snapshot === "string"
+          ? JSON.parse(row.product_snapshot)
+          : row.product_snapshot;
+      } catch {}
+    }
+    return {
+      productId: row.product_id as number,
+      soldOut,
+      product: soldOut ? null : (row as unknown as DBProduct),
+      snapshot,
+    };
+  });
 }
 
 /**

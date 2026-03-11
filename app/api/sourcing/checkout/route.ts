@@ -5,7 +5,7 @@ import { createSourcingRequest } from "@/app/lib/sourcing-db";
 const SOURCING_FEE_CENTS = 2000; // $20.00
 
 function getBaseUrl(request: NextRequest) {
-  const host = request.headers.get("host") || "theviaplatform.com";
+  const host = request.headers.get("host") || "vyaplatform.com";
   const proto = host.startsWith("localhost") ? "http" : "https";
   return `${proto}://${host}`;
 }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripePost("checkout/sessions", {
       mode: "payment",
       "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][product_data][name]": "VIA Sourcing Request",
+      "line_items[0][price_data][product_data][name]": "VYA Sourcing Request",
       "line_items[0][price_data][product_data][description]": "Refundable if no match is found within 14 business days.",
       "line_items[0][price_data][unit_amount]": String(SOURCING_FEE_CENTS),
       "line_items[0][quantity]": "1",

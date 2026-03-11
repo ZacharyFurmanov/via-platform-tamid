@@ -11,14 +11,14 @@ export default function ShopifySetupPage() {
               href="/for-stores"
               className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
             >
-              &larr; Partner with VIA
+              &larr; Partner with VYA
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
             Shopify Store Setup
           </h1>
           <p className="text-[#5D0F17]/60 text-base sm:text-lg">
-            Connect your Shopify store to VIA using Shopify Collabs for automatic affiliate tracking.
+            Connect your Shopify store to VYA using Shopify Collabs for automatic affiliate tracking.
           </p>
         </div>
       </section>
@@ -94,14 +94,14 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     2
                   </span>
-                  <h3 className="text-lg font-medium">Add VIA as a Collaborator</h3>
+                  <h3 className="text-lg font-medium">Add VYA as a Collaborator</h3>
                 </div>
                 <div className="text-[#5D0F17]/60 space-y-3">
-                  <p>Invite VIA to your Collabs program:</p>
+                  <p>Invite VYA to your Collabs program:</p>
                   <ol className="list-decimal list-inside space-y-1 text-sm">
                     <li>Open <strong>Shopify Collabs</strong> from your Apps</li>
                     <li>Go to <strong>Recruiting → Invite Creator</strong></li>
-                    <li>Enter VIA&apos;s email:</li>
+                    <li>Enter VYA&apos;s email:</li>
                   </ol>
                   <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm select-all">
                     partnerships@theviaplatform.com
@@ -120,7 +120,7 @@ export default function ShopifySetupPage() {
                 </div>
                 <div className="text-[#5D0F17]/60 space-y-3">
                   <p>
-                    Once VIA has been added to your Collabs program, we generate a unique
+                    Once VYA has been added to your Collabs program, we generate a unique
                     affiliate link for each of your products on our end. No action needed from you.
                   </p>
                   <p className="text-sm">
@@ -130,7 +130,7 @@ export default function ShopifySetupPage() {
                     https://collabs.shop/xxxxxxx
                   </div>
                   <p className="text-sm">
-                    When a customer clicks a product on VIA, they&apos;re routed through that
+                    When a customer clicks a product on VYA, they&apos;re routed through that
                     product&apos;s link. Shopify Collabs registers the visit and sets a tracking
                     cookie automatically — no theme changes or app embeds needed on your store.
                   </p>
@@ -199,7 +199,7 @@ export default function ShopifySetupPage() {
 
                   <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
                     <p className="text-amber-800">
-                      <strong>Why 30 days?</strong> This captures customers who browse VIA but
+                      <strong>Why 30 days?</strong> This captures customers who browse VYA but
                       come back to buy later. Most vintage purchases happen within a week, but
                       the extra window means you won&apos;t miss delayed sales.
                     </p>
@@ -217,7 +217,7 @@ export default function ShopifySetupPage() {
                 </div>
                 <div className="text-[#5D0F17]/50 space-y-3">
                   <p>
-                    Once we accept your invitation, all VIA traffic to your store will be
+                    Once we accept your invitation, all VYA traffic to your store will be
                     automatically tracked. No theme changes needed — our per-product links
                     handle tracking and attribution. Shopify handles:
                   </p>
@@ -238,7 +238,7 @@ export default function ShopifySetupPage() {
             <div className="bg-[#5D0F17]/5 p-6 space-y-4 text-sm">
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">1</div>
-                <p>Customer clicks a product on VIA → routed through a unique per-product affiliate link</p>
+                <p>Customer clicks a product on VYA → routed through a unique per-product affiliate link</p>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">2</div>
@@ -246,7 +246,7 @@ export default function ShopifySetupPage() {
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">3</div>
-                <p>If they purchase within your cookie window, VIA gets credit</p>
+                <p>If they purchase within your cookie window, VYA gets credit</p>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-6 h-6 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-xs flex-shrink-0">4</div>
@@ -267,10 +267,10 @@ export default function ShopifySetupPage() {
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-2">How do I see VIA-referred sales?</h3>
+                <h3 className="font-medium mb-2">How do I see VYA-referred sales?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
                   In Shopify Collabs, go to <strong>Analytics</strong> to see all sales, clicks,
-                  and commissions attributed to VIA.
+                  and commissions attributed to VYA.
                 </p>
               </div>
               <div>

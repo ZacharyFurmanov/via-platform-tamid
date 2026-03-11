@@ -3,19 +3,19 @@ import FAQAccordion from "@/app/components/FAQAccordion";
 export default function FAQsPage() {
   const faqs = [
     {
-      q: "What is VIA?",
-      a: "VIA is a platform that brings together independent vintage and secondhand stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
+      q: "What is VYA?",
+      a: "VYA is a platform that brings together independent vintage and secondhand stores, allowing you to browse across shops in one place while checking out directly with the store you choose.",
     },
     {
-      q: "How does shopping on VIA work?",
-      a: "You can browse items and stores on VIA, then when you're ready to purchase, you'll be redirected to the store's own website to complete checkout.",
+      q: "How does shopping on VYA work?",
+      a: "You can browse items and stores on VYA, then when you're ready to purchase, you'll be redirected to the store's own website to complete checkout.",
     },
     {
-      q: "Do I buy items directly from VIA?",
-      a: "No. VIA does not process payments or hold inventory. All purchases are completed directly with the individual store.",
+      q: "Do I buy items directly from VYA?",
+      a: "No. VYA does not process payments or hold inventory. All purchases are completed directly with the individual store.",
     },
     {
-      q: "Is everything on VIA authentic?",
+      q: "Is everything on VYA authentic?",
       a: "Yes. We partner with vetted vintage and secondhand stores known for authenticity, quality, and expertise in their categories.",
     },
     {
@@ -27,28 +27,28 @@ export default function FAQsPage() {
       a: "Return and exchange policies are set by each individual store. You'll find the specific policy on the store's website where you complete your purchase.",
     },
     {
-      q: "Where do stores on VIA ship?",
+      q: "Where do stores on VYA ship?",
       a: "Stores decide where they ship, but most stores ship worldwide.",
     },
     {
-      q: "How are stores selected for VIA?",
-      a: "Stores on VIA are carefully selected based on curation quality, authenticity standards, and overall brand alignment.",
+      q: "How are stores selected for VYA?",
+      a: "Stores on VYA are carefully selected based on curation quality, authenticity standards, and overall brand alignment.",
     },
     {
-      q: "Does VIA take a commission?",
-      a: "VIA may earn a commission when you purchase from a store through our platform. This helps support the continued curation and operation of VIA.",
+      q: "Does VYA take a commission?",
+      a: "VYA may earn a commission when you purchase from a store through our platform. This helps support the continued curation and operation of VYA.",
     },
     {
-      q: "Are prices on VIA different from store websites?",
+      q: "Are prices on VYA different from store websites?",
       a: "No. Prices are set by each store and are the same as those listed on their own website.",
     },
     {
-      q: "Can stores remove themselves from VIA?",
-      a: "Yes. Stores partner with VIA voluntarily and can choose to update or remove their presence at any time.",
+      q: "Can stores remove themselves from VYA?",
+      a: "Yes. Stores partner with VYA voluntarily and can choose to update or remove their presence at any time.",
     },
     {
-      q: "I'm a store owner, how can I partner with VIA?",
-      a: "You can visit our Partner With VIA page to learn more and get in touch about joining the platform.",
+      q: "I'm a store owner, how can I partner with VYA?",
+      a: "You can visit our Partner With VYA page to learn more and get in touch about joining the platform.",
     },
   ];
 
@@ -64,7 +64,7 @@ export default function FAQsPage() {
         </h1>
 
         <p className="text-[#5D0F17]/60 mb-16 max-w-2xl">
-          Answers to common questions about shopping, shipping, and partnering with VIA.
+          Answers to common questions about shopping, shipping, and partnering with VYA.
         </p>
 
         <FAQAccordion faqs={faqs} />
@@ -91,7 +91,7 @@ export default function FAQsPage() {
               href="/for-stores"
               className="border border-[#5D0F17] text-[#5D0F17] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
             >
-              Partner With VIA
+              Partner With VYA
             </a>
           </div>
         </div>

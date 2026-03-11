@@ -44,7 +44,9 @@ export function computeProductScore(input: RankingInput): number {
   let score = 0;
 
   // ── 1. Engagement (strongest signal when available) ──
-  score += input.engagementScore * 5;
+  // Weighted heavily so any product with real clicks always ranks above
+  // zero-click products regardless of image count, brand, or price.
+  score += input.engagementScore * 50;
 
   // ── 2. Image quality (0–25) ──
   // This is the biggest quality signal for zero-engagement products.
@@ -84,7 +86,7 @@ export function computeProductScore(input: RankingInput): number {
   }
 
   // ── 6. Men's item penalty ──
-  // VIA's audience is primarily women's vintage/secondhand. Demote
+  // VYA's audience is primarily women's vintage/secondhand. Demote
   // items with men's keywords so they appear further down.
   if (input.title) {
     const t = input.title.toLowerCase();

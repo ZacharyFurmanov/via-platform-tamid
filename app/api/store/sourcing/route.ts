@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/app/lib/auth";
 import { storeContactEmails } from "@/app/lib/stores";
 import { getOpenSourcingRequests, getSourcingRequestsByStore } from "@/app/lib/sourcing-db";
+import { getOffersByStoreSlug } from "@/app/lib/sourcing-offers-db";
 
 function getStoreSlugFromEmail(email: string): string | null {
   for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
@@ -21,10 +22,11 @@ export async function GET() {
     return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
   }
 
-  const [open, mine] = await Promise.all([
+  const [open, mine, myOffers] = await Promise.all([
     getOpenSourcingRequests(storeSlug),
     getSourcingRequestsByStore(storeSlug),
+    getOffersByStoreSlug(storeSlug),
   ]);
 
-  return NextResponse.json({ open, mine });
+  return NextResponse.json({ open, mine, myOffers });
 }

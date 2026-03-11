@@ -8,7 +8,7 @@ export default function ForStoresPage() {
       <section className="bg-[#F7F3EA] py-20 sm:py-32 border-b border-[#5D0F17]/10">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif mb-4 sm:mb-6">
-            Partner with VIA
+            Partner with VYA
           </h1>
           <p className="text-base sm:text-lg text-[#5D0F17]/70 max-w-2xl mx-auto">
             We work with independent vintage & secondhand stores to help them reach
@@ -24,7 +24,7 @@ export default function ForStoresPage() {
             Already a partner? Set up your store.
           </h2>
           <p className="text-[#5D0F17]/50 text-sm text-center mb-8">
-            Follow the guide for your platform to connect your store to VIA.
+            Follow the guide for your platform to connect your store to VYA.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link

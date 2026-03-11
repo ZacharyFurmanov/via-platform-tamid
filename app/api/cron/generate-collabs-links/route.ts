@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     );
   }
 
-  // Get all products missing collabs links from VIA's database
+  // Get all products missing collabs links from VYA's database
   const missingProducts = await getProductsMissingCollabsLink();
   const missingByShopifyId = new Map<string, string>(
     missingProducts

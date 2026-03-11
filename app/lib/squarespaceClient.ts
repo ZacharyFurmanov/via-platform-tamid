@@ -117,7 +117,7 @@ export async function parseSquarespaceJSON(
 
   const response = await fetch(jsonUrl, {
     headers: {
-      "User-Agent": "VIA-Sync/1.0",
+      "User-Agent": "VYA-Sync/1.0",
       Accept: "application/json",
     },
   });

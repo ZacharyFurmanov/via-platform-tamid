@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Scarz Vintage — The Story Behind the Selection | VIA",
+  title: "Scarz Vintage — The Story Behind the Selection | VYA",
   description:
-    "Why we chose Scarz Vintage for VIA. Curated vintage at its best: thoughtful, refined, and intentional.",
+    "Why we chose Scarz Vintage for VYA. Curated vintage at its best: thoughtful, refined, and intentional.",
 };
 
 export default function ScarzVintageStory() {
@@ -65,9 +65,9 @@ export default function ScarzVintageStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            At VIA, our mission is to make it easier to discover the best independent
+            At VYA, our mission is to make it easier to discover the best independent
             vintage stores and designer secondhand boutiques in one place. Scarz Vintage
-            is exactly why VIA exists — to connect shoppers with the finest online vintage
+            is exactly why VYA exists — to connect shoppers with the finest online vintage
             boutiques that prioritize authenticity, longevity, and style that lasts.
           </p>
         </div>

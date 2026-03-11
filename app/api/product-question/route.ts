@@ -9,7 +9,7 @@ function getResend() {
   return new Resend(apiKey);
 }
 
-const FROM_EMAIL = "VIA <hana@theviaplatform.com>";
+const FROM_EMAIL = "VYA <hana@theviaplatform.com>";
 const TO_EMAIL = "hana@theviaplatform.com";
 
 function baseStyles() {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 <head><style>${baseStyles()}</style></head>
 <body>
   <div class="container">
-    <div class="header"><h1>VIA</h1></div>
+    <div class="header"><h1>VYA</h1></div>
     <div class="content">
       <h2>New Product Question</h2>
       <div class="detail">
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       <a href="${productUrl}" class="btn">View Product</a>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} VIA</p>
+      <p>&copy; ${new Date().getFullYear()} VYA</p>
     </div>
   </div>
 </body>

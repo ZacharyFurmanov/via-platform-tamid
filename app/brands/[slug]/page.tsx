@@ -59,7 +59,8 @@ export default async function BrandPage({
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
-      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      engagementScore,
+      createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),
       popularityScore: computeProductScore({
         engagementScore,
         syncedAt,

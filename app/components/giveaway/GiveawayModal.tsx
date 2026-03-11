@@ -50,7 +50,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
     if (storedCode && storedEmail) {
       setReferralCode(storedCode);
       setEmail(storedEmail);
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
       setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
 
       // Fetch current status
@@ -184,7 +184,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
       }
     }
 
-    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VYA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     const first = phone1.trim() || phone2.trim();
     const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
@@ -200,7 +200,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
   };
 
   const handleSendSecond = () => {
-    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VYA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
     setPendingPhone("");
     goToConfirmation();
@@ -260,17 +260,17 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
         {screen === "entry" && (
           <div className="p-8 sm:p-12 text-center">
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-              VIA Giveaway
+              VYA Giveaway
             </p>
 
             <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-black leading-tight">
-              Help Build VIA.<br />
+              Help Build VYA.<br />
               Enter to Win a $1,000<br />
               Shopping Spree on Us!
             </h2>
 
             <p className="text-gray-600 mb-8 max-w-sm mx-auto">
-              Enter our giveaway to win a $1,000 shopping spree on VIA!
+              Enter our giveaway to win a $1,000 shopping spree on VYA!
             </p>
 
             {/* How It Works */}
@@ -316,7 +316,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
             </form>
 
             <p className="text-[10px] text-gray-400 mt-6 leading-relaxed">
-              By entering, you agree to VIA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VIA.
+              By entering, you agree to VYA&apos;s Terms &amp; Conditions. Winner will be selected at random from all completed entries. Giveaway credit must be used on items listed on VYA.
             </p>
           </div>
         )}
@@ -362,7 +362,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
                 </p>
 
                 <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-black leading-tight">
-                  Send VIA to<br />Two Friends
+                  Send VYA to<br />Two Friends
                 </h2>
 
                 <p className="text-gray-600 mb-8 max-w-sm mx-auto text-sm">
@@ -425,7 +425,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
         {screen === "confirmation" && (
           <div className="p-8 sm:p-12 text-center">
             <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-              VIA Giveaway
+              VYA Giveaway
             </p>
 
             <h2 className="text-3xl sm:text-4xl font-serif mb-3 text-black leading-tight">

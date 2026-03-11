@@ -426,7 +426,7 @@ export default function SyncAdminPage() {
                 <ol className="list-decimal list-inside space-y-2 text-neutral-500 text-sm">
                   <li>Accept the invite from your email or at <code className="bg-neutral-100 px-1 text-xs">collabs.shopify.com</code></li>
                   <li>Grab your unique affiliate link from the Collabs dashboard</li>
-                  <li>Ask the store owner for their Storefront Access Token (see Storefront API steps) so VIA can sync their products</li>
+                  <li>Ask the store owner for their Storefront Access Token (see Storefront API steps) so VYA can sync their products</li>
                 </ol>
                 <p className="mt-4 text-neutral-400 text-xs">
                   Invites expire after 30 days. The brand only needs your email to invite you.

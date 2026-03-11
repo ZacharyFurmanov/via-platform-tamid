@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     productId: item.product_id ? String(item.product_id) : undefined,
   }));
 
-  // Try to find a matching VIA click — most recent click for this store in the
+  // Try to find a matching VYA click — most recent click for this store in the
   // last 24 hours. Not a perfect match but covers the typical purchase window.
   let matchedClick: { click_id: string; timestamp: unknown; product_name: string } | null = null;
   try {

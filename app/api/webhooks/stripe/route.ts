@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
             } catch (err) {
               console.error("Failed to send sourcing confirmation to user:", err);
             }
-            // Send notification to VIA + all stores
+            // Send notification to VYA + all stores
             try {
               await sendSourcingRequestToStores(getAllStoreEmails(), details);
             } catch (err) {

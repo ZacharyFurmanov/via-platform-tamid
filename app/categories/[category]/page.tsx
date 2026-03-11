@@ -102,7 +102,8 @@ export default async function CategoryPage({
       size: item.size,
       accessoryType: isAccessories ? inferAccessoryType(item.title) : null,
       isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),
-      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      engagementScore,
+      createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),
       popularityScore: computeProductScore({
         engagementScore,
         syncedAt,

@@ -27,7 +27,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
-              <img src="/via-logo.png" alt="VIA" className="h-9 sm:h-11 w-auto" />
+              <img src="/via-logo.png" alt="VYA" className="h-9 sm:h-11 w-auto" />
             </Link>
             <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
               Vintage and secondhand from independent stores across the country. Discover pieces with stories.
@@ -165,7 +165,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-[#5D0F17]/50 text-xs tracking-wide">
-              {currentYear} VIA. All rights reserved.
+              {currentYear} VYA. All rights reserved.
             </p>
             <p className="text-[#5D0F17]/50 text-xs tracking-wide">
               Made with care in the USA

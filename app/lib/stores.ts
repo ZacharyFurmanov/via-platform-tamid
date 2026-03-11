@@ -36,7 +36,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
-    affiliatePath: "VIA",
+    affiliatePath: "VYA",
     collabsStoreId: "230978",
     authenticityPolicy:
       "Every piece at Bloda's Choice is personally sourced and selected by Anna. Each item is chosen for its character, quality, and story — accurately described so you always know exactly what you're getting.",
@@ -155,7 +155,7 @@ export const stores = [
     affiliatePath: "0001",
     collabsStoreId: "228526",
     discountCode: "0001",
-    perk: "VIA customers get free shipping — use code 0001 at checkout",
+    perk: "VYA customers get free shipping — use code 0001 at checkout",
     authenticityPolicy:
       "Every item at Missi Archives is hand-picked and personally inspected before listing. Each piece is described accurately and transparently — if you have any concerns about your order, the team is available directly via email.",
     shippingPolicy:
@@ -172,12 +172,12 @@ export const stores = [
       "Moonstruck Vintage is dedicated to curating unique accessories for everyone. We aim to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. We focus on bags, but also love a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
     website: "https://moonstruckvintagenyc.com",
     dataSource: "moonstruck-vintage",
-    image: "/stores/placeholder.svg",
+    image: "/stores/moonstruck-vintage.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
-    affiliatePath: "VIA",
+    affiliatePath: "VYA",
     collabsStoreId: "230452",
     authenticityPolicy:
       "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind. Specializing in bags and shoes, each item is personally selected and accurately described before listing.",
@@ -226,7 +226,7 @@ export const stores = [
     affiliatePath: "VIAXSCARZ",
     collabsStoreId: "228153",
     discountCode: "VIAXSCARZ",
-    perk: "VIA customers get free shipping — use code VIAXSCARZ at checkout",
+    perk: "VYA customers get free shipping — use code VIAXSCARZ at checkout",
     authenticityPolicy:
       "All items are hand-selected and personally authenticated by Scarlett, with a focus on rare archival pieces from Chanel, Gucci, Prada, Versace, and other iconic houses. Every listing includes detailed condition notes — if an item doesn't match its description, contact within 7 days of receiving your order.",
     shippingPolicy:
@@ -263,7 +263,7 @@ export const stores = [
     name: "Sourced by Scottie",
     location: "Washington, DC",
     description:
-      "Sourced by Scottie is a Washington, DC-based vintage and secondhand shop specializing in hand-picked designer and statement pieces. Each item is personally sourced and selected for quality, character, and style — bringing standout vintage finds to modern wardrobes.",
+      "Sourced by Scottie is a Washington, DC–based vintage shop known for sourcing standout designer pieces directly from Milan. The collection highlights bold vintage from the 1990s and early 2000s, with a focus on iconic Italian labels. Each piece is hand selected for its character, craftsmanship, and lasting style.",
     website: "https://sourcedbyscottie.com",
     dataSource: "sourced-by-scottie",
     image: "/stores/sourced-by-scottie.jpg",
@@ -387,7 +387,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
-    affiliatePath: "VIA",
+    affiliatePath: "VYA",
     collabsStoreId: "5668014",
     authenticityPolicy:
       "Every bag is personally authenticated and inspected by the founders before listing. As dedicated specialists in vintage designer handbags, each item is accurately described with full condition details, so you can shop with complete confidence.",
@@ -399,7 +399,7 @@ export const stores = [
 ];
 
 /**
- * Commission tiers (% of sale price that VIA earns).
+ * Commission tiers (% of sale price that VYA earns).
  * Applies to all stores regardless of payout method.
  */
 export const COMMISSION_TIERS = [
@@ -413,7 +413,7 @@ export function getCommissionRate(price: number): number {
   return COMMISSION_TIERS.find((t) => price < t.maxPrice)?.rate ?? 0.03;
 }
 
-/** Returns the commission dollar amount VIA earns on a sale. */
+/** Returns the commission dollar amount VYA earns on a sale. */
 export function getCommissionAmount(price: number): number {
   return price * getCommissionRate(price);
 }
@@ -441,8 +441,8 @@ export const storeContactEmails: Record<string, string> = {
   "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
-  "rareality-archive": "",
-  // VIA admin test account — sees all requests
+  "rareality-archive": "holly.cooper01@hotmail.com",
+  // VYA admin test account — sees all requests
   "via-admin": "hana@theviaplatform.com",
 };
 

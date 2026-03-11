@@ -70,7 +70,7 @@ export default function AccountActions({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-100">
           <div>
             <h3 className="text-sm font-medium mb-1">Phone Number</h3>
-            <p className="text-xs text-black/50">So friends can find you on VIA</p>
+            <p className="text-xs text-black/50">So friends can find you on VYA</p>
           </div>
           <div className="flex items-center gap-3">
             <input

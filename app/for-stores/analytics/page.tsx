@@ -107,7 +107,7 @@ function StoreDashboard() {
         <div className="max-w-md text-center">
           <h1 className="text-2xl font-serif mb-4">Dashboard Access</h1>
           <p className="text-neutral-600 mb-6">
-            To access your store analytics, use the link VIA sent you. If you
+            To access your store analytics, use the link VYA sent you. If you
             don&apos;t have it, email{" "}
             <a href="mailto:partnerships@theviaplatform.com" className="underline">
               partnerships@theviaplatform.com
@@ -128,7 +128,7 @@ function StoreDashboard() {
         <div className="max-w-md text-center">
           <h1 className="text-2xl font-serif mb-4">Invalid Link</h1>
           <p className="text-neutral-600 mb-6">
-            This link doesn&apos;t match any store on VIA. Please use the exact link
+            This link doesn&apos;t match any store on VYA. Please use the exact link
             sent to you, or email{" "}
             <a href="mailto:partnerships@theviaplatform.com" className="underline">
               partnerships@theviaplatform.com
@@ -147,7 +147,7 @@ function StoreDashboard() {
         <div className="max-w-5xl mx-auto px-6 py-12 sm:py-20">
           <div className="flex items-center gap-2 text-sm mb-6">
             <Link href="/for-stores" className="text-neutral-400 hover:text-black transition-colors">
-              Partner with VIA
+              Partner with VYA
             </Link>
             <span className="text-neutral-300">/</span>
             <span className="text-black">Your Dashboard</span>
@@ -156,7 +156,7 @@ function StoreDashboard() {
             {data ? data.storeName : "Your Dashboard"}
           </h1>
           <p className="text-neutral-600">
-            Traffic and sales VIA has sent your store.
+            Traffic and sales VYA has sent your store.
           </p>
         </div>
       </section>
@@ -167,7 +167,7 @@ function StoreDashboard() {
           <div className="max-w-5xl mx-auto px-6 py-8">
             <div className="grid grid-cols-3 gap-4 sm:gap-8">
               <div>
-                <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Clicks from VIA</p>
+                <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Clicks from VYA</p>
                 <p className="text-2xl sm:text-3xl font-serif">{data.totalClicks.toLocaleString()}</p>
               </div>
               <div>
@@ -302,14 +302,14 @@ function StoreDashboard() {
               <div className="border border-dashed border-neutral-300 p-8 text-center">
                 <p className="text-neutral-500 mb-2">No orders recorded yet for this period.</p>
                 <p className="text-sm text-neutral-400">
-                  Orders will appear here once customers referred by VIA complete a purchase.
+                  Orders will appear here once customers referred by VYA complete a purchase.
                 </p>
               </div>
             </div>
           ) : (
             <section className="py-12 sm:py-16">
               <div className="max-w-5xl mx-auto px-6">
-                <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Orders from VIA</h2>
+                <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Orders from VYA</h2>
                 <div className="border border-neutral-200">
                   <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-neutral-50 text-sm text-neutral-500 border-b border-neutral-200">
                     <div className="col-span-4">Time</div>

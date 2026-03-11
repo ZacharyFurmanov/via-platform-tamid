@@ -44,7 +44,7 @@ function isAuthorized(request: NextRequest): boolean {
  * POST /api/admin/generate-collabs-links
  *
  * Fetches all products from Collabs for each store, grabs existing affiliate
- * URLs, creates new ones where missing, and saves them to VIA's database.
+ * URLs, creates new ones where missing, and saves them to VYA's database.
  * Streams progress as newline-delimited JSON.
  */
 export async function POST(request: NextRequest) {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Get products missing collabs links from VIA's database.
+  // Get products missing collabs links from VYA's database.
   // Build a map from numeric Shopify ID → the exact DB value (may be a full GID
   // like "gid://shopify/Product/12345" or just the numeric string — normalise
   // to the numeric suffix so it matches what the Collabs API returns).
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Save to VIA's database using the exact ID stored in DB
+          // Save to VYA's database using the exact ID stored in DB
           if (collabsUrl) {
             await updateCollabsLinkByShopifyProductId(dbShopifyId, collabsUrl);
             saved++;

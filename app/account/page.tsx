@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/app/lib/auth";
-import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
+import { getUserFavoritedProducts, getProductFavoriteCounts, type FavoriteProductEntry } from "@/app/lib/favorites-db";
+import type { DBProduct } from "@/app/lib/db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
 import { getUserPurchaseHistory, getUserClickHistory } from "@/app/lib/analytics-db";
 import { getUserSourcingRequests, type SourcingRequest } from "@/app/lib/sourcing-db";
@@ -34,7 +35,7 @@ export default async function AccountPage() {
 
   const userId = session.user.id;
 
-  let favProducts: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
+  let favProducts: DBProduct[] = [];
   let favStoreSlugs: string[] = [];
   let notificationsEnabled = true;
   let userPhone = "";
@@ -56,7 +57,8 @@ export default async function AccountPage() {
         getUserClickHistory(userId).catch(() => []),
         getUserSourcingRequests(userId).catch(() => []),
       ]);
-      favProducts = products;
+      // Extract live (non-sold-out) products for the account page carousel
+      favProducts = products.filter((e) => !e.soldOut && e.product).map((e) => e.product!);
       favStoreSlugs = storeSlugs;
       notificationsEnabled = settings.notificationsEnabled;
       userPhone = settings.phone;
@@ -99,10 +101,10 @@ export default async function AccountPage() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6">
-        {/* ===== VIA Insider ===== */}
+        {/* ===== VYA Insider ===== */}
         <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">VIA Insider</h2>
+            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">VYA Insider</h2>
             <div className="flex-1 h-px bg-[#5D0F17]/15" />
           </div>
           {isMember ? (
@@ -141,14 +143,14 @@ export default async function AccountPage() {
             <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
                 <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
-                  Get 24-hour early access to new arrivals from all VIA stores.
+                  Get 24-hour early access to new arrivals from all VYA stores.
                 </p>
               </div>
               <a
                 href="/membership"
                 className="shrink-0 text-center text-sm uppercase tracking-[0.15em] px-6 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
               >
-                Join VIA Insider — $10/month
+                Join VYA Insider — $10/month
               </a>
             </div>
           )}
@@ -346,7 +348,7 @@ export default async function AccountPage() {
             <div>
               <h2 className="font-serif text-lg mb-2">Invite a Friend</h2>
               <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
-                Know someone who&apos;d love VIA? Share the link and shop together.
+                Know someone who&apos;d love VYA? Share the link and shop together.
               </p>
             </div>
             <div className="shrink-0 sm:w-48">

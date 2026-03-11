@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-const VIA_URL = "https://theviaplatform.com";
-const INVITE_TEXT = `Join VIA! An online platform where you can shop the best vintage stores, all in one place! ${VIA_URL}`;
+const VIA_URL = "https://vyaplatform.com";
+const INVITE_TEXT = `Join VYA! An online platform where you can shop the best vintage stores, all in one place! ${VIA_URL}`;
 
 export default function InviteButton() {
   const [open, setOpen] = useState(false);
@@ -45,7 +45,7 @@ export default function InviteButton() {
             </div>
 
             <p className="text-sm text-[#5D0F17]/60 leading-relaxed">
-              Share VIA with someone who&apos;d love it — vintage stores, all in one place.
+              Share VYA with someone who&apos;d love it — vintage stores, all in one place.
             </p>
 
             {/* Link row */}

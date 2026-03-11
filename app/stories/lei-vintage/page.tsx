@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "LEI Vintage — The Story Behind the Selection | VIA",
+  title: "LEI Vintage — The Story Behind the Selection | VYA",
   description:
-    "Why we chose LEI Vintage for VIA. A brand built on the idea that the best style already exists.",
+    "Why we chose LEI Vintage for VYA. A brand built on the idea that the best style already exists.",
 };
 
 export default function LEIVintageStory() {
@@ -71,7 +71,7 @@ export default function LEIVintageStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            Exactly the kind of story we&apos;re proud to bring to VIA.
+            Exactly the kind of story we&apos;re proud to bring to VYA.
           </p>
         </div>
 

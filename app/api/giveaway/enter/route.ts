@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     // Create entry (deduplicates via UNIQUE constraint)
     const { referralCode, isExisting } = await createGiveawayEntry(normalizedEmail, normalizedRefCode || undefined);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
     const referralLink = `${baseUrl}/waitlist?ref=${referralCode}`;
 
     if (!isExisting) {

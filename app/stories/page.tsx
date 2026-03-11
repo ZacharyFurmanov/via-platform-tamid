@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "The Story Behind the Selection | VIA",
+  title: "The Story Behind the Selection | VYA",
   description:
-    "Why we chose each store on VIA. Read the stories behind the independent vintage and secondhand sellers we partner with.",
+    "Why we chose each store on VYA. Read the stories behind the independent vintage and secondhand sellers we partner with.",
 };
 
 const stories = [
@@ -81,7 +81,7 @@ export default function StoriesPage() {
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">Stories</h1>
           <p className="max-w-2xl text-[#5D0F17]/60 text-sm sm:text-base">
-            Every store on VIA has a story worth telling. Here&apos;s why we selected
+            Every store on VYA has a story worth telling. Here&apos;s why we selected
             each one.
           </p>
         </div>

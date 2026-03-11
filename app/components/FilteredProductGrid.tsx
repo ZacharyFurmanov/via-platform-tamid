@@ -31,6 +31,8 @@ export type FilterableProduct = {
   size?: string | null;
   accessoryType?: string | null;
   isEditorsPick?: boolean;
+  soldOut?: boolean;
+  engagementScore?: number;
 };
 
 type FilteredProductGridProps = {
@@ -69,10 +71,15 @@ function sortProducts(
   const sorted = [...products];
   switch (sort) {
     case "popular": {
-      // Sort by composite score, then interleave by store so items
-      // from different stores alternate (prevents clustering)
-      sorted.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
-      return diversityInterleave(sorted, (p) => p.storeSlug, 2);
+      // Tier 1: products with real engagement (clicks/favorites) sorted by score
+      // Tier 2: zero-engagement products sorted by newest first
+      // This prevents quality-signal gaming (brand name + many images) from
+      // pushing unclicked products to the top.
+      const engaged = sorted.filter((p) => (p.engagementScore ?? 0) > 0);
+      const unengaged = sorted.filter((p) => (p.engagementScore ?? 0) === 0);
+      engaged.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
+      unengaged.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      return diversityInterleave([...engaged, ...unengaged], (p) => p.storeSlug, 2);
     }
     case "price-asc":
       return sorted.sort((a, b) => a.price - b.price);
@@ -178,16 +185,22 @@ export default function FilteredProductGrid({
     return result;
   }, [products, filters]);
 
-  // Get unique stores from products for the filter, sorted alphabetically
+  // Get stores that have products, preserving the chronological order from the stores prop
   const availableStores = useMemo(() => {
-    const storeMap = new Map<string, { slug: string; name: string }>();
-    products.forEach((p) => {
-      if (!storeMap.has(p.storeSlug)) {
-        storeMap.set(p.storeSlug, { slug: p.storeSlug, name: p.store });
-      }
-    });
-    return Array.from(storeMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [products]);
+    const slugsWithProducts = new Set(products.map((p) => p.storeSlug));
+    const filtered = stores.filter((s) => slugsWithProducts.has(s.slug));
+    // Fall back to deriving from products if stores prop doesn't cover all slugs
+    if (filtered.length === 0) {
+      const storeMap = new Map<string, { slug: string; name: string }>();
+      products.forEach((p) => {
+        if (!storeMap.has(p.storeSlug)) {
+          storeMap.set(p.storeSlug, { slug: p.storeSlug, name: p.store });
+        }
+      });
+      return Array.from(storeMap.values());
+    }
+    return filtered;
+  }, [products, stores]);
 
   // Get unique categories from products for the filter
   const availableCategories = useMemo(() => {
@@ -319,6 +332,7 @@ export default function FilteredProductGrid({
                 images={product.images}
                 size={product.size}
                 isEditorsPick={product.isEditorsPick}
+                soldOut={product.soldOut}
                 from={from}
                 favoriteCount={
                   favCounts[

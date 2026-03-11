@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Missi Archives — The Story Behind the Selection | VIA",
+  title: "Missi Archives — The Story Behind the Selection | VYA",
   description:
-    "Why we chose Missi Archives for VIA. Designer secondhand with depth. Luxury resale with longevity.",
+    "Why we chose Missi Archives for VYA. Designer secondhand with depth. Luxury resale with longevity.",
 };
 
 export default function MissiArchivesStory() {
@@ -63,7 +63,7 @@ export default function MissiArchivesStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            At VIA, we exist to connect shoppers with the best independent resale stores
+            At VYA, we exist to connect shoppers with the best independent resale stores
             and curated vintage boutiques worldwide. Missi Archives reflects exactly what
             we look for in a partner: authenticity, quality, and a clear perspective on
             fashion that transcends trends.

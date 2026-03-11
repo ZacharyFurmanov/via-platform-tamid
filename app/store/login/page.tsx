@@ -35,7 +35,7 @@ export default function StoreLoginPage() {
             <div className="mb-6">
               <Image
                 src="/via-logo.png"
-                alt="VIA"
+                alt="VYA"
                 width={80}
                 height={80}
                 className="mx-auto"

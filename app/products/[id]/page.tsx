@@ -338,7 +338,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <ProductQuestion
               productTitle={product.title}
               storeName={store.name}
-              productUrl={`https://theviaplatform.com/products/${compositeId}`}
+              productUrl={`https://vyaplatform.com/products/${compositeId}`}
             />
           </div>
         </div>

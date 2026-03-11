@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import { X, ShoppingCart } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -39,6 +39,7 @@ export default function CartPage() {
   const { items, removeItem, clearCart, itemCount } = useCart();
   const { data: session, status } = useSession();
   const { openModal } = useSignUp();
+  const [soldOutIds, setSoldOutIds] = useState<Set<number>>(new Set());
 
   // Auto-open the sign-in modal for unauthenticated users with items in cart
   const needsAuth = status !== "loading" && !session && itemCount > 0;
@@ -48,6 +49,26 @@ export default function CartPage() {
       openModal("/cart", { required: true });
     }
   }, [needsAuth, openModal]);
+
+  // Check which cart items are still available
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items
+      .map((item) => {
+        const match = item.compositeId.match(/-(\d+)$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((id): id is number => id != null);
+    if (ids.length === 0) return;
+    fetch(`/api/products/availability?ids=${ids.join(",")}`)
+      .then((r) => r.json())
+      .then(({ available }: { available: number[] }) => {
+        const availableSet = new Set(available);
+        const sold = new Set(ids.filter((id) => !availableSet.has(id)));
+        setSoldOutIds(sold);
+      })
+      .catch(() => {});
+  }, [items]);
 
   // Group items by store
   const storeGroups = useMemo(() => {
@@ -118,6 +139,14 @@ export default function CartPage() {
           {storeGroups.map((group) => {
             const groupTotal = group.items.reduce((sum, i) => sum + i.price, 0);
 
+            const allSoldOut = group.items.every((item) => {
+              const dbId = (() => {
+                const match = item.compositeId.match(/-(\d+)$/);
+                return match ? parseInt(match[1], 10) : null;
+              })();
+              return dbId != null && soldOutIds.has(dbId);
+            });
+
             return (
               <div
                 key={group.storeSlug}
@@ -144,82 +173,111 @@ export default function CartPage() {
 
                 {/* Items */}
                 <div className="divide-y divide-[#5D0F17]/10">
-                  {group.items.map((item) => (
-                    <div
-                      key={item.compositeId}
-                      className="flex gap-4 sm:gap-5 px-5 py-4"
-                    >
-                      {/* Thumbnail */}
-                      <Link
-                        href={`/products/${item.compositeId}`}
-                        className="flex-shrink-0"
+                  {group.items.map((item) => {
+                    const dbId = (() => {
+                      const match = item.compositeId.match(/-(\d+)$/);
+                      return match ? parseInt(match[1], 10) : null;
+                    })();
+                    const isSoldOut = dbId != null && soldOutIds.has(dbId);
+
+                    return (
+                      <div
+                        key={item.compositeId}
+                        className={`flex gap-4 sm:gap-5 px-5 py-4 ${isSoldOut ? "opacity-50" : ""}`}
                       >
-                        <div className="w-16 h-20 sm:w-20 sm:h-24 bg-[#D8CABD]/30 overflow-hidden">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#5D0F17]/40 text-xs">
-                              No image
-                            </div>
-                          )}
-                        </div>
-                      </Link>
-
-                      {/* Details */}
-                      <div className="flex-1 min-w-0 flex items-center">
-                        <div className="flex-1 min-w-0">
+                        {/* Thumbnail */}
+                        <div className="flex-shrink-0 relative">
                           <Link
-                            href={`/products/${item.compositeId}`}
-                            className="font-serif text-base text-[#5D0F17] leading-snug line-clamp-2 hover:underline"
+                            href={isSoldOut ? "#" : `/products/${item.compositeId}`}
+                            className={isSoldOut ? "pointer-events-none" : ""}
                           >
-                            {item.title}
+                            <div className="w-16 h-20 sm:w-20 sm:h-24 bg-[#D8CABD]/30 overflow-hidden">
+                              {item.image ? (
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#5D0F17]/40 text-xs">
+                                  No image
+                                </div>
+                              )}
+                            </div>
                           </Link>
-                          <p className="text-sm text-[#5D0F17]/60 mt-0.5">
-                            ${item.price}
-                          </p>
                         </div>
 
-                        {/* Remove */}
-                        <button
-                          onClick={() => removeItem(item.compositeId)}
-                          className="flex-shrink-0 p-2 text-[#5D0F17]/40 hover:text-[#5D0F17] transition ml-2"
-                          aria-label={`Remove ${item.title}`}
-                        >
-                          <X size={16} />
-                        </button>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 flex items-center">
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={isSoldOut ? "#" : `/products/${item.compositeId}`}
+                              className={`font-serif text-base text-[#5D0F17] leading-snug line-clamp-2 ${isSoldOut ? "pointer-events-none" : "hover:underline"}`}
+                            >
+                              {item.title}
+                            </Link>
+                            {isSoldOut ? (
+                              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/40 mt-0.5">
+                                Sold Out
+                              </p>
+                            ) : (
+                              <p className="text-sm text-[#5D0F17]/60 mt-0.5">
+                                ${item.price}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Remove */}
+                          <button
+                            onClick={() => removeItem(item.compositeId)}
+                            className="flex-shrink-0 p-2 text-[#5D0F17]/40 hover:text-[#5D0F17] transition ml-2"
+                            aria-label={`Remove ${item.title}`}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Store checkout button */}
                 <div className="px-5 py-4 border-t border-[#5D0F17]/10 bg-[#D8CABD]/20">
-                  <a
-                    href={(() => {
-                      const firstItem = group.items[0];
-                      const multiCartUrl = buildGroupCheckoutUrl(group.items);
+                  {allSoldOut ? (
+                    <div className="block w-full bg-[#5D0F17]/20 text-[#5D0F17]/40 text-center py-3 text-sm uppercase tracking-wide cursor-not-allowed">
+                      All items sold out
+                    </div>
+                  ) : (
+                    <a
+                      href={(() => {
+                        const availableItems = group.items.filter((item) => {
+                          const dbId = (() => {
+                            const match = item.compositeId.match(/-(\d+)$/);
+                            return match ? parseInt(match[1], 10) : null;
+                          })();
+                          return dbId == null || !soldOutIds.has(dbId);
+                        });
+                        const firstItem = availableItems[0] ?? group.items[0];
+                        const multiCartUrl = buildGroupCheckoutUrl(availableItems);
 
-                      const params = new URLSearchParams({
-                        pid: firstItem.compositeId,
-                        pn: group.items.length > 1
-                          ? `${group.items.length} items from ${group.storeName}`
-                          : firstItem.title,
-                        s: firstItem.storeName,
-                        ss: firstItem.storeSlug,
-                        url: multiCartUrl,
-                      });
-                      return `/api/track?${params.toString()}`;
-                    })()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
-                  >
-                    Checkout on {group.storeName} &rarr;
-                  </a>
+                        const params = new URLSearchParams({
+                          pid: firstItem.compositeId,
+                          pn: availableItems.length > 1
+                            ? `${availableItems.length} items from ${group.storeName}`
+                            : firstItem.title,
+                          s: firstItem.storeName,
+                          ss: firstItem.storeSlug,
+                          url: multiCartUrl,
+                        });
+                        return `/api/track?${params.toString()}`;
+                      })()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
+                    >
+                      Checkout on {group.storeName} &rarr;
+                    </a>
+                  )}
                 </div>
               </div>
             );

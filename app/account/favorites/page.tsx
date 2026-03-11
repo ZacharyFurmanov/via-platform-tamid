@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/app/lib/auth";
-import { getUserFavoritedProducts, getProductFavoriteCounts } from "@/app/lib/favorites-db";
+import { getUserFavoritedProducts } from "@/app/lib/favorites-db";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
-import ProductCard from "@/app/components/ProductCard";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { stores } from "@/app/lib/stores";
+import FilteredProductGrid from "@/app/components/FilteredProductGrid";
+import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 
 export default async function FavoritesPage() {
   const session = await auth();
@@ -12,21 +16,112 @@ export default async function FavoritesPage() {
     redirect("/login");
   }
 
-  const userId = session.user.id;
+  const userId = session.user.id!;
 
-  let favProducts: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
-  let favCounts: Record<number, number> = {};
+  let favEntries: Awaited<ReturnType<typeof getUserFavoritedProducts>> = [];
 
-  if (userId) {
-    try {
-      favProducts = await getUserFavoritedProducts(userId);
-      if (favProducts.length > 0) {
-        favCounts = await getProductFavoriteCounts(favProducts.map((p) => p.id));
-      }
-    } catch (err) {
-      console.error("Failed to load favorites:", err);
+  try {
+    favEntries = await getUserFavoritedProducts(userId);
+  } catch (err) {
+    console.error("Failed to load favorites:", err);
+  }
+
+  // Build dbIdMap for live products
+  const dbIdMap = new Map<string, number>();
+  for (const entry of favEntries) {
+    if (!entry.soldOut && entry.product) {
+      const compositeId = `${entry.product.store_slug}-${entry.product.id}`;
+      dbIdMap.set(compositeId, entry.product.id);
     }
   }
+
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = dbIds.length > 0 ? await getProductPopularityScores(dbIds) : {};
+
+  // Transform into FilterableProduct[]
+  const products: FilterableProduct[] = favEntries
+    .map((entry) => {
+      if (entry.soldOut) {
+        const snap = entry.snapshot;
+        if (!snap) return null;
+        const compositeId = `${snap.store_slug}-${entry.productId}`;
+        const categorySlug = inferCategoryFromTitle(snap.title);
+        const categoryLabel = categoryMap[categorySlug];
+        let images: string[] = [];
+        if (snap.images) {
+          try {
+            const parsed = JSON.parse(snap.images);
+            if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
+          } catch {}
+        }
+        if (images.length === 0 && snap.image) images = [snap.image];
+        return {
+          id: compositeId,
+          dbId: entry.productId,
+          title: snap.title,
+          price: Number(snap.price),
+          category: categorySlug,
+          categoryLabel,
+          store: snap.store_name,
+          storeSlug: snap.store_slug,
+          image: snap.image || "",
+          images,
+          size: snap.size,
+          soldOut: true,
+          popularityScore: 0,
+          createdAt: 0,
+        };
+      }
+
+      const product = entry.product!;
+      const compositeId = `${product.store_slug}-${product.id}`;
+      const categorySlug = inferCategoryFromTitle(product.title);
+      const categoryLabel = categoryMap[categorySlug];
+      const engagementScore = popularityScores[product.id] ?? 0;
+      const syncedAt = product.synced_at instanceof Date
+        ? product.synced_at.toISOString()
+        : String(product.synced_at ?? new Date().toISOString());
+
+      let images: string[] = [];
+      if (product.images) {
+        try {
+          const parsed = JSON.parse(product.images);
+          if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
+        } catch {}
+      }
+      if (images.length === 0 && product.image) images = [product.image];
+
+      return {
+        id: compositeId,
+        dbId: product.id,
+        title: product.title,
+        price: Number(product.price),
+        compareAtPrice: product.compare_at_price != null ? Number(product.compare_at_price) : null,
+        category: categorySlug,
+        categoryLabel,
+        brand: null,
+        brandLabel: null,
+        store: product.store_name,
+        storeSlug: product.store_slug,
+        externalUrl: product.external_url ?? undefined,
+        image: product.image || "",
+        images,
+        size: product.size,
+        engagementScore,
+        createdAt: product.id,
+        popularityScore: computeProductScore({
+          engagementScore,
+          syncedAt,
+          imageCount: images.length,
+          brandSlug: null,
+          price: Number(product.price),
+          title: product.title,
+        }),
+      };
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
+
+  const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
@@ -38,22 +133,16 @@ export default async function FavoritesPage() {
           >
             &larr; Account
           </Link>
-          <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">My</p>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-4">
-            Favorites
-          </h1>
-          <p className="text-sm text-[#5D0F17]/50">
-            {favProducts.length} {favProducts.length === 1 ? "piece" : "pieces"} saved
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">My Favorites</h1>
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
+            {favEntries.length} {favEntries.length === 1 ? "piece" : "pieces"} saved
           </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          {favProducts.length === 0 ? (
+          {favEntries.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-[#5D0F17]/50 mb-6">
                 You haven&apos;t favorited any products yet.
@@ -66,42 +155,16 @@ export default async function FavoritesPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-              {favProducts.map((product) => {
-                const compositeId = `${product.store_slug}-${product.id}`;
-                const categorySlug = inferCategoryFromTitle(product.title);
-                const categoryLabel = categoryMap[categorySlug];
-
-                let images: string[] = [];
-                if (product.images) {
-                  try {
-                    const parsed = JSON.parse(product.images);
-                    if (Array.isArray(parsed) && parsed.length > 0) images = parsed;
-                  } catch {}
-                }
-                if (images.length === 0 && product.image) {
-                  images = [product.image];
-                }
-
-                return (
-                  <ProductCard
-                    key={product.id}
-                    id={compositeId}
-                    dbId={product.id}
-                    name={product.title}
-                    price={`$${Math.round(Number(product.price))}`}
-                    category={categoryLabel}
-                    storeName={product.store_name}
-                    storeSlug={product.store_slug}
-                    image={product.image || ""}
-                    images={images}
-                    size={product.size}
-                    favoriteCount={favCounts[product.id]}
-                    from="/account/favorites"
-                  />
-                );
-              })}
-            </div>
+            <FilteredProductGrid
+              products={products}
+              stores={storeList}
+              categories={[]}
+              showCategoryFilter={false}
+              showBrandFilter={false}
+              showSizeFilter
+              from="/account/favorites"
+              emptyMessage="No matching favorites found."
+            />
           )}
         </div>
       </section>

@@ -97,7 +97,8 @@ const compiledCategories: [CategorySlug, Array<RegExp | string>][] =
     keywords.map(buildPattern),
   ]);
 
-export const inferCategoryFromTitle = (title: string): CategorySlug => {
+export const inferCategoryFromTitle = (title: string | null | undefined): CategorySlug => {
+  if (!title) return "other-clothing";
   for (const [category, patterns] of compiledCategories) {
     if (patterns.some((p) =>
       typeof p === "string" ? title.toLowerCase().includes(p) : p.test(title)
@@ -179,6 +180,11 @@ function transformDBProduct(product: DBProduct): StoreProduct {
     syncedAt: product.synced_at instanceof Date
       ? product.synced_at.toISOString()
       : String(product.synced_at),
+    createdAt: product.created_at instanceof Date
+      ? product.created_at.toISOString()
+      : product.created_at
+        ? String(product.created_at)
+        : undefined,
   };
 }
 

@@ -13,10 +13,10 @@ export default function BigCartelSetupPage() {
   const displayName = storeName || "Your Store Name";
 
   // Combined snippet — click tracking on all pages + conversion on /success
-  const trackingCode = `<!-- VIA Tracking -->
+  const trackingCode = `<!-- VYA Tracking -->
 <script>
 (function() {
-  // Capture VIA click ID into a 30-day cookie on any page visit
+  // Capture VYA click ID into a 30-day cookie on any page visit
   var p = new URLSearchParams(window.location.search);
   var c = p.get('via_click_id');
   if (c) document.cookie = 'via_click_id=' + c + ';max-age=2592000;path=/;SameSite=Lax';
@@ -40,7 +40,7 @@ export default function BigCartelSetupPage() {
       return parseFloat(m.replace(/[\\$,]/g, ''));
     })) : 0;
 
-    fetch('https://theviaplatform.com/api/conversion', {
+    fetch('https://vyaplatform.com/api/conversion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -73,14 +73,14 @@ export default function BigCartelSetupPage() {
               href="/for-stores"
               className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
             >
-              &larr; Partner with VIA
+              &larr; Partner with VYA
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
             Connect Your Big Cartel Store
           </h1>
           <p className="text-[#5D0F17]/60 text-base sm:text-lg">
-            Follow these steps to connect your Big Cartel store to VIA.
+            Follow these steps to connect your Big Cartel store to VYA.
             No coding knowledge needed — just copy, paste, and save.
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function BigCartelSetupPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store Name <span className="text-[#5D0F17]/40 font-normal">(how it appears on VIA)</span>
+                  Store Name <span className="text-[#5D0F17]/40 font-normal">(how it appears on VYA)</span>
                 </label>
                 <input
                   type="text"
@@ -125,7 +125,7 @@ export default function BigCartelSetupPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store ID <span className="text-[#5D0F17]/40 font-normal">(lowercase, dashes instead of spaces — this will be your VIA URL)</span>
+                  Store ID <span className="text-[#5D0F17]/40 font-normal">(lowercase, dashes instead of spaces — this will be your VYA URL)</span>
                 </label>
                 <input
                   type="text"
@@ -151,7 +151,7 @@ export default function BigCartelSetupPage() {
               <span className="w-10 h-10 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-lg font-medium flex-shrink-0">
                 2
               </span>
-              <h2 className="text-xl sm:text-2xl font-serif">Add the VIA Tracking Code</h2>
+              <h2 className="text-xl sm:text-2xl font-serif">Add the VYA Tracking Code</h2>
             </div>
 
             {!isFilled && (
@@ -211,7 +211,7 @@ export default function BigCartelSetupPage() {
             </div>
             <div className="bg-green-50 border border-green-200 p-4">
               <p className="text-sm text-green-800">
-                Once the snippet is saved and published, VIA will automatically know when a customer
+                Once the snippet is saved and published, VYA will automatically know when a customer
                 we send to your store places an order. No other steps needed.
               </p>
             </div>
@@ -239,13 +239,13 @@ export default function BigCartelSetupPage() {
               <div>
                 <h3 className="font-medium mb-2">Does this track all my customers?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  No — only customers who came from VIA. We never collect customer names, emails, or personal info.
+                  No — only customers who came from VYA. We never collect customer names, emails, or personal info.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">What if a customer buys something different from what they clicked?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  VIA still gets credit. The tracking lasts 30 days from the first click, so any purchase during that window counts.
+                  VYA still gets credit. The tracking lasts 30 days from the first click, so any purchase during that window counts.
                 </p>
               </div>
             </div>

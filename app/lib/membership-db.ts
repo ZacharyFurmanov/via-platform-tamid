@@ -104,7 +104,7 @@ export async function getUserByEmail(
 }
 
 /**
- * Get emails of all active VIA Insider members.
+ * Get emails of all active VYA Insider members.
  */
 export async function getInsiderUserEmails(): Promise<string[]> {
   await initMembershipColumns();

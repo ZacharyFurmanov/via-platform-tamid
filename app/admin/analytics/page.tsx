@@ -782,7 +782,7 @@ export default function AnalyticsPage() {
               <div className="border border-dashed border-neutral-300 p-8 text-center">
                 <p className="text-neutral-500 mb-2">No conversion data yet.</p>
                 <p className="text-sm text-neutral-400 mb-6">
-                  Set up conversion tracking for your stores to see sales attributed to VIA.
+                  Set up conversion tracking for your stores to see sales attributed to VYA.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link
@@ -871,9 +871,9 @@ export default function AnalyticsPage() {
                       <p className="text-sm text-neutral-500 mt-1">all tracked orders</p>
                     </div>
                     <div className="bg-green-50 p-6">
-                      <p className="text-xs uppercase tracking-wide text-green-700 mb-2">VIA-Attributed</p>
+                      <p className="text-xs uppercase tracking-wide text-green-700 mb-2">VYA-Attributed</p>
                       <p className="text-3xl font-serif text-green-800">{conversionData.matchedConversions}</p>
-                      <p className="text-sm text-green-600 mt-1">matched to VIA clicks</p>
+                      <p className="text-sm text-green-600 mt-1">matched to VYA clicks</p>
                     </div>
                     <div className="bg-neutral-50 p-6">
                       <p className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Attribution Rate</p>
@@ -883,7 +883,7 @@ export default function AnalyticsPage() {
                           : 0}
                         %
                       </p>
-                      <p className="text-sm text-neutral-500 mt-1">of orders from VIA</p>
+                      <p className="text-sm text-neutral-500 mt-1">of orders from VYA</p>
                     </div>
                     <div className="bg-green-50 p-6">
                       <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Collabs Commission</p>
@@ -955,7 +955,7 @@ export default function AnalyticsPage() {
                                       : "bg-neutral-100 text-neutral-500"
                                   }`}
                                 >
-                                  {conv.matched ? "VIA Attributed" : "Unmatched"}
+                                  {conv.matched ? "VYA Attributed" : "Unmatched"}
                                 </span>
                               </div>
                             </div>

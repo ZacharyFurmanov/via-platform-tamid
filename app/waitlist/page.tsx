@@ -63,7 +63,7 @@ function WaitlistContent() {
     if (entered && storedCode && storedEmail) {
       setReferralCode(storedCode);
       setEmail(storedEmail);
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
       setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
       setPhase("confirmation");
 
@@ -153,7 +153,7 @@ function WaitlistContent() {
       }
     }
 
-    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VYA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     const first = phone1.trim() || phone2.trim();
     const second = phone1.trim() && phone2.trim() ? phone2.trim() : "";
 
@@ -169,7 +169,7 @@ function WaitlistContent() {
   };
 
   const handleSendSecond = () => {
-    const message = `Check out VIA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
+    const message = `Check out VYA — vintage & secondhand. Enter the giveaway to win a $1,000 shopping spree: ${referralLink}`;
     window.location.href = `sms:${pendingPhone}?&body=${encodeURIComponent(message)}`;
     setPendingPhone("");
     goToConfirmation();
@@ -205,12 +205,12 @@ function WaitlistContent() {
         rel="noopener noreferrer"
         className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center text-xs tracking-[0.15em] uppercase py-2.5 hover:bg-[#5D0F17]/90 transition"
       >
-        Discover VIA in person — NYC Pop Up March 29th. Click here for tickets.
+        Discover VYA in person — NYC Pop Up March 29th. Click here for tickets.
       </a>
 
       {/* Header */}
       <div className="border-b border-[#5D0F17]/10 px-6 py-5 flex items-center justify-between">
-        <img src="/via-logo.png" alt="VIA" className="h-20 w-auto" />
+        <img src="/via-logo.png" alt="VYA" className="h-20 w-auto" />
         <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50">Coming Soon</p>
       </div>
 
@@ -224,7 +224,7 @@ function WaitlistContent() {
               Shop vintage &amp; secondhand,<br />all in one place.
             </h1>
             <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
-              VIA lets you browse independent vintage and secondhand stores across
+              VYA lets you browse independent vintage and secondhand stores across
               the country in one seamless experience. Join the waitlist and enter
               our giveaway — invite 2 friends to win a $1,000 shopping spree.
             </p>
@@ -386,7 +386,7 @@ function WaitlistContent() {
         {phase === "confirmation" && (
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-4">
-              VIA Giveaway
+              VYA Giveaway
             </p>
             <h2 className="text-2xl sm:text-3xl font-serif mb-4 leading-snug">
               You&apos;re in the queue
@@ -469,7 +469,7 @@ function WaitlistContent() {
             )}
 
             <p className="text-[11px] text-[#5D0F17]/40 leading-relaxed mb-10">
-              By entering, you agree to VIA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random. Giveaway credit must be used on items listed on VIA.
+              By entering, you agree to VYA&apos;s Terms &amp; Conditions. Each referral beyond your first gives you an additional entry. Winner will be selected at random. Giveaway credit must be used on items listed on VYA.
             </p>
 
             {/* Access Code */}

@@ -129,7 +129,7 @@ export default function AdminLoginPage() {
             href="/"
             className="text-sm text-neutral-500 hover:text-black transition-colors"
           >
-            Back to VIA
+            Back to VYA
           </Link>
         </div>
       </div>

@@ -156,7 +156,7 @@ export async function parseRSSFeed(
 ): Promise<RSSFetchResult> {
   const response = await fetch(rssUrl, {
     headers: {
-      "User-Agent": "VIA-RSS-Parser/1.0",
+      "User-Agent": "VYA-RSS-Parser/1.0",
       Accept: "application/rss+xml, application/xml, text/xml",
     },
   });

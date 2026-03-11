@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { neonAdapter } from "@/app/lib/auth-adapter";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
 function baseStyles() {
   return `
@@ -36,16 +36,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     Resend({
-      from: "VIA <hana@theviaplatform.com>",
+      from: "VYA <hana@theviaplatform.com>",
       apiKey: process.env.RESEND_API_KEY,
       async sendVerificationRequest({ identifier: email, url }) {
         const { Resend: ResendClient } = await import("resend");
         const resend = new ResendClient(process.env.RESEND_API_KEY!);
 
         await resend.emails.send({
-          from: "VIA <hana@theviaplatform.com>",
+          from: "VYA <hana@theviaplatform.com>",
           to: email,
-          subject: "Sign in to VIA",
+          subject: "Sign in to VYA",
           html: `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
@@ -70,16 +70,16 @@ ${baseStyles()}
 <div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
   <div class="container" style="max-width:600px;margin:0 auto;">
     <div class="header" style="text-align:center;padding:32px 0 28px;">
-      <img src="${BASE_URL}/via-logo.png" alt="VIA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
+      <img src="${BASE_URL}/via-logo.png" alt="VYA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
     </div>
     <div class="content" style="background:#ffffff;padding:40px 32px;">
-      <h2>Sign in to VIA</h2>
-      <p>Click the button below to sign in to your VIA account. This link expires in 24 hours.</p>
+      <h2>Sign in to VYA</h2>
+      <p>Click the button below to sign in to your VYA account. This link expires in 24 hours.</p>
       <a href="${url}" class="btn">Sign In</a>
       <p style="font-size:12px;color:rgba(93,15,23,0.45);margin-top:24px;">If you didn't request this email, you can safely ignore it.</p>
     </div>
     <div class="footer" style="text-align:center;margin-top:32px;font-size:11px;color:rgba(93,15,23,0.45);padding-bottom:24px;">
-      <p>&copy; ${new Date().getFullYear()} VIA. Vintage &amp; secondhand, worldwide.</p>
+      <p>&copy; ${new Date().getFullYear()} VYA. Vintage &amp; secondhand, worldwide.</p>
     </div>
   </div>
 </div>

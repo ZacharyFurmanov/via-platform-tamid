@@ -7,7 +7,7 @@ import {
 import { sendFavoriteActivityNotification } from "@/app/lib/email";
 
 const MAX_DAILY_EMAILS_PER_USER = 3;
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
 export async function GET(request: Request) {
   // Verify cron secret
@@ -48,6 +48,9 @@ export async function GET(request: Request) {
           candidate.product_image,
           candidate.store_name,
           productUrl,
+          candidate.price,
+          candidate.currency,
+          candidate.recent_click_count,
         );
 
         await recordNotificationSent(

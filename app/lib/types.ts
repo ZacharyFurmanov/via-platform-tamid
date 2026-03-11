@@ -11,4 +11,5 @@ export type StoreProduct = {
   images?: string[];
   size?: string | null;
   syncedAt?: string; // ISO timestamp from DB
+  createdAt?: string; // ISO timestamp when first added to DB
 };

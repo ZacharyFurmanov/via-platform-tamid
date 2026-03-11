@@ -22,7 +22,7 @@ export default function LoginPage() {
     <main className="bg-[#F7F3EA] min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <h1 className="font-serif text-3xl sm:text-4xl text-center mb-3 text-[#5D0F17]">
-          Sign in to VIA
+          Sign in to VYA
         </h1>
         <p className="text-sm text-[#5D0F17]/50 text-center mb-10">
           Create an account to start shopping.
@@ -72,7 +72,7 @@ export default function LoginPage() {
           By signing in, you agree to our{" "}
           <Link href="/terms" className="underline">Terms</Link> and{" "}
           <Link href="/privacy" className="underline">Privacy Policy</Link>, and
-          to receive email updates from VIA. You can unsubscribe at any time.
+          to receive email updates from VYA. You can unsubscribe at any time.
         </p>
       </div>
     </main>

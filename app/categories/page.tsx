@@ -6,6 +6,10 @@ import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categor
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { auth } from "@/app/lib/auth";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 // Map product subcategories to display categories for filtering
 function toDisplayCategory(slug: CategorySlug): string {
@@ -13,14 +17,31 @@ function toDisplayCategory(slug: CategorySlug): string {
 }
 
 export default async function CategoriesPage() {
-  const inventory = await getInventory();
+  const session = await auth();
+  const isMember = session?.user?.id
+    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+    : false;
 
-  const products: FilterableProduct[] = inventory.map((item, idx) => {
+  const inventory = await getInventory(isMember);
+
+  const dbIdMap = new Map<string, number>();
+  for (const item of inventory) {
+    const match = item.id.match(/-(\d+)$/);
+    if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
+  }
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
+  const products: FilterableProduct[] = inventory.map((item) => {
+    const engagementScore = popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0;
+    const syncedAt = item.syncedAt ?? new Date().toISOString();
     const displaySlug = toDisplayCategory(item.category);
     const displayLabel = displayCategories.find((c) => c.slug === displaySlug)?.label
       ?? categoryMap[item.category as CategorySlug];
+
     return {
       id: item.id,
+      dbId: dbIdMap.get(item.id),
       title: item.title,
       price: item.price,
       compareAtPrice: item.compareAtPrice,
@@ -33,7 +54,16 @@ export default async function CategoriesPage() {
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
-      createdAt: Date.now() - idx * 1000,
+      engagementScore,
+      createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt,
+        imageCount: item.images.length,
+        brandSlug: item.brand,
+        price: item.price,
+        title: item.title,
+      }),
     };
   });
 

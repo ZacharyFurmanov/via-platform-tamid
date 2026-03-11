@@ -2,6 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/app/lib/auth";
 import { getSourcingRequestById } from "@/app/lib/sourcing-db";
+import { getOffersByRequestId } from "@/app/lib/sourcing-offers-db";
+import AcceptOfferSection from "./AcceptOfferSection";
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: "Payment Processing",
@@ -12,8 +14,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
   pending_payment: "Your payment is being processed. This usually takes just a moment.",
-  paid: "We've received your request and our network of stores is actively searching for your item. We'll be in touch within 14 business days.",
-  matched: "Great news — we found a match for your request! Check your email for details.",
+  paid: "We've received your request and our network of stores is actively searching for your item. Offers from stores will appear below.",
+  matched: "You've accepted a sourcing offer. The store will reach out to you directly via email.",
   refunded: "This request has been refunded.",
 };
 
@@ -26,7 +28,10 @@ export default async function SourcingRequestDetailPage({
   if (!session?.user) redirect("/login");
 
   const { id } = await params;
-  const req = await getSourcingRequestById(id, session.user.id!);
+  const [req, offers] = await Promise.all([
+    getSourcingRequestById(id, session.user.id!),
+    getOffersByRequestId(id),
+  ]);
   if (!req) notFound();
 
   return (
@@ -115,6 +120,16 @@ export default async function SourcingRequestDetailPage({
             </p>
           </div>
         </div>
+
+        {/* Offers — only show when request is active or matched */}
+        {(req.status === "paid" || req.status === "matched") && (
+          <AcceptOfferSection
+            requestId={req.id}
+            offers={offers}
+            requestStatus={req.status}
+            matchedStoreSlug={req.matchedStoreSlug}
+          />
+        )}
       </div>
     </main>
   );

@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Source Twenty Four — The Story Behind the Selection | VIA",
+  title: "Source Twenty Four — The Story Behind the Selection | VYA",
   description:
-    "Why we chose Source Twenty Four for VIA. Authentic designer accessories, sustainable luxury fashion, and thoughtfully curated resale.",
+    "Why we chose Source Twenty Four for VYA. Authentic designer accessories, sustainable luxury fashion, and thoughtfully curated resale.",
 };
 
 export default function SourceTwentyFourStory() {
@@ -61,7 +61,7 @@ export default function SourceTwentyFourStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            At VIA, we love highlighting independent vintage boutiques that prioritize
+            At VYA, we love highlighting independent vintage boutiques that prioritize
             authentic designer accessories, sustainable luxury fashion, and thoughtfully
             curated resale. Source Twenty Four is exactly that.
           </p>

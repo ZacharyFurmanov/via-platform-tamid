@@ -89,6 +89,7 @@ export type InventoryItem = {
   storeSlug: string;
   externalUrl?: string;
   syncedAt?: string;
+  createdAt?: string;
   size?: string | null;
 };
 
@@ -122,6 +123,11 @@ function transformDBProduct(product: DBProduct): InventoryItem {
     syncedAt: product.synced_at instanceof Date
       ? product.synced_at.toISOString()
       : String(product.synced_at),
+    createdAt: product.created_at instanceof Date
+      ? product.created_at.toISOString()
+      : product.created_at
+        ? String(product.created_at)
+        : undefined,
     size: product.size ?? inferSizeFromMeasurements(product.description) ?? null,
   };
 }

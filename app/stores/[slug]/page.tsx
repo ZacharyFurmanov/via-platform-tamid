@@ -73,7 +73,8 @@ export default async function StorePage({ params }: StorePageProps) {
       images,
       size: product.size ?? null,
       isEditorsPick: editorsPickIds.has(dbIdMap.get(product.id) ?? -1),
-      createdAt: syncedAt ? new Date(syncedAt).getTime() : Date.now(),
+      engagementScore,
+      createdAt: product.createdAt ? new Date(product.createdAt).getTime() : (dbIdMap.get(product.id) ?? 0),
       popularityScore: computeProductScore({
         engagementScore,
         syncedAt,

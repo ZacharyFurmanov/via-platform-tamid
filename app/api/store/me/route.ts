@@ -31,10 +31,10 @@ export async function GET() {
   if (storeSlug === "via-admin") {
     return NextResponse.json({
       storeSlug: "via-admin",
-      storeName: "VIA Admin",
+      storeName: "VYA Admin",
       location: "New York, NY",
       currency: "USD",
-      website: "https://theviaplatform.com",
+      website: "https://vyaplatform.com",
       logo: "/via-logo.png",
       logoBg: "#F7F3EA",
       commissionType: "shopify-collabs",
@@ -48,7 +48,7 @@ export async function GET() {
     return NextResponse.json({ error: "Store not found" }, { status: 404 });
   }
 
-  // Calculate total inventory value and VIA's tiered commission potential
+  // Calculate total inventory value and VYA's tiered commission potential
   let totalInventoryValue = 0;
   let viaCommissionPotential = 0;
   try {

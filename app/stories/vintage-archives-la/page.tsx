@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Vintage Archives LA — The Story Behind the Selection | VIA",
+  title: "Vintage Archives LA — The Story Behind the Selection | VYA",
   description:
-    "Why we chose Vintage Archives LA for VIA. Dedicated to the art of curation, specializing in exceptional vintage designer shoes.",
+    "Why we chose Vintage Archives LA for VYA. Dedicated to the art of curation, specializing in exceptional vintage designer shoes.",
 };
 
 export default function VintageArchivesLAStory() {
@@ -68,7 +68,7 @@ export default function VintageArchivesLAStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            VIA can&apos;t wait for you to find truly special, one of a kind,
+            VYA can&apos;t wait for you to find truly special, one of a kind,
             shoes from Vintage Archives LA.
           </p>
         </div>

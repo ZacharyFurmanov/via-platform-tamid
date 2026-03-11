@@ -41,14 +41,32 @@ type SourcingRequest = {
   matchedStoreAt: string | null;
 };
 
+type SourcingOffer = {
+  id: string;
+  requestId: string;
+  storeName: string;
+  fee: number;
+  timeline: string;
+  notes: string | null;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+};
+
 type SourcingData = {
   open: SourcingRequest[];
   mine: SourcingRequest[];
+  myOffers: SourcingOffer[];
+};
+
+type OfferForm = {
+  fee: string;
+  timeline: string;
+  notes: string;
 };
 
 type RangeOption = "7d" | "30d" | "all";
 
-/** Tiered commission VIA earns on a given revenue total. */
+/** Tiered commission VYA earns on a given revenue total. */
 function calcViaCommission(revenue: number): number {
   if (revenue <= 0) return 0;
   if (revenue <= 1000) return revenue * 0.07;
@@ -63,8 +81,11 @@ export default function StoreDashboardPage() {
   const [sourcing, setSourcing] = useState<SourcingData | null>(null);
   const [range, setRange] = useState<RangeOption>("30d");
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
-  const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
+  const [offerFormOpen, setOfferFormOpen] = useState<string | null>(null);
+  const [offerForms, setOfferForms] = useState<Record<string, OfferForm>>({});
+  const [submittingOffer, setSubmittingOffer] = useState<string | null>(null);
+  const [offerErrors, setOfferErrors] = useState<Record<string, string>>({});
+  const [offerSuccess, setOfferSuccess] = useState<Record<string, boolean>>({});
 
   const fetchAnalytics = useCallback(async (r: RangeOption) => {
     const res = await fetch(`/api/store/analytics?range=${r}`);
@@ -107,35 +128,61 @@ export default function StoreDashboardPage() {
     await fetchAnalytics(newRange);
   }
 
-  async function handleClaim(requestId: string) {
-    setClaimingId(requestId);
-    setClaimErrors((prev) => ({ ...prev, [requestId]: "" }));
+  function getOfferForm(requestId: string): OfferForm {
+    return offerForms[requestId] ?? { fee: "", timeline: "", notes: "" };
+  }
+
+  function updateOfferForm(requestId: string, patch: Partial<OfferForm>) {
+    setOfferForms((prev) => ({
+      ...prev,
+      [requestId]: { ...getOfferForm(requestId), ...patch },
+    }));
+  }
+
+  async function handleSubmitOffer(requestId: string) {
+    const form = getOfferForm(requestId);
+    if (!form.fee || Number(form.fee) <= 0) {
+      setOfferErrors((prev) => ({ ...prev, [requestId]: "Please enter a sourcing fee." }));
+      return;
+    }
+    if (!form.timeline.trim()) {
+      setOfferErrors((prev) => ({ ...prev, [requestId]: "Please enter an estimated timeline." }));
+      return;
+    }
+
+    setSubmittingOffer(requestId);
+    setOfferErrors((prev) => ({ ...prev, [requestId]: "" }));
 
     try {
-      const res = await fetch(`/api/store/sourcing/${requestId}/claim`, {
+      const res = await fetch(`/api/store/sourcing/${requestId}/offer`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fee: Number(form.fee),
+          timeline: form.timeline.trim(),
+          notes: form.notes.trim() || null,
+        }),
       });
 
       if (res.ok) {
-        // Refresh sourcing data
+        setOfferSuccess((prev) => ({ ...prev, [requestId]: true }));
+        setOfferFormOpen(null);
         const sourcingRes = await fetch("/api/store/sourcing");
-        if (sourcingRes.ok) {
-          setSourcing(await sourcingRes.json());
-        }
+        if (sourcingRes.ok) setSourcing(await sourcingRes.json());
       } else {
         const data = await res.json();
-        setClaimErrors((prev) => ({
+        setOfferErrors((prev) => ({
           ...prev,
-          [requestId]: data.error || "Someone else just claimed this",
+          [requestId]: data.error || "Failed to submit offer.",
         }));
       }
     } catch {
-      setClaimErrors((prev) => ({
+      setOfferErrors((prev) => ({
         ...prev,
         [requestId]: "Something went wrong. Please try again.",
       }));
     } finally {
-      setClaimingId(null);
+      setSubmittingOffer(null);
     }
   }
 
@@ -164,7 +211,7 @@ export default function StoreDashboardPage() {
         <div className="flex items-center gap-4">
           <Image
             src="/via-logo.png"
-            alt="VIA"
+            alt="VYA"
             width={48}
             height={48}
             className="brightness-0 invert"
@@ -209,7 +256,7 @@ export default function StoreDashboardPage() {
                   ${store.viaCommissionPotential.toLocaleString()}
                 </p>
                 <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
-                  VIA Commission (if sold)
+                  VYA Commission (if sold)
                 </p>
               </div>
               <div className="bg-white p-6 shadow-sm text-center">
@@ -289,7 +336,7 @@ export default function StoreDashboardPage() {
                     ${Math.round(calcViaCommission(analytics.totalRevenue)).toLocaleString()}
                   </p>
                   <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
-                    VIA Commission
+                    VYA Commission
                   </p>
                   <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.35)" }}>
                     7% · 5% · 3% tiered
@@ -353,7 +400,7 @@ export default function StoreDashboardPage() {
             )}
           </h2>
           <p className="text-xs mb-6" style={{ color: "rgba(93,15,23,0.5)" }}>
-            These are paid customer requests waiting to be matched with a store.
+            Paid customer requests open for offers. Submit your sourcing fee, timeline, and any notes — the customer will choose which offer to accept.
           </p>
 
           {!sourcing || sourcing.open.length === 0 ? (
@@ -392,117 +439,176 @@ export default function StoreDashboardPage() {
                     <p>Deadline: {req.deadline}</p>
                   </div>
 
-                  {claimErrors[req.id] && (
-                    <p className="text-xs text-red-600 mb-2">{claimErrors[req.id]}</p>
-                  )}
+                  {/* Offer already submitted */}
+                  {(sourcing?.myOffers ?? []).some((o) => o.requestId === req.id) ? (
+                    <div className="text-xs py-2 text-center" style={{ color: "rgba(93,15,23,0.5)", border: "1px solid rgba(93,15,23,0.15)" }}>
+                      {(sourcing?.myOffers ?? []).find((o) => o.requestId === req.id)?.status === "accepted"
+                        ? "✓ Offer Accepted"
+                        : (sourcing?.myOffers ?? []).find((o) => o.requestId === req.id)?.status === "declined"
+                        ? "Offer Declined"
+                        : "✓ Offer Submitted — Awaiting Customer"}
+                    </div>
+                  ) : offerSuccess[req.id] ? (
+                    <div className="text-xs py-2 text-center" style={{ color: "rgba(93,15,23,0.5)", border: "1px solid rgba(93,15,23,0.15)" }}>
+                      ✓ Offer Submitted — Awaiting Customer
+                    </div>
+                  ) : offerFormOpen === req.id ? (
+                    <div className="border border-[#5D0F17]/15 p-4 space-y-3">
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                          Sourcing Fee (USD) *
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>$</span>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            placeholder="e.g. 25"
+                            value={getOfferForm(req.id).fee}
+                            onChange={(e) => updateOfferForm(req.id, { fee: e.target.value })}
+                            className="w-full border border-[#5D0F17]/20 bg-transparent pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition"
+                            style={{ color: "#5D0F17" }}
+                          />
+                        </div>
+                        <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
+                          This is charged on top of the item price, paid by the customer when they accept.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                          Timeline *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 3–5 business days"
+                          value={getOfferForm(req.id).timeline}
+                          onChange={(e) => updateOfferForm(req.id, { timeline: e.target.value })}
+                          className="w-full border border-[#5D0F17]/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition"
+                          style={{ color: "#5D0F17" }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                          Notes <span className="normal-case tracking-normal" style={{ color: "rgba(93,15,23,0.3)" }}>(optional)</span>
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="Anything the customer should know — condition, provenance, etc."
+                          value={getOfferForm(req.id).notes}
+                          onChange={(e) => updateOfferForm(req.id, { notes: e.target.value })}
+                          className="w-full border border-[#5D0F17]/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] resize-none transition"
+                          style={{ color: "#5D0F17" }}
+                        />
+                      </div>
 
-                  <button
-                    onClick={() => handleClaim(req.id)}
-                    disabled={claimingId === req.id}
-                    className="w-full py-2 text-xs uppercase tracking-wide transition-opacity disabled:opacity-50"
-                    style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
-                  >
-                    {claimingId === req.id ? "Claiming…" : "I Can Fulfill This"}
-                  </button>
+                      {offerErrors[req.id] && (
+                        <p className="text-xs text-red-600">{offerErrors[req.id]}</p>
+                      )}
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSubmitOffer(req.id)}
+                          disabled={submittingOffer === req.id}
+                          className="flex-1 py-2 text-xs uppercase tracking-wide transition-opacity disabled:opacity-50"
+                          style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
+                        >
+                          {submittingOffer === req.id ? "Submitting…" : "Submit Offer"}
+                        </button>
+                        <button
+                          onClick={() => setOfferFormOpen(null)}
+                          className="px-4 py-2 text-xs uppercase tracking-wide border"
+                          style={{ borderColor: "rgba(93,15,23,0.2)", color: "#5D0F17" }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setOfferFormOpen(req.id)}
+                      className="w-full py-2 text-xs uppercase tracking-wide border transition-colors hover:bg-[#5D0F17] hover:text-[#F7F3EA]"
+                      style={{ borderColor: "#5D0F17", color: "#5D0F17" }}
+                    >
+                      Submit an Offer
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        {/* Your Active Requests */}
+        {/* Your Submitted Offers */}
         <section>
           <h2
-            className="text-lg font-serif uppercase tracking-wide mb-6"
+            className="text-lg font-serif uppercase tracking-wide mb-2"
             style={{ color: "#5D0F17" }}
           >
-            Your Active Requests
+            Your Submitted Offers
             {sourcing && (
               <span
                 className="ml-2 text-sm font-sans normal-case"
                 style={{ color: "rgba(93,15,23,0.5)" }}
               >
-                ({sourcing.mine.length})
+                ({sourcing.myOffers?.length ?? 0})
               </span>
             )}
           </h2>
+          <p className="text-xs mb-6" style={{ color: "rgba(93,15,23,0.5)" }}>
+            Offers you&apos;ve submitted to customers. Accepted offers mean the customer has chosen you.
+          </p>
 
-          {!sourcing || sourcing.mine.length === 0 ? (
+          {!sourcing || !sourcing.myOffers?.length ? (
             <p className="text-sm" style={{ color: "rgba(93,15,23,0.5)" }}>
-              You haven&apos;t claimed any requests yet.
+              You haven&apos;t submitted any offers yet.
             </p>
           ) : (
             <div className="bg-white shadow-sm overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: "1px solid #F7F3EA" }}>
-                    <th
-                      className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
-                      style={{ color: "rgba(93,15,23,0.5)" }}
-                    >
-                      Customer
-                    </th>
-                    <th
-                      className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
-                      style={{ color: "rgba(93,15,23,0.5)" }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
-                      style={{ color: "rgba(93,15,23,0.5)" }}
-                    >
-                      Budget
-                    </th>
-                    <th
-                      className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
-                      style={{ color: "rgba(93,15,23,0.5)" }}
-                    >
-                      Deadline
-                    </th>
-                    <th
-                      className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
-                      style={{ color: "rgba(93,15,23,0.5)" }}
-                    >
-                      Claimed
-                    </th>
+                    {["Request", "Fee", "Timeline", "Status", "Submitted"].map((h) => (
+                      <th
+                        key={h}
+                        className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
+                        style={{ color: "rgba(93,15,23,0.5)" }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {sourcing.mine.map((req) => (
-                    <tr
-                      key={req.id}
-                      className="border-b last:border-0"
-                      style={{ borderColor: "#F7F3EA" }}
-                    >
-                      <td className="px-5 py-3" style={{ color: "#5D0F17" }}>
-                        <div>{req.userName || "—"}</div>
-                        <div className="text-xs" style={{ color: "rgba(93,15,23,0.5)" }}>
-                          {req.userEmail}
-                        </div>
+                  {sourcing.myOffers.map((offer) => (
+                    <tr key={offer.id} className="border-b last:border-0" style={{ borderColor: "#F7F3EA" }}>
+                      <td className="px-5 py-3 max-w-xs" style={{ color: "#5D0F17" }}>
+                        <p className="line-clamp-2 text-xs" style={{ color: "rgba(93,15,23,0.6)" }}>
+                          {offer.requestId}
+                        </p>
                       </td>
-                      <td
-                        className="px-5 py-3 max-w-xs"
-                        style={{ color: "#5D0F17" }}
-                      >
-                        <p className="line-clamp-2">{req.description}</p>
-                      </td>
-                      <td
-                        className="px-5 py-3 whitespace-nowrap"
-                        style={{ color: "#5D0F17" }}
-                      >
-                        ${req.priceMin}–${req.priceMax}
+                      <td className="px-5 py-3 whitespace-nowrap" style={{ color: "#5D0F17" }}>
+                        ${offer.fee}
                       </td>
                       <td className="px-5 py-3" style={{ color: "#5D0F17" }}>
-                        {req.deadline}
+                        {offer.timeline}
                       </td>
-                      <td
-                        className="px-5 py-3 text-xs"
-                        style={{ color: "rgba(93,15,23,0.5)" }}
-                      >
-                        {req.matchedStoreAt
-                          ? new Date(req.matchedStoreAt).toLocaleDateString()
-                          : "—"}
+                      <td className="px-5 py-3">
+                        <span
+                          className="text-[10px] uppercase tracking-widest px-2 py-1"
+                          style={
+                            offer.status === "accepted"
+                              ? { background: "#dcfce7", color: "#166534" }
+                              : offer.status === "declined"
+                              ? { background: "rgba(93,15,23,0.06)", color: "rgba(93,15,23,0.4)" }
+                              : { background: "rgba(93,15,23,0.08)", color: "#5D0F17" }
+                          }
+                        >
+                          {offer.status === "accepted" ? "Accepted" : offer.status === "declined" ? "Declined" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-xs" style={{ color: "rgba(93,15,23,0.5)" }}>
+                        {new Date(offer.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
                   ))}

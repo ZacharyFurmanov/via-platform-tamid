@@ -21,10 +21,10 @@ export default function PrivacyPage() {
         <div className="space-y-12 text-gray-700 leading-relaxed">
           <section>
             <p>
-              VIA Platform (&ldquo;VIA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
+              VYA Platform (&ldquo;VYA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
               or &ldquo;our&rdquo;) is committed to protecting your privacy. This
               Privacy Policy explains how we collect, use, disclose, and safeguard
-              your information when you visit our website at theviaplatform.com
+              your information when you visit our website at vyaplatform.com
               (the &ldquo;Site&rdquo;). Please read this policy carefully. If you
               do not agree with the terms of this Privacy Policy, please do not
               access the Site.
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-2 mb-6">
               <li>Subscribe to our newsletter</li>
               <li>Create an account or user profile</li>
-              <li>Participate in quizzes or interactive features (e.g., VIA Taste Match)</li>
+              <li>Participate in quizzes or interactive features (e.g., VYA Taste Match)</li>
               <li>Contact us with inquiries or feedback</li>
               <li>Apply to partner with us as a store</li>
             </ul>
@@ -299,7 +299,7 @@ export default function PrivacyPage() {
             href="/"
             className="text-sm text-gray-500 hover:text-black transition"
           >
-            ← Back to VIA
+            ← Back to VYA
           </Link>
         </div>
       </div>

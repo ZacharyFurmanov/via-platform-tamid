@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Ascensio Vintage — The Story Behind the Selection | VIA",
+  title: "Ascensio Vintage — The Story Behind the Selection | VYA",
   description:
-    "Why we chose Ascensio Vintage for VIA. Championing timeless style that transcends the decades.",
+    "Why we chose Ascensio Vintage for VYA. Championing timeless style that transcends the decades.",
 };
 
 export default function AscensioVintageStory() {
@@ -66,7 +66,7 @@ export default function AscensioVintageStory() {
           </p>
 
           <p className="font-serif text-[#5D0F17] text-xl">
-            Exactly the timeless curation that belongs on VIA.
+            Exactly the timeless curation that belongs on VYA.
           </p>
         </div>
 

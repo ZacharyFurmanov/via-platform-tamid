@@ -37,6 +37,8 @@ export type NotificationCandidate = {
   product_image: string | null;
   store_name: string;
   store_slug: string;
+  price: number;
+  currency: string;
   recent_click_count: number;
 };
 
@@ -60,6 +62,8 @@ export async function getFavoriteNotificationCandidates(): Promise<NotificationC
       p.image AS product_image,
       p.store_name,
       p.store_slug,
+      p.price,
+      p.currency,
       COUNT(c.id) AS recent_click_count
     FROM product_favorites pf
     JOIN users u ON u.id = pf.user_id
@@ -71,7 +75,7 @@ export async function getFavoriteNotificationCandidates(): Promise<NotificationC
         pf.created_at
       )
     WHERE u.notification_emails_enabled = TRUE
-    GROUP BY pf.user_id, u.email, p.id, p.title, p.image, p.store_name, p.store_slug
+    GROUP BY pf.user_id, u.email, p.id, p.title, p.image, p.store_name, p.store_slug, p.price, p.currency
     HAVING COUNT(c.id) >= 3
   `;
 

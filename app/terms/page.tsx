@@ -24,7 +24,7 @@ export default function TermsPage() {
               1. Agreement to Terms
             </h2>
             <p>
-              By accessing or using the VIA Platform website at theviaplatform.com
+              By accessing or using the VYA Platform website at vyaplatform.com
               (the &ldquo;Service&rdquo;), you agree to be bound by these Terms &amp;
               Conditions (&ldquo;Terms&rdquo;). If you disagree with any part of these
               terms, you may not access the Service.
@@ -36,10 +36,10 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              VIA is a marketplace that connects shoppers with independent
+              VYA is a marketplace that connects shoppers with independent
               vintage and secondhand stores across the United States. We aggregate and
               display product listings from partner stores, allowing users to
-              browse, discover, and purchase items. VIA does not directly sell
+              browse, discover, and purchase items. VYA does not directly sell
               products; purchases are completed through our partner stores.
             </p>
           </section>
@@ -54,7 +54,7 @@ export default function TermsPage() {
               <li>Attempt to gain unauthorized access to any portion of the Service, other accounts, computer systems, or networks connected to the Service.</li>
               <li>Use any automated system, including robots, spiders, or scrapers, to access the Service for any purpose without our express written permission.</li>
               <li>Introduce any viruses, Trojan horses, worms, or other material that is malicious or technologically harmful.</li>
-              <li>Impersonate or attempt to impersonate VIA, a VIA employee, another user, or any other person or entity.</li>
+              <li>Impersonate or attempt to impersonate VYA, a VYA employee, another user, or any other person or entity.</li>
             </ul>
           </section>
 
@@ -77,7 +77,7 @@ export default function TermsPage() {
             </h2>
             <p className="mb-3">
               By creating an account, you consent to receive the following types
-              of email communications from VIA:
+              of email communications from VYA:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
@@ -100,15 +100,15 @@ export default function TermsPage() {
               6. Products and Purchases
             </h2>
             <p className="mb-3">
-              VIA acts as an intermediary platform connecting buyers with
+              VYA acts as an intermediary platform connecting buyers with
               independent seller stores. Please note:
             </p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>All products listed on VIA are sold by independent partner stores, not by VIA directly.</li>
+              <li>All products listed on VYA are sold by independent partner stores, not by VYA directly.</li>
               <li>Product descriptions, images, pricing, and availability are provided by partner stores and may be subject to change without notice.</li>
-              <li>VIA does not guarantee the accuracy, completeness, or reliability of any product listings.</li>
+              <li>VYA does not guarantee the accuracy, completeness, or reliability of any product listings.</li>
               <li>Returns, exchanges, and refund policies are determined by each individual partner store.</li>
-              <li>VIA is not responsible for the quality, safety, legality, or any other aspect of items sold by partner stores.</li>
+              <li>VYA is not responsible for the quality, safety, legality, or any other aspect of items sold by partner stores.</li>
             </ul>
           </section>
 
@@ -118,11 +118,11 @@ export default function TermsPage() {
             </h2>
             <p>
               The Service and its original content, features, and functionality
-              are and will remain the exclusive property of VIA Platform and its
+              are and will remain the exclusive property of VYA Platform and its
               licensors. The Service is protected by copyright, trademark, and
               other laws. Our trademarks and trade dress may not be used in
               connection with any product or service without the prior written
-              consent of VIA Platform.
+              consent of VYA Platform.
             </p>
           </section>
 
@@ -132,7 +132,7 @@ export default function TermsPage() {
             </h2>
             <p>
               By submitting content to the Service, including but not limited to
-              quiz responses, taste profiles, and shared links, you grant VIA a
+              quiz responses, taste profiles, and shared links, you grant VYA a
               non-exclusive, worldwide, royalty-free license to use, reproduce,
               modify, and display such content in connection with the Service.
               You represent that you own or have the necessary rights to submit
@@ -146,10 +146,10 @@ export default function TermsPage() {
             </h2>
             <p>
               Our Service may contain links to third-party websites or services
-              that are not owned or controlled by VIA. VIA has no control over,
+              that are not owned or controlled by VYA. VYA has no control over,
               and assumes no responsibility for, the content, privacy policies,
               or practices of any third-party websites or services. You
-              acknowledge and agree that VIA shall not be responsible or liable
+              acknowledge and agree that VYA shall not be responsible or liable
               for any damage or loss caused by the use of any such content,
               goods, or services.
             </p>
@@ -164,7 +164,7 @@ export default function TermsPage() {
               AVAILABLE&rdquo; basis, without any warranties of any kind, either
               express or implied, including but not limited to implied warranties
               of merchantability, fitness for a particular purpose,
-              non-infringement, or course of performance. VIA does not warrant
+              non-infringement, or course of performance. VYA does not warrant
               that the Service will function uninterrupted, secure, or available
               at any particular time or location.
             </p>
@@ -175,7 +175,7 @@ export default function TermsPage() {
               11. Limitation of Liability
             </h2>
             <p>
-              In no event shall VIA Platform, nor its directors, employees,
+              In no event shall VYA Platform, nor its directors, employees,
               partners, agents, suppliers, or affiliates, be liable for any
               indirect, incidental, special, consequential, or punitive damages,
               including without limitation, loss of profits, data, use, goodwill,
@@ -189,7 +189,7 @@ export default function TermsPage() {
               12. Indemnification
             </h2>
             <p>
-              You agree to defend, indemnify, and hold harmless VIA Platform and
+              You agree to defend, indemnify, and hold harmless VYA Platform and
               its licensees, licensors, employees, contractors, agents, officers,
               and directors from and against any and all claims, damages,
               obligations, losses, liabilities, costs, or debt arising from your
@@ -247,7 +247,7 @@ export default function TermsPage() {
             href="/"
             className="text-sm text-gray-500 hover:text-black transition"
           >
-            ← Back to VIA
+            ← Back to VYA
           </Link>
         </div>
       </div>

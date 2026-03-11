@@ -55,9 +55,9 @@ function verifyOtpCookie(cookieValue: string): string | null {
 async function sendOtpEmail(otp: string) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
-    from: "VIA Admin <hana@theviaplatform.com>",
+    from: "VYA Admin <hana@theviaplatform.com>",
     to: "hana@theviaplatform.com",
-    subject: `${otp} — VIA Admin Sign-In Code`,
+    subject: `${otp} — VYA Admin Sign-In Code`,
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,7 +80,7 @@ body { margin: 0; padding: 0; background-color: #F7F3EA; font-family: Georgia, '
 <div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
   <div style="max-width:480px;margin:0 auto;">
     <div class="content" style="background:#ffffff;padding:40px 32px;text-align:center;">
-      <p style="font-size:13px;color:#5D0F17;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 24px;">VIA Admin</p>
+      <p style="font-size:13px;color:#5D0F17;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 24px;">VYA Admin</p>
       <p style="font-size:15px;color:#5D0F17;margin:0 0 24px;">Your sign-in code:</p>
       <div class="code-box" style="background:#F7F3EA;padding:20px;font-size:36px;font-family:monospace;letter-spacing:0.3em;color:#5D0F17;margin:0 0 24px;">
         ${otp}

@@ -3,7 +3,7 @@ import { auth } from "@/app/lib/auth";
 import { getUserByEmail, saveStripeCustomerId } from "@/app/lib/membership-db";
 
 function getBaseUrl() {
-  const url = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
+  const url = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
   if (url.startsWith("http")) return url;
   return `https://${url}`;
 }

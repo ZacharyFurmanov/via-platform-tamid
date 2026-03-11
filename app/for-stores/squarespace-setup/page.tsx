@@ -14,7 +14,7 @@ export default function SquarespaceSetupPage() {
   const displayName = storeName || "Your Store Name";
 
   // One script goes in Header — handles click tracking AND order conversion
-  const headerCode = `<!-- VIA Tracking -->
+  const headerCode = `<!-- VYA Tracking -->
 <script>
 (function() {
   // Save via_click_id from URL into a 30-day cookie
@@ -51,7 +51,7 @@ export default function SquarespaceSetupPage() {
   }
 
   function send() {
-    fetch('https://theviaplatform.com/api/conversion', {
+    fetch('https://vyaplatform.com/api/conversion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -90,14 +90,14 @@ export default function SquarespaceSetupPage() {
               href="/for-stores"
               className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors"
             >
-              &larr; Partner with VIA
+              &larr; Partner with VYA
             </Link>
           </div>
           <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
             Connect Your Squarespace Store
           </h1>
           <p className="text-[#5D0F17]/60 text-base sm:text-lg">
-            Follow these steps to connect your Squarespace store to VIA.
+            Follow these steps to connect your Squarespace store to VYA.
             No coding knowledge needed — just copy, paste, and save.
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function SquarespaceSetupPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Store Name <span className="text-[#5D0F17]/40 font-normal">(how it appears on VIA)</span>
+                  Store Name <span className="text-[#5D0F17]/40 font-normal">(how it appears on VYA)</span>
                 </label>
                 <input
                   type="text"
@@ -235,7 +235,7 @@ export default function SquarespaceSetupPage() {
               </div>
 
               <p className="text-[#5D0F17]/40 text-xs">
-                If you previously installed two VIA code blocks, replace your existing Header code with this one and delete the Order Confirmation code — this single block handles everything.
+                If you previously installed two VYA code blocks, replace your existing Header code with this one and delete the Order Confirmation code — this single block handles everything.
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function SquarespaceSetupPage() {
             </p>
             <div className="bg-green-50 border border-green-200 p-4 mt-4">
               <p className="text-sm text-green-800">
-                Once saved, VIA will automatically know when a customer we send to your store makes a purchase.
+                Once saved, VYA will automatically know when a customer we send to your store makes a purchase.
                 You don&apos;t need to do anything else.
               </p>
             </div>
@@ -276,15 +276,15 @@ export default function SquarespaceSetupPage() {
               <div>
                 <h3 className="font-medium mb-2">Does this track all my customers?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  No — only customers who came from VIA. If someone finds your store on their own,
+                  No — only customers who came from VYA. If someone finds your store on their own,
                   nothing happens. We never collect customer names, emails, or personal info.
                 </p>
               </div>
               <div>
-                <h3 className="font-medium mb-2">What if a customer browses other products after clicking from VIA?</h3>
+                <h3 className="font-medium mb-2">What if a customer browses other products after clicking from VYA?</h3>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  If a customer clicks through from VIA and ends up buying a different item on your store,
-                  VIA still gets credit. The tracking lasts for 30 days from their first click.
+                  If a customer clicks through from VYA and ends up buying a different item on your store,
+                  VYA still gets credit. The tracking lasts for 30 days from their first click.
                 </p>
               </div>
               <div>

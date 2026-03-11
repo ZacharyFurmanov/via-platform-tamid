@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json(
-      { message: "Welcome to VIA! We'll keep you updated." },
+      { message: "Welcome to VYA! We'll keep you updated." },
       { status: 201 }
     );
   } catch (error) {

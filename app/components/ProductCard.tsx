@@ -34,6 +34,7 @@ type ProductCardProps = {
   from?: string;
   size?: string | null;
   isEditorsPick?: boolean;
+  soldOut?: boolean;
 };
 
 export default function ProductCard({
@@ -50,6 +51,7 @@ export default function ProductCard({
   from,
   size,
   isEditorsPick,
+  soldOut,
 }: ProductCardProps) {
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
@@ -62,7 +64,17 @@ export default function ProductCard({
 
   return (
     <div className="relative group">
-      <Link href={from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`} className="cursor-pointer text-[#5D0F17] block">
+      {soldOut && (
+        <div className="absolute inset-0 z-20 bg-[#F7F3EA]/70 pointer-events-none flex items-start justify-center pt-8 sm:pt-10">
+          <span className="bg-[#F7F3EA]/95 border border-[#5D0F17]/20 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#5D0F17]/50">
+            Sold Out
+          </span>
+        </div>
+      )}
+      <Link
+        href={soldOut ? "#" : (from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`)}
+        className={`cursor-pointer text-[#5D0F17] block ${soldOut ? "opacity-40 pointer-events-none" : ""}`}
+      >
         <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} />
 
         {/* Product info */}
