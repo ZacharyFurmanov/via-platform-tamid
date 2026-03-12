@@ -149,6 +149,7 @@ const SIZE_VALUE_REGEX = new RegExp(`^(${SIZE_VALUE_PATTERN})$`, "i");
 /**
  * Extracts a size from a product title as a fallback when no variant size option exists.
  * Matches patterns like "Size M", "Size 38", "/ Size 9.5", "- Size US 8", "(Size L)"
+ * Also matches bare trailing numbers common in vintage listings: "Dior Heels 35", "Gucci Slides 40.5"
  */
 function extractSizeFromTitle(title: string): string | null {
   const parenMatch = /\(\s*(?:size|sz)\s*:?\s*([^)]+)\)/i.exec(title);
@@ -157,6 +158,17 @@ function extractSizeFromTitle(title: string): string | null {
   const re = new RegExp(`(?:[-–—|\\/,]\\s*|\\s+)(?:size|sz)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
   const sepMatch = re.exec(title);
   if (sepMatch) return sepMatch[1].trim();
+
+  // Match a bare size at the very end of the title (no "size" keyword needed).
+  // Handles "Dior Heels 35", "Jimmy Choo Pumps 40.5", "Loafers EU 38".
+  // Capped at 50 to exclude years (2024, 2025) and other large numbers.
+  const trailingRe = new RegExp(`\\s((?:US|UK|EU|IT)\\s*\\d[\\d.]*|\\d{1,2}(?:\\.\\d)?)$`);
+  const trailingMatch = trailingRe.exec(title);
+  if (trailingMatch) {
+    const val = trailingMatch[1].trim();
+    const num = parseFloat(val.replace(/[^\d.]/g, ""));
+    if (SIZE_VALUE_REGEX.test(val) && num >= 1 && num <= 50) return val;
+  }
 
   return null;
 }
@@ -502,11 +514,15 @@ export async function fetchShopifyProductsPublic(
       // Only accept variant.title as a size if it actually looks like a size (not a color like "Green")
       const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
       const variantTitleIfSize = rawVariantTitle && SIZE_VALUE_REGEX.test(rawVariantTitle.trim()) ? rawVariantTitle : null;
-      // Fallbacks: variant size → validated variant title → product title → description
-      const size = sizeFromVariant
-        ?? variantTitleIfSize
-        ?? extractSizeFromTitle(product.title)
-        ?? extractSizeFromDescription(product.body_html || null);
+      // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), prefer a more specific
+      // size from the title or description (e.g. "35" from "Dior Heels 35" beats "M").
+      const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
+      const sizeFromTitle = extractSizeFromTitle(product.title);
+      const sizeFromDescription = extractSizeFromDescription(product.body_html || null);
+      const specificSize = sizeFromDescription ?? sizeFromTitle;
+      const size = (sizeFromVariant && !isGenericOnly)
+        ? sizeFromVariant
+        : specificSize ?? variantTitleIfSize ?? (isGenericOnly ? sizeFromVariant : null);
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];

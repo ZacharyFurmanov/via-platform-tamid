@@ -245,7 +245,7 @@ export default function SourcingPage() {
         <h1 className="font-serif text-2xl sm:text-3xl mb-2">Sourcing Request</h1>
         <p className="text-sm text-[#5D0F17]/60 mb-6 leading-relaxed">
           Can&apos;t find what you&apos;re looking for? Tell us what you want and we&apos;ll source it from our network of stores.
-          A <strong>$20 sourcing fee</strong> applies — fully refunded if we can&apos;t find a match in 14 business days.
+          A <strong>$20 sourcing request</strong> applies — fully refunded if we can&apos;t find a match in 14 business days.
         </p>
         <div className="border border-[#5D0F17]/15 bg-[#D8CABD]/15 px-5 py-4 mb-10">
           <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1">How it works</p>

@@ -374,6 +374,28 @@ export const stores = [
       "All sales are final — no refunds, exchanges, or returns. Please review all item details carefully before purchasing.",
   },
   {
+    slug: "sheer-vintage",
+    dashboardToken: "shv-3c1a9e7f2d4b",
+    name: "Sheer Vintage",
+    location: "Calgary, Canada",
+    description: "",
+    website: "https://www.shopsheervintage.com",
+    dataSource: "sheer-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "CAD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "SHEER",
+    collabsStoreId: "231298",
+    authenticityPolicy:
+      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "vintari-vault",
     dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",
@@ -436,6 +458,7 @@ export const storeContactEmails: Record<string, string> = {
   "sourced-by-scottie": "emma@scottiestudios.com",
   "to-us-vintage": "KScarrone@gmail.com",
   "moonstruck-vintage": "moonstruckvintagenyc@gmail.com",
+  "sheer-vintage": "",
   "maison-optimism-vintage": "maisonoptimism@gmail.com",
   "vintari-vault": "admin@vintarivault.com",
   "blodas-choice": "annabloda@gmail.com",

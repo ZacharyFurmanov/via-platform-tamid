@@ -16,6 +16,7 @@ const stories = [
     logo: "/stores/lei-vintage-logo.jpg",
     logoBg: "#ffffff",
     logoFit: "contain" as const,
+    logoZoom: 1.8,
   },
   {
     slug: "vintage-archives-la",
@@ -43,6 +44,7 @@ const stories = [
     logo: "/stores/scarz-vintage-logo.jpg",
     logoBg: "#ffffff",
     logoFit: "contain" as const,
+    logoZoom: 1.8,
   },
   {
     slug: "missi-archives",
@@ -107,6 +109,7 @@ export default function StoriesPage() {
                     fill
                     sizes="224px"
                     className={story.logoFit === "cover" ? "object-cover" : "object-contain p-4"}
+                    style={"logoZoom" in story ? { transform: `scale(${story.logoZoom})` } : undefined}
                   />
                 </div>
                 <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-3">

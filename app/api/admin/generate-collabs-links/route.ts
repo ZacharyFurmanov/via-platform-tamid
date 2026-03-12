@@ -5,6 +5,7 @@ import {
   updateCollabsLinkByShopifyProductId,
   getSyncedStores,
   getShopifyIdCoverage,
+  deletePermanentlyStuckProducts,
 } from "@/app/lib/db";
 import {
   COLLABS_STORES,
@@ -129,10 +130,14 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        const collabsTotalCount = fetchResult.totalCount;
+        const paginationMismatch = collabsTotalCount !== null && collabsProducts.length < collabsTotalCount;
         send({
           type: "store_products",
           store: store.name,
           count: collabsProducts.length,
+          totalCount: collabsTotalCount,
+          paginationMismatch,
         });
 
         for (const product of collabsProducts) {
@@ -292,9 +297,25 @@ export async function GET(request: NextRequest) {
   // Debug: shopify_product_id coverage per collabs store
   const shopifyIdCoverage = await getShopifyIdCoverage(Array.from(COLLABS_STORE_SLUGS));
 
+  // Build per-store list of stuck products with age info
+  const now = Date.now();
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const stuckByStore: Record<string, Array<{ title: string; daysOld: number | null; firstSeen: string }>> = {};
+  for (const p of candidates) {
+    if (!stuckByStore[p.store_slug]) stuckByStore[p.store_slug] = [];
+    // created_at = when the product first appeared in VYA (null = pre-Collabs era / initial sync)
+    const daysOld = p.created_at ? Math.floor((now - new Date(p.created_at).getTime()) / ONE_DAY_MS) : null;
+    stuckByStore[p.store_slug].push({
+      title: p.title,
+      daysOld,
+      firstSeen: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : "pre-collabs",
+    });
+  }
+
   return NextResponse.json({
     total: candidates.length,
     byStore,
+    stuckByStore,
     collabsStores: Array.from(COLLABS_STORE_SLUGS),
     sampleLinks,
     redirectInfo,
@@ -304,4 +325,18 @@ export async function GET(request: NextRequest) {
       shopifyIdCoverage,
     },
   });
+}
+
+/**
+ * DELETE /api/admin/generate-collabs-links
+ * Purges products that predate Collabs support (created_at IS NULL) and have
+ * never received a collabs_link. These are permanently stuck and invisible on VYA.
+ */
+export async function DELETE(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const deleted = await deletePermanentlyStuckProducts();
+  return NextResponse.json({ deleted });
 }

@@ -9,6 +9,7 @@ import {
   fetchCollabsProducts,
   createAffiliateLink,
 } from "@/app/lib/collabs";
+import { sendCollabsCredentialsExpiredAlert, sendCollabsLinksStuckAlert } from "@/app/lib/email";
 
 // Allow up to 5 minutes for bulk generation
 export const maxDuration = 300;
@@ -64,6 +65,7 @@ export async function GET(request: Request) {
   let totalCreated = 0;
   let totalFailed = 0;
   let rateLimited = false;
+  let credentialsAlertSent = false;
   const storeResults: Array<{
     store: string;
     slug: string;
@@ -85,6 +87,13 @@ export async function GET(request: Request) {
     if (fetchError) {
       console.error(`[Generate Collabs Links] Fetch error for ${store.name}:`, fetchError);
       storeResults.push({ store: store.name, slug: store.slug, saved: 0, created: 0, failed: 0, error: fetchError });
+      if (fetchError.includes("401") && !credentialsAlertSent) {
+        credentialsAlertSent = true;
+        console.error("[Generate Collabs Links] 401 detected — sending credentials expired alert");
+        await sendCollabsCredentialsExpiredAlert().catch((e) =>
+          console.error("[Generate Collabs Links] Failed to send alert email:", e)
+        );
+      }
       continue;
     }
 
@@ -146,6 +155,33 @@ export async function GET(request: Request) {
     });
   }
 
+  // Detect products still unmatched after processing all stores.
+  // These are in our DB with a shopify_product_id but were never found in any
+  // Collabs catalog — they'll stay invisible on VYA until resolved.
+  const stillMissingDbIds = new Set(missingByShopifyId.values());
+  const stillMissingProducts = missingProducts.filter(
+    (p) => p.shopify_product_id && stillMissingDbIds.has(p.shopify_product_id)
+  );
+
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  const stuckProducts = stillMissingProducts.filter(
+    (p) => p.created_at && Date.now() - new Date(p.created_at).getTime() > THREE_DAYS_MS
+  );
+
+  if (stuckProducts.length > 0) {
+    console.warn(
+      `[Generate Collabs Links] ${stuckProducts.length} products stuck without links for 3+ days`
+    );
+    // Only send the daily alert on the 1am UTC standalone run to avoid noise
+    // (sync-stores triggers this cron at midnight and noon; standalone runs at 1am and 1pm)
+    const utcHour = new Date().getUTCHours();
+    if (utcHour === 1) {
+      await sendCollabsLinksStuckAlert(stuckProducts).catch((e) =>
+        console.error("[Generate Collabs Links] Failed to send stuck alert:", e)
+      );
+    }
+  }
+
   const summary = {
     success: totalFailed === 0 && !rateLimited,
     storesProcessed: COLLABS_STORES.length,
@@ -153,6 +189,8 @@ export async function GET(request: Request) {
     linksCreated: totalCreated,
     failures: totalFailed,
     rateLimited,
+    stillMissing: stillMissingProducts.length,
+    stuckOver3Days: stuckProducts.length,
     stores: storeResults,
   };
 

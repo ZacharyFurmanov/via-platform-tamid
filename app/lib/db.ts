@@ -445,6 +445,33 @@ export async function getProductsMissingCollabsLink(storeSlug?: string): Promise
 }
 
 /**
+ * Delete products that have a shopify_product_id but no collabs_link and
+ * no created_at (meaning they predate Collabs support and have never been
+ * visible on VYA). Safe to remove — they'll be re-added by the next sync
+ * if the store enrolls them in Collabs.
+ */
+export async function deletePermanentlyStuckProducts(storeSlug?: string): Promise<number> {
+  const sql = neon(getDatabaseUrl());
+  const result = storeSlug
+    ? await sql`
+        DELETE FROM products
+        WHERE store_slug = ${storeSlug}
+          AND shopify_product_id IS NOT NULL
+          AND collabs_link IS NULL
+          AND created_at IS NULL
+        RETURNING id
+      `
+    : await sql`
+        DELETE FROM products
+        WHERE shopify_product_id IS NOT NULL
+          AND collabs_link IS NULL
+          AND created_at IS NULL
+        RETURNING id
+      `;
+  return result.length;
+}
+
+/**
  * Look up the collabs_link for a product by its database ID.
  * Returns null if the product doesn't exist or has no collabs_link.
  */

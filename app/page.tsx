@@ -25,13 +25,13 @@ export default function HomePage() {
                 Stop digging. Start shopping.
               </p>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
-                The home of vintage &amp; secondhand.
+              <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
+                The department store<br />for vintage &amp; secondhand.
               </h1>
 
               <p className="max-w-xl mb-8 sm:mb-12 text-sm sm:text-base text-[#D8CABD] font-sans leading-relaxed">
-                Discover and browse independent vintage and secondhand stores worldwide.
-                The pieces you&apos;ve been looking for, without the hunt. All trusted and verified stores.
+                Discover independent vintage and secondhand stores worldwide.
+                The pieces you&apos;ve been looking for, in one place. All trusted and verified stores.
               </p>
 
               {/* CTA buttons */}

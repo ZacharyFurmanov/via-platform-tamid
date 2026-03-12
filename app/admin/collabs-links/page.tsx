@@ -22,10 +22,13 @@ export default function CollabsLinksPage() {
   const [csrfToken, setCsrfToken] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [loading, setLoading] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purgeResult, setPurgeResult] = useState<{ deleted: number } | null>(null);
   const [checking, setChecking] = useState(true);
   const [missing, setMissing] = useState<{
     total: number;
     byStore: StoreCount;
+    stuckByStore?: Record<string, Array<{ title: string; daysOld: number | null; firstSeen: string }>>;
     collabsStores: string[];
     sampleLinks?: { id: number; title: string; storeSlug: string; collabsLink: string; compositeId: string }[];
     redirectInfo?: { collabsLink: string; redirectsTo: string } | null;
@@ -67,6 +70,23 @@ export default function CollabsLinksPage() {
     checkMissing();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handlePurge() {
+    if (!confirm("Delete all pre-Collabs stuck products from the DB? They'll be re-added automatically once the store enrolls them in Collabs.")) return;
+    setPurging(true);
+    setPurgeResult(null);
+    try {
+      const res = await fetch("/api/admin/generate-collabs-links", { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json();
+        setPurgeResult(data);
+        await checkMissing();
+      }
+    } catch {
+      // ignore
+    }
+    setPurging(false);
+  }
 
   async function handleGenerate() {
     if (!cookie.trim() || !csrfToken.trim()) {
@@ -128,7 +148,9 @@ export default function CollabsLinksPage() {
                 setStatusMessage(`${data.store} ERROR: ${data.error}`);
                 setLog((prev) => [...prev, `ERROR fetching ${data.store}: ${data.error}`]);
               } else if (data.type === "store_products") {
-                const msg = `${data.store}: ${data.count} products in Collabs`;
+                const totalInfo = data.totalCount !== null ? ` (API says ${data.totalCount} total)` : "";
+                const mismatchWarn = data.paginationMismatch ? ` ⚠ PAGINATION MISMATCH — only fetched ${data.count} of ${data.totalCount}` : "";
+                const msg = `${data.store}: fetched ${data.count} products from Collabs${totalInfo}${mismatchWarn}`;
                 setStatusMessage(msg);
                 setLog((prev) => [
                   ...prev,
@@ -263,6 +285,43 @@ export default function CollabsLinksPage() {
                 <div className="bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
                   All products have collabs links. Nothing to generate.
                 </div>
+              )}
+              {missing.stuckByStore && Object.keys(missing.stuckByStore).length > 0 && (
+                <details className="mt-4">
+                  <summary className="text-xs text-neutral-400 cursor-pointer hover:text-black">
+                    Show stuck products ({missing.total} total — not in Collabs catalog)
+                  </summary>
+                  <div className="mt-3 mb-2 flex items-center gap-3">
+                    <button
+                      onClick={handlePurge}
+                      disabled={purging}
+                      className="text-xs px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                    >
+                      {purging ? "Purging…" : "Purge pre-Collabs stuck products"}
+                    </button>
+                    {purgeResult && (
+                      <span className="text-xs text-neutral-500">{purgeResult.deleted} products deleted</span>
+                    )}
+                    <span className="text-xs text-neutral-400">(orange = pre-Collabs era, will be re-added by sync once store enrolls them)</span>
+                  </div>
+                  <div className="mt-3 space-y-4">
+                    {Object.entries(missing.stuckByStore).map(([slug, prods]) => (
+                      <div key={slug}>
+                        <p className="text-xs font-medium text-black mb-1">{slug} ({prods.length})</p>
+                        <div className="space-y-0.5">
+                          {prods.map((p, i) => (
+                            <div key={i} className="flex gap-3 text-xs font-mono text-neutral-600">
+                              <span className={`flex-shrink-0 w-24 ${p.daysOld !== null && p.daysOld >= 7 ? "text-red-500 font-medium" : p.firstSeen === "pre-collabs" ? "text-orange-500" : "text-neutral-400"}`}>
+                                {p.daysOld !== null ? `${p.daysOld}d` : p.firstSeen}
+                              </span>
+                              <span className="truncate">{p.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               )}
               {missing.debug && (
                 <details className="mt-4">

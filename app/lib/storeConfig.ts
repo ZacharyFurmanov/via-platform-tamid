@@ -132,6 +132,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "rareality-archive",
     storeDomain: "rarealityarchive.com",
   },
+  {
+    type: "shopify",
+    name: "Sheer Vintage",
+    slug: "sheer-vintage",
+    storeDomain: "shopsheervintage.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

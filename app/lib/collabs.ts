@@ -59,9 +59,10 @@ export async function fetchCollabsProducts(
   collabsStoreId: string,
   cookie: string,
   csrfToken: string
-): Promise<{ products: CollabsProduct[]; error: string | null }> {
+): Promise<{ products: CollabsProduct[]; totalCount: number | null; error: string | null }> {
   const all: CollabsProduct[] = [];
   let after: string | null = null;
+  let totalCount: number | null = null;
   const gid = `gid://dovetale-api/ShopifyStore/${collabsStoreId}`;
 
   while (true) {
@@ -99,13 +100,14 @@ export async function fetchCollabsProducts(
     } catch (e) {
       return {
         products: all,
+        totalCount,
         error: `Fetch failed: ${e instanceof Error ? e.message : String(e)}`,
       };
     }
 
     if (!fetchRes.ok) {
       const text = await fetchRes.text().catch(() => "");
-      return { products: all, error: `HTTP ${fetchRes.status}: ${text.slice(0, 300)}` };
+      return { products: all, totalCount, error: `HTTP ${fetchRes.status}: ${text.slice(0, 300)}` };
     }
 
     const json = await fetchRes.json();
@@ -113,10 +115,14 @@ export async function fetchCollabsProducts(
     if (!products?.nodes) {
       return {
         products: all,
+        totalCount,
         error: `Unexpected response: ${JSON.stringify(json).slice(0, 300)}`,
       };
     }
 
+    if (totalCount === null && products.totalCount != null) {
+      totalCount = products.totalCount;
+    }
     all.push(...products.nodes);
 
     if (products.pageInfo?.hasNextPage && products.pageInfo.endCursor) {
@@ -127,7 +133,7 @@ export async function fetchCollabsProducts(
     }
   }
 
-  return { products: all, error: null };
+  return { products: all, totalCount, error: null };
 }
 
 export async function createAffiliateLink(

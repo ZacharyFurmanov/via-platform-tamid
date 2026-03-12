@@ -65,6 +65,7 @@ export async function GET() {
         ), 0) AS via_commission_potential
       FROM products
       WHERE store_slug = ${storeSlug}
+        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
     `;
     totalInventoryValue = Math.round(Number(rows[0]?.total_inventory_value ?? 0));
     viaCommissionPotential = Math.round(Number(rows[0]?.via_commission_potential ?? 0));

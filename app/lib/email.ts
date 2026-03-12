@@ -619,3 +619,85 @@ export async function sendSourcingOfferAcceptedToStore(details: {
     html: viaShell("Offer Accepted", content),
   });
 }
+
+export async function sendCollabsLinksStuckAlert(stuckProducts: DBProduct[]): Promise<void> {
+  const resend = getResend();
+
+  // Group by store
+  const byStore = new Map<string, number>();
+  for (const p of stuckProducts) {
+    byStore.set(p.store_slug, (byStore.get(p.store_slug) ?? 0) + 1);
+  }
+
+  const storeRows = Array.from(byStore.entries())
+    .map(
+      ([slug, count]) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${slug}</td>
+        <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${count} product${count !== 1 ? "s" : ""}</td>
+      </tr>`
+    )
+    .join("");
+
+  const sampleTitles = stuckProducts
+    .slice(0, 5)
+    .map(
+      (p) =>
+        `<li style="font-size:13px;color:#5D0F17;margin-bottom:4px;">${p.title} <span style="opacity:0.5;">(${p.store_slug})</span></li>`
+    )
+    .join("");
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 16px;">
+      ${stuckProducts.length} product${stuckProducts.length !== 1 ? "s" : ""} have been missing Collabs links
+      for more than 3 days and are hidden from VYA.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0 24px;">
+      <tr>
+        <th style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.2);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(93,15,23,0.5);text-align:left;">Store</th>
+        <th style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.2);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(93,15,23,0.5);text-align:left;">Count</th>
+      </tr>
+      ${storeRows}
+    </table>
+    <p style="font-size:13px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 8px;"><strong>Examples:</strong></p>
+    <ul style="margin:0 0 24px;padding-left:20px;">
+      ${sampleTitles}
+    </ul>
+    <p style="font-size:13px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;margin:0 0 24px;">
+      These products have a Shopify ID but were not found in the Collabs catalog after 3+ days of retries.
+      They may not be enrolled in the Collabs program for their store, or the Collabs credentials may need refreshing.
+    </p>
+    <a href="${BASE_URL}/admin/analytics"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;">
+      Check Admin →
+    </a>
+  `;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: "hana@theviaplatform.com",
+    subject: `${stuckProducts.length} product${stuckProducts.length !== 1 ? "s" : ""} missing Collabs links — action needed`,
+    html: viaShell("Collabs Coverage Alert", content),
+  });
+}
+
+export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
+  const resend = getResend();
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;margin:0 0 16px;">Your Shopify Collabs session has expired.</p>
+    <p style="font-size:14px;color:#5D0F17;margin:0 0 24px;">
+      The cron job that generates affiliate links for new products is currently failing with a 401 error.
+      New products added to Shopify won't appear on VYA until you refresh your credentials.
+    </p>
+    <a href="${BASE_URL}/admin/analytics"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;">
+      Update Credentials →
+    </a>
+  `;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: "hana@theviaplatform.com",
+    subject: "Action needed — Shopify Collabs credentials expired",
+    html: viaShell("Collabs Credentials Expired", content),
+  });
+}
