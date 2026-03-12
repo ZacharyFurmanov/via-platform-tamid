@@ -62,6 +62,7 @@ export async function getAllEditorsPicks(): Promise<PickWithProduct[]> {
     FROM editors_picks ep
     JOIN products p ON p.id = ep.product_id
     WHERE ep.week_start = ${FIXED_WEEK}
+      AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
     ORDER BY ep.position ASC
   `;
 
