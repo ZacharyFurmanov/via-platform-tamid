@@ -213,14 +213,15 @@ export default function TermsPage() {
             <h2 className="text-2xl font-serif mb-4 text-black">
               14. Changes to Terms
             </h2>
+            <p className="mb-3">
+              VYA reserves the sole right to modify these Terms at any time, without prior notice, and at its sole discretion. The date of the last modification will be posted at the beginning of these Terms. By continuing to access or use these Services, you agree to be bound by these Terms as modified. It is your sole responsibility to check for updates to these Terms.
+            </p>
             <p>
-              We reserve the right, at our sole discretion, to modify or replace
-              these Terms at any time. If a revision is material, we will provide
-              at least 30 days&apos; notice prior to any new terms taking effect.
-              What constitutes a material change will be determined at our sole
-              discretion. By continuing to access or use our Service after those
-              revisions become effective, you agree to be bound by the revised
-              terms.
+              Any modifications to these Terms or other communications required or permitted hereunder will be given in writing either through the email you provide to VYA or a posting to VYA&apos;s website:{" "}
+              <a href="https://vyaplatform.com/" className="text-black underline hover:no-underline">
+                https://vyaplatform.com/
+              </a>
+              .
             </p>
           </section>
 

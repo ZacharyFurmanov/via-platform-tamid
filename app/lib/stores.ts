@@ -43,7 +43,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
   },
   {
     slug: "house-on-a-chain",
@@ -86,7 +86,7 @@ export const stores = [
     shippingPolicy:
       "Shipping rates are calculated at checkout. Orders ship to the address provided at checkout.",
     returnPolicy:
-      "All sales are final. If your item arrives significantly damaged or materially different from its description, contact info@shoplei.com within 48 hours of delivery with photos for review.",
+      "All sales are final. If your item arrives significantly different from its description or arrives damaged, contact info@shoplei.com within 48 hours of delivery with photos and the team will review.",
     commissionType: "squarespace-manual" as const,
     // No affiliatePath — uses Squarespace pixel for conversion tracking
   },
@@ -134,7 +134,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Houston, TX. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final — no returns under any circumstances. All vintage items may show signs of wear consistent with age. Any notable wear is disclosed in the item description. Please review carefully before purchasing.",
   },
   {
     slug: "missi-archives",
@@ -188,6 +188,7 @@ export const stores = [
   },
   {
     slug: "rareality-archive",
+
     dashboardToken: "ra-4f2b8e1c9d7a",
     name: "Rareality Archive",
     location: "Australia",
@@ -207,7 +208,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Australia. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, contact the store within 2 business days of delivery.",
   },
   {
     slug: "scarz-vintage",
@@ -235,6 +236,28 @@ export const stores = [
       "All sales are final. Refunds or exchanges are only issued if the wrong item was sent or if there is a significant discrepancy from the product description. Contact contact@scarzvintage.com within 7 days of receiving your order.",
   },
   {
+    slug: "sheer-vintage",
+    dashboardToken: "shv-3c1a9e7f2d4b",
+    name: "Sheer Vintage",
+    location: "Calgary, Canada",
+    description: "",
+    website: "https://www.shopsheervintage.com",
+    dataSource: "sheer-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "CAD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "SHEER",
+    collabsStoreId: "231298",
+    authenticityPolicy:
+      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Due to the delicate and one-of-a-kind nature of vintage items, returns are not accepted. If there is an issue with your order, contact the store and they will do everything possible to resolve it.",
+  },
+  {
     slug: "source-twenty-four",
     dashboardToken: "s24-7d1f8c4a2b9e",
     name: "Source Twenty Four",
@@ -255,7 +278,7 @@ export const stores = [
     shippingPolicy:
       "Free shipping on all items. Orders ship from the United States.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. If authenticity is disputed by a recognized third-party authenticator, email sourcetwentyfour@gmail.com within 7 days of delivery with documentation for a full refund. Damage or incorrect items must be reported within 48 hours of delivery with photos.",
   },
   {
     slug: "sourced-by-scottie",
@@ -278,7 +301,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Washington, DC. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "Returns accepted within 7 days of delivery — items must be shipped back within 7 business days of return confirmation. Refunds are issued as store credit for the full price minus a $15 restocking and return shipping fee. Final sale items (belts, jewelry, swimwear, lingerie, and sale items) are not eligible. Contact hello@sourcedbyscottie.com to initiate a return.",
   },
   {
     slug: "the-objects-of-affection",
@@ -301,7 +324,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Every item is authenticated and transparently presented. Please review all item details and photos carefully before purchasing.",
+      "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Contact the store to initiate a return.",
   },
   {
     slug: "to-us-vintage",
@@ -324,7 +347,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. No returns or exchanges.",
   },
   {
     slug: "vangie",
@@ -347,7 +370,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Philadelphia, PA. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items, personalized items, and gift cards are final sale. Refunds are issued to the original payment method. Contact hello@vangie.co to initiate a return.",
   },
   {
     slug: "vintage-archives-la",
@@ -372,28 +395,6 @@ export const stores = [
       "Orders are processed within 3–7 business days. Delivery takes an additional 3–7 business days depending on location. Shipping rates are calculated at checkout based on destination and package weight. US shipping only.",
     returnPolicy:
       "All sales are final — no refunds, exchanges, or returns. Please review all item details carefully before purchasing.",
-  },
-  {
-    slug: "sheer-vintage",
-    dashboardToken: "shv-3c1a9e7f2d4b",
-    name: "Sheer Vintage",
-    location: "Calgary, Canada",
-    description: "",
-    website: "https://www.shopsheervintage.com",
-    dataSource: "sheer-vintage",
-    image: "/stores/placeholder.svg",
-    logo: "/stores/placeholder.svg",
-    logoBg: "#ffffff",
-    currency: "CAD",
-    commissionType: "shopify-collabs" as const,
-    affiliatePath: "SHEER",
-    collabsStoreId: "231298",
-    authenticityPolicy:
-      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
-    shippingPolicy:
-      "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
-    returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
     slug: "vintari-vault",

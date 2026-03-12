@@ -167,9 +167,6 @@ export default function Footer() {
             <p className="text-[#5D0F17]/50 text-xs tracking-wide">
               {currentYear} VYA. All rights reserved.
             </p>
-            <p className="text-[#5D0F17]/50 text-xs tracking-wide">
-              Made with care in the USA
-            </p>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
 import { getProductFavoriteCount } from "@/app/lib/favorites-db";
+import { getProductCartCount } from "@/app/lib/cart-db";
 import ProductQuestion from "@/app/components/ProductQuestion";
 import ProductAccordion from "@/app/components/ProductAccordion";
 import TrackProductView from "@/app/components/TrackProductView";
@@ -111,9 +112,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   if (isNaN(dbId)) return notFound();
 
   // Run all three DB queries in parallel to minimize load time
-  const [product, favoriteCount, allCandidates] = await Promise.all([
+  const [product, favoriteCount, cartCount, allCandidates] = await Promise.all([
     getProductById(dbId),
     getProductFavoriteCount(dbId).catch(() => 0),
+    getProductCartCount(dbId).catch(() => 0),
     getRecommendedProducts(dbId, 50).catch(() => []),
   ]);
   if (!product) return notFound();
@@ -215,6 +217,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <div className="flex items-center gap-4 mb-8">
               <p className="text-2xl font-medium text-black">{price}</p>
               <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />
+              {cartCount > 0 && (
+                <span className="text-xs text-black/50">
+                  {cartCount} {cartCount === 1 ? "person has" : "people have"} this in their cart
+                </span>
+              )}
             </div>
 
             {/* Accordion details */}
