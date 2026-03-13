@@ -24,7 +24,7 @@ export default function TermsPage() {
               1. Agreement to Terms
             </h2>
             <p>
-              By accessing or using the VYA Platform website at vyaplatform.com
+              By accessing or using the VIA Platform Corporation website at vyaplatform.com
               (the &ldquo;Service&rdquo;), you agree to be bound by these Terms &amp;
               Conditions (&ldquo;Terms&rdquo;). If you disagree with any part of these
               terms, you may not access the Service.
@@ -118,11 +118,11 @@ export default function TermsPage() {
             </h2>
             <p>
               The Service and its original content, features, and functionality
-              are and will remain the exclusive property of VYA Platform and its
+              are and will remain the exclusive property of VIA Platform Corporation and its
               licensors. The Service is protected by copyright, trademark, and
               other laws. Our trademarks and trade dress may not be used in
               connection with any product or service without the prior written
-              consent of VYA Platform.
+              consent of VIA Platform Corporation.
             </p>
           </section>
 
@@ -175,7 +175,7 @@ export default function TermsPage() {
               11. Limitation of Liability
             </h2>
             <p>
-              In no event shall VYA Platform, nor its directors, employees,
+              In no event shall VIA Platform Corporation, nor its directors, employees,
               partners, agents, suppliers, or affiliates, be liable for any
               indirect, incidental, special, consequential, or punitive damages,
               including without limitation, loss of profits, data, use, goodwill,
@@ -189,7 +189,7 @@ export default function TermsPage() {
               12. Indemnification
             </h2>
             <p>
-              You agree to defend, indemnify, and hold harmless VYA Platform and
+              You agree to defend, indemnify, and hold harmless VIA Platform Corporation and
               its licensees, licensors, employees, contractors, agents, officers,
               and directors from and against any and all claims, damages,
               obligations, losses, liabilities, costs, or debt arising from your

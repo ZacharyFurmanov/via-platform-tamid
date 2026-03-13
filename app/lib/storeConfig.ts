@@ -50,6 +50,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
+    name: "Club Fleur Vintage",
+    slug: "club-fleur",
+    storeDomain: "clubfleurvintage.com",
+  },
+  {
+    type: "shopify",
     name: "Missi Archives",
     slug: "missi-archives",
     storeDomain: "www.missiarchives.com",
@@ -143,6 +149,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Petria Vintage",
     slug: "petria-vintage",
     storeDomain: "petriavintage.com",
+  },
+  {
+    type: "shopify",
+    name: "Promised Vintage",
+    slug: "promised-vintage",
+    storeDomain: "promisedvintage.com",
   },
   {
     type: "shopify",

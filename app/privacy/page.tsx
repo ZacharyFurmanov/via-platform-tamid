@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         <div className="space-y-12 text-gray-700 leading-relaxed">
           <section>
             <p>
-              VYA Platform (&ldquo;VYA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
+              VIA Platform Corporation (&ldquo;VYA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
               or &ldquo;our&rdquo;) is committed to protecting your privacy. This
               Privacy Policy explains how we collect, use, disclose, and safeguard
               your information when you visit our website at vyaplatform.com

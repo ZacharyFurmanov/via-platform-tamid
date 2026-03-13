@@ -211,7 +211,6 @@ function WaitlistContent() {
       {/* Header */}
       <div className="border-b border-[#5D0F17]/10 px-6 py-5 flex items-center justify-between">
         <img src="/via-logo.png" alt="VYA" className="h-20 w-auto" />
-        <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50">Coming Soon</p>
       </div>
 
       {/* Content */}
@@ -220,13 +219,16 @@ function WaitlistContent() {
         {/* Phase: Waitlist */}
         {phase === "waitlist" && (
           <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-[#5D0F17]/50 mb-4">
+              Launching March 19th at 5 PM
+            </p>
             <h1 className="text-3xl sm:text-4xl font-serif mb-4 leading-snug">
               Shop vintage &amp; secondhand,<br />all in one place.
             </h1>
             <p className="text-sm sm:text-base text-[#5D0F17]/60 mb-10 leading-relaxed max-w-md">
-              VYA lets you browse independent vintage and secondhand stores across
-              the country in one seamless experience. Join the waitlist and enter
-              our giveaway — invite 2 friends to win a $1,000 shopping spree.
+              Join the waitlist for early access. VYA lets you browse independent
+              vintage and secondhand stores across the country in one seamless
+              experience — and enter our giveaway to win a $1,000 shopping spree.
             </p>
 
             <form onSubmit={handleSubmit}>

@@ -46,6 +46,29 @@ export const stores = [
       "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
   },
   {
+    slug: "club-fleur",
+    dashboardToken: "cf-7a2d9e1b4c8f3",
+    name: "Club Fleur Vintage",
+    location: "Washington, DC",
+    description:
+      "A club where vintage blooms. Club Fleur Vintage offers a romantic take on designer vintage. Based in Washington, DC, Club Fleur features a thoughtful curation of iconic accessories, reworked floral heels, and distinctive pieces with presence — including coveted designers like Manolo Blahnik and Jimmy Choo, and statement shoes Carrie Bradshaw would die for — each selected for its craftsmanship, character, and ability to bring individuality and story into a modern wardrobe.",
+    website: "https://clubfleurvintage.com",
+    dataSource: "club-fleur",
+    image: "/stores/club-fleur.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "CLUBFLEURXVYA",
+    collabsStoreId: "231864",
+    authenticityPolicy:
+      "Every piece at Club Fleur Vintage is personally sourced and hand-selected for its craftsmanship, character, and romantic presence. Specializing in iconic designer accessories and shoes — Manolo Blahnik, Jimmy Choo, and beyond — each item is carefully inspected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from Washington, DC. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "house-on-a-chain",
     dashboardToken: "hoac-2f7e1b9d4c3a",
     name: "House on a Chain",
@@ -205,6 +228,28 @@ export const stores = [
       "Every piece at Petria Vintage is Entrupy Verified — authenticated using Entrupy's AI-powered technology before listing. You can shop with confidence knowing each item has passed independent authentication.",
     shippingPolicy:
       "Ships from Montreal, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
+    slug: "promised-vintage",
+    dashboardToken: "prom-6c1d8a3e5f9b2",
+    name: "Promised Vintage",
+    location: "Boston, MA",
+    description: "",
+    website: "https://promisedvintage.com",
+    dataSource: "promised-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "231785",
+    authenticityPolicy:
+      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Boston, MA. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
@@ -511,6 +556,8 @@ export const storeContactEmails: Record<string, string> = {
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
   "petria-vintage": "",
+  "promised-vintage": "",
+  "club-fleur": "",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@theviaplatform.com",

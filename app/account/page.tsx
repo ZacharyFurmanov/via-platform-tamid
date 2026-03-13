@@ -357,6 +357,26 @@ export default async function AccountPage() {
           </div>
         </section>
 
+        {/* ===== Feedback ===== */}
+        <section className="py-12 border-b border-[#5D0F17]/10">
+          <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h2 className="font-serif text-lg mb-2">Have feedback for us?</h2>
+              <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
+                Submit your recommendations — we&apos;d love to hear from you.
+              </p>
+            </div>
+            <div className="shrink-0 sm:w-48">
+              <a
+                href="sms:+12407628431"
+                className="block w-full border border-[#5D0F17] text-[#5D0F17] text-xs uppercase tracking-[0.15em] py-3 text-center hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition-colors duration-200"
+              >
+                Send Feedback
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* ===== Settings ===== */}
         <section className="py-12 mb-8">
           <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
