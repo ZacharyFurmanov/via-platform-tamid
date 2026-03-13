@@ -187,8 +187,29 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "petria-vintage",
+    dashboardToken: "pv-2a9c3e1f7b4d",
+    name: "Petria Vintage",
+    location: "Montreal, Canada",
+    description: "",
+    website: "https://petriavintage.com",
+    dataSource: "petria-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "CAD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "231616",
+    authenticityPolicy:
+      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Montreal, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "rareality-archive",
-
     dashboardToken: "ra-4f2b8e1c9d7a",
     name: "Rareality Archive",
     location: "Australia",
@@ -465,6 +486,7 @@ export const storeContactEmails: Record<string, string> = {
   "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
+  "petria-vintage": "",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@theviaplatform.com",
