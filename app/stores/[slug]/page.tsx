@@ -144,12 +144,26 @@ export default async function StorePage({ params }: StorePageProps) {
       </section>
 
       {/* ================= PILLS + PRODUCTS ================= */}
-      <StoreClientSection
-        products={products}
-        categoryCounts={categoryCounts}
-        brandCounts={brandCounts}
-        store={{ slug: store.slug, name: store.name }}
-      />
+      {products.length === 0 ? (
+        <section className="py-32 sm:py-48 flex flex-col items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/via-logo.png"
+            alt="VYA"
+            className="w-28 sm:w-36 blur-[1px] opacity-40 select-none pointer-events-none"
+          />
+          <p className="mt-5 text-[10px] uppercase tracking-[0.35em] text-[#5D0F17]/40">
+            Coming Soon
+          </p>
+        </section>
+      ) : (
+        <StoreClientSection
+          products={products}
+          categoryCounts={categoryCounts}
+          brandCounts={brandCounts}
+          store={{ slug: store.slug, name: store.name }}
+        />
+      )}
     </main>
   );
 }

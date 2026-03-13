@@ -14,15 +14,16 @@ import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "VYA",
-  description: "Vintage & secondhand, worldwide.",
+  title: "VYA — Vintage & Secondhand Platform",
+  description: "Discover the best independent vintage and secondhand stores worldwide. Shop curated clothing, bags, shoes, and accessories from trusted stores on VYA.",
+  keywords: ["vintage", "secondhand", "vintage clothing", "vintage platform", "independent vintage stores", "VYA platform", "designer vintage", "pre-loved fashion"],
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
   },
   openGraph: {
-    title: "VYA",
-    description: "Vintage & secondhand, worldwide.",
+    title: "VYA — Vintage & Secondhand Platform",
+    description: "Discover the best independent vintage and secondhand stores worldwide. Shop curated clothing, bags, shoes, and accessories from trusted stores.",
     url: "https://vyaplatform.com",
     siteName: "VYA",
     images: [
@@ -30,15 +31,15 @@ export const metadata: Metadata = {
         url: "https://vyaplatform.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "VYA — Vintage & Secondhand",
+        alt: "VYA — Vintage & Secondhand Platform",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "VYA",
-    description: "Vintage & secondhand, worldwide.",
+    title: "VYA — Vintage & Secondhand Platform",
+    description: "Discover the best independent vintage and secondhand stores worldwide.",
     images: ["https://vyaplatform.com/og-image.png"],
   },
   other: {

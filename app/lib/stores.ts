@@ -39,7 +39,7 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "230978",
     authenticityPolicy:
-      "Every piece at Bloda's Choice is personally sourced and selected by Anna. Each item is chosen for its character, quality, and story — accurately described so you always know exactly what you're getting.",
+      "Every piece at Bloda's Choice is personally sourced and hand-selected by Anna — a photographer, model, and lifelong collector with a Y3K lens and an eye for color therapy, character, and the unusual. Each item is chosen for its story and quality, accurately described so you always know exactly what you're getting.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -62,7 +62,7 @@ export const stores = [
     affiliatePath: "VIA-7",
     collabsStoreId: "230455",
     authenticityPolicy:
-      "Every piece at House on a Chain is personally sourced and curated for authenticity and quality. Specialising in rare archival designer pieces from the 90s and early 2000s, each item is carefully selected and accurately described before listing.",
+      "Every piece at House on a Chain is sourced from trusted vintage dealers, collectors, and archival resale markets — then authenticated and evaluated for condition before listing. The curation centres on rare 90s and early 2000s luxury — Galliano-era Dior, Prada, Chanel, La Perla — chosen for femininity, craftsmanship, and elevation.",
     shippingPolicy:
       "Orders ship from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -107,7 +107,7 @@ export const stores = [
     affiliatePath: "VIAPARTNER",
     collabsStoreId: "229026",
     authenticityPolicy:
-      "Each piece is hand-selected with careful attention to quality and condition. Any notable wear or flaws are disclosed in individual item descriptions so you always know exactly what you're getting.",
+      "Each piece is hand-selected with a feminine, romantic eye — chosen for its charm, character, and timeless appeal. Any notable wear or flaws are disclosed in individual item descriptions so you always know exactly what you're getting.",
     shippingPolicy:
       "Ships from Newport Beach, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -180,7 +180,7 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "230452",
     authenticityPolicy:
-      "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind. Specializing in bags and shoes, each item is personally selected and accurately described before listing.",
+      "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind — with a focus on bags and shoes, each selected to give it a second life. Sustainability is at the heart of the curation, and every item is personally chosen and accurately described before listing.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -202,7 +202,7 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "231616",
     authenticityPolicy:
-      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+      "Every piece at Petria Vintage is Entrupy Verified — authenticated using Entrupy's AI-powered technology before listing. You can shop with confidence knowing each item has passed independent authentication.",
     shippingPolicy:
       "Ships from Montreal, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -225,7 +225,7 @@ export const stores = [
     affiliatePath: "RAREALITY",
     collabsStoreId: "230749",
     authenticityPolicy:
-      "Every piece at Rareality Archive is personally sourced and inspected before listing. Each item is accurately described with any notable condition details clearly disclosed.",
+      "Every piece at Rareality Archive is personally sourced with a sharp archival eye — rare, considered items hand-selected for quality, character, and lasting appeal. Each item is inspected before listing and accurately described with any notable condition details clearly disclosed.",
     shippingPolicy:
       "Ships from Australia. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -261,7 +261,7 @@ export const stores = [
     dashboardToken: "shv-3c1a9e7f2d4b",
     name: "Sheer Vintage",
     location: "Calgary, Canada",
-    description: "",
+    description: "Sheer Vintage is a curated collection of designer vintage specializing in bridal and evening wear. Rooted in the belief that cherished things deserve to be passed down, the store celebrates enduring style and the beauty of quality pieces with a story.",
     website: "https://www.shopsheervintage.com",
     dataSource: "sheer-vintage",
     image: "/stores/placeholder.svg",
@@ -272,7 +272,7 @@ export const stores = [
     affiliatePath: "SHEER",
     collabsStoreId: "231298",
     authenticityPolicy:
-      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+      "Every piece at Sheer Vintage is hand-selected with a focus on designer bridal and evening wear — curated for enduring quality, condition, and style. Items are accurately described with full condition details before listing.",
     shippingPolicy:
       "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -318,7 +318,7 @@ export const stores = [
     affiliatePath: "VIACONNECT",
     collabsStoreId: "230428",
     authenticityPolicy:
-      "Every piece is personally sourced and inspected before listing. Each item is accurately described with any notable condition details clearly disclosed.",
+      "Every piece is personally sourced by Emma from trusted vintage dealers, flea markets, and private sellers across Milan and Europe — inspected for quality and selected only in excellent or very good condition. The focus is on expressive 90s and early 2000s designer pieces from labels like Roberto Cavalli, Christian Dior, and iconic Italian houses. Any age or wear is noted in the description.",
     shippingPolicy:
       "Ships from Washington, DC. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -348,6 +348,29 @@ export const stores = [
       "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Contact the store to initiate a return.",
   },
   {
+    slug: "the-vntg-collective",
+    dashboardToken: "tvc-5e2b8f1a9c3d",
+    name: "The VNTG Collective",
+    location: "New York, NY",
+    description:
+      "The VNTG Collective is a vintage store founded in 2024 based in New York City. We curate a variety of high-quality garments focused on timeless staples and statement pieces. Our diverse curation offers custom made designs, reviving second hand fabrics into modern and chic styles. We aim to help people find their individuality through fashion without shifting our focus from sustainability. By carefully hand-selecting and reconstructing authentic, quality vintage garments, we create lasting value for our community.",
+    website: "https://thevntgcollective.com",
+    dataSource: "the-vntg-collective",
+    image: "/stores/the-vntg-collective.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "1234",
+    collabsStoreId: "231753",
+    authenticityPolicy:
+      "Every piece at The VNTG Collective is hand-selected and personally curated — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and accurately described, with sustainability and individuality at the core of every selection.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "to-us-vintage",
     dashboardToken: "tuv-5d2a8c1e9b7f",
     name: "To Us Vintage",
@@ -364,7 +387,7 @@ export const stores = [
     affiliatePath: "HANA",
     collabsStoreId: "228807",
     authenticityPolicy:
-      "Every piece at To Us Vintage is hand-selected and personally inspected by Kathleen before listing. Specializing in timeless designer and statement pieces, each item is accurately described with any notable condition details clearly disclosed.",
+      "Every piece at To Us Vintage is hand-selected and personally inspected by founder Kathleen Scarrone. Specializing in iconic designer and statement pieces — from Thierry Mugler tailoring to rare Dolce & Gabbana Y2K finds — each item is chosen for quality, character, and individuality, and accurately described before listing.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -478,6 +501,7 @@ export const storeContactEmails: Record<string, string> = {
   "the-objects-of-affection": "mackenzie@theobjectsofaffection.com",
   "vangie": "evan@vangie.co",
   "sourced-by-scottie": "emma@scottiestudios.com",
+  "the-vntg-collective": "",
   "to-us-vintage": "KScarrone@gmail.com",
   "moonstruck-vintage": "moonstruckvintagenyc@gmail.com",
   "sheer-vintage": "",

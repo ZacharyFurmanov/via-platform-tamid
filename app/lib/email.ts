@@ -61,8 +61,8 @@ body { margin: 0; padding: 0; background-color: #F7F3EA !important; font-family:
 
     <!-- Header: logo + subtitle -->
     <div style="text-align:center;margin-bottom:56px;">
-      <img src="${BASE_URL}/via-logo.png" alt="VYA." width="100"
-        style="display:block;margin:0 auto;width:100px;height:auto;" border="0" />
+      <img src="${BASE_URL}/via-logo.png" alt="VYA." width="160"
+        style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
       <p style="margin:10px 0 0;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;
         color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">${subtitle}</p>
     </div>
@@ -117,7 +117,7 @@ ${baseStyles()}
 <div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
   <div class="container" style="max-width:600px;margin:0 auto;">
     <div class="header" style="text-align:center;padding:32px 0 28px;">
-      <img src="${BASE_URL}/via-logo.png" alt="VYA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
+      <img src="${BASE_URL}/via-logo.png" alt="VYA" width="160" style="display:block;margin:0 auto;max-height:80px;width:160px;" border="0" />
     </div>
     <div class="content" style="background:#ffffff;padding:40px 32px;">
       ${content}

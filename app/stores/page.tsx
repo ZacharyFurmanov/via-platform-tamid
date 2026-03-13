@@ -27,8 +27,8 @@ export default function StoresPage() {
 
                 {/* IMAGE (CLICKABLE) */}
                 <Link href={`/stores/${store.slug}`} className="block mb-3 sm:mb-6">
-                  <div className="relative aspect-[3/4] bg-[#D8CABD]/30 overflow-hidden">
-                    {store.image && (
+                  <div className="relative aspect-[3/4] overflow-hidden" style={{ backgroundColor: store.image?.includes("placeholder") ? "#FFFDF8" : undefined }}>
+                    {store.image && !store.image.includes("placeholder") ? (
                       <Image
                         src={store.image}
                         alt={store.name}
@@ -36,21 +36,17 @@ export default function StoresPage() {
                         sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
-                    )}
-                    {/* Logo overlay on hover */}
-                    {"logo" in store && store.logo && !store.logo.includes("placeholder") && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <div
-                          className="relative w-2/3 h-1/4"
-                          style={{ backgroundColor: store.logoBg ?? "#ffffff" }}
-                        >
-                          <Image
-                            src={store.logo}
-                            alt={`${store.name} logo`}
-                            fill
-                            className={"logoFit" in store && store.logoFit === "cover" ? "object-cover" : "object-contain p-3"}
-                          />
-                        </div>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ backgroundColor: "#FFFDF8" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/via-logo.png"
+                          alt="VYA"
+                          className="w-20 sm:w-28 blur-[1px] opacity-40 select-none pointer-events-none"
+                        />
+                        <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.3em] text-[#5D0F17]/40">
+                          Coming Soon
+                        </p>
                       </div>
                     )}
                   </div>

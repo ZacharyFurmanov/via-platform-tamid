@@ -138,6 +138,18 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "sheer-vintage",
     storeDomain: "shopsheervintage.com",
   },
+  {
+    type: "shopify",
+    name: "Petria Vintage",
+    slug: "petria-vintage",
+    storeDomain: "petriavintage.com",
+  },
+  {
+    type: "shopify",
+    name: "The VNTG Collective",
+    slug: "the-vntg-collective",
+    storeDomain: "thevntgcollective.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

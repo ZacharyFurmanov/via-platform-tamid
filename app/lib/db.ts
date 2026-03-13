@@ -208,6 +208,7 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
         shopify_product_id IS NULL
         OR collabs_link IS NOT NULL
       )
+      AND title NOT ILIKE '%gift card%'
     ORDER BY id
   `;
   return result as DBProduct[];
@@ -239,6 +240,7 @@ export async function getAllProducts(isMember: boolean = false): Promise<DBProdu
           shopify_product_id IS NULL
           OR collabs_link IS NOT NULL
         )
+          AND title NOT ILIKE '%gift card%'
         ORDER BY store_slug, id
       `
     : sql`
@@ -247,7 +249,8 @@ export async function getAllProducts(isMember: boolean = false): Promise<DBProdu
           shopify_product_id IS NULL
           OR collabs_link IS NOT NULL
         )
-        AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
+          AND title NOT ILIKE '%gift card%'
+          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
         ORDER BY store_slug, id
       `;
 
@@ -280,6 +283,7 @@ export async function getRecommendedProducts(
         shopify_product_id IS NULL
         OR collabs_link IS NOT NULL
       )
+      AND title NOT ILIKE '%gift card%'
       AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
     LIMIT ${limit}
   `;
@@ -304,6 +308,7 @@ export async function getNewArrivals(
           SELECT * FROM products
           WHERE created_at IS NOT NULL
             AND created_at >= NOW() - make_interval(days => ${days})
+            AND title NOT ILIKE '%gift card%'
           ORDER BY created_at DESC
           LIMIT ${limit}
         `
@@ -312,6 +317,7 @@ export async function getNewArrivals(
           WHERE created_at IS NOT NULL
             AND created_at >= NOW() - make_interval(days => ${days})
             AND created_at <= NOW() - interval '24 hours'
+            AND title NOT ILIKE '%gift card%'
           ORDER BY created_at DESC
           LIMIT ${limit}
         `;
@@ -324,6 +330,7 @@ export async function getNewArrivals(
           shopify_product_id IS NULL
           OR collabs_link IS NOT NULL
         )
+          AND title NOT ILIKE '%gift card%'
         ORDER BY id DESC
         LIMIT ${limit}
       `;
@@ -348,6 +355,7 @@ export async function getInsiderProducts(limit: number = 48): Promise<DBProduct[
       WHERE created_at IS NOT NULL
         AND created_at >= NOW() - interval '24 hours'
         AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        AND title NOT ILIKE '%gift card%'
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;
@@ -367,8 +375,10 @@ export async function getUnnotifiedInsiderProducts(limit: number = 50): Promise<
     const result = await sql`
       SELECT * FROM products
       WHERE created_at IS NOT NULL
+        AND created_at >= NOW() - interval '14 days'
         AND insider_notified = FALSE
         AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        AND title NOT ILIKE '%gift card%'
       ORDER BY created_at DESC
       LIMIT ${limit}
     `;

@@ -30,7 +30,7 @@ export default function HomePage() {
               </h1>
 
               <p className="max-w-xl mb-8 sm:mb-12 text-sm sm:text-base text-[#D8CABD] font-sans leading-relaxed">
-                Discover independent vintage and secondhand stores worldwide.
+                Discover the best independent vintage and secondhand stores worldwide.
                 The pieces you&apos;ve been looking for, in one place. All trusted and verified stores.
               </p>
 

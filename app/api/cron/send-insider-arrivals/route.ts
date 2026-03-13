@@ -48,10 +48,11 @@ export async function GET(request: Request) {
       });
     }
 
-    const { sent, failed } = await sendInsiderNewArrivalsEmail(members, products);
-
-    // Mark products as notified so they're not included in future sends
+    // Mark as notified BEFORE sending — prevents re-sending if the bulk email
+    // send times out or partially fails.
     await markProductsAsInsiderNotified(products.map((p) => p.id));
+
+    const { sent, failed } = await sendInsiderNewArrivalsEmail(members, products);
 
     return NextResponse.json({
       ok: true,
