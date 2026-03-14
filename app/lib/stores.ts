@@ -239,7 +239,7 @@ export const stores = [
     description: "",
     website: "https://promisedvintage.com",
     dataSource: "promised-vintage",
-    image: "/stores/placeholder.svg",
+    image: "/stores/promised-vintage.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
