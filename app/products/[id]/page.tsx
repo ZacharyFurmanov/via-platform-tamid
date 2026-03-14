@@ -173,7 +173,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     <main className="bg-[#F7F3EA] min-h-screen">
       <TrackProductView productId={compositeId} />
       {/* Back nav */}
-      <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
+      <div className="max-w-6xl mx-auto px-6 pt-4 pb-2 md:pt-8 md:pb-4">
         <BackButton
           label={from?.startsWith("/categories/")
             ? categories.find((c) => `/categories/${c.slug}` === from)?.label ?? "Category"
@@ -185,7 +185,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
       {/* Product layout */}
       <div className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-16">
           {/* Image */}
           <ImageCarousel
             images={productImages}
@@ -194,27 +194,27 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           />
 
           {/* Details */}
-          <div className="flex flex-col justify-center py-4 md:py-8">
+          <div className="flex flex-col justify-center py-1 md:py-8">
             <Link
               href={`/stores/${store.slug}`}
-              className="text-xs uppercase tracking-[0.2em] text-black/50 hover:text-black transition mb-3"
+              className="text-xs uppercase tracking-[0.2em] text-black/50 hover:text-black transition mb-1"
             >
               {store.name}
             </Link>
 
-            <h1 className="text-3xl sm:text-4xl font-serif text-black leading-snug mb-3">
+            <h1 className="text-2xl sm:text-4xl font-serif text-black leading-snug mb-1">
               {product.title}
             </h1>
 
-            <p className="text-sm text-black/50 mb-1">{categoryLabel}</p>
+            <p className="text-sm text-black/50 mb-0.5">{categoryLabel}</p>
 
             {product.size && VALID_SIZE_RE.test(product.size.trim()) && (
-              <p className="text-sm text-black/70 mb-1">
+              <p className="text-sm text-black/70 mb-0.5">
                 Size: <span className="font-medium">{product.size}</span>
               </p>
             )}
 
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-4 md:mb-8">
               <p className="text-2xl font-medium text-black">{price}</p>
               <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />
               {cartCount > 0 && (
@@ -225,7 +225,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             </div>
 
             {/* Accordion details */}
-            <div className="mb-8">
+            <div className="mb-4 md:mb-8">
               <ProductAccordion
                 sections={[
                   {

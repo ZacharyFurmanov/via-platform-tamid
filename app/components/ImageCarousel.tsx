@@ -18,6 +18,8 @@ export default function ImageCarousel({
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const mouseStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
 
   const safeImages = images.length > 0 ? images : ["/placeholder.jpg"];
   const hasMultiple = safeImages.length > 1;
@@ -47,6 +49,7 @@ export default function ImageCarousel({
     [current, goTo]
   );
 
+  // Touch handlers
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   }, []);
@@ -55,10 +58,36 @@ export default function ImageCarousel({
     (e: React.TouchEvent) => {
       if (touchStartX.current === null) return;
       const diff = touchStartX.current - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) {
+      if (Math.abs(diff) > 30) {
         goTo(current + (diff > 0 ? 1 : -1));
       }
       touchStartX.current = null;
+    },
+    [current, goTo]
+  );
+
+  // Mouse drag handlers (for laptop trackpad / desktop drag)
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX;
+    isDragging.current = false;
+  }, []);
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (mouseStartX.current === null) return;
+    if (Math.abs(e.clientX - mouseStartX.current) > 5) {
+      isDragging.current = true;
+    }
+  }, []);
+
+  const onMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (mouseStartX.current === null) return;
+      const diff = mouseStartX.current - e.clientX;
+      if (Math.abs(diff) > 30) {
+        e.preventDefault();
+        goTo(current + (diff > 0 ? 1 : -1));
+      }
+      mouseStartX.current = null;
     },
     [current, goTo]
   );
@@ -72,34 +101,40 @@ export default function ImageCarousel({
     [goTo]
   );
 
-  // ── Card variant: dots at bottom, arrows on hover ──
+  // Pre-render current + adjacent images with instant opacity swap
+  const renderImages = (sizeHint: number) =>
+    safeImages.map((src, idx) => {
+      const isAdjacentOrCurrent =
+        idx === current ||
+        idx === (current + 1) % safeImages.length ||
+        idx === (current - 1 + safeImages.length) % safeImages.length;
+      if (!isAdjacentOrCurrent) return null;
+      return (
+        <img
+          key={idx}
+          src={resizeImage(src, sizeHint)}
+          alt={alt}
+          className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-150 ${
+            idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
+          }`}
+          loading="eager"
+          decoding="async"
+        />
+      );
+    });
+
+  // ── Card variant ──
   if (variant === "card") {
     return (
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 group/carousel"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 group/carousel cursor-grab active:cursor-grabbing"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+        onMouseDown={hasMultiple ? onMouseDown : undefined}
+        onMouseMove={hasMultiple ? onMouseMove : undefined}
+        onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {/* Only render current + adjacent images to avoid loading all images upfront */}
-        {safeImages.map((src, idx) => {
-          const isAdjacentOrCurrent =
-            idx === current ||
-            idx === (current + 1) % safeImages.length ||
-            idx === (current - 1 + safeImages.length) % safeImages.length;
-          if (!isAdjacentOrCurrent) return null;
-          return (
-            <img
-              key={idx}
-              src={resizeImage(src, 600)}
-              alt={alt}
-              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${
-                idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
-              loading="lazy"
-              decoding="async"
-            />
-          );
-        })}
+        {renderImages(600)}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-[#D8CABD]/50 z-10" />
@@ -158,20 +193,18 @@ export default function ImageCarousel({
     );
   }
 
-  // ── Detail variant: thumbnail strip below main image ──
+  // ── Detail variant ──
   return (
     <div>
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30"
+        className="relative aspect-[2/3] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+        onMouseDown={hasMultiple ? onMouseDown : undefined}
+        onMouseMove={hasMultiple ? onMouseMove : undefined}
+        onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        <img
-          src={resizeImage(safeImages[current], 1200)}
-          alt={alt}
-          className="w-full h-full object-cover object-top"
-          decoding="async"
-        />
+        {renderImages(1200)}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-[#D8CABD]/50" />
@@ -181,7 +214,7 @@ export default function ImageCarousel({
           <>
             <button
               onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
               aria-label="Previous image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +224,7 @@ export default function ImageCarousel({
 
             <button
               onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
               aria-label="Next image"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,7 +252,7 @@ export default function ImageCarousel({
                 src={resizeImage(src, 200)}
                 alt={`${alt} ${idx + 1}`}
                 className="w-full h-full object-cover object-top"
-                loading="lazy"
+                loading="eager"
                 decoding="async"
               />
             </button>

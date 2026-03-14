@@ -248,9 +248,41 @@ export default function AnalyticsPage() {
   const totalConversionRate = clickData && clickData.totalClicks > 0 && totalConversions > 0
     ? ((totalConversions / clickData.totalClicks) * 100).toFixed(2)
     : conversionRate;
-  const maxCollabsRevenue = collabsData?.partnerships
-    ? Math.max(...collabsData.partnerships.map((p) => parseCommission(p.totalCommissionEarned)), 1)
-    : 1;
+
+  // Commission for non-Collabs stores (e.g. LEI Vintage via Squarespace pixel)
+  // 7% on revenue under $1k, 5% on $1k–$5k, 3% above $5k
+  function calcCommissionRate(revenue: number): number {
+    if (revenue < 1000) return 0.07;
+    if (revenue < 5000) return 0.05;
+    return 0.03;
+  }
+  const collabsStoreNames = new Set(
+    (collabsData?.partnerships ?? []).map((p) => p.name.toLowerCase().trim())
+  );
+  const manualCommissions: { name: string; revenue: number; commission: number }[] =
+    conversionData
+      ? Object.entries(conversionData.revenueByStore)
+          .filter(([name]) => !collabsStoreNames.has(name.toLowerCase().trim()))
+          .map(([name, data]) => ({
+            name,
+            revenue: data.total,
+            commission: data.total * calcCommissionRate(data.total),
+          }))
+          .filter((s) => s.commission > 0)
+      : [];
+  const manualCommissionTotal = manualCommissions.reduce((sum, s) => sum + s.commission, 0);
+  const totalCommission = collabsCommission + manualCommissionTotal;
+
+  // Back-calculate Shopify Collabs revenue from commission ÷ 7%
+  // (virtually all vintage items are under $1k, so 7% is the correct rate)
+  const collabsRevenue = collabsCommission / 0.07;
+  const totalTrackedRevenue = (conversionData?.matchedRevenue ?? 0) + collabsRevenue;
+
+  const maxCollabsRevenue = Math.max(
+    ...(collabsData?.partnerships ?? []).map((p) => parseCommission(p.totalCommissionEarned)),
+    ...manualCommissions.map((s) => s.commission),
+    1
+  );
 
   return (
     <main className="bg-white min-h-screen text-black">
@@ -329,11 +361,11 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Tracked Revenue</p>
-                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(conversionData.matchedRevenue)}</p>
+                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(totalTrackedRevenue)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Collabs Commission</p>
-                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(collabsCommission)}</p>
+                <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">Total Commission</p>
+                <p className="text-2xl sm:text-3xl font-serif">{formatCurrency(totalCommission)}</p>
               </div>
             </div>
           </div>
@@ -829,19 +861,23 @@ export default function AnalyticsPage() {
                 </div>
               </section>
 
-              {/* Collabs Commission by Store */}
-              {collabsData?.partnerships && collabsData.partnerships.some((p) => parseCommission(p.totalCommissionEarned) > 0) && (
+              {/* Commission by Store */}
+              {(collabsData?.partnerships?.some((p) => parseCommission(p.totalCommissionEarned) > 0) || manualCommissions.length > 0) && (
                 <section className="py-12 sm:py-16 border-b border-neutral-200">
                   <div className="max-w-7xl mx-auto px-6">
-                    <h2 className="text-xl sm:text-2xl font-serif mb-2">Collabs Commission by Store</h2>
-                    <p className="text-sm text-neutral-500 mb-6 sm:mb-8">Shopify Collabs affiliate earnings</p>
+                    <h2 className="text-xl sm:text-2xl font-serif mb-2">Commission by Store</h2>
+                    <p className="text-sm text-neutral-500 mb-6 sm:mb-8">Shopify Collabs earnings + estimated commission from tracked conversions</p>
                     <div className="space-y-4">
-                      {collabsData.partnerships
+                      {/* Shopify Collabs stores */}
+                      {(collabsData?.partnerships ?? [])
                         .filter((p) => parseCommission(p.totalCommissionEarned) > 0)
                         .sort((a, b) => parseCommission(b.totalCommissionEarned) - parseCommission(a.totalCommissionEarned))
                         .map((p) => (
                           <div key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                            <div className="sm:w-40 text-sm font-medium sm:font-normal truncate">{p.name}</div>
+                            <div className="sm:w-44 text-sm font-medium sm:font-normal truncate">
+                              {p.name}
+                              <span className="ml-2 text-[10px] text-neutral-400 uppercase tracking-wide">Collabs</span>
+                            </div>
                             <div className="flex items-center gap-3 flex-1">
                               <div className="flex-1 h-6 sm:h-8 bg-neutral-100 relative">
                                 <div
@@ -851,6 +887,28 @@ export default function AnalyticsPage() {
                               </div>
                               <div className="w-24 sm:w-28 text-right text-sm tabular-nums">
                                 {p.totalCommissionEarned}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      {/* Manual commission stores (e.g. Squarespace) */}
+                      {manualCommissions
+                        .sort((a, b) => b.commission - a.commission)
+                        .map((s) => (
+                          <div key={s.name} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="sm:w-44 text-sm font-medium sm:font-normal truncate">
+                              {s.name}
+                              <span className="ml-2 text-[10px] text-neutral-400 uppercase tracking-wide">Est.</span>
+                            </div>
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="flex-1 h-6 sm:h-8 bg-neutral-100 relative">
+                                <div
+                                  className="h-full bg-blue-500 transition-all duration-300"
+                                  style={{ width: `${(s.commission / maxCollabsRevenue) * 100}%` }}
+                                />
+                              </div>
+                              <div className="w-24 sm:w-28 text-right text-sm tabular-nums">
+                                {formatCurrency(s.commission)}
                               </div>
                             </div>
                           </div>
@@ -886,9 +944,9 @@ export default function AnalyticsPage() {
                       <p className="text-sm text-neutral-500 mt-1">of orders from VYA</p>
                     </div>
                     <div className="bg-green-50 p-6">
-                      <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Collabs Commission</p>
-                      <p className="text-3xl font-serif text-green-800">{formatCurrency(collabsCommission)}</p>
-                      <p className="text-sm text-green-600 mt-1">from Shopify Collabs</p>
+                      <p className="text-xs uppercase tracking-wide text-green-700 mb-2">Total Commission</p>
+                      <p className="text-3xl font-serif text-green-800">{formatCurrency(totalCommission)}</p>
+                      <p className="text-sm text-green-600 mt-1">Collabs + estimated</p>
                     </div>
                   </div>
                 </div>

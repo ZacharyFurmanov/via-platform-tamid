@@ -162,6 +162,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "the-vntg-collective",
     storeDomain: "thevntgcollective.com",
   },
+  {
+    type: "shopify",
+    name: "Dayton Jane",
+    slug: "dayton-jane",
+    storeDomain: "www.daytonjane.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

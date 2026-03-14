@@ -236,7 +236,7 @@ export const stores = [
     dashboardToken: "prom-6c1d8a3e5f9b2",
     name: "Promised Vintage",
     location: "Boston, MA",
-    description: "",
+    description: "Promised Vintage is a shop built on a commitment to honing your most authentic self with the help of fabulous clothing and accessories. Founded by Kellan, every piece she carries is handpicked from Europe — rare, discontinued, one-of-one, and designer finds that just don't exist in the US market. The kind of thing you see and just know is yours - because getting dressed should feel like an extension of who you actually are. If your taste exists slightly outside of what's easy to find — you're in the right place.",
     website: "https://promisedvintage.com",
     dataSource: "promised-vintage",
     image: "/stores/promised-vintage.jpg",
@@ -508,6 +508,28 @@ export const stores = [
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
+  {
+    slug: "dayton-jane",
+    dashboardToken: "dj-123456789",
+    name: "Dayton Jane",
+    location: "Connecticut",
+    description: "Dayton Jane is a curated lifestyle boutique inspired by the intersection of New York City sophistication and the timeless charm of New England living. The collection brings together preloved fashion and thoughtfully sourced home décor, each piece selected for its quality, character, and enduring style.",
+    website: "https://www.daytonjane.com",
+    dataSource: "dayton-jane",
+    image: "/stores/dayton-jane.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "231648",
+    authenticityPolicy:
+      "Every piece at Dayton Jane is personally sourced and inspected before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Connecticut. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**
@@ -557,6 +579,7 @@ export const storeContactEmails: Record<string, string> = {
   "styelled": "Amandasweetwood@gmail.com",
   "petria-vintage": "",
   "promised-vintage": "",
+  "dayton-jane": "",
   "club-fleur": "",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests

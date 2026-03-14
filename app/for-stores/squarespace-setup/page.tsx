@@ -50,26 +50,32 @@ export default function SquarespaceSetupPage() {
     return amounts.length ? Math.max.apply(null, amounts) : 0;
   }
 
-  function send() {
-    fetch('https://vyaplatform.com/api/conversion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId: orderId,
-        orderTotal: findTotal(),
-        currency: 'USD',
-        items: [],
-        viaClickId: viaClickId,
-        storeSlug: '${displaySlug}',
-        storeName: '${displayName}'
-      })
-    }).catch(function() {});
+  // Retry up to 10 times (10 seconds) waiting for the page to render the order total
+  function sendWhenReady(attempts) {
+    var total = findTotal();
+    if (total > 0) {
+      fetch('https://vyaplatform.com/api/conversion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: orderId,
+          orderTotal: total,
+          currency: 'USD',
+          items: [],
+          viaClickId: viaClickId,
+          storeSlug: '${displaySlug}',
+          storeName: '${displayName}'
+        })
+      }).catch(function() {});
+    } else if (attempts > 0) {
+      setTimeout(function() { sendWhenReady(attempts - 1); }, 1000);
+    }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', send);
+    document.addEventListener('DOMContentLoaded', function() { sendWhenReady(10); });
   } else {
-    send();
+    sendWhenReady(10);
   }
 })();
 </script>`;
