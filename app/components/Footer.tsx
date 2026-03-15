@@ -30,7 +30,7 @@ export default function Footer() {
               <img src="/via-logo.png" alt="VYA" className="h-9 sm:h-11 w-auto" />
             </Link>
             <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
-              Vintage and secondhand from independent stores across the country. Discover pieces with stories.
+              The online department store for vintage and secondhand. The pieces you&apos;ve been looking for, in one place. All trusted and verified stores.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-4">

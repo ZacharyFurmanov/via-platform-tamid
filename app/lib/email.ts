@@ -415,11 +415,11 @@ export async function sendInsiderNewArrivalsEmail(
       <a href="${insiderUrl}"
          style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
                 text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
-                font-family:Georgia,'Times New Roman',serif;">View All New Arrivals</a>
+                font-family:Georgia,'Times New Roman',serif;">Shop VYA Insider</a>
     </div>
   `;
 
-  const html = viaShell("New Arrivals", content);
+  const html = viaShell("VYA Insider", content);
 
   let sent = 0;
   let failed = 0;

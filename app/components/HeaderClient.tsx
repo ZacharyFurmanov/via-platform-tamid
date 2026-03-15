@@ -360,6 +360,14 @@ export default function HeaderClient({
                 Designers
               </Link>
 
+              {/* EDITORS PICKS LINK */}
+              <Link
+                href="/editors-picks"
+                className="hover:text-[#5D0F17]/60 transition-colors duration-300"
+              >
+                Editor&apos;s Picks
+              </Link>
+
               {/* SOURCING REQUESTS LINK */}
               <Link
                 href="/sourcing"
@@ -535,6 +543,15 @@ export default function HeaderClient({
                     className="block py-4 text-lg text-[#5D0F17]"
                   >
                     Designers
+                  </Link>
+                </li>
+                <li className="border-b border-[#5D0F17]/15">
+                  <Link
+                    href="/editors-picks"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block py-4 text-lg text-[#5D0F17]"
+                  >
+                    Editor&apos;s Picks
                   </Link>
                 </li>
                 <li className="border-b border-[#5D0F17]/15">

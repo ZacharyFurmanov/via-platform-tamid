@@ -69,12 +69,34 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "dayton-jane",
+    dashboardToken: "dj-123456789",
+    name: "Dayton Jane",
+    location: "Connecticut",
+    description: "Dayton Jane is a curated lifestyle boutique inspired by the intersection of New York City sophistication and the timeless charm of New England living. The collection brings together preloved fashion and thoughtfully sourced home décor, each piece selected for its quality, character, and enduring style.",
+    website: "https://www.daytonjane.com",
+    dataSource: "dayton-jane",
+    image: "/stores/dayton-jane.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "231648",
+    authenticityPolicy:
+      "Every piece at Dayton Jane is personally sourced and inspected before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Connecticut. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "house-on-a-chain",
     dashboardToken: "hoac-2f7e1b9d4c3a",
     name: "House on a Chain",
     location: "London, UK",
     description:
-      "House on a Chain is a London-based curated vintage store specialising in rare archival designer and elevated wardrobe pieces. The curation centres on 90s and early 2000s luxury — from Galliano-era Dior and Prada to Chanel and La Perla — chosen for craftsmanship, femininity and elevation.",
+      "House on a Chain is a London-based curated vintage store specialising in rare archival designer and elevated wardrobe pieces, built around the idea of continuity — garments moving from one hand to another and becoming part of a new story. The name carries a double meaning: a playful, confident tone intended to feel empowering, while referencing the fashion houses behind each piece and the chain of ownership that allows garments to move from one life to the next. The curation centres on 90s and early 2000s luxury, from Galliano-era Dior and Prada to Chanel and La Perla, chosen for craftsmanship, femininity and elevation.",
     website: "https://www.houseonachain.com",
     dataSource: "house-on-a-chain",
     image: "/stores/house-on-a-chain.jpg",
@@ -214,10 +236,10 @@ export const stores = [
     dashboardToken: "pv-2a9c3e1f7b4d",
     name: "Petria Vintage",
     location: "Montreal, Canada",
-    description: "",
+    description: "Petria Vintage is a Montreal-based luxury resale boutique specializing in curated vintage and pre-owned designer pieces. From iconic handbags to unique jewelry and accessories, every item is carefully selected for quality, authenticity, and timeless style. We work with a network of collectors, consignors, and trusted sources to bring unique designer pieces to our clients.",
     website: "https://petriavintage.com",
     dataSource: "petria-vintage",
-    image: "/stores/placeholder.svg",
+    image: "/stores/petria-vintage.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "CAD",
@@ -507,28 +529,6 @@ export const stores = [
       "Ships from Dallas, Texas. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
-  },
-  {
-    slug: "dayton-jane",
-    dashboardToken: "dj-123456789",
-    name: "Dayton Jane",
-    location: "Connecticut",
-    description: "Dayton Jane is a curated lifestyle boutique inspired by the intersection of New York City sophistication and the timeless charm of New England living. The collection brings together preloved fashion and thoughtfully sourced home décor, each piece selected for its quality, character, and enduring style.",
-    website: "https://www.daytonjane.com",
-    dataSource: "dayton-jane",
-    image: "/stores/dayton-jane.jpg",
-    logo: "/stores/placeholder.svg",
-    logoBg: "#ffffff",
-    currency: "USD",
-    commissionType: "shopify-collabs" as const,
-    affiliatePath: "VYA",
-    collabsStoreId: "231648",
-    authenticityPolicy:
-      "Every piece at Dayton Jane is personally sourced and inspected before listing. Items are accurately described with full condition details.",
-    shippingPolicy:
-      "Ships from Connecticut. Shipping rates are calculated at checkout.",
-    returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
 ];
 

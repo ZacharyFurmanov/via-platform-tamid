@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const ACCESS_CODE = process.env.VIA_ACCESS_CODE || "VIAInsider";
+const ACCESS_CODE = process.env.VIA_ACCESS_CODE || "vyainsider";
 
 export async function POST(request: Request) {
   const { code } = await request.json();

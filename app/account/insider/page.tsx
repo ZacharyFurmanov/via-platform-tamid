@@ -40,7 +40,7 @@ export default async function InsiderPage() {
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">VYA Insider</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            New arrivals from the last 24 hours — yours before anyone else sees them.
+            The latest drops — yours before anyone else sees them.
           </p>
         </div>
       </section>
