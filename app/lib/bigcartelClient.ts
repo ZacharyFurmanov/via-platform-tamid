@@ -26,6 +26,7 @@ export type BigCartelResult = {
   products: Array<{
     title: string;
     price: number;
+    compareAtPrice: number | null;
     image: string | null;
     images: string[];
     externalUrl: string;
@@ -74,10 +75,10 @@ export async function parseBigCartelJSON(
     }
 
     // Price: prefer sale price when on sale, otherwise regular price
-    const price =
-      item.on_sale && item.sale_price != null
-        ? item.sale_price
-        : (item.price ?? 0);
+    const originalPrice = item.price ?? 0;
+    const isOnSale = item.on_sale && item.sale_price != null && item.sale_price > 0;
+    const price = isOnSale ? item.sale_price! : originalPrice;
+    const compareAtPrice = isOnSale && originalPrice > price ? originalPrice : null;
     if (price <= 0) continue;
 
     if (!item.url) continue;
@@ -90,6 +91,7 @@ export async function parseBigCartelJSON(
     products.push({
       title,
       price,
+      compareAtPrice,
       image,
       images,
       externalUrl: item.url,

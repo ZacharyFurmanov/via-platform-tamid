@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       mode: "payment",
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][product_data][name]": "VYA Sourcing Request",
-      "line_items[0][price_data][product_data][description]": "Refundable if no match is found within 14 business days.",
+      "line_items[0][price_data][product_data][description]": "Refundable if no match is found within 21 business days.",
       "line_items[0][price_data][unit_amount]": String(SOURCING_FEE_CENTS),
       "line_items[0][quantity]": "1",
       ui_mode: "embedded",

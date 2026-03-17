@@ -35,7 +35,7 @@ export async function GET() {
       location: "New York, NY",
       currency: "USD",
       website: "https://vyaplatform.com",
-      logo: "/via-logo.png",
+      logo: "/vya-logo.png",
       logoBg: "#F7F3EA",
       commissionType: "shopify-collabs",
       totalInventoryValue: 0,
@@ -48,27 +48,51 @@ export async function GET() {
     return NextResponse.json({ error: "Store not found" }, { status: 404 });
   }
 
-  // Calculate total inventory value and VYA's tiered commission potential
+  // Calculate total inventory value, commission potential, store followers, and top favorited products
   let totalInventoryValue = 0;
   let viaCommissionPotential = 0;
+  let storeFollowers = 0;
+  let topFavoritedProducts: { title: string; favoriteCount: number; price: number }[] = [];
+
   try {
     const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      SELECT
-        COALESCE(SUM(price), 0) AS total_inventory_value,
-        COALESCE(SUM(
-          CASE
-            WHEN price < 1000 THEN price * 0.07
-            WHEN price < 5000 THEN price * 0.05
-            ELSE price * 0.03
-          END
-        ), 0) AS via_commission_potential
-      FROM products
-      WHERE store_slug = ${storeSlug}
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-    `;
-    totalInventoryValue = Math.round(Number(rows[0]?.total_inventory_value ?? 0));
-    viaCommissionPotential = Math.round(Number(rows[0]?.via_commission_potential ?? 0));
+    const [inventoryRows, followerRows, favProductRows] = await Promise.all([
+      sql`
+        SELECT
+          COALESCE(SUM(price), 0) AS total_inventory_value,
+          COALESCE(SUM(
+            CASE
+              WHEN price < 1000 THEN price * 0.07
+              WHEN price < 5000 THEN price * 0.05
+              ELSE price * 0.03
+            END
+          ), 0) AS via_commission_potential
+        FROM products
+        WHERE store_slug = ${storeSlug}
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      `,
+      sql`
+        SELECT COUNT(*) AS cnt FROM store_favorites WHERE store_slug = ${storeSlug}
+      `,
+      sql`
+        SELECT p.title, p.price, COUNT(pf.id) AS favorite_count
+        FROM products p
+        JOIN product_favorites pf ON pf.product_id = p.id
+        WHERE p.store_slug = ${storeSlug}
+        GROUP BY p.id, p.title, p.price
+        ORDER BY favorite_count DESC
+        LIMIT 10
+      `,
+    ]);
+
+    totalInventoryValue = Math.round(Number(inventoryRows[0]?.total_inventory_value ?? 0));
+    viaCommissionPotential = Math.round(Number(inventoryRows[0]?.via_commission_potential ?? 0));
+    storeFollowers = Number(followerRows[0]?.cnt ?? 0);
+    topFavoritedProducts = favProductRows.map((r) => ({
+      title: r.title as string,
+      price: Math.round(Number(r.price)),
+      favoriteCount: Number(r.favorite_count),
+    }));
   } catch {
     // Non-fatal — dashboard still loads without these figures
   }
@@ -84,5 +108,7 @@ export async function GET() {
     commissionType: store.commissionType,
     totalInventoryValue,
     viaCommissionPotential,
+    storeFollowers,
+    topFavoritedProducts,
   });
 }

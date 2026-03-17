@@ -241,13 +241,14 @@ export default function HeaderClient({
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}
-          <Link href="/" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-            <img src="/via-logo.png" alt="VYA" className="h-7 sm:h-9 w-auto" />
+          <Link href="/" className="flex items-start gap-1.5" onClick={() => setMobileMenuOpen(false)}>
+            <img src="/vya-logo.png" alt="VYA" className="h-7 sm:h-9 w-auto" />
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/60 font-sans">pilot</span>
           </Link>
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]">
+            <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]" style={{ fontFamily: "'PP Eiko', Georgia, serif" }}>
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -271,7 +272,7 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div style={{ minWidth: `${Math.ceil(stores.length / 7) * 210}px` }} className="bg-[#F7F3EA] text-[#5D0F17] shadow-xl border border-[#5D0F17]/10">
+                  <div style={{ minWidth: `${Math.ceil(stores.length / 7) * 210}px`, fontFamily: "'Almarai', sans-serif" }} className="bg-[#F7F3EA] text-[#5D0F17] shadow-xl border border-[#5D0F17]/10">
                     <div className="py-2 grid grid-flow-col" style={{ gridTemplateRows: 'repeat(7, auto)' }}>
                       {stores.map((store) => (
                         <Link
@@ -321,7 +322,7 @@ export default function HeaderClient({
                       : 'opacity-0 invisible -translate-y-2'
                   }`}
                 >
-                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[180px] shadow-xl border border-[#5D0F17]/10">
+                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[180px] shadow-xl border border-[#5D0F17]/10" style={{ fontFamily: "'Almarai', sans-serif" }}>
                     <div className="py-2">
                       {[
                         { slug: "clothing", label: "Clothing" },
@@ -440,7 +441,7 @@ export default function HeaderClient({
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-[#F7F3EA] overflow-y-auto">
+          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-[#F7F3EA] overflow-y-auto" style={{ fontFamily: "'PP Eiko', Georgia, serif" }}>
             <div className="px-6 py-8">
               <ul className="space-y-1">
                 {/* Mobile Stores Accordion */}

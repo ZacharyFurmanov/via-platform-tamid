@@ -102,7 +102,7 @@ export default function ImageCarousel({
   );
 
   // Pre-render current + adjacent images with instant opacity swap
-  const renderImages = (sizeHint: number) =>
+  const renderImages = (sizeHint: number, objectPosition = "object-top") =>
     safeImages.map((src, idx) => {
       const isAdjacentOrCurrent =
         idx === current ||
@@ -114,7 +114,7 @@ export default function ImageCarousel({
           key={idx}
           src={resizeImage(src, sizeHint)}
           alt={alt}
-          className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-150 ${
+          className={`absolute inset-0 w-full h-full object-cover ${objectPosition} transition-opacity duration-150 ${
             idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
           loading="eager"
@@ -134,7 +134,7 @@ export default function ImageCarousel({
         onMouseMove={hasMultiple ? onMouseMove : undefined}
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {renderImages(600)}
+        {renderImages(600, "object-center")}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-[#D8CABD]/50 z-10" />
@@ -204,7 +204,7 @@ export default function ImageCarousel({
         onMouseMove={hasMultiple ? onMouseMove : undefined}
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {renderImages(1200)}
+        {renderImages(1200, "object-center")}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-[#D8CABD]/50" />
@@ -251,7 +251,7 @@ export default function ImageCarousel({
               <img
                 src={resizeImage(src, 200)}
                 alt={`${alt} ${idx + 1}`}
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-cover object-center"
                 loading="eager"
                 decoding="async"
               />

@@ -40,7 +40,7 @@ export default function StoresPage() {
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3" style={{ backgroundColor: "#FFFDF8" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src="/via-logo.png"
+                          src="/vya-logo.png"
                           alt="VYA"
                           className="w-20 sm:w-28 blur-[1px] opacity-40 select-none pointer-events-none"
                         />

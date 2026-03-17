@@ -13,7 +13,6 @@ import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
 import InviteButton from "./InviteButton";
-import MembershipPortalButton from "./MembershipPortalButton";
 import { neon } from "@neondatabase/serverless";
 
 async function getUserSettings(userId: string): Promise<{ notificationsEnabled: boolean; phone: string }> {
@@ -123,22 +122,7 @@ export default async function AccountPage() {
                   View →
                 </span>
               </Link>
-              <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div>
-                  <p className="font-medium text-sm mb-1">Active Member</p>
-                  {memberSince && (
-                    <p className="text-sm text-[#5D0F17]/50">
-                      Since{" "}
-                      {memberSince.toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  )}
                 </div>
-                <MembershipPortalButton />
-              </div>
-            </div>
           ) : (
             <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
@@ -278,7 +262,7 @@ export default async function AccountPage() {
               <div>
                 <p className="font-serif text-lg mb-1">Can&apos;t find what you&apos;re looking for?</p>
                 <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
-                  Submit a sourcing request and we&apos;ll find it from our network of stores within 14 business days.
+                  Submit a sourcing request and we&apos;ll find it from our network of stores within 21 business days.
                 </p>
               </div>
               <Link
@@ -379,7 +363,7 @@ export default async function AccountPage() {
 
         {/* ===== Settings ===== */}
         <section className="py-12 mb-8">
-          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
+          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} isMember={isMember} memberSince={memberSince} />
         </section>
       </div>
     </main>

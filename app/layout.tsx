@@ -12,6 +12,7 @@ import { FavoritesProvider } from "./components/FavoritesProvider";
 import { FriendsProvider } from "./components/FriendsProvider";
 import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
+import FeedbackModal from "./components/FeedbackModal";
 
 export const metadata: Metadata = {
   title: "VYA — Vintage & Secondhand Platform",
@@ -54,6 +55,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       {/* Google Analytics */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-ZDBBYJCNVT"
@@ -93,6 +96,7 @@ export default function RootLayout({
               <SignUpProvider>
               {/* <GiveawayProvider> */}
                 <ScrollToTop />
+                <FeedbackModal />
                 <Header />
                 <main className="pt-[104px]">{children}</main>
                 <Footer />

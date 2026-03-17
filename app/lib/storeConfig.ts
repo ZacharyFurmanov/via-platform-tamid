@@ -12,6 +12,8 @@ export type ShopifyStore = {
   slug: string;
   storeDomain: string;
   storefrontAccessToken?: string;
+  /** Product titles to exclude from sync (exact match, case-insensitive) */
+  excludeTitles?: string[];
 };
 
 export type BigCartelStore = {
@@ -94,7 +96,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     type: "shopify",
     name: "Vangie",
     slug: "vangie",
-    storeDomain: "vangie.co",
+    storeDomain: "pgkjey-wq.myshopify.com",
   },
   {
     type: "shopify",
@@ -149,6 +151,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Petria Vintage",
     slug: "petria-vintage",
     storeDomain: "petriavintage.com",
+    excludeTitles: ["Item Authentication Other Luxury Bags"],
   },
   {
     type: "shopify",

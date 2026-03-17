@@ -43,7 +43,7 @@ export default function StoreLoginPage() {
           <div className="text-center mb-8">
             <div className="mb-6">
               <Image
-                src="/via-logo.png"
+                src="/vya-logo.png"
                 alt="VYA"
                 width={80}
                 height={80}

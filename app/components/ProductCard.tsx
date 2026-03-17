@@ -4,6 +4,31 @@ import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
 import { normalizeSize } from "@/app/lib/inventory";
 
+const SIZE_LABELS: Record<string, string> = {
+  XS: "Extra Small",
+  S: "Small",
+  M: "Medium",
+  L: "Large",
+  XL: "Extra Large",
+  XXL: "XXL",
+  XXXL: "XXXL",
+  "One Size": "One Size",
+};
+
+const CLOTHING_SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
+
+function expandSize(size: string, category?: string, title?: string): string {
+  const normalized = normalizeSize(size);
+
+  // For shoes: if stored size is a clothing label but title has a numeric shoe size, prefer that
+  if (category === "Shoes" && CLOTHING_SIZES.has(normalized) && title) {
+    const match = title.match(/\b(\d{2}(?:\.\d)?)\s*$/);
+    if (match) return match[1];
+  }
+
+  return SIZE_LABELS[normalized] ?? normalized;
+}
+
 // Strip "Size X" patterns from a product title when size is already shown separately
 function stripSizeFromTitle(title: string, size: string | null | undefined): string {
   if (!size) return title;
@@ -83,19 +108,20 @@ export default function ProductCard({
             {storeName}
           </p>
 
-          <h3 className="font-serif text-xs sm:text-base text-[#5D0F17] leading-snug line-clamp-2">
+          <h3 className="font-serif text-xs sm:text-base text-[#5D0F17] leading-snug line-clamp-2 mb-0.5">
             {stripSizeFromTitle(name, size)}
           </h3>
 
-          <div className="flex items-baseline gap-2 mt-0.5 sm:mt-1">
+          {size && (
+            <p className="text-[9px] sm:text-[11px] uppercase tracking-wide text-[#5D0F17]/50 mb-0.5">
+              Size: {expandSize(size, category, name)}
+            </p>
+          )}
+
+          <div className="flex items-baseline gap-2">
             <p className="text-xs sm:text-sm text-[#5D0F17]/80">{price}</p>
             {compareAtPrice && (
               <p className="text-xs sm:text-sm text-[#5D0F17]/40 line-through">{compareAtPrice}</p>
-            )}
-            {size && (
-              <span className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50">
-                {normalizeSize(size)}
-              </span>
             )}
           </div>
         </div>

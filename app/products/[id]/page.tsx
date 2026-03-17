@@ -27,16 +27,26 @@ const MEASUREMENT_KEYWORDS = [
   "shoulder", "sleeve", "bust", "chest", "waist", "hip", "inseam",
   "outseam", "rise", "hem", "thigh", "knee", "pit", "armhole",
   "width", "circumference", "belt", "back length", "front length",
-  "total length",
+  "total length", "length", "pit to pit",
 ];
 
-/** Returns true if a plain-text bullet looks like a size or measurement */
+// Section headers that signal a measurements block
+const MEASUREMENT_HEADERS = /^measurements?[:\s]*$/i;
+// Section headers that signal the end of a measurements block
+const SECTION_HEADER_RE = /^([A-Z][A-Z\s&/]{2,}):?\s*$/;
+
+/** Returns true if a plain-text line looks like a size or measurement */
 function isMeasurementLine(text: string): boolean {
   const t = text.toLowerCase().trim();
+  if (!t) return false;
   // Size labels: "Size: M", "Labeled size: 10", "Tagged size S"
   if (/(?:tagged|labeled|marked)?\s*size\s*[:\s]/.test(t)) return true;
-  // Measurement with inches value: "Bust: 17"", "Shoulder length: 19""
-  if (/:\s*\d+(?:\.\d+)?\s*["″'']/.test(t)) {
+  // Measurement with optional ~ and inches/cm value: "Bust: ~16"", "Waist: 14 cm"
+  if (/:\s*~?\s*\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b)/.test(t)) {
+    return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
+  }
+  // "16" flat", "~37"" with a keyword somewhere in the line
+  if (/~?\d+(?:[.,]\d+)?\s*["″''"]\s*(?:flat|laid flat)?/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
   }
   return false;
@@ -44,7 +54,8 @@ function isMeasurementLine(text: string): boolean {
 
 /**
  * Splits description HTML into product details and sizing/measurements.
- * Extracts <li> items that are measurements and returns them separately.
+ * Handles both <li>-based and <p>-based descriptions, including section-header
+ * style descriptions (e.g. "MEASUREMENTS:\n\nBust: ~16" flat\n\n...").
  */
 function splitDescriptionBySizing(html: string | null): {
   detailsHtml: string | null;
@@ -55,7 +66,7 @@ function splitDescriptionBySizing(html: string | null): {
   const detailItems: string[] = [];
   const sizingItems: string[] = [];
 
-  // Extract all <li> inner contents
+  // --- Strategy 1: <li>-based descriptions ---
   const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/gi;
   let match: RegExpExecArray | null;
   let hasLiTags = false;
@@ -71,31 +82,53 @@ function splitDescriptionBySizing(html: string | null): {
     }
   }
 
-  if (!hasLiTags) {
-    // Fall back to paragraph splitting
-    const pPattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
-    let hasP = false;
-    const remaining: string[] = [];
-    while ((match = pPattern.exec(html)) !== null) {
-      hasP = true;
-      const inner = match[1];
-      const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
-      if (isMeasurementLine(plain)) {
-        sizingItems.push(plain);
-      } else {
-        remaining.push(`<p>${inner}</p>`);
-      }
-    }
-    if (!hasP) return { detailsHtml: html, sizingItems: [] };
-    const detailsHtml = remaining.length > 0 ? remaining.join("") : null;
+  if (hasLiTags) {
+    const detailsHtml = detailItems.length > 0 ? `<ul>${detailItems.join("")}</ul>` : null;
     return { detailsHtml, sizingItems };
   }
 
-  const detailsHtml =
-    detailItems.length > 0
-      ? `<ul>${detailItems.join("")}</ul>`
-      : null;
+  // --- Strategy 2: <p>-based descriptions, with section-header awareness ---
+  const pPattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  const paragraphs: { inner: string; plain: string }[] = [];
+  while ((match = pPattern.exec(html)) !== null) {
+    const inner = match[1];
+    const plain = inner.replace(/<[^>]+>/g, "").replace(/&(?:[a-z]+|#\d+);/gi, " ").trim();
+    paragraphs.push({ inner, plain });
+  }
 
+  if (paragraphs.length === 0) return { detailsHtml: html, sizingItems: [] };
+
+  // Two-pass: first detect if there's an explicit MEASUREMENTS: section header
+  let inMeasurementsSection = false;
+  const remaining: string[] = [];
+
+  for (const { inner, plain } of paragraphs) {
+    if (MEASUREMENT_HEADERS.test(plain)) {
+      // This paragraph IS the "MEASUREMENTS:" header — skip it, enter section mode
+      inMeasurementsSection = true;
+      continue;
+    }
+
+    if (inMeasurementsSection) {
+      // A new all-caps section header ends the measurements block
+      if (SECTION_HEADER_RE.test(plain)) {
+        inMeasurementsSection = false;
+        remaining.push(`<p>${inner}</p>`);
+      } else if (plain) {
+        sizingItems.push(plain);
+      }
+      continue;
+    }
+
+    // Not in a measurements section — check line-by-line
+    if (isMeasurementLine(plain)) {
+      sizingItems.push(plain);
+    } else {
+      remaining.push(`<p>${inner}</p>`);
+    }
+  }
+
+  const detailsHtml = remaining.length > 0 ? remaining.join("") : null;
   return { detailsHtml, sizingItems };
 }
 

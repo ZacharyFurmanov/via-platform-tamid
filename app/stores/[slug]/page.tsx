@@ -148,7 +148,7 @@ export default async function StorePage({ params }: StorePageProps) {
         <section className="py-32 sm:py-48 flex flex-col items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/via-logo.png"
+            src="/vya-logo.png"
             alt="VYA"
             className="w-28 sm:w-36 blur-[1px] opacity-40 select-none pointer-events-none"
           />

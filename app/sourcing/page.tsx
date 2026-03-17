@@ -199,7 +199,7 @@ export default function SourcingPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">Sourcing Request</p>
           <h1 className="font-serif text-3xl mb-4">Request Received</h1>
           <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-2">
-            Your $20 sourcing fee has been processed. We&apos;ll be in touch within 14 business days if we find a match.
+            Your $20 sourcing fee has been processed. We&apos;ll be in touch within 21 business days if we find a match.
           </p>
           <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-10">
             If we can&apos;t find one, your fee will be fully refunded.
@@ -229,7 +229,7 @@ export default function SourcingPage() {
             <h1 className="font-serif text-xl">Pay Sourcing Fee — $20</h1>
           </div>
           <p className="text-sm text-[#5D0F17]/60 mb-8 leading-relaxed">
-            Your $20 fee is refundable if we can&apos;t find a match within 14 business days.
+            Your $20 fee is refundable if we can&apos;t find a match within 21 business days.
           </p>
           <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
             <EmbeddedCheckout />
@@ -245,7 +245,7 @@ export default function SourcingPage() {
         <h1 className="font-serif text-2xl sm:text-3xl mb-2">Sourcing Request</h1>
         <p className="text-sm text-[#5D0F17]/60 mb-6 leading-relaxed">
           Can&apos;t find what you&apos;re looking for? Tell us what you want and we&apos;ll source it from our network of stores.
-          A <strong>$20 sourcing request</strong> applies — fully refunded if we can&apos;t find a match in 14 business days.
+          A <strong>$20 sourcing request</strong> applies — fully refunded if we can&apos;t find a match in 21 business days.
         </p>
         <div className="border border-[#5D0F17]/15 bg-[#D8CABD]/15 px-5 py-4 mb-10">
           <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1">How it works</p>
@@ -486,7 +486,7 @@ export default function SourcingPage() {
           {/* Submit */}
           <div className="border-t border-[#5D0F17]/10 pt-6">
             <p className="text-xs text-[#5D0F17]/40 mb-4 leading-relaxed">
-              By submitting you agree to a <strong className="text-[#5D0F17]/60">$20 sourcing fee</strong>, refundable within 14 business days if no match is found.
+              By submitting you agree to a <strong className="text-[#5D0F17]/60">$20 sourcing fee</strong>, refundable within 21 business days if no match is found.
               {!session && (
                 <span className="block mt-1">You&apos;ll be asked to create an account or sign in before proceeding.</span>
               )}

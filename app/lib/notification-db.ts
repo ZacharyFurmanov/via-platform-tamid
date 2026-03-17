@@ -99,6 +99,76 @@ export async function recordNotificationSent(
   `;
 }
 
+export type TrendingCandidate = {
+  user_id: string;
+  email: string;
+  product_id: number;
+  product_title: string;
+  product_image: string | null;
+  store_name: string;
+  store_slug: string;
+  price: number;
+  currency: string;
+  favorite_count: number;
+};
+
+/**
+ * Find products with 15+ favorites where the user hasn't received a trending email yet.
+ */
+export async function getTrendingCandidates(): Promise<TrendingCandidate[]> {
+  await initNotificationTables();
+  const sql = neon(getDatabaseUrl());
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS trending_notifications (
+      id SERIAL PRIMARY KEY,
+      user_id UUID NOT NULL,
+      product_id INT NOT NULL,
+      sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE(user_id, product_id)
+    )
+  `;
+
+  const rows = await sql`
+    SELECT
+      pf.user_id,
+      u.email,
+      p.id AS product_id,
+      p.title AS product_title,
+      p.image AS product_image,
+      p.store_name,
+      p.store_slug,
+      p.price,
+      p.currency,
+      counts.favorite_count
+    FROM product_favorites pf
+    JOIN users u ON u.id = pf.user_id
+    JOIN products p ON p.id = pf.product_id
+    JOIN (
+      SELECT product_id, COUNT(*) AS favorite_count
+      FROM product_favorites
+      GROUP BY product_id
+      HAVING COUNT(*) >= 15
+    ) counts ON counts.product_id = pf.product_id
+    WHERE u.notification_emails_enabled = TRUE
+      AND NOT EXISTS (
+        SELECT 1 FROM trending_notifications tn
+        WHERE tn.user_id = pf.user_id AND tn.product_id = pf.product_id
+      )
+  `;
+
+  return rows as TrendingCandidate[];
+}
+
+export async function recordTrendingNotificationSent(userId: string, productId: number): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    INSERT INTO trending_notifications (user_id, product_id)
+    VALUES (${userId}, ${productId})
+    ON CONFLICT (user_id, product_id) DO NOTHING
+  `;
+}
+
 /**
  * Get how many notification emails a user has received today (for daily cap).
  */

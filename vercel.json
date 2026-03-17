@@ -35,6 +35,18 @@
     {
       "path": "/api/cron/sync-collabs-revenue",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/approve-pilot-users",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned-cart",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/trending-items",
+      "schedule": "0 9 * * *"
     }
   ]
 }

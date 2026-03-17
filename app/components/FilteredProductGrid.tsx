@@ -6,6 +6,30 @@ import ProductFilter, {
   PriceRange,
   SortOption,
 } from "./ProductFilter";
+
+const COLOR_KEYWORDS = [
+  "black", "white", "cream", "ivory", "beige", "off-white",
+  "grey", "gray", "silver", "charcoal",
+  "brown", "tan", "camel", "chocolate", "cognac",
+  "navy", "blue", "cobalt", "teal", "turquoise",
+  "red", "burgundy", "wine", "crimson",
+  "pink", "blush", "rose", "fuchsia",
+  "green", "olive", "sage", "forest", "emerald", "mint",
+  "yellow", "mustard", "gold",
+  "orange", "coral", "rust",
+  "purple", "lilac", "lavender", "violet",
+  "nude", "multicolor",
+];
+
+function extractColor(title: string): string | null {
+  const lower = title.toLowerCase();
+  for (const color of COLOR_KEYWORDS) {
+    if (lower.includes(color)) {
+      return color.charAt(0).toUpperCase() + color.slice(1);
+    }
+  }
+  return null;
+}
 import { normalizeSize, sortSizes } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
@@ -115,6 +139,7 @@ export default function FilteredProductGrid({
     selectedBrands: [],
     selectedSizes: [],
     selectedTypes: [],
+    selectedColors: [],
     sort: "popular",
   });
 
@@ -177,6 +202,14 @@ export default function FilteredProductGrid({
       result = result.filter(
         (p) => p.accessoryType && filters.selectedTypes.includes(p.accessoryType)
       );
+    }
+
+    // Color filter
+    if (filters.selectedColors.length > 0) {
+      result = result.filter((p) => {
+        const color = extractColor(p.title);
+        return color && filters.selectedColors.includes(color);
+      });
     }
 
     // Sort
@@ -242,6 +275,16 @@ export default function FilteredProductGrid({
     return Array.from(seen).sort();
   }, [products]);
 
+  // Get unique colors extracted from product titles
+  const availableColors = useMemo(() => {
+    const seen = new Set<string>();
+    products.forEach((p) => {
+      const color = extractColor(p.title);
+      if (color) seen.add(color);
+    });
+    return Array.from(seen).sort();
+  }, [products]);
+
   // Fetch favorite counts for all products
   const [favCounts, setFavCounts] = useState<Record<number, number>>({});
 
@@ -274,10 +317,12 @@ export default function FilteredProductGrid({
         brands={availableBrands}
         sizes={availableSizes}
         types={availableTypes}
+        colors={availableColors}
         showCategoryFilter={showCategoryFilter}
         showBrandFilter={showBrandFilter}
         showSizeFilter={showSizeFilter}
         showTypeFilter={showTypeFilter}
+        showColorFilter={availableColors.length > 0}
         onFilterChange={handleFilterChange}
         productCount={filteredProducts.length}
       />
@@ -291,7 +336,8 @@ export default function FilteredProductGrid({
           filters.selectedCategories.length > 0 ||
           filters.selectedBrands.length > 0 ||
           filters.selectedSizes.length > 0 ||
-          filters.selectedTypes.length > 0 ? (
+          filters.selectedTypes.length > 0 ||
+          filters.selectedColors.length > 0 ? (
             <button
               onClick={() =>
                 handleFilterChange({
@@ -302,6 +348,7 @@ export default function FilteredProductGrid({
                   selectedBrands: [],
                   selectedSizes: [],
                   selectedTypes: [],
+                  selectedColors: [],
                   sort: filters.sort,
                 })
               }

@@ -210,7 +210,7 @@ function WaitlistContent() {
 
       {/* Header */}
       <div className="border-b border-[#5D0F17]/10 px-6 py-5 flex items-center justify-between">
-        <img src="/via-logo.png" alt="VYA" className="h-20 w-auto" />
+        <img src="/vya-logo.png" alt="VYA" className="h-20 w-auto" />
       </div>
 
       {/* Content */}

@@ -58,9 +58,13 @@ export async function GET(request: Request) {
         }
 
         const storeSlug = store.slug;
+        const excludedTitles = new Set(
+          (store.excludeTitles ?? []).map((t) => t.toLowerCase())
+        );
         const products = fetchResult.products
           .map(toRSSProductFormat)
           .filter((p) => p.price !== null)
+          .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
           .map((p) => ({
             title: p.title,
             price: convertToUSD(p.price as number, storeSlug),
@@ -72,6 +76,7 @@ export async function GET(request: Request) {
             variantId: p.variantId ?? undefined,
             shopifyProductId: p.shopifyProductId ?? undefined,
             size: p.size ?? undefined,
+            compareAtPrice: p.compareAtPrice ?? undefined,
           }));
 
         const productCount = await syncProducts(storeSlug, store.name, products);
@@ -87,6 +92,7 @@ export async function GET(request: Request) {
           .map((p) => ({
             title: p.title,
             price: p.price,
+            compareAtPrice: p.compareAtPrice ?? undefined,
             image: p.image ?? undefined,
             images: p.images,
             externalUrl: p.externalUrl,
@@ -114,6 +120,7 @@ export async function GET(request: Request) {
           .map((p) => ({
             title: p.title,
             price: p.price as number,
+            compareAtPrice: ("compareAtPrice" in p && typeof p.compareAtPrice === "number" ? p.compareAtPrice : null) ?? undefined,
             image: p.image ?? undefined,
             images: p.images,
             externalUrl: p.externalUrl,

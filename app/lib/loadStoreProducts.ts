@@ -21,6 +21,8 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "minaudiere", "minaudière", "wristlet", "baguette bag", "hobo bag",
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
     "suitcase", "duffel", "evening bag",
+    "pochette", "cabas", "musette", "keepall", "speedy", "neverfull",
+    "alma", "papillon", "noé", "noe", "deauville", "vanity",
   ]],
   // Specific garment types first — these take priority over material keywords
   ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress"]],

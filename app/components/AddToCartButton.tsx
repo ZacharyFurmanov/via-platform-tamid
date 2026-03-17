@@ -19,13 +19,20 @@ export default function AddToCartButton({ item }: AddToCartButtonProps) {
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
 
-    // Track cart add for demand signal on product page
+    // Track cart add for demand signal and abandoned cart emails
     const dbId = parseInt(item.compositeId.match(/-(\d+)$/)?.[1] ?? "0", 10);
     if (dbId) {
       fetch("/api/cart/count", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: dbId }),
+        body: JSON.stringify({
+          id: dbId,
+          title: item.title,
+          image: item.image,
+          storeName: item.storeName,
+          storeSlug: item.storeSlug,
+          price: item.price,
+        }),
       }).catch(() => {});
     }
   };

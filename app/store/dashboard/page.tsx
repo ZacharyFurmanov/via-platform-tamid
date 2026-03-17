@@ -16,6 +16,8 @@ type StoreInfo = {
   commissionType: "shopify-collabs" | "squarespace-manual";
   totalInventoryValue: number;
   viaCommissionPotential: number;
+  storeFollowers: number;
+  topFavoritedProducts: { title: string; price: number; favoriteCount: number }[];
 };
 
 type Analytics = {
@@ -113,7 +115,11 @@ export default function StoreDashboardPage() {
         sourcingRes.ok ? sourcingRes.json() : null,
       ]);
 
-      setStore(storeData);
+      setStore({
+        storeFollowers: 0,
+        topFavoritedProducts: [],
+        ...storeData,
+      });
       setAnalytics(analyticsData);
       setSourcing(sourcingData);
       setLoadingInitial(false);
@@ -210,7 +216,7 @@ export default function StoreDashboardPage() {
       >
         <div className="flex items-center gap-4">
           <Image
-            src="/via-logo.png"
+            src="/vya-logo.png"
             alt="VYA"
             width={48}
             height={48}
@@ -276,6 +282,78 @@ export default function StoreDashboardPage() {
             </p>
           </section>
         )}
+
+        {/* Followers & Liked Products */}
+        <section>
+          <h2 className="text-lg font-serif uppercase tracking-wide mb-4" style={{ color: "#5D0F17" }}>
+            Your Audience
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-6 shadow-sm text-center">
+              <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                {store.storeFollowers.toLocaleString()}
+              </p>
+              <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                Store Followers
+              </p>
+              <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
+                Users who have saved your store
+              </p>
+            </div>
+            <div className="bg-white p-6 shadow-sm text-center">
+              <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                {store.topFavoritedProducts.reduce((sum, p) => sum + p.favoriteCount, 0).toLocaleString()}
+              </p>
+              <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                Total Product Likes
+              </p>
+              <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
+                Across all listed products
+              </p>
+            </div>
+            <div className="bg-white p-6 shadow-sm text-center">
+              <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
+                {store.topFavoritedProducts.length > 0 ? store.topFavoritedProducts[0].favoriteCount : 0}
+              </p>
+              <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                Most Liked Product
+              </p>
+              {store.topFavoritedProducts.length > 0 && (
+                <p className="text-[10px] mt-1 truncate px-2" style={{ color: "rgba(93,15,23,0.4)" }}>
+                  {store.topFavoritedProducts[0].title}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {store.topFavoritedProducts.length > 0 && (
+            <div className="bg-white shadow-sm">
+              <div
+                className="px-5 py-3 border-b text-xs uppercase tracking-wide"
+                style={{ color: "rgba(93,15,23,0.5)", borderColor: "#F7F3EA" }}
+              >
+                Most Liked Products
+              </div>
+              <table className="w-full">
+                <tbody>
+                  {store.topFavoritedProducts.map((product, i) => (
+                    <tr key={i} className="border-b last:border-0" style={{ borderColor: "#F7F3EA" }}>
+                      <td className="px-5 py-3 text-sm" style={{ color: "#5D0F17" }}>
+                        {product.title}
+                      </td>
+                      <td className="px-5 py-3 text-sm text-right whitespace-nowrap" style={{ color: "rgba(93,15,23,0.5)" }}>
+                        ${product.price}
+                      </td>
+                      <td className="px-5 py-3 text-sm text-right whitespace-nowrap" style={{ color: "rgba(93,15,23,0.5)" }}>
+                        ♥ {product.favoriteCount}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
         {/* Analytics Section */}
         <section>
@@ -616,6 +694,24 @@ export default function StoreDashboardPage() {
               </table>
             </div>
           )}
+        </section>
+        {/* Partner Feedback */}
+        <section className="border-t pt-10" style={{ borderColor: "rgba(93,15,23,0.1)" }}>
+          <h2 className="text-lg font-serif uppercase tracking-wide mb-2" style={{ color: "#5D0F17" }}>
+            Share Feedback
+          </h2>
+          <p className="text-xs mb-4" style={{ color: "rgba(93,15,23,0.5)" }}>
+            Help us improve VYA for our store partners. All responses are anonymous.
+          </p>
+          <a
+            href="https://form.typeform.com/to/L13186Wp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-6 py-3 text-xs uppercase tracking-wide transition-opacity hover:opacity-80"
+            style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
+          >
+            Give Anonymous Feedback
+          </a>
         </section>
       </main>
     </div>

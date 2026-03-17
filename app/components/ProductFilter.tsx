@@ -14,6 +14,7 @@ export type FilterState = {
   selectedBrands: string[];
   selectedSizes: string[];
   selectedTypes: string[];
+  selectedColors: string[];
   sort: SortOption;
 };
 
@@ -23,6 +24,7 @@ type ProductFilterProps = {
   brands?: { slug: string; label: string }[];
   sizes?: string[];
   types?: string[];
+  colors?: string[];
   onFilterChange: (filters: FilterState) => void;
   initialFilters?: Partial<FilterState>;
   productCount?: number;
@@ -30,6 +32,7 @@ type ProductFilterProps = {
   showBrandFilter?: boolean;
   showSizeFilter?: boolean;
   showTypeFilter?: boolean;
+  showColorFilter?: boolean;
 };
 
 const priceRangeLabels: Record<PriceRange, string> = {
@@ -53,6 +56,7 @@ export default function ProductFilter({
   brands = [],
   sizes = [],
   types = [],
+  colors = [],
   onFilterChange,
   initialFilters,
   productCount,
@@ -60,6 +64,7 @@ export default function ProductFilter({
   showBrandFilter = false,
   showSizeFilter = false,
   showTypeFilter = false,
+  showColorFilter = false,
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
@@ -69,17 +74,29 @@ export default function ProductFilter({
     selectedBrands: initialFilters?.selectedBrands ?? [],
     selectedSizes: initialFilters?.selectedSizes ?? [],
     selectedTypes: initialFilters?.selectedTypes ?? [],
+    selectedColors: initialFilters?.selectedColors ?? [],
     sort: initialFilters?.sort ?? "popular",
   });
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [openMobileSections, setOpenMobileSections] = useState<Set<string>>(new Set());
   const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
   const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
+  const toggleMobileSection = useCallback((section: string) => {
+    setOpenMobileSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      return next;
+    });
+  }, []);
 
   const closeAllDropdowns = useCallback(() => {
     setPriceDropdownOpen(false);
@@ -88,6 +105,7 @@ export default function ProductFilter({
     setStoreDropdownOpen(false);
     setSizeDropdownOpen(false);
     setTypeDropdownOpen(false);
+    setColorDropdownOpen(false);
     setSortDropdownOpen(false);
   }, []);
 
@@ -155,6 +173,17 @@ export default function ProductFilter({
     [filters.selectedTypes, updateFilters]
   );
 
+  const toggleColor = useCallback(
+    (color: string) => {
+      const current = filters.selectedColors;
+      const updated = current.includes(color)
+        ? current.filter((c) => c !== color)
+        : [...current, color];
+      updateFilters({ selectedColors: updated });
+    },
+    [filters.selectedColors, updateFilters]
+  );
+
   const clearFilters = useCallback(() => {
     const cleared: FilterState = {
       search: "",
@@ -164,6 +193,7 @@ export default function ProductFilter({
       selectedBrands: [],
       selectedSizes: [],
       selectedTypes: [],
+      selectedColors: [],
       sort: "popular",
     };
     setFilters(cleared);
@@ -177,7 +207,8 @@ export default function ProductFilter({
     filters.selectedCategories.length > 0 ||
     filters.selectedBrands.length > 0 ||
     filters.selectedSizes.length > 0 ||
-    filters.selectedTypes.length > 0;
+    filters.selectedTypes.length > 0 ||
+    filters.selectedColors.length > 0;
 
   const activeFilterCount =
     (filters.search ? 1 : 0) +
@@ -186,7 +217,45 @@ export default function ProductFilter({
     filters.selectedCategories.length +
     filters.selectedBrands.length +
     filters.selectedSizes.length +
-    filters.selectedTypes.length;
+    filters.selectedTypes.length +
+    filters.selectedColors.length;
+
+  // Helper for mobile accordion section header
+  function MobileSection({
+    id,
+    label,
+    activeCount,
+    children,
+  }: {
+    id: string;
+    label: string;
+    activeCount?: number;
+    children: React.ReactNode;
+  }) {
+    const isOpen = openMobileSections.has(id);
+    return (
+      <div className="border-b border-[#5D0F17]/10 last:border-b-0">
+        <button
+          onClick={() => toggleMobileSection(id)}
+          className="w-full flex items-center justify-between py-3.5"
+        >
+          <span className="text-xs uppercase tracking-wide text-[#5D0F17]/60 font-medium">
+            {label}
+            {activeCount ? (
+              <span className="ml-2 bg-[#5D0F17] text-[#F7F3EA] text-[10px] px-1.5 py-0.5">
+                {activeCount}
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown
+            size={14}
+            className={`text-[#5D0F17]/40 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {isOpen && <div className="pb-4">{children}</div>}
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">
@@ -351,6 +420,55 @@ export default function ProductFilter({
                       >
                         {brand.label}
                         {filters.selectedBrands.includes(brand.slug) && (
+                          <span className="text-[#5D0F17]">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Color Dropdown */}
+          {showColorFilter && colors.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const wasOpen = colorDropdownOpen;
+                  closeAllDropdowns();
+                  setColorDropdownOpen(!wasOpen);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
+                  filters.selectedColors.length > 0
+                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
+                }`}
+              >
+                {filters.selectedColors.length > 0
+                  ? `Color (${filters.selectedColors.length})`
+                  : "Color"}
+                <ChevronDown size={16} />
+              </button>
+              {colorDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setColorDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => toggleColor(color)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
+                          filters.selectedColors.includes(color)
+                            ? "bg-[#D8CABD]/30 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {color}
+                        {filters.selectedColors.includes(color) && (
                           <span className="text-[#5D0F17]">&#10003;</span>
                         )}
                       </button>
@@ -589,7 +707,7 @@ export default function ProductFilter({
           />
         </div>
 
-        {/* Mobile Filter Toggle */}
+        {/* Mobile Filter Toggle + Sort */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
@@ -623,17 +741,18 @@ export default function ProductFilter({
           </select>
         </div>
 
-        {/* Mobile Filter Panel */}
+        {/* Mobile Filter Panel — Accordion */}
         {mobileFiltersOpen && (
-          <div className="mt-4 p-4 border border-[#5D0F17]/15 bg-[#D8CABD]/10">
-            {/* Price Range */}
-            <div className="mb-6">
-              <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                Price Range
-              </h4>
-              <div className="grid grid-cols-2 gap-2">
-                {(Object.keys(priceRangeLabels) as PriceRange[]).map(
-                  (range) => (
+          <div className="mt-3 border border-[#5D0F17]/15 bg-[#D8CABD]/10">
+            <div className="px-4">
+              {/* Price Range */}
+              <MobileSection
+                id="price"
+                label="Price Range"
+                activeCount={filters.priceRange !== "all" ? 1 : 0}
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(priceRangeLabels) as PriceRange[]).map((range) => (
                     <button
                       key={range}
                       onClick={() => updateFilters({ priceRange: range })}
@@ -645,138 +764,153 @@ export default function ProductFilter({
                     >
                       {priceRangeLabels[range]}
                     </button>
-                  )
-                )}
-              </div>
+                  ))}
+                </div>
+              </MobileSection>
+
+              {/* Categories */}
+              {showCategoryFilter && categories.length > 0 && (
+                <MobileSection
+                  id="categories"
+                  label="Category"
+                  activeCount={filters.selectedCategories.length}
+                >
+                  <div className="space-y-2">
+                    {categories.map((cat) => (
+                      <label key={cat.slug} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedCategories.includes(cat.slug)}
+                          onChange={() => toggleCategory(cat.slug)}
+                          className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                        />
+                        <span className="text-sm">{cat.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
+
+              {/* Colors */}
+              {showColorFilter && colors.length > 0 && (
+                <MobileSection
+                  id="colors"
+                  label="Color"
+                  activeCount={filters.selectedColors.length}
+                >
+                  <div className="grid grid-cols-2 gap-2">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => toggleColor(color)}
+                        className={`px-3 py-2 text-sm border transition text-left ${
+                          filters.selectedColors.includes(color)
+                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                            : "border-[#5D0F17]/20 bg-[#F7F3EA] hover:border-[#5D0F17]"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
+
+              {/* Brands */}
+              {showBrandFilter && brands.length > 0 && (
+                <MobileSection
+                  id="brands"
+                  label="Brand"
+                  activeCount={filters.selectedBrands.length}
+                >
+                  <div className="space-y-2">
+                    {brands.map((brand) => (
+                      <label key={brand.slug} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedBrands.includes(brand.slug)}
+                          onChange={() => toggleBrand(brand.slug)}
+                          className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                        />
+                        <span className="text-sm">{brand.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
+
+              {/* Sizes */}
+              {showSizeFilter && sizes.length > 0 && (
+                <MobileSection
+                  id="sizes"
+                  label="Size"
+                  activeCount={filters.selectedSizes.length}
+                >
+                  <div className="space-y-2">
+                    {sizes.map((size) => (
+                      <label key={size} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedSizes.includes(size)}
+                          onChange={() => toggleSize(size)}
+                          className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                        />
+                        <span className="text-sm">{size}</span>
+                      </label>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
+
+              {/* Types */}
+              {showTypeFilter && types.length > 0 && (
+                <MobileSection
+                  id="types"
+                  label="Type"
+                  activeCount={filters.selectedTypes.length}
+                >
+                  <div className="space-y-2">
+                    {types.map((type) => (
+                      <label key={type} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedTypes.includes(type)}
+                          onChange={() => toggleType(type)}
+                          className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                        />
+                        <span className="text-sm">{type}</span>
+                      </label>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
+
+              {/* Stores */}
+              {stores.length > 1 && (
+                <MobileSection
+                  id="stores"
+                  label="Store"
+                  activeCount={filters.selectedStores.length}
+                >
+                  <div className="space-y-2">
+                    {stores.map((store) => (
+                      <label key={store.slug} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedStores.includes(store.slug)}
+                          onChange={() => toggleStore(store.slug)}
+                          className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
+                        />
+                        <span className="text-sm">{store.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </MobileSection>
+              )}
             </div>
 
-            {/* Categories */}
-            {showCategoryFilter && categories.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                  Categories
-                </h4>
-                <div className="space-y-2">
-                  {categories.map((cat) => (
-                    <label
-                      key={cat.slug}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedCategories.includes(cat.slug)}
-                        onChange={() => toggleCategory(cat.slug)}
-                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
-                      />
-                      <span className="text-sm">{cat.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Brands */}
-            {showBrandFilter && brands.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                  Brands
-                </h4>
-                <div className="space-y-2">
-                  {brands.map((brand) => (
-                    <label
-                      key={brand.slug}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedBrands.includes(brand.slug)}
-                        onChange={() => toggleBrand(brand.slug)}
-                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
-                      />
-                      <span className="text-sm">{brand.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sizes */}
-            {showSizeFilter && sizes.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                  Size
-                </h4>
-                <div className="space-y-2">
-                  {sizes.map((size) => (
-                    <label
-                      key={size}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedSizes.includes(size)}
-                        onChange={() => toggleSize(size)}
-                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
-                      />
-                      <span className="text-sm">{size}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Types */}
-            {showTypeFilter && types.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                  Type
-                </h4>
-                <div className="space-y-2">
-                  {types.map((type) => (
-                    <label
-                      key={type}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedTypes.includes(type)}
-                        onChange={() => toggleType(type)}
-                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
-                      />
-                      <span className="text-sm">{type}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Stores */}
-            {stores.length > 1 && (
-              <div className="mb-6">
-                <h4 className="text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-3">
-                  Stores
-                </h4>
-                <div className="space-y-2">
-                  {stores.map((store) => (
-                    <label
-                      key={store.slug}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedStores.includes(store.slug)}
-                        onChange={() => toggleStore(store.slug)}
-                        className="w-4 h-4 border-[#5D0F17]/20 focus:ring-[#5D0F17] accent-[#5D0F17]"
-                      />
-                      <span className="text-sm">{store.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-[#5D0F17]/10">
+            <div className="flex gap-3 px-4 py-4 border-t border-[#5D0F17]/10">
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}

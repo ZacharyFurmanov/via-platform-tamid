@@ -98,23 +98,23 @@ export default function HomePage() {
           <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
             <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
               {[
-                { label: "Clothing", slug: "clothing", image: "/categories/clothes.jpg" },
-                { label: "Bags", slug: "bags", image: "/categories/bags.jpg" },
-                { label: "Shoes", slug: "shoes", image: "/categories/shoes.jpg" },
-                { label: "Accessories", slug: "accessories", image: "/categories/accessories.jpg" },
+                { label: "Clothing", slug: "clothing", image: "/categories/clothes.jpg", position: "object-center" },
+                { label: "Bags", slug: "bags", image: "/categories/bags-v2.jpg", position: "object-bottom" },
+                { label: "Shoes", slug: "shoes", image: "/categories/shoes-v2.jpg", position: "object-center" },
+                { label: "Accessories", slug: "accessories", image: "/categories/accessories-v3.jpg", position: "object-center" },
               ].map((category, i) => (
                 <ScrollReveal key={category.slug} delay={i * 150}>
                   <Link
                     href={`/categories/${category.slug}`}
                     className="group block w-[72vw] flex-shrink-0 sm:w-auto"
                   >
-                    <div className="aspect-square relative overflow-hidden mb-4 bg-[#D8CABD]/30">
+                    <div className="aspect-[3/4] relative overflow-hidden mb-4 bg-[#D8CABD]/30">
                       <Image
                         src={category.image}
                         alt={category.label}
                         fill
                         sizes="(min-width: 768px) 25vw, 72vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        className={`object-cover ${category.position} transition-transform duration-700 ease-out group-hover:scale-105`}
                       />
                     </div>
                     <p className="text-xs text-[#5D0F17]/50 text-center mb-1 italic font-sans">Shop</p>
