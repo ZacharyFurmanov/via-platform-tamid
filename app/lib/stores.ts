@@ -138,7 +138,7 @@ export const stores = [
   {
     slug: "lover-girl-vintage",
     dashboardToken: "lgv-9e3f1a8b2c7d",
-    name: "Lover Girl Vintage",
+    name: "Lovergirl Vintage",
     location: "Newport Beach, CA",
     description:
       "Lover Girl Vintage is a curated collection of vintage and pre-loved fashion, hand-selected with a feminine, romantic eye. Based in Newport Beach, each piece is chosen for its charm, character, and timeless appeal.",
@@ -281,10 +281,10 @@ export const stores = [
     name: "Rareality Archive",
     location: "Australia",
     description:
-      "Rareality Archive is an Australian vintage and designer resale destination curating rare, considered pieces with a sharp archival eye. Each item is hand-selected for its quality, character, and lasting appeal.",
+      "Rareality is a curated vintage designer archive for those who stand out without trying. Founded by Holly, from a love of creating a capsule wardrobe you truly adore, each piece is hand-selected to be bold, colourful, and impossible to ignore—think iconic heels and statement finds from Galliano-era Dior, Giuseppe Zanotti, Chanel, and Prada. While still in its baby phase, the brand is driven by big dreams and a genuine care for every single customer. She only sources and restores high-quality vintage so each piece can have its next moment—made for those who value individuality and confidence.",
     website: "https://rarealityarchive.com",
     dataSource: "rareality-archive",
-    image: "/stores/placeholder.svg",
+    image: "/stores/rareality-archive.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
@@ -301,7 +301,7 @@ export const stores = [
   {
     slug: "scarz-vintage",
     dashboardToken: "sv-8a2c4b9d1e7f",
-    name: "SCARZ Vintage",
+    name: "Scarz Vintage",
     location: "London, UK",
     description:
       "Scarz Vintage is a curated collection of archival clothing and accessories founded by Scarlett, rooted in a love for timeless design and intentional sourcing. Each piece is hand-selected for its character and story, from rare finds to standout runway pieces, offering distinctive vintage you won't see everywhere else. Guided by sustainability and individuality, Scarz gives exceptional pieces a second life.",
@@ -334,7 +334,7 @@ export const stores = [
     image: "/stores/placeholder.svg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
-    currency: "CAD",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "SHEER",
     collabsStoreId: "231298",
@@ -400,7 +400,7 @@ export const stores = [
       "Founded by Mackenzie, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras. With an archival mindset and an editorial eye, each piece is sourced not for trend but for reverence — hand-selected for craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives.",
     website: "https://theobjectsofaffection.com",
     dataSource: "the-objects-of-affection",
-    image: "/stores/the-objects-of-affection.jpg",
+    image: "/stores/the-objects-of-affection-2.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
