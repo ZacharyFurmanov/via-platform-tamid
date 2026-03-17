@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { createHash, randomUUID } from "crypto";
+import { neon } from "@neondatabase/serverless";
 import type { ReminderCategory } from "@/app/lib/giveaway-db";
 import type { DBProduct } from "@/app/lib/db";
 
@@ -10,7 +12,7 @@ const getResend = () => {
   return new Resend(apiKey);
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://theviaplatform.com";
 const FROM_EMAIL = "VYA <hana@theviaplatform.com>";
 
 function baseStyles() {
@@ -61,7 +63,7 @@ body { margin: 0; padding: 0; background-color: #F7F3EA !important; font-family:
 
     <!-- Header: logo + subtitle -->
     <div style="text-align:center;margin-bottom:56px;">
-      <img src="${BASE_URL}/via-logo.png" alt="VYA." width="160"
+      <img src="${BASE_URL}/vya-logo.png" alt="VYA." width="160"
         style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
       <p style="margin:10px 0 0;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;
         color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">${subtitle}</p>
@@ -73,8 +75,8 @@ body { margin: 0; padding: 0; background-color: #F7F3EA !important; font-family:
     <!-- Footer -->
     <div style="text-align:center;margin-top:72px;">
       <p style="margin:0;font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:2;">
-        <a href="${BASE_URL}" style="color:#5D0F17;text-decoration:none;">vyaplatform.com</a><br />
-        IG: <a href="https://instagram.com/theviaplatform" style="color:#5D0F17;text-decoration:none;">theviaplatform</a>
+        <a href="${BASE_URL}" style="color:#5D0F17;text-decoration:none;">theviaplatform.com</a><br />
+        IG: <a href="https://www.instagram.com/vyaplatform" style="color:#5D0F17;text-decoration:none;">@vyaplatform</a>
       </p>
       <p style="margin:18px 0 0;font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">
         <a href="${unsubUrl}" style="color:#5D0F17;text-decoration:underline;">Unsubscribe here</a>
@@ -117,7 +119,7 @@ ${baseStyles()}
 <div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
   <div class="container" style="max-width:600px;margin:0 auto;">
     <div class="header" style="text-align:center;padding:32px 0 28px;">
-      <img src="${BASE_URL}/via-logo.png" alt="VYA" width="160" style="display:block;margin:0 auto;max-height:80px;width:160px;" border="0" />
+      <img src="${BASE_URL}/vya-logo.png" alt="VYA" width="160" style="display:block;margin:0 auto;max-height:80px;width:160px;" border="0" />
     </div>
     <div class="content" style="background:#ffffff;padding:40px 32px;">
       ${content}
@@ -470,7 +472,7 @@ export async function sendSourcingConfirmationToUser(details: SourcingEmailDetai
     subject: "Your sourcing request has been received — VYA",
     html: emailShell(`
       <h2>We're on it.</h2>
-      <p>Your sourcing request has been received and your $20 fee has been processed. We'll reach out within 14 business days if we find a match.</p>
+      <p>Your sourcing request has been received and your $20 fee has been processed. We'll reach out within 21 business days if we find a match.</p>
       ${imageBlock}
       <table style="width:100%;border-collapse:collapse;margin:20px 0;">
         <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Description</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.description}</td></tr>
@@ -479,7 +481,7 @@ export async function sendSourcingConfirmationToUser(details: SourcingEmailDetai
         ${details.size ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Size</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.size}</td></tr>` : ""}
         <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
       </table>
-      <p class="muted" style="font-size:13px;">If we can't find a match within 14 business days, your $20 fee will be fully refunded.</p>
+      <p class="muted" style="font-size:13px;">If we can't find a match within 21 business days, your $20 fee will be fully refunded.</p>
     `),
   });
 }
@@ -681,6 +683,65 @@ export async function sendCollabsLinksStuckAlert(stuckProducts: DBProduct[]): Pr
   });
 }
 
+async function createMagicSignInLink(email: string): Promise<string> {
+  try {
+    const secret = process.env.AUTH_SECRET;
+    if (!secret) return `${BASE_URL}/login`;
+
+    const rawToken = randomUUID();
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    // Auth.js v5 hashes the token as SHA-256(rawToken + secret) before storing
+    const hashedToken = createHash("sha256").update(`${rawToken}${secret}`).digest("hex");
+
+    const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!databaseUrl) return `${BASE_URL}/login`;
+
+    const sql = neon(databaseUrl);
+    // Clean up any existing tokens for this email, then insert
+    await sql`DELETE FROM verification_tokens WHERE identifier = ${email}`;
+    await sql`
+      INSERT INTO verification_tokens (identifier, token, expires)
+      VALUES (${email}, ${hashedToken}, ${expires.toISOString()})
+    `;
+
+    // callbackUrl goes through pilot-check so the via_access cookie gets set
+    const callbackUrl = `${BASE_URL}/api/pilot-check?next=/`;
+    const params = new URLSearchParams({ callbackUrl, token: rawToken, email });
+    return `${BASE_URL}/api/auth/callback/resend?${params}`;
+  } catch {
+    return `${BASE_URL}/login`;
+  }
+}
+
+export async function sendPilotApprovalEmail(
+  email: string,
+  firstName?: string
+): Promise<void> {
+  const resend = getResend();
+  const magicLink = await createMagicSignInLink(email);
+  const greeting = firstName ? `Hi ${firstName},` : "Hi,";
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;margin:0 0 16px;">${greeting}</p>
+    <p style="font-size:15px;color:#5D0F17;margin:0 0 16px;">
+      You have exclusive access to shop the VYA pilot &mdash; our curated edit of independent vintage and secondhand stores, all in one place.
+    </p>
+    <a href="${magicLink}"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:14px 32px;font-size:12px;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">
+      Start Shopping
+    </a>
+    <p style="font-size:13px;color:rgba(93,15,23,0.5);margin-top:24px;">
+      This link expires in 7 days. After that, sign in at vyaplatform.com with this email address.
+    </p>
+  `;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "You're approved — welcome to VYA",
+    html: viaShell("You're in.", content),
+  });
+}
+
 export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
   const resend = getResend();
   const content = `
@@ -699,5 +760,121 @@ export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
     to: "hana@theviaplatform.com",
     subject: "Action needed — Shopify Collabs credentials expired",
     html: viaShell("Collabs Credentials Expired", content),
+  });
+}
+
+export async function sendAbandonedCartEmail(
+  email: string,
+  productTitle: string,
+  productImage: string | null,
+  storeName: string,
+  productUrl: string,
+  price?: number,
+  currency?: string,
+): Promise<void> {
+  const resend = getResend();
+
+  const imgBlock = productImage
+    ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
+         <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
+           style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
+       </a>`
+    : `<div style="height:28px;"></div>`;
+
+  const priceBlock = price && currency
+    ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
+         ${formatEmailPrice(price, currency)}
+       </p>`
+    : `<div style="height:16px;"></div>`;
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      Looks like you left something behind.
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+      Your cart is waiting &mdash; but vintage is one of a kind. Get it now before someone else does.
+    </p>
+
+    ${imgBlock}
+
+    <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+       font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
+    <a href="${productUrl}" style="text-decoration:none;">
+      <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+         line-height:1.35;margin:0 0 8px;">${productTitle}</p>
+    </a>
+    ${priceBlock}
+    <a href="${productUrl}"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+              font-family:Georgia,'Times New Roman',serif;">Complete Your Purchase</a>
+  `;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "You left something behind",
+    html: viaShell("Your Cart", content),
+  });
+}
+
+export async function sendTrendingItemEmail(
+  email: string,
+  productTitle: string,
+  productImage: string | null,
+  storeName: string,
+  productUrl: string,
+  favoriteCount: number,
+  price?: number,
+  currency?: string,
+): Promise<void> {
+  const resend = getResend();
+
+  const imgBlock = productImage
+    ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
+         <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
+           style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
+       </a>`
+    : `<div style="height:28px;"></div>`;
+
+  const priceBlock = price && currency
+    ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
+         ${formatEmailPrice(price, currency)}
+       </p>`
+    : `<div style="height:16px;"></div>`;
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      Something you saved is <strong>trending.</strong>
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+      ${favoriteCount} people have saved this piece &mdash; and there&rsquo;s only one.
+      If you love it, don&rsquo;t wait.
+    </p>
+
+    ${imgBlock}
+
+    <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+       font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
+    <a href="${productUrl}" style="text-decoration:none;">
+      <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+         line-height:1.35;margin:0 0 8px;">${productTitle}</p>
+    </a>
+    ${priceBlock}
+    <p style="font-size:14px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
+       line-height:1.75;margin:0 0 32px;">
+      Once it&rsquo;s gone, it&rsquo;s gone forever.
+    </p>
+    <a href="${productUrl}"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+              font-family:Georgia,'Times New Roman',serif;">Shop Now</a>
+  `;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "Your saved item is trending",
+    html: viaShell("Trending", content),
   });
 }

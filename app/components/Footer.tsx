@@ -27,7 +27,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
-              <img src="/via-logo.png" alt="VYA" className="h-9 sm:h-11 w-auto" />
+              <img src="/vya-logo.png" alt="VYA" className="h-9 sm:h-11 w-auto" />
             </Link>
             <p className="text-[#5D0F17]/70 text-sm leading-relaxed mb-6 max-w-xs">
               The online department store for vintage and secondhand. The pieces you&apos;ve been looking for, in one place. All trusted and verified stores.
@@ -35,7 +35,7 @@ export default function Footer() {
             {/* Social Links */}
             <div className="flex items-center gap-4">
               <a
-                href="https://www.instagram.com/theviaplatform/"
+                href="https://www.instagram.com/vyaplatform"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center w-10 h-10 border border-[#5D0F17]/30 hover:border-[#5D0F17] hover:bg-[#5D0F17] transition-all duration-300"
@@ -55,7 +55,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://www.tiktok.com/@theviaplatform"
+                href="https://www.tiktok.com/@vyaplatform"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center w-10 h-10 border border-[#5D0F17]/30 hover:border-[#5D0F17] hover:bg-[#5D0F17] transition-all duration-300"
@@ -120,6 +120,16 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <a
+                  href="https://form.typeform.com/to/ssrEgHZ1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm link-underline"
+                >
+                  Give Feedback
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -131,7 +141,7 @@ export default function Footer() {
             <ul className="space-y-4">
               <li>
                 <a
-                  href="https://www.instagram.com/theviaplatform/"
+                  href="https://www.instagram.com/vyaplatform"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
@@ -144,7 +154,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://www.tiktok.com/@theviaplatform"
+                  href="https://www.tiktok.com/@vyaplatform"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
