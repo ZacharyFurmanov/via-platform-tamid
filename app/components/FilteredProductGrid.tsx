@@ -150,16 +150,46 @@ export default function FilteredProductGrid({
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Search filter (title, store name, category label, and category slug)
+    // Search filter — split query into category-intent words and text words.
+    // Category words (e.g. "top", "bag", "shoe") narrow to the inferred category
+    // so "black top" returns black tops, not black top-handle bags.
     if (filters.search.trim()) {
-      const query = filters.search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.title.toLowerCase().includes(query) ||
-          p.store.toLowerCase().includes(query) ||
-          (p.categoryLabel ?? "").toLowerCase().includes(query) ||
-          (p.category ?? "").toLowerCase().includes(query)
-      );
+      const SEARCH_CATEGORY_MAP: Record<string, string[]> = {
+        "tops": ["top", "tops", "shirt", "shirts", "blouse", "blouses", "tee", "tees", "tank", "tanks", "cami"],
+        "bags": ["bag", "bags", "clutch", "clutches", "tote", "totes", "purse", "purses", "handbag", "handbags", "pouch"],
+        "shoes": ["shoe", "shoes", "heel", "heels", "boot", "boots", "sandal", "sandals", "sneaker", "sneakers", "loafer", "loafers", "pump", "pumps", "flat", "flats", "mule", "mules", "slingback", "stiletto", "stilettos"],
+        "dresses": ["dress", "dresses", "gown", "gowns"],
+        "pants": ["pant", "pants", "trouser", "trousers", "jean", "jeans", "legging", "leggings"],
+        "skirts": ["skirt", "skirts"],
+        "accessories": ["accessory", "accessories", "belt", "belts", "scarf", "scarves", "hat", "hats", "watch", "watches", "necklace", "necklaces", "ring", "rings", "earring", "earrings", "bracelet", "bracelets", "jewelry", "jewellery", "sunglasses", "glasses", "brooch"],
+        "coats-jackets": ["jacket", "jackets", "coat", "coats", "blazer", "blazers", "trench"],
+        "sweaters": ["sweater", "sweaters", "cardigan", "cardigans", "knitwear", "knit"],
+        "shorts": ["short", "shorts"],
+        "jumpsuits": ["jumpsuit", "jumpsuits", "romper", "rompers"],
+      };
+
+      const words = filters.search.trim().toLowerCase().split(/\s+/);
+      const categoryWords: string[] = [];
+      const textWords: string[] = [];
+
+      for (const word of words) {
+        const cat = Object.entries(SEARCH_CATEGORY_MAP).find(([, terms]) => terms.includes(word));
+        if (cat) {
+          categoryWords.push(cat[0]);
+        } else {
+          textWords.push(word);
+        }
+      }
+
+      result = result.filter((p) => {
+        const title = p.title.toLowerCase();
+        const store = p.store.toLowerCase();
+        // All non-category words must appear in title or store name
+        const textMatch = textWords.every((w) => title.includes(w) || store.includes(w));
+        // If category words were detected, product must be in that category
+        const categoryMatch = categoryWords.length === 0 || categoryWords.some((c) => p.category === c || p.category?.startsWith(c));
+        return textMatch && categoryMatch;
+      });
     }
 
     // Price range filter

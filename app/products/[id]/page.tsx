@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getProductById, getRecommendedProducts } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
@@ -130,6 +131,39 @@ function splitDescriptionBySizing(html: string | null): {
 
   const detailsHtml = remaining.length > 0 ? remaining.join("") : null;
   return { detailsHtml, sizingItems };
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id: compositeId } = await params;
+  const match = compositeId.match(/^(.+)-(\d+)$/);
+  if (!match) return {};
+  const dbId = parseInt(match[2], 10);
+  if (isNaN(dbId)) return {};
+  const product = await getProductById(dbId);
+  if (!product) return {};
+
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+  const image = product.image ?? undefined;
+  const price = `$${Math.round(Number(product.price))}`;
+  const description = `${price} — ${product.store_name}`;
+
+  return {
+    title: `${product.title} — VYA`,
+    description,
+    openGraph: {
+      title: product.title,
+      description,
+      images: image ? [{ url: image, width: 1200, height: 1200, alt: product.title }] : [],
+      url: `${BASE_URL}/products/${compositeId}`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
 }
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {

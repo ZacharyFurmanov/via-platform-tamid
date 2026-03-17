@@ -108,6 +108,20 @@ export async function initDatabase() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC)
   `;
+
+  // Deduplicate any existing rows before enforcing the unique constraint
+  await sql`
+    DELETE FROM products
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM products GROUP BY store_slug, title
+    )
+  `;
+
+  // Enforce unique (store_slug, title) — safe to run on existing tables
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_products_store_title
+    ON products(store_slug, title)
+  `;
 }
 
 /**

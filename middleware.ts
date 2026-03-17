@@ -35,6 +35,7 @@ const PUBLIC_ROUTES = [
   "/api/admin/test-abandoned-cart",
   "/api/admin/test-trending-item",
   "/api/admin/approve-waitlist",
+  "/api/admin/approve-stores",
   "/api/admin/delete-product",
   "/api/store/me",
   "/api/store/analytics",
