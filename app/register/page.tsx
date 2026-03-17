@@ -40,13 +40,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Trigger magic link sign-in so they get an auth email
-      await signIn("resend", {
-        email: email.trim().toLowerCase(),
-        callbackUrl: next,
-        redirect: false,
-      });
-
       setSubmitted(true);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -79,10 +72,9 @@ export default function RegisterPage() {
 
           {submitted ? (
             <div className="text-center">
-              <h1 className="font-serif text-3xl text-[#5D0F17] mb-4">Check your email</h1>
+              <h1 className="font-serif text-3xl text-[#5D0F17] mb-4">You&apos;re on the list.</h1>
               <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-6">
-                We sent a sign-in link to <strong>{email}</strong>.
-                Click it to confirm your account and find out your access status.
+                We&apos;ve added <strong>{email}</strong> to the waitlist. We&apos;ll let you know when you&apos;re in.
               </p>
               <p className="text-[#5D0F17]/40 text-xs">
                 Already have an account?{" "}

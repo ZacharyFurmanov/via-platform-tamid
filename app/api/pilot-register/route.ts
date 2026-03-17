@@ -5,7 +5,7 @@ import {
   isEmailInWaitlist,
   checkAndApproveReferrer,
 } from "@/app/lib/pilot-db";
-import { sendPilotApprovalEmail } from "@/app/lib/email";
+import { sendPilotApprovalEmail, sendWaitlistConfirmationEmail } from "@/app/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,11 +38,21 @@ export async function POST(request: NextRequest) {
       referredBy: normalizedReferralCode,
     });
 
+    // Send confirmation email based on status
+    if (status === "approved") {
+      sendPilotApprovalEmail(normalizedEmail, firstName.trim()).catch(
+        (err) => console.error("[PilotRegister] Approval email failed:", err)
+      );
+    } else {
+      sendWaitlistConfirmationEmail(normalizedEmail, firstName.trim()).catch(
+        (err) => console.error("[PilotRegister] Waitlist email failed:", err)
+      );
+    }
+
     // If signed up via a referral code, approve the referrer immediately
     if (normalizedReferralCode) {
       const approved = await checkAndApproveReferrer(normalizedReferralCode);
       if (approved) {
-        // Fire-and-forget approval email
         sendPilotApprovalEmail(approved.email, approved.firstName ?? undefined).catch(
           (err) => console.error("[PilotRegister] Referrer approval email failed:", err)
         );

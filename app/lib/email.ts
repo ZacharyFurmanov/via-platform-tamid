@@ -742,6 +742,29 @@ export async function sendPilotApprovalEmail(
   });
 }
 
+export async function sendWaitlistConfirmationEmail(
+  email: string,
+  firstName?: string
+): Promise<void> {
+  const resend = getResend();
+  const greeting = firstName ? `Hi ${firstName},` : "Hi,";
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 16px;">${greeting}</p>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 16px;">
+      We&rsquo;ve added you to the waitlist. We&rsquo;ll let you know when you&rsquo;re in.
+    </p>
+    <p style="font-size:13px;color:rgba(93,15,23,0.5);font-family:Georgia,'Times New Roman',serif;margin:0;">
+      In the meantime, follow us on Instagram <a href="https://www.instagram.com/vyaplatform" style="color:#5D0F17;">@vyaplatform</a> to stay in the loop.
+    </p>
+  `;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "You're on the waitlist — VYA",
+    html: viaShell("You're on the list.", content),
+  });
+}
+
 export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
   const resend = getResend();
   const content = `
