@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getPilotStatus,
+  getPilotReferralCode,
   createPilotEntry,
   checkAndApproveReferrer,
 } from "@/app/lib/pilot-db";
@@ -20,13 +21,14 @@ export async function POST(request: NextRequest) {
 
     const existingStatus = await getPilotStatus(normalizedEmail);
     if (existingStatus) {
-      return NextResponse.json({ status: existingStatus, alreadyRegistered: true });
+      const existingCode = await getPilotReferralCode(normalizedEmail);
+      return NextResponse.json({ status: existingStatus, alreadyRegistered: true, referralCode: existingCode });
     }
 
     // Everyone starts as pending — approved via cron after 7 days or manual approval
     const status = "pending";
 
-    await createPilotEntry({
+    const myReferralCode = await createPilotEntry({
       email: normalizedEmail,
       firstName: firstName.trim(),
       lastName: lastName?.trim() || undefined,
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ status });
+    return NextResponse.json({ status, referralCode: myReferralCode });
   } catch (error) {
     console.error("[PilotRegister]", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

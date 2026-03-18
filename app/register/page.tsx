@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [smsSubscribe, setSmsSubscribe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [myReferralCode, setMyReferralCode] = useState("");
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,6 +42,7 @@ export default function RegisterPage() {
         return;
       }
 
+      if (data.referralCode) setMyReferralCode(data.referralCode);
       setSubmitted(true);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -84,12 +87,23 @@ export default function RegisterPage() {
                 <p className="text-xs text-[#F7F3EA]/60 leading-relaxed mb-4">
                   Invite 2 friends who join the waitlist using your link to be officially entered.
                 </p>
-                <Link
-                  href="/pilot-pending"
-                  className="inline-block bg-[#F7F3EA] text-[#5D0F17] px-6 py-2.5 text-xs uppercase tracking-[0.15em] hover:bg-white transition"
-                >
-                  Get My Referral Link
-                </Link>
+                {myReferralCode && (
+                  <div className="flex items-stretch border border-[#F7F3EA]/20 overflow-hidden">
+                    <p className="flex-1 px-3 py-2.5 text-xs text-[#F7F3EA]/70 truncate bg-[#5D0F17]">
+                      {`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="px-4 border-l border-[#F7F3EA]/20 text-[#F7F3EA]/70 hover:text-[#F7F3EA] hover:bg-[#F7F3EA]/10 transition flex items-center gap-1.5 text-xs uppercase tracking-wide whitespace-nowrap"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <p className="text-[#5D0F17]/40 text-xs text-center">

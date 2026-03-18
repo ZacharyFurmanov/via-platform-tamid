@@ -65,6 +65,14 @@ export async function getPilotStatus(email: string): Promise<PilotStatus> {
   return rows[0].status as "approved" | "pending";
 }
 
+export async function getPilotReferralCode(email: string): Promise<string | null> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT referral_code FROM pilot_access WHERE email = ${email.toLowerCase().trim()}
+  `;
+  return rows.length > 0 ? (rows[0].referral_code as string | null) : null;
+}
+
 export async function createPilotEntry(data: {
   email: string;
   firstName?: string;
@@ -105,6 +113,7 @@ export async function createPilotEntry(data: {
       referred_by = COALESCE(pilot_access.referred_by, EXCLUDED.referred_by),
       referral_code = COALESCE(pilot_access.referral_code, EXCLUDED.referral_code)
   `;
+  return referralCode;
 }
 
 export async function approvePilotUser(email: string) {
