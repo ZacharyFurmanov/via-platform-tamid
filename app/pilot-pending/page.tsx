@@ -60,6 +60,20 @@ export default function PilotPendingPage() {
             you&apos;re in.
           </p>
 
+          {/* Giveaway banner */}
+          <div className="bg-[#5D0F17] px-6 py-5 mb-6 text-left">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
+            <p className="text-base font-serif text-[#F7F3EA] mb-1">Win a $1,000 vintage shopping spree</p>
+            <p className="text-xs text-[#F7F3EA]/60 leading-relaxed">
+              Invite 2 friends who join the waitlist using your link to be officially entered.
+            </p>
+            {referralCount >= 2 && (
+              <p className="text-xs text-[#F7F3EA] mt-3 font-serif italic">
+                ✓ You&apos;re entered!
+              </p>
+            )}
+          </div>
+
           {/* Referral section */}
           {referralCode && (
             <div className="bg-[#F7F3EA] px-6 py-6 mb-8 text-left">
@@ -68,21 +82,35 @@ export default function PilotPendingPage() {
               </p>
 
               {/* Progress */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex gap-1.5">
+              <div className="flex flex-col gap-2 mb-4">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`w-3 h-3 rounded-full border ${
+                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
                       referralCount >= 1
                         ? "bg-[#5D0F17] border-[#5D0F17]"
                         : "border-[#5D0F17]/30 bg-transparent"
                     }`}
                   />
+                  <p className="text-xs text-[#5D0F17]/60">
+                    {referralCount >= 1
+                      ? "1 friend signed up — you should be approved shortly!"
+                      : "1 friend signup = instant access"}
+                  </p>
                 </div>
-                <p className="text-xs text-[#5D0F17]/60">
-                  {referralCount >= 1
-                    ? "1 friend signed up — you should be approved shortly!"
-                    : "1 friend signup = instant access"}
-                </p>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                      referralCount >= 2
+                        ? "bg-[#5D0F17] border-[#5D0F17]"
+                        : "border-[#5D0F17]/30 bg-transparent"
+                    }`}
+                  />
+                  <p className="text-xs text-[#5D0F17]/60">
+                    {referralCount >= 2
+                      ? "2 friends signed up — you're entered in the giveaway!"
+                      : "2 friend signups = giveaway entry"}
+                  </p>
+                </div>
               </div>
 
               {/* Link + copy */}
