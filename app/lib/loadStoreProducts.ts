@@ -20,7 +20,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "backpack", "rucksack", "satchel", "crossbody", "cross-body",
     "minaudiere", "minaudière", "wristlet", "baguette", "hobo",
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
-    "suitcase", "duffel", "evening bag",
+    "suitcase", "duffel", "duffle", "top handle", "evening bag",
     // LV
     "pochette", "cabas", "musette", "keepall", "speedy", "neverfull",
     "alma", "papillon", "noé", "noe", "deauville", "vanity",
@@ -38,7 +38,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "envelope", "frame bag", "chain wallet", "chain bag",
   ]],
   // Specific garment types first — these take priority over material keywords
-  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress"]],
+  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "slip dress", "maxi", "mini dress", "midi dress"]],
   ["skirts", ["skirt", "sarong"]],
   ["shorts", ["shorts"]],
   ["jumpsuits", ["jumpsuit", "romper", "playsuit", "overall", "matching set", "co-ord"]],
@@ -58,7 +58,8 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ["tops", [
     "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
     "bodysuit", "corset", "bustier", "halter", "polo", "henley",
-    "tube top", "crop", "tunic",
+    "tube top", "crop", "tunic", "wrap top", "bralette", "lingerie",
+    "slip top", "sheer top",
   ]],
   // Jeans checked after specific garment types so "Denim Skirt" → skirts,
   // not jeans. "jeans" (plural only) avoids matching designer first names

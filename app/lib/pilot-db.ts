@@ -119,11 +119,26 @@ export async function createPilotEntry(data: {
 export async function approvePilotUser(email: string) {
   await ensureTable();
   const sql = getDb();
-  await sql`
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Try to update an existing pending row first
+  const result = await sql`
     UPDATE pilot_access
     SET status = 'approved', approved_at = NOW()
-    WHERE email = ${email.toLowerCase().trim()} AND status = 'pending'
+    WHERE email = ${normalizedEmail} AND status = 'pending'
+    RETURNING email
   `;
+
+  // If no row existed (waitlist-only user), insert them as approved
+  if (result.length === 0) {
+    const referralCode = await createUniqueReferralCode();
+    await sql`
+      INSERT INTO pilot_access (email, status, approved_at, referral_code)
+      VALUES (${normalizedEmail}, 'approved', NOW(), ${referralCode})
+      ON CONFLICT (email) DO UPDATE
+        SET status = 'approved', approved_at = NOW()
+    `;
+  }
 }
 
 export async function getPendingUsersToApprove(): Promise<

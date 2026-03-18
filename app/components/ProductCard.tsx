@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";

@@ -146,7 +146,9 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Single item: go through collabs.shop for reliable cookie attribution ──
-    if (productCollabsLink) {
+    // Skip this path for multi-item carts (comma in pathname = multiple variants)
+    const isMultiItemCart = parsedUrl.pathname.includes(",");
+    if (productCollabsLink && !isMultiItemCart) {
       return NextResponse.redirect(productCollabsLink, 302);
     }
 

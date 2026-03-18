@@ -177,6 +177,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "dayton-jane",
     storeDomain: "www.daytonjane.com",
   },
+  {
+    type: "shopify",
+    name: "Front Page Finds",
+    slug: "front-page-finds",
+    storeDomain: "frontpagefinds.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

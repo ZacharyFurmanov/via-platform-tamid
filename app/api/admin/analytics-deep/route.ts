@@ -45,6 +45,7 @@ export async function GET(request: Request) {
       recentConversionsResult,
       inventorySummaryResult,
       inventoryByStoreResult,
+      collabsDataResult,
     ] = await Promise.all([
       // totalClicks
       cutoffIso
@@ -343,13 +344,42 @@ export async function GET(request: Request) {
         GROUP BY store_slug
         ORDER BY inventory_value DESC
       `,
+
+      // collabsData from settings cache
+      sql`SELECT value FROM app_settings WHERE key = 'collabs_data'`.catch(() => []),
     ]);
+
+    // Parse Shopify Collabs cached data
+    let collabsTotalOrders = 0;
+    let collabsEstimatedRevenue = 0;
+    try {
+      const rawCollabs = collabsDataResult[0]?.value as string | undefined;
+      if (rawCollabs) {
+        const partnerships = JSON.parse(rawCollabs) as Array<{
+          totalOrders: number;
+          totalCommissionEarned: string; // e.g. "$18.20"
+        }>;
+        for (const p of partnerships) {
+          collabsTotalOrders += p.totalOrders ?? 0;
+          // Parse commission display string — strip currency symbols, keep digits and dot
+          const commissionStr = p.totalCommissionEarned ?? "";
+          const commissionNum = parseFloat(commissionStr.replace(/[^0-9.]/g, ""));
+          if (!isNaN(commissionNum) && commissionNum > 0) {
+            // Back-calculate order total: VYA earns 7% on orders under $1k
+            collabsEstimatedRevenue += commissionNum / 0.07;
+          }
+        }
+      }
+    } catch {}
+
+    const webhookRevenue = (kpiRevenueResult[0]?.revenue as number) ?? 0;
+    const webhookOrders = (kpiRevenueResult[0]?.conversions as number) ?? 0;
 
     const kpis = {
       totalClicks: (kpiClicksResult[0]?.total as number) ?? 0,
       totalViews: (kpiViewsResult[0]?.total as number) ?? 0,
-      totalRevenue: (kpiRevenueResult[0]?.revenue as number) ?? 0,
-      totalConversions: (kpiRevenueResult[0]?.conversions as number) ?? 0,
+      totalRevenue: Math.max(webhookRevenue, collabsEstimatedRevenue),
+      totalConversions: Math.max(webhookOrders, collabsTotalOrders),
       matchedConversions: (kpiRevenueResult[0]?.matched as number) ?? 0,
       unmatchedConversions: (kpiRevenueResult[0]?.unmatched as number) ?? 0,
       totalCustomers: (kpiCustomersResult[0]?.total as number) ?? 0,
@@ -357,6 +387,8 @@ export async function GET(request: Request) {
       pilotTotal: (kpiCustomersResult[0]?.pilot_total as number) ?? 0,
       waitlistOnly: (kpiCustomersResult[0]?.waitlist_only as number) ?? 0,
       newSignupsThisWeek: (kpiSignupsResult[0]?.total as number) ?? 0,
+      collabsTotalOrders,
+      collabsEstimatedRevenue: Math.round(collabsEstimatedRevenue * 100) / 100,
     };
 
     const invS = inventorySummaryResult[0];

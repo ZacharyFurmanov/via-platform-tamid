@@ -20,6 +20,8 @@ type KPIs = {
   pilotTotal: number;
   waitlistOnly: number;
   newSignupsThisWeek: number;
+  collabsTotalOrders?: number;
+  collabsEstimatedRevenue?: number;
 };
 
 type ConversionRow = {
@@ -136,7 +138,7 @@ const CREAM = "#F7F3EA";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div
       style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px" }}
@@ -147,6 +149,9 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
       <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
         {value}
       </p>
+      {sub && (
+        <p style={{ fontSize: 10, color: MAROON, opacity: 0.4, margin: "4px 0 0" }}>{sub}</p>
+      )}
     </div>
   );
 }
@@ -308,8 +313,16 @@ export default function DeepAnalyticsPage() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 36 }}>
               <StatCard label="Total Clicks" value={data.kpis.totalClicks.toLocaleString()} />
               <StatCard label="Product Views" value={data.kpis.totalViews.toLocaleString()} />
-              <StatCard label="Orders" value={data.kpis.totalConversions.toLocaleString()} />
-              <StatCard label="Revenue" value={formatRevenue(data.kpis.totalRevenue)} />
+              <StatCard
+                label="Orders"
+                value={data.kpis.totalConversions.toLocaleString()}
+                sub={data.kpis.collabsTotalOrders ? `${data.kpis.collabsTotalOrders} via Shopify Collabs` : undefined}
+              />
+              <StatCard
+                label="Revenue"
+                value={formatRevenue(data.kpis.totalRevenue)}
+                sub={data.kpis.collabsEstimatedRevenue ? `~${formatRevenue(data.kpis.collabsEstimatedRevenue)} est. from Collabs` : undefined}
+              />
             </div>
 
             {/* ── Signups Over Time ────────────────────────────────────────── */}

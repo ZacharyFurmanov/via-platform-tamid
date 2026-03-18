@@ -59,6 +59,8 @@ const SESSION_ONLY_ROUTES = [
   "/products",
   "/stores",
   "/categories",
+  "/cart",
+  "/api/cart",
 ];
 
 // Simple hash function for admin password comparison

@@ -92,6 +92,15 @@ const stories = [
     logoBg: "#8B2257",
     logoFit: "cover" as const,
   },
+  {
+    slug: "sheer-vintage",
+    store: "Sheer Vintage",
+    teaser:
+      "A curated destination for archival designer vintage — bridal, runway, and statement eveningwear, built on memory and style that endures.",
+    logo: "/stores/sheer-vintage-story.jpg",
+    logoBg: "#F5EDE6",
+    logoFit: "cover" as const,
+  },
 ];
 
 export default function StoriesPage() {

@@ -91,6 +91,29 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "front-page-finds",
+    dashboardToken: "fpf-6c2e9a1d4b7f3",
+    name: "Front Page Finds",
+    location: "San Francisco, CA",
+    description:
+      "Front Page Finds is a San Francisco–based vintage shop specializing in curated designer handbags that feel both current and archival. Inspired by the enduring nature of print, the collection focuses on pieces that transcend time. Each bag is selected for its craftsmanship, relevance, and lasting appeal.",
+    website: "https://frontpagefinds.com",
+    dataSource: "front-page-finds",
+    image: "/stores/front-page-finds.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "232498",
+    authenticityPolicy:
+      "Every bag at Front Page Finds is personally sourced and hand-selected for its craftsmanship, relevance, and lasting appeal. Each piece is curated with an archival eye and accurately described before listing.",
+    shippingPolicy:
+      "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "house-on-a-chain",
     dashboardToken: "hoac-2f7e1b9d4c3a",
     name: "House on a Chain",
@@ -240,7 +263,7 @@ export const stores = [
       "MontroseEdit is a Houston based curated luxury resale brand specializing in elevated pre loved designer pieces. Rooted in storytelling and personal style, MontroseEdit is more than a storefront — it is a community built around the Montrose girl, someone who is effortless, fashion forward, and intentional in the way she lives and dresses. Through curated drops, pop ups, luxury markets, and digital content, we bring a fresh and approachable perspective to luxury resale, making timeless pieces feel personal, accessible, and meaningful.",
     website: "https://www.montroseedit.com",
     dataSource: "montrose-edit",
-    image: "/stores/montrose-edit.jpg",
+    image: "/stores/placeholder.svg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
@@ -352,7 +375,7 @@ export const stores = [
     description: "Sheer Vintage is a curated collection of designer vintage specializing in bridal and evening wear. Rooted in the belief that cherished things deserve to be passed down, the store celebrates enduring style and the beauty of quality pieces with a story.",
     website: "https://www.shopsheervintage.com",
     dataSource: "sheer-vintage",
-    image: "/stores/placeholder.svg",
+    image: "/stores/sheer-vintage-story.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
@@ -603,6 +626,7 @@ export const storeContactEmails: Record<string, string> = {
   "promised-vintage": "kellanmccormick@gmail.com",
   "dayton-jane": "jacquelyne.rankin@gmail.com",
   "club-fleur": "theclubfleur@gmail.com",
+  "front-page-finds": "charlee@frontpagefinds.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@theviaplatform.com",
