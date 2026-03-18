@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { stores } from "@/app/lib/stores";
+import AdminNav from "@/app/components/AdminNav";
 
 type Product = {
   id: number;
@@ -24,7 +24,7 @@ export default function EditorsPicks() {
   const router = useRouter();
   const [picks, setPicks] = useState<Pick[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [storeFilter, setStoreFilter] = useState(stores[0]?.slug ?? "");
+  const [storeFilter, setStoreFilter] = useState("");
   const [query, setQuery] = useState("");
   const [loadingPicks, setLoadingPicks] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -112,24 +112,35 @@ export default function EditorsPicks() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F7F3EA] text-[#5D0F17] p-8">
-      <div className="max-w-6xl mx-auto">
+    <main style={{ minHeight: "100vh", background: "#F7F3EA" }}>
+      <AdminNav />
 
-        {/* Header */}
-        <div className="flex items-center gap-6 mb-8">
-          <Link href="/admin" className="text-xs uppercase tracking-widest text-[#5D0F17]/50 hover:text-[#5D0F17] transition">
-            ← Back
-          </Link>
-          <h1 className="text-2xl font-serif">Editor&apos;s Picks</h1>
-          <span className="ml-auto text-sm font-medium">
+      {/* Page title */}
+      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 4 }}>
+              Editor&apos;s Picks
+            </h1>
+            <p style={{ fontSize: 14, color: "rgba(93,15,23,0.5)" }}>
+              Curate featured products shown on the homepage.
+            </p>
+          </div>
+          <span style={{ fontSize: 14, color: "#5D0F17", fontWeight: 600 }}>
             {loadingPicks ? "…" : picks.length} selected
           </span>
         </div>
+      </section>
+
+      {/* Content */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
 
         {/* Selected strip */}
         {!loadingPicks && picks.length > 0 && (
-          <div className="mb-8">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Current Selections</p>
+          <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(93,15,23,0.4)", marginBottom: 12 }}>
+              Current Selections
+            </p>
             <div className="flex flex-wrap gap-2">
               {picks.map((pick) => (
                 <div
@@ -157,30 +168,35 @@ export default function EditorsPicks() {
         )}
 
         {/* Filters */}
-        <div className="flex gap-3 mb-6">
-          <select
-            value={storeFilter}
-            onChange={(e) => { setStoreFilter(e.target.value); setQuery(""); }}
-            className="border border-[#5D0F17]/30 bg-[#F7F3EA] px-4 py-2.5 text-sm outline-none focus:border-[#5D0F17] text-[#5D0F17]"
-          >
-            {stores.map((s) => (
-              <option key={s.slug} value={s.slug}>{s.name}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter by name…"
-            className="flex-1 border border-[#5D0F17]/30 bg-transparent px-4 py-2.5 text-sm outline-none focus:border-[#5D0F17] placeholder:text-[#5D0F17]/30"
-          />
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
+          <div className="flex gap-3">
+            <select
+              value={storeFilter}
+              onChange={(e) => { setStoreFilter(e.target.value); setQuery(""); }}
+              className="border px-4 py-2.5 text-sm outline-none"
+              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+            >
+              <option value="">All Stores</option>
+              {stores.map((s) => (
+                <option key={s.slug} value={s.slug}>{s.name}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Filter by name…"
+              className="flex-1 border px-4 py-2.5 text-sm outline-none"
+              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+            />
+          </div>
         </div>
 
         {/* Product grid */}
         {loadingProducts ? (
-          <p className="text-sm text-[#5D0F17]/40">Loading products…</p>
+          <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>Loading products…</p>
         ) : products.length === 0 ? (
-          <p className="text-sm text-[#5D0F17]/40">No products found.</p>
+          <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>No products found.</p>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
             {products.map((product) => {
@@ -210,10 +226,10 @@ export default function EditorsPicks() {
 
                     {isPicked && (
                       <div className="absolute inset-0 bg-[#5D0F17]/10 group-hover:bg-[#5D0F17]/30 transition-colors flex items-center justify-center">
-                        <div className="w-7 h-7 bg-[#5D0F17] flex items-center justify-center opacity-80 group-hover:opacity-0 transition-opacity">
+                        <div className="w-7 h-7 bg-[#5D0F17] flex items-center justify-center opacity-80 group-hover:hidden">
                           <span className="text-[#F7F3EA] text-sm">✓</span>
                         </div>
-                        <span className="absolute opacity-0 group-hover:opacity-100 text-[#F7F3EA] text-[10px] uppercase tracking-wide transition-opacity bg-[#5D0F17] px-2 py-1">
+                        <span className="hidden group-hover:inline text-[#F7F3EA] text-[10px] uppercase tracking-wide bg-[#5D0F17] px-2 py-1">
                           Remove
                         </span>
                       </div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { AdminHide, MainWrapper } from "./components/RootLayoutWrapper";
 import Script from "next/script";
 import { GiveawayProvider } from "./components/GiveawayProvider";
 import { SignUpProvider } from "./components/SignUpProvider";
@@ -97,9 +98,9 @@ export default function RootLayout({
               {/* <GiveawayProvider> */}
                 <ScrollToTop />
                 <FeedbackModal />
-                <Header />
-                <main className="pt-[104px]">{children}</main>
-                <Footer />
+                <AdminHide><Header /></AdminHide>
+                <MainWrapper>{children}</MainWrapper>
+                <AdminHide><Footer /></AdminHide>
               {/* </GiveawayProvider> */}
               </SignUpProvider>
             </CartProvider>

@@ -143,6 +143,7 @@ export default async function StorePage({ params }: StorePageProps) {
         </div>
       </section>
 
+
       {/* ================= PILLS + PRODUCTS ================= */}
       {products.length === 0 ? (
         <section className="py-32 sm:py-48 flex flex-col items-center justify-center">

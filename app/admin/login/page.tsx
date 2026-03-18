@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
@@ -47,90 +48,113 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen text-black flex items-center justify-center">
+    <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#F7F3EA" }}>
       <div className="w-full max-w-md px-6">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-serif mb-2">Admin Access</h1>
-          <p className="text-neutral-500 text-sm">
-            {step === "password"
-              ? "Enter password to continue"
-              : "Check hana@theviaplatform.com for your code"}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {step === "password" ? (
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                autoFocus
-                required
-                className="w-full px-4 py-4 border border-neutral-200 text-lg outline-none focus:border-black transition-colors"
+        <div className="bg-white p-10 shadow-sm">
+          <div className="text-center mb-8">
+            <div className="mb-6">
+              <Image
+                src="/vya-logo.png"
+                alt="VYA"
+                width={64}
+                height={64}
+                className="mx-auto"
+                style={{ objectFit: "contain" }}
               />
             </div>
-          ) : (
-            <div>
-              <label htmlFor="totp" className="sr-only">
-                Email code
-              </label>
-              <input
-                id="totp"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9 ]*"
-                maxLength={7}
-                value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value)}
-                placeholder="000000"
-                autoFocus
-                autoComplete="one-time-code"
-                required
-                className="w-full px-4 py-4 border border-neutral-200 text-2xl tracking-[0.4em] text-center font-mono outline-none focus:border-black transition-colors"
-              />
-            </div>
-          )}
+            <h1 className="text-2xl font-serif mb-2" style={{ color: "#5D0F17" }}>
+              Admin
+            </h1>
+            <p className="text-sm" style={{ color: "rgba(93,15,23,0.6)" }}>
+              {step === "password"
+                ? "Enter password to continue"
+                : "Check hana@theviaplatform.com for your code"}
+            </p>
+          </div>
 
-          {error && (
-            <p className="text-red-600 text-sm text-center">{error}</p>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === "password" ? (
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  autoFocus
+                  required
+                  className="w-full px-4 py-3 border text-sm outline-none transition-colors"
+                  style={{ borderColor: "rgba(93,15,23,0.3)", color: "#5D0F17" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#5D0F17")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(93,15,23,0.3)")}
+                />
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="totp" className="sr-only">
+                  Email code
+                </label>
+                <input
+                  id="totp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9 ]*"
+                  maxLength={7}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value)}
+                  placeholder="000000"
+                  autoFocus
+                  autoComplete="one-time-code"
+                  required
+                  className="w-full px-4 py-3 border text-2xl tracking-[0.4em] text-center font-mono outline-none transition-colors"
+                  style={{ borderColor: "rgba(93,15,23,0.3)", color: "#5D0F17" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#5D0F17")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(93,15,23,0.3)")}
+                />
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading || (step === "password" ? !password : !totpCode)}
-            className="w-full px-6 py-4 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Verifying…" : step === "password" ? "Continue" : "Sign In"}
-          </button>
+            {error && (
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            )}
 
-          {step === "otp" && (
             <button
-              type="button"
-              onClick={() => {
-                setStep("password");
-                setTotpCode("");
-                setError("");
-              }}
-              className="w-full text-sm text-neutral-400 hover:text-black transition-colors"
+              type="submit"
+              disabled={loading || (step === "password" ? !password : !totpCode)}
+              className="w-full py-3 text-sm uppercase tracking-wide transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
             >
-              Back
+              {loading ? "Verifying…" : step === "password" ? "Continue" : "Sign In"}
             </button>
-          )}
-        </form>
 
-        <div className="mt-10 text-center">
-          <Link
-            href="/"
-            className="text-sm text-neutral-500 hover:text-black transition-colors"
-          >
-            Back to VYA
-          </Link>
+            {step === "otp" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("password");
+                  setTotpCode("");
+                  setError("");
+                }}
+                className="w-full text-sm transition-colors"
+                style={{ color: "rgba(93,15,23,0.5)" }}
+              >
+                Back
+              </button>
+            )}
+          </form>
+
+          <div className="mt-8 text-center">
+            <Link
+              href="/"
+              className="text-sm transition-colors"
+              style={{ color: "rgba(93,15,23,0.5)" }}
+            >
+              Back to VYA
+            </Link>
+          </div>
         </div>
       </div>
     </main>

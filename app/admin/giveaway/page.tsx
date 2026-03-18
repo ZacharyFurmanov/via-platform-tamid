@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import AdminNav from "@/app/components/AdminNav";
 
 type Candidate = {
   id: number;
@@ -54,13 +53,6 @@ export default function GiveawayAdminPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  async function handleLogout() {
-    await fetch("/api/admin/auth", { method: "DELETE" });
-    router.push("/admin/login");
-    router.refresh();
-  }
 
   async function fetchPreview() {
     setLoading(true);
@@ -113,257 +105,175 @@ export default function GiveawayAdminPage() {
   };
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      {/* Header */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-            <div className="flex items-center gap-4 text-sm flex-wrap">
-              <Link
-                href="/admin/sync"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Sync
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/analytics"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Analytics
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/emails"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Emails
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <span className="text-black">Giveaway</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-neutral-400 hover:text-black transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
+    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
+      <AdminNav />
+
+      {/* Page title */}
+      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
+          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
             Giveaway Reminders
           </h1>
-          <p className="text-neutral-600 text-base sm:text-lg">
-            Preview and manually send reminder emails to giveaway entrants who
-            haven&apos;t completed their referrals.
+          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+            Preview and manually send reminder emails to giveaway entrants who haven&apos;t completed their referrals.
           </p>
         </div>
       </section>
 
       {/* Actions */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="text-sm text-neutral-500">
-            The cron runs daily at 2:00 PM UTC. Use the buttons below to preview
-            or manually trigger.
-          </p>
-          <div className="flex gap-3">
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <p style={{ fontSize: 13, color: "rgba(93,15,23,0.5)" }}>
+          The cron runs daily at 2:00 PM UTC. Use the buttons below to preview or manually trigger.
+        </p>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={fetchPreview}
+            disabled={loading}
+            style={{ padding: "10px 24px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          >
+            {loading ? "Loading..." : "Preview Candidates"}
+          </button>
+          {preview && preview.total > 0 && (
             <button
-              onClick={fetchPreview}
-              disabled={loading}
-              className="px-6 py-3 min-h-[48px] border border-black text-sm uppercase tracking-wide hover:bg-black hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleSend}
+              disabled={sending}
+              style={{ padding: "10px 24px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
             >
-              {loading ? "Loading..." : "Preview Candidates"}
+              {sending ? "Sending..." : `Send ${preview.total} Reminders`}
             </button>
-            {preview && preview.total > 0 && (
-              <button
-                onClick={handleSend}
-                disabled={sending}
-                className="px-6 py-3 min-h-[48px] bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {sending ? "Sending..." : `Send ${preview.total} Reminders`}
-              </button>
-            )}
-          </div>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* Error */}
-      {error && (
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="bg-red-50 border border-red-200 p-4 text-red-800 text-sm">
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 48px" }}>
+
+        {/* Error */}
+        {error && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: 16, color: "#b91c1c", fontSize: 13, marginBottom: 24 }}>
             {error}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Config warnings */}
-      {preview && (!preview.config.hasCronSecret || !preview.config.hasResendKey) && (
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm space-y-1">
-            <p className="font-medium">Missing environment variables:</p>
+        {/* Config warnings */}
+        {preview && (!preview.config.hasCronSecret || !preview.config.hasResendKey) && (
+          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: 16, color: "#92400e", fontSize: 13, marginBottom: 24 }}>
+            <p style={{ fontWeight: 600, marginBottom: 4 }}>Missing environment variables:</p>
             {!preview.config.hasCronSecret && (
-              <p>
-                CRON_SECRET is not set — the automated cron job will fail
-                authentication.
-              </p>
+              <p>CRON_SECRET is not set — the automated cron job will fail authentication.</p>
             )}
             {!preview.config.hasResendKey && (
-              <p>
-                RESEND_API_KEY is not set — emails cannot be sent.
-              </p>
+              <p>RESEND_API_KEY is not set — emails cannot be sent.</p>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Stats breakdown */}
-      {preview && preview.stats && (
-        <section className="border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <h2 className="text-lg font-serif mb-4">All Entries Breakdown</h2>
-            <div className="flex flex-wrap gap-8">
-              <div>
-                <p className="text-3xl font-serif">{preview.stats.total}</p>
-                <p className="text-sm text-neutral-500">Total entries</p>
-              </div>
-              <div>
-                <p className="text-3xl font-serif text-green-700">{preview.stats.completed}</p>
-                <p className="text-sm text-neutral-500">Completed (2+ referrals)</p>
-              </div>
-              <div>
-                <p className="text-3xl font-serif text-neutral-400">{preview.stats.alreadyReminded}</p>
-                <p className="text-sm text-neutral-500">Already reminded</p>
-              </div>
-              <div>
-                <p className="text-3xl font-serif text-amber-600">{preview.stats.tooRecent}</p>
-                <p className="text-sm text-neutral-500">Too recent (&lt;2 days)</p>
-              </div>
-              <div>
-                <p className="text-3xl font-serif text-black">{preview.stats.eligible}</p>
-                <p className="text-sm text-neutral-500">Eligible for reminder</p>
-              </div>
+        {/* Stats breakdown */}
+        {preview && preview.stats && (
+          <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 24, marginBottom: 24 }}>
+            <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>All Entries Breakdown</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
+              {[
+                { label: "Total entries", value: preview.stats.total, color: "#5D0F17" },
+                { label: "Completed (2+ referrals)", value: preview.stats.completed, color: "#15803d" },
+                { label: "Already reminded", value: preview.stats.alreadyReminded, color: "rgba(93,15,23,0.4)" },
+                { label: "Too recent (<2 days)", value: preview.stats.tooRecent, color: "#d97706" },
+                { label: "Eligible for reminder", value: preview.stats.eligible, color: "#5D0F17" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-serif" style={{ fontSize: 28, color: s.color, lineHeight: 1 }}>{s.value}</p>
+                  <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* Send results */}
-      {sendResult && (
-        <section className="py-8">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="border border-neutral-200 p-6">
-              <h2 className="text-xl font-serif mb-4">Send Results</h2>
-              <div className="flex gap-8 mb-6">
-                <div>
-                  <p className="text-3xl font-serif text-green-700">
-                    {sendResult.sent}
-                  </p>
-                  <p className="text-sm text-neutral-500">Sent</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-serif text-red-700">
-                    {sendResult.failed}
-                  </p>
-                  <p className="text-sm text-neutral-500">Failed</p>
-                </div>
+        {/* Send results */}
+        {sendResult && (
+          <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 24, marginBottom: 24 }}>
+            <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>Send Results</h2>
+            <div style={{ display: "flex", gap: 32, marginBottom: 20 }}>
+              <div>
+                <p className="font-serif" style={{ fontSize: 28, color: "#15803d", lineHeight: 1 }}>{sendResult.sent}</p>
+                <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>Sent</p>
               </div>
-              {sendResult.results && sendResult.results.length > 0 && (
-                <div className="space-y-2">
-                  {sendResult.results.map((r) => (
-                    <div
-                      key={r.email}
-                      className="flex items-center justify-between text-sm py-2 border-b border-neutral-100 last:border-0"
-                    >
-                      <span className="truncate">{r.email}</span>
-                      {r.status === "sent" ? (
-                        <span className="text-green-700 ml-4 shrink-0">
-                          Sent
-                        </span>
-                      ) : (
-                        <span
-                          className="text-red-700 ml-4 shrink-0"
-                          title={r.error}
-                        >
-                          Failed
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div>
+                <p className="font-serif" style={{ fontSize: 28, color: "#b91c1c", lineHeight: 1 }}>{sendResult.failed}</p>
+                <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>Failed</p>
+              </div>
             </div>
+            {sendResult.results && sendResult.results.length > 0 && (
+              <div>
+                {sendResult.results.map((r) => (
+                  <div
+                    key={r.email}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 13, padding: "8px 0", borderBottom: "1px solid #e5e7eb" }}
+                  >
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>{r.email}</span>
+                    {r.status === "sent" ? (
+                      <span style={{ color: "#15803d", marginLeft: 16, flexShrink: 0 }}>Sent</span>
+                    ) : (
+                      <span style={{ color: "#b91c1c", marginLeft: 16, flexShrink: 0 }} title={r.error}>Failed</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </section>
-      )}
+        )}
 
-      {/* Preview */}
-      {preview && !sendResult && (
-        <section className="py-8 sm:py-12">
-          <div className="max-w-7xl mx-auto px-6">
+        {/* Preview */}
+        {preview && !sendResult && (
+          <div>
             {/* Category breakdown */}
             {preview.total > 0 && (
-              <div className="flex flex-wrap gap-6 mb-8">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 24, marginBottom: 24 }}>
                 {Object.entries(preview.categories).map(([cat, count]) => (
-                  <div key={cat}>
-                    <p className="text-3xl font-serif">{count}</p>
-                    <p className="text-sm text-neutral-500">
-                      {CATEGORY_LABELS[cat] || cat}
-                    </p>
+                  <div key={cat} style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "16px 20px" }}>
+                    <p className="font-serif" style={{ fontSize: 28, color: "#5D0F17", lineHeight: 1 }}>{count}</p>
+                    <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{CATEGORY_LABELS[cat] || cat}</p>
                   </div>
                 ))}
               </div>
             )}
 
             {preview.total === 0 ? (
-              <div className="border border-dashed border-neutral-300 p-8 text-center">
-                <p className="text-neutral-500 mb-2">
-                  No candidates eligible for reminders right now.
-                </p>
-                <p className="text-sm text-neutral-400">
-                  Users become eligible 2 days after their last activity if they
-                  have fewer than 2 referrals and haven&apos;t received a
-                  reminder yet.
+              <div style={{ background: "#fff", border: "1px dashed #e5e7eb", padding: "32px 24px", textAlign: "center" }}>
+                <p style={{ color: "rgba(93,15,23,0.5)", marginBottom: 8 }}>No candidates eligible for reminders right now.</p>
+                <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>
+                  Users become eligible 2 days after their last activity if they have fewer than 2 referrals and haven&apos;t received a reminder yet.
                 </p>
               </div>
             ) : (
-              <div className="border border-neutral-200">
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb" }}>
                 {/* Desktop Header */}
-                <div className="hidden sm:grid grid-cols-12 gap-4 px-4 sm:px-6 py-3 bg-neutral-50 text-sm text-neutral-500 border-b border-neutral-200">
+                <div className="hidden sm:grid grid-cols-12 gap-4" style={{ padding: "12px 24px", background: "#F7F3EA", borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(93,15,23,0.5)" }}>
                   <div className="col-span-4">Email</div>
                   <div className="col-span-2">Referrals</div>
                   <div className="col-span-3">Category</div>
                   <div className="col-span-3">Last Activity</div>
                 </div>
 
-                <div className="max-h-[600px] overflow-y-auto">
+                <div style={{ maxHeight: 600, overflowY: "auto" }}>
                   {preview.candidates.map((c) => (
                     <div
                       key={c.id}
-                      className="px-4 sm:px-6 py-4 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50"
+                      style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}
                     >
                       {/* Mobile */}
                       <div className="sm:hidden">
-                        <p className="font-medium truncate">{c.email}</p>
-                        <div className="flex items-center justify-between mt-1 text-xs text-neutral-500">
-                          <span>
-                            {c.referralCount} referral
-                            {c.referralCount !== 1 ? "s" : ""}
-                          </span>
+                        <p style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>{c.email}</p>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 11, color: "rgba(93,15,23,0.5)" }}>
+                          <span>{c.referralCount} referral{c.referralCount !== 1 ? "s" : ""}</span>
                           <span>{CATEGORY_LABELS[c.category] || c.category}</span>
                         </div>
                       </div>
                       {/* Desktop */}
-                      <div className="hidden sm:grid grid-cols-12 gap-4 text-sm">
-                        <div className="col-span-4 truncate">{c.email}</div>
-                        <div className="col-span-2 text-neutral-500">
-                          {c.referralCount}
-                        </div>
-                        <div className="col-span-3 text-neutral-500">
-                          {CATEGORY_LABELS[c.category] || c.category}
-                        </div>
-                        <div className="col-span-3 text-neutral-500">
-                          {formatDate(c.updatedAt)}
-                        </div>
+                      <div className="hidden sm:grid grid-cols-12 gap-4" style={{ fontSize: 13 }}>
+                        <div className="col-span-4" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>{c.email}</div>
+                        <div className="col-span-2" style={{ color: "rgba(93,15,23,0.5)" }}>{c.referralCount}</div>
+                        <div className="col-span-3" style={{ color: "rgba(93,15,23,0.5)" }}>{CATEGORY_LABELS[c.category] || c.category}</div>
+                        <div className="col-span-3" style={{ color: "rgba(93,15,23,0.5)" }}>{formatDate(c.updatedAt)}</div>
                       </div>
                     </div>
                   ))}
@@ -371,37 +281,8 @@ export default function GiveawayAdminPage() {
               </div>
             )}
           </div>
-        </section>
-      )}
-
-      {/* Admin Navigation */}
-      <section className="border-t border-neutral-200 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
-            <Link
-              href="/admin/sync"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Inventory Sync
-            </Link>
-            <Link
-              href="/admin/analytics"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Analytics
-            </Link>
-            <Link
-              href="/admin/emails"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Emails
-            </Link>
-            <span className="text-black min-h-[44px] flex items-center">
-              Giveaway
-            </span>
-          </div>
-        </div>
-      </section>
+        )}
+      </div>
     </main>
   );
 }

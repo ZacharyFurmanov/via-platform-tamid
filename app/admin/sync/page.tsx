@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   SQUARESPACE_STORES,
   SHOPIFY_STORES,
@@ -10,6 +8,7 @@ import {
   ALL_STORES,
   type Store,
 } from "@/app/lib/storeConfig";
+import AdminNav from "@/app/components/AdminNav";
 
 type SyncResult = {
   success?: boolean;
@@ -28,13 +27,6 @@ type StoreStatus = {
 
 export default function SyncAdminPage() {
   const [statuses, setStatuses] = useState<Record<string, StoreStatus>>({});
-  const router = useRouter();
-
-  async function handleLogout() {
-    await fetch("/api/admin/auth", { method: "DELETE" });
-    router.push("/admin/login");
-    router.refresh();
-  }
 
   async function handleSync(store: Store) {
     setStatuses((prev) => ({
@@ -103,308 +95,225 @@ export default function SyncAdminPage() {
   }
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      {/* Header */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-            <div className="flex items-center gap-4 text-sm flex-wrap">
-              <span className="text-black">Sync</span>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/collabs-links"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Collabs Links
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/analytics"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Analytics
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/emails"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Emails
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/giveaway"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Giveaway
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/editors-picks"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Editor&apos;s Picks
-              </Link>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-neutral-400 hover:text-black transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">Inventory Sync</h1>
-          <p className="text-neutral-600 text-base sm:text-lg">
-            Sync products from Squarespace and Shopify partner stores to the database.
+    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
+      <AdminNav />
+
+      {/* Page title */}
+      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
+          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
+            Inventory Sync
+          </h1>
+          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+            Sync products from all connected stores.
           </p>
         </div>
       </section>
 
       {/* Sync All Button */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 sm:py-6 flex justify-center sm:justify-end">
-          <button
-            onClick={handleSyncAll}
-            className="w-full sm:w-auto px-6 py-3 min-h-[48px] bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
-          >
-            Sync All Stores
-          </button>
-        </div>
-      </section>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px", display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={handleSyncAll}
+          style={{ padding: "10px 24px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: "pointer", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+        >
+          Sync All Stores
+        </button>
+      </div>
 
-      {/* Squarespace Stores */}
-      {SQUARESPACE_STORES.length > 0 && (
-        <section className="py-10 sm:py-16 border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Squarespace Stores</h2>
-            <div className="space-y-4 sm:space-y-6">
-              {SQUARESPACE_STORES.map((store) => {
-                const status = statuses[store.slug];
-                const isLoading = status?.loading;
-                const result = status?.result;
+      {/* Content */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 48px" }}>
 
-                return (
-                  <div
-                    key={store.slug}
-                    className="border border-neutral-200 p-4 sm:p-6"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      {/* Store Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg sm:text-xl font-serif mb-1">{store.name}</h3>
-                        <p className="text-xs sm:text-sm text-neutral-500 break-all">
-                          {store.shopUrl || store.rssUrl}
-                        </p>
-                      </div>
+        {/* Squarespace Stores */}
+        {SQUARESPACE_STORES.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>Squarespace Stores</h2>
+            {SQUARESPACE_STORES.map((store) => {
+              const status = statuses[store.slug];
+              const isLoading = status?.loading;
+              const result = status?.result;
 
-                      {/* Sync Button */}
-                      <button
-                        onClick={() => handleSync(store)}
-                        disabled={isLoading}
-                        className="w-full sm:w-auto px-5 py-3 min-h-[48px] border border-black text-sm tracking-wide hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {isLoading ? "Syncing..." : "Sync"}
-                      </button>
+              return (
+                <div
+                  key={store.slug}
+                  style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 12 }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 className="font-serif" style={{ fontSize: 17, color: "#5D0F17", marginBottom: 4 }}>{store.name}</h3>
+                      <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", wordBreak: "break-all" }}>
+                        {store.shopUrl || store.rssUrl}
+                      </p>
                     </div>
-
-                    {/* Result */}
-                    {result && (
-                      <div className="mt-3 pt-3 border-t border-neutral-100">
-                        {result.success ? (
-                          <div className="text-sm">
-                            <p className="text-green-700">
-                              {result.productCount} products synced
-                            </p>
-                            {result.skippedCount !== undefined && result.skippedCount > 0 && (
-                              <p className="text-neutral-500 mt-1">
-                                {result.skippedCount} skipped (sold out)
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-red-700 text-sm">
-                            {result.error}
-                            {result.details && (
-                              <span className="block text-neutral-500 mt-1">
-                                {result.details}
-                              </span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    <button
+                      onClick={() => handleSync(store)}
+                      disabled={isLoading}
+                      style={{ padding: "8px 20px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 13, whiteSpace: "nowrap" }}
+                    >
+                      {isLoading ? "Syncing..." : "Sync"}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Big Cartel Stores */}
-      {BIGCARTEL_STORES.length > 0 && (
-        <section className="py-10 sm:py-16 border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Big Cartel Stores</h2>
-            <div className="space-y-4 sm:space-y-6">
-              {BIGCARTEL_STORES.map((store) => {
-                const status = statuses[store.slug];
-                const isLoading = status?.loading;
-                const result = status?.result;
-
-                return (
-                  <div key={store.slug} className="border border-neutral-200 p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className="text-lg sm:text-xl font-serif">{store.name}</h3>
-                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
-                            Big Cartel
-                          </span>
+                  {result && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                      {result.success ? (
+                        <div style={{ fontSize: 13 }}>
+                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                            <p style={{ color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
+                          )}
                         </div>
-                        <p className="text-xs sm:text-sm text-neutral-500 break-all">
-                          api.bigcartel.com/{store.storeSlug}
+                      ) : (
+                        <p style={{ color: "#b91c1c", fontSize: 13 }}>
+                          {result.error}
+                          {result.details && (
+                            <span style={{ display: "block", color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.details}</span>
+                          )}
                         </p>
-                      </div>
-                      <button
-                        onClick={() => handleSync(store)}
-                        disabled={isLoading}
-                        className="w-full sm:w-auto px-5 py-3 min-h-[48px] border border-black text-sm tracking-wide hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {isLoading ? "Syncing..." : "Sync"}
-                      </button>
+                      )}
                     </div>
-                    {result && (
-                      <div className="mt-3 pt-3 border-t border-neutral-100">
-                        {result.success ? (
-                          <div className="text-sm">
-                            <p className="text-green-700">{result.productCount} products synced</p>
-                            {result.skippedCount !== undefined && result.skippedCount > 0 && (
-                              <p className="text-neutral-500 mt-1">{result.skippedCount} skipped (sold out)</p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-red-700 text-sm">
-                            {result.error}
-                            {result.details && (
-                              <span className="block text-neutral-500 mt-1">{result.details}</span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </section>
-      )}
+        )}
 
-      {/* Shopify Stores */}
-      <section className="py-10 sm:py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Shopify Stores</h2>
+        {/* Big Cartel Stores */}
+        {BIGCARTEL_STORES.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>Big Cartel Stores</h2>
+            {BIGCARTEL_STORES.map((store) => {
+              const status = statuses[store.slug];
+              const isLoading = status?.loading;
+              const result = status?.result;
+
+              return (
+                <div key={store.slug} style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <h3 className="font-serif" style={{ fontSize: 17, color: "#5D0F17" }}>{store.name}</h3>
+                        <span style={{ fontSize: 10, padding: "2px 8px", background: "#dbeafe", color: "#1e40af" }}>Big Cartel</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", wordBreak: "break-all" }}>
+                        api.bigcartel.com/{store.storeSlug}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleSync(store)}
+                      disabled={isLoading}
+                      style={{ padding: "8px 20px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 13, whiteSpace: "nowrap" }}
+                    >
+                      {isLoading ? "Syncing..." : "Sync"}
+                    </button>
+                  </div>
+                  {result && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                      {result.success ? (
+                        <div style={{ fontSize: 13 }}>
+                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                            <p style={{ color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ color: "#b91c1c", fontSize: 13 }}>
+                          {result.error}
+                          {result.details && (
+                            <span style={{ display: "block", color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.details}</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Shopify Stores */}
+        <div style={{ marginBottom: 32 }}>
+          <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>Shopify Stores</h2>
           {SHOPIFY_STORES.length > 0 ? (
-            <div className="space-y-4 sm:space-y-6">
-              {SHOPIFY_STORES.map((store) => {
-                const status = statuses[store.slug];
-                const isLoading = status?.loading;
-                const result = status?.result;
+            SHOPIFY_STORES.map((store) => {
+              const status = statuses[store.slug];
+              const isLoading = status?.loading;
+              const result = status?.result;
 
-                return (
-                  <div
-                    key={store.slug}
-                    className="border border-neutral-200 p-4 sm:p-6"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      {/* Store Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className="text-lg sm:text-xl font-serif">{store.name}</h3>
-                          <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded">
-                            Shopify
-                          </span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-neutral-500 break-all">
-                          {store.storeDomain}
-                        </p>
+              return (
+                <div
+                  key={store.slug}
+                  style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 12 }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <h3 className="font-serif" style={{ fontSize: 17, color: "#5D0F17" }}>{store.name}</h3>
+                        <span style={{ fontSize: 10, padding: "2px 8px", background: "#dcfce7", color: "#166534" }}>Shopify</span>
                       </div>
-
-                      {/* Sync Button */}
-                      <button
-                        onClick={() => handleSync(store)}
-                        disabled={isLoading}
-                        className="w-full sm:w-auto px-5 py-3 min-h-[48px] border border-black text-sm tracking-wide hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {isLoading ? "Syncing..." : "Sync"}
-                      </button>
+                      <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", wordBreak: "break-all" }}>
+                        {store.storeDomain}
+                      </p>
                     </div>
-
-                    {/* Result */}
-                    {result && (
-                      <div className="mt-3 pt-3 border-t border-neutral-100">
-                        {result.success ? (
-                          <div className="text-sm">
-                            <p className="text-green-700">
-                              {result.productCount} products synced
-                            </p>
-                            {result.skippedCount !== undefined && result.skippedCount > 0 && (
-                              <p className="text-neutral-500 mt-1">
-                                {result.skippedCount} skipped (sold out)
-                              </p>
-                            )}
-                            {result.shopName && (
-                              <p className="text-neutral-500 mt-1">
-                                from {result.shopName}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-red-700 text-sm">
-                            {result.error}
-                            {result.details && (
-                              <span className="block text-neutral-500 mt-1">
-                                {result.details}
-                              </span>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    <button
+                      onClick={() => handleSync(store)}
+                      disabled={isLoading}
+                      style={{ padding: "8px 20px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 13, whiteSpace: "nowrap" }}
+                    >
+                      {isLoading ? "Syncing..." : "Sync"}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                  {result && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                      {result.success ? (
+                        <div style={{ fontSize: 13 }}>
+                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                            <p style={{ color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
+                          )}
+                          {result.shopName && (
+                            <p style={{ color: "rgba(93,15,23,0.5)", marginTop: 4 }}>from {result.shopName}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ color: "#b91c1c", fontSize: 13 }}>
+                          {result.error}
+                          {result.details && (
+                            <span style={{ display: "block", color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.details}</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           ) : (
-            <div className="border border-dashed border-neutral-300 p-6 sm:p-8 text-center">
-              <p className="text-neutral-500 mb-3 sm:mb-4">
-                No Shopify stores configured yet.
-              </p>
-              <p className="text-xs sm:text-sm text-neutral-400">
-                Add stores in <code className="bg-neutral-100 px-1 text-xs">app/admin/sync/page.tsx</code>
+            <div style={{ background: "#fff", border: "1px dashed #e5e7eb", padding: "32px 24px", textAlign: "center" }}>
+              <p style={{ color: "rgba(93,15,23,0.5)", marginBottom: 8 }}>No Shopify stores configured yet.</p>
+              <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>
+                Add stores in <code style={{ background: "#F7F3EA", padding: "1px 4px", fontSize: 11 }}>app/admin/sync/page.tsx</code>
               </p>
             </div>
           )}
         </div>
-      </section>
 
-      {/* Help Section */}
-      <section className="border-t border-neutral-200 py-10 sm:py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
+        {/* Help Section */}
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 24, marginTop: 32 }}>
+          <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 20 }}>Setup Guide</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Squarespace Setup</h3>
-              <div className="text-sm text-neutral-600 space-y-2">
+              <h3 className="font-serif" style={{ fontSize: 15, color: "#5D0F17", marginBottom: 12 }}>Squarespace Setup</h3>
+              <div style={{ fontSize: 13, color: "rgba(93,15,23,0.7)", lineHeight: 1.6 }}>
                 <p>
-                  <span className="text-black">Shop URL (recommended):</span>{" "}
-                  <code className="text-xs bg-neutral-100 px-1">/shop</code>
+                  <span style={{ color: "#5D0F17" }}>Shop URL (recommended):</span>{" "}
+                  <code style={{ fontSize: 11, background: "#F7F3EA", padding: "1px 4px" }}>/shop</code>
                 </p>
-                <p>
-                  <span className="text-black">RSS fallback:</span>{" "}
-                  <code className="text-xs bg-neutral-100 px-1">/shop?format=rss</code>
+                <p style={{ marginTop: 8 }}>
+                  <span style={{ color: "#5D0F17" }}>RSS fallback:</span>{" "}
+                  <code style={{ fontSize: 11, background: "#F7F3EA", padding: "1px 4px" }}>/shop?format=rss</code>
                 </p>
-                <p className="mt-4 text-neutral-500">
+                <p style={{ marginTop: 12, color: "rgba(93,15,23,0.5)" }}>
                   Use the shop URL for stores with Squarespace Commerce (includes prices).
                   RSS is a fallback for stores with prices in descriptions.
                 </p>
@@ -412,87 +321,48 @@ export default function SyncAdminPage() {
             </div>
 
             <div>
-              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Shopify Collabs Setup</h3>
-              <div className="text-sm text-neutral-600 space-y-3">
-                <p className="text-black font-medium">What to tell the store owner:</p>
-                <ol className="list-decimal list-inside space-y-2 text-neutral-500 text-sm">
+              <h3 className="font-serif" style={{ fontSize: 15, color: "#5D0F17", marginBottom: 12 }}>Shopify Collabs Setup</h3>
+              <div style={{ fontSize: 13, color: "rgba(93,15,23,0.7)", lineHeight: 1.6 }}>
+                <p style={{ color: "#5D0F17", fontWeight: 600 }}>What to tell the store owner:</p>
+                <ol style={{ paddingLeft: 16, marginTop: 8, color: "rgba(93,15,23,0.6)" }}>
                   <li>Install the Shopify Collabs app from the Shopify App Store (free)</li>
-                  <li>In Shopify Admin, go to Apps → Collabs → set up a Program with commission rates</li>
-                  <li>Go to Recruiting → Invite Creator</li>
-                  <li>Enter your email address</li>
-                  <li>Attach the program offer to the invite and hit Send</li>
+                  <li style={{ marginTop: 4 }}>In Shopify Admin, go to Apps → Collabs → set up a Program with commission rates</li>
+                  <li style={{ marginTop: 4 }}>Go to Recruiting → Invite Creator</li>
+                  <li style={{ marginTop: 4 }}>Enter your email address</li>
+                  <li style={{ marginTop: 4 }}>Attach the program offer to the invite and hit Send</li>
                 </ol>
-                <p className="text-black font-medium mt-5">After you get the invite:</p>
-                <ol className="list-decimal list-inside space-y-2 text-neutral-500 text-sm">
-                  <li>Accept the invite from your email or at <code className="bg-neutral-100 px-1 text-xs">collabs.shopify.com</code></li>
-                  <li>Grab your unique affiliate link from the Collabs dashboard</li>
-                  <li>Ask the store owner for their Storefront Access Token (see Storefront API steps) so VYA can sync their products</li>
+                <p style={{ color: "#5D0F17", fontWeight: 600, marginTop: 16 }}>After you get the invite:</p>
+                <ol style={{ paddingLeft: 16, marginTop: 8, color: "rgba(93,15,23,0.6)" }}>
+                  <li>Accept the invite from your email or at <code style={{ fontSize: 11, background: "#F7F3EA", padding: "1px 4px" }}>collabs.shopify.com</code></li>
+                  <li style={{ marginTop: 4 }}>Grab your unique affiliate link from the Collabs dashboard</li>
+                  <li style={{ marginTop: 4 }}>Ask the store owner for their Storefront Access Token (see Storefront API steps) so VYA can sync their products</li>
                 </ol>
-                <p className="mt-4 text-neutral-400 text-xs">
+                <p style={{ marginTop: 12, fontSize: 11, color: "rgba(93,15,23,0.4)" }}>
                   Invites expire after 30 days. The brand only needs your email to invite you.
                 </p>
               </div>
             </div>
 
             <div>
-              <h3 className="text-base sm:text-lg font-serif mb-3 sm:mb-4">Shopify Storefront API</h3>
-              <div className="text-sm text-neutral-600 space-y-3">
+              <h3 className="font-serif" style={{ fontSize: 15, color: "#5D0F17", marginBottom: 12 }}>Shopify Storefront API</h3>
+              <div style={{ fontSize: 13, color: "rgba(93,15,23,0.7)", lineHeight: 1.6 }}>
                 <p>To sync products, get the store&apos;s Storefront Access Token:</p>
-                <ol className="list-decimal list-inside space-y-1 text-neutral-500 text-sm">
+                <ol style={{ paddingLeft: 16, marginTop: 8, color: "rgba(93,15,23,0.6)" }}>
                   <li>Go to Shopify Admin → Settings</li>
-                  <li>Click &quot;Apps and sales channels&quot;</li>
-                  <li>Click &quot;Develop apps&quot; → Create an app</li>
-                  <li>Configure Storefront API scopes</li>
-                  <li>Install the app and copy the token</li>
+                  <li style={{ marginTop: 4 }}>Click &quot;Apps and sales channels&quot;</li>
+                  <li style={{ marginTop: 4 }}>Click &quot;Develop apps&quot; → Create an app</li>
+                  <li style={{ marginTop: 4 }}>Configure Storefront API scopes</li>
+                  <li style={{ marginTop: 4 }}>Install the app and copy the token</li>
                 </ol>
-                <p className="mt-4">
-                  <span className="text-black">Required scopes:</span>{" "}
-                  <code className="bg-neutral-100 px-1 text-xs break-all">unauthenticated_read_product_listings</code>
+                <p style={{ marginTop: 12 }}>
+                  <span style={{ color: "#5D0F17" }}>Required scopes:</span>{" "}
+                  <code style={{ fontSize: 11, background: "#F7F3EA", padding: "1px 4px", wordBreak: "break-all" }}>unauthenticated_read_product_listings</code>
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Admin Navigation */}
-      <section className="border-t border-neutral-200 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
-            <span className="text-black min-h-[44px] flex items-center">Inventory Sync</span>
-            <Link
-              href="/admin/collabs-links"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Collabs Links
-            </Link>
-            <Link
-              href="/admin/analytics"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Analytics
-            </Link>
-            <Link
-              href="/admin/emails"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Emails
-            </Link>
-            <Link
-              href="/admin/giveaway"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Giveaway
-            </Link>
-            <Link
-              href="/admin/editors-picks"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Editor&apos;s Picks
-            </Link>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
   );
 }

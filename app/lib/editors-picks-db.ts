@@ -58,12 +58,15 @@ export async function getAllEditorsPicks(): Promise<PickWithProduct[]> {
       p.image,
       p.images,
       p.size,
-      p.external_url
+      p.external_url,
+      COUNT(c.id) AS click_count
     FROM editors_picks ep
     JOIN products p ON p.id = ep.product_id
+    LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
     WHERE ep.week_start = ${FIXED_WEEK}
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-    ORDER BY ep.position ASC
+    GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
+    ORDER BY click_count DESC, ep.position ASC
   `;
 
   return rows.map((r) => ({
@@ -130,7 +133,17 @@ function mapProductRow(r: Record<string, unknown>): ProductResult {
   };
 }
 
-export async function getProductsByStore(storeSlug: string, limit = 200): Promise<ProductResult[]> {
+export async function getAllProducts(): Promise<ProductResult[]> {
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`
+    SELECT id, store_slug, store_name, title, price, image
+    FROM products
+    ORDER BY store_slug, title
+  `;
+  return rows.map(mapProductRow);
+}
+
+export async function getProductsByStore(storeSlug: string, limit = 300): Promise<ProductResult[]> {
   const sql = neon(getDatabaseUrl());
   const rows = await sql`
     SELECT id, store_slug, store_name, title, price, image
@@ -152,14 +165,14 @@ export async function searchProducts(q: string, storeSlug?: string): Promise<Pro
         WHERE title ILIKE ${"%" + q + "%"}
           AND store_slug = ${storeSlug}
         ORDER BY title
-        LIMIT 30
+        LIMIT 50
       `
     : await sql`
         SELECT id, store_slug, store_name, title, price, image
         FROM products
         WHERE title ILIKE ${"%" + q + "%"}
         ORDER BY title
-        LIMIT 30
+        LIMIT 50
       `;
 
   return rows.map(mapProductRow);

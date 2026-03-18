@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import AdminNav from "@/app/components/AdminNav";
 
 type StoreCount = Record<string, number>;
 
@@ -44,13 +43,6 @@ export default function CollabsLinksPage() {
   } | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [log, setLog] = useState<string[]>([]);
-  const router = useRouter();
-
-  async function handleLogout() {
-    await fetch("/api/admin/auth", { method: "DELETE" });
-    router.push("/admin/login");
-    router.refresh();
-  }
 
   async function checkMissing() {
     setChecking(true);
@@ -200,62 +192,24 @@ export default function CollabsLinksPage() {
     : missing?.total || 0;
 
   return (
-    <main className="bg-white min-h-screen text-black">
-      {/* Header */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-            <div className="flex items-center gap-4 text-sm flex-wrap">
-              <Link
-                href="/admin/sync"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Sync
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <span className="text-black">Collabs Links</span>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/analytics"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Analytics
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/emails"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Emails
-              </Link>
-              <span className="text-neutral-300">/</span>
-              <Link
-                href="/admin/giveaway"
-                className="text-neutral-400 hover:text-black transition-colors min-h-[44px] flex items-center"
-              >
-                Giveaway
-              </Link>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-neutral-400 hover:text-black transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-serif mb-3 sm:mb-4">
+    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
+      <AdminNav />
+
+      {/* Page title */}
+      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
+          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
             Collabs Links
           </h1>
-          <p className="text-neutral-600 text-base sm:text-lg">
-            Generate per-product affiliate links from Shopify Collabs. These
-            links handle tracking and attribution automatically.
+          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+            Generate per-product affiliate links from Shopify Collabs. These links handle tracking and attribution automatically.
           </p>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-8">
+      <section style={{ borderBottom: "1px solid #e5e7eb", background: "#fff", marginTop: 24 }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px" }}>
           {checking ? (
             <p className="text-sm text-neutral-500">Checking products...</p>
           ) : missing ? (
@@ -376,8 +330,8 @@ export default function CollabsLinksPage() {
 
       {/* Verify Links */}
       {missing?.sampleLinks && missing.sampleLinks.length > 0 && (
-        <section className="border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6 py-6 sm:py-8">
+        <section style={{ borderBottom: "1px solid #e5e7eb" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px" }}>
             <h2 className="text-lg font-serif mb-4">Verify Links</h2>
 
             {missing.redirectInfo && (
@@ -417,8 +371,8 @@ export default function CollabsLinksPage() {
 
       {/* Generate Form */}
       {missing && missing.total > 0 && (
-        <section className="py-10 sm:py-16 border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-6">
+        <section style={{ borderBottom: "1px solid #e5e7eb", padding: "24px 0" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px" }}>
             <h2 className="text-xl sm:text-2xl font-serif mb-6">
               Generate Links
             </h2>
@@ -616,40 +570,6 @@ export default function CollabsLinksPage() {
         </section>
       )}
 
-      {/* Admin Navigation */}
-      <section className="border-t border-neutral-200 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
-            <Link
-              href="/admin/sync"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Inventory Sync
-            </Link>
-            <span className="text-black min-h-[44px] flex items-center">
-              Collabs Links
-            </span>
-            <Link
-              href="/admin/analytics"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Analytics
-            </Link>
-            <Link
-              href="/admin/emails"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Emails
-            </Link>
-            <Link
-              href="/admin/giveaway"
-              className="text-neutral-500 hover:text-black transition-colors min-h-[44px] flex items-center"
-            >
-              Giveaway
-            </Link>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }

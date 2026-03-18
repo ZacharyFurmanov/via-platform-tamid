@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchProducts, getProductsByStore } from "@/app/lib/editors-picks-db";
+import { searchProducts, getProductsByStore, getAllProducts } from "@/app/lib/editors-picks-db";
 
 function hashPassword(password: string): string {
   let hash = 0;
@@ -41,8 +41,9 @@ export async function GET(request: NextRequest) {
       const products = await searchProducts(q.trim(), store || undefined);
       return NextResponse.json({ products });
     }
-    // No query, no store → return empty
-    return NextResponse.json({ products: [] });
+    // No query, no store → return all products
+    const products = await getAllProducts();
+    return NextResponse.json({ products });
   } catch (error) {
     console.error("Product search failed:", error);
     return NextResponse.json({ error: "Search failed" }, { status: 500 });

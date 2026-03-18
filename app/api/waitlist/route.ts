@@ -89,20 +89,33 @@ export async function GET() {
     await ensureTable();
     const sql = neon(getDatabaseUrl());
 
-    const rows = await sql`
-      SELECT email, signup_date, source FROM waitlist ORDER BY signup_date ASC
-    `;
+    const [waitlistRows, pilotRows] = await Promise.all([
+      sql`SELECT email, signup_date AS signed_up, source FROM waitlist`,
+      sql`SELECT email, created_at AS signed_up, status FROM pilot_access`.catch(() => []),
+    ]);
 
-    const emails = rows.map((row) => ({
-      email: row.email,
-      signupDate: row.signup_date,
-      source: row.source,
-    }));
+    const seen = new Set<string>();
+    const emails: { email: string; signupDate: string; source: string }[] = [];
 
-    return NextResponse.json({
-      count: emails.length,
-      emails,
-    });
+    for (const row of waitlistRows) {
+      const e = row.email.toLowerCase();
+      if (!seen.has(e)) {
+        seen.add(e);
+        emails.push({ email: e, signupDate: row.signed_up, source: row.source || "waitlist" });
+      }
+    }
+
+    for (const row of pilotRows) {
+      const e = row.email.toLowerCase();
+      if (!seen.has(e)) {
+        seen.add(e);
+        emails.push({ email: e, signupDate: row.signed_up, source: `pilot-${row.status}` });
+      }
+    }
+
+    emails.sort((a, b) => new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime());
+
+    return NextResponse.json({ count: emails.length, emails });
   } catch (error) {
     console.error("[Waitlist] Error fetching emails:", error);
     return NextResponse.json(
