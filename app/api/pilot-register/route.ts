@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getPilotStatus,
   createPilotEntry,
-  isEmailInWaitlist,
   checkAndApproveReferrer,
 } from "@/app/lib/pilot-db";
 import { sendPilotApprovalEmail, sendWaitlistConfirmationEmail } from "@/app/lib/email";
@@ -24,8 +23,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: existingStatus, alreadyRegistered: true });
     }
 
-    const inWaitlist = await isEmailInWaitlist(normalizedEmail);
-    const status = inWaitlist ? "approved" : "pending";
+    // Everyone starts as pending — approved via cron after 7 days or manual approval
+    const status = "pending";
 
     await createPilotEntry({
       email: normalizedEmail,
@@ -38,16 +37,9 @@ export async function POST(request: NextRequest) {
       referredBy: normalizedReferralCode,
     });
 
-    // Send confirmation email based on status
-    if (status === "approved") {
-      sendPilotApprovalEmail(normalizedEmail, firstName.trim()).catch(
-        (err) => console.error("[PilotRegister] Approval email failed:", err)
-      );
-    } else {
-      sendWaitlistConfirmationEmail(normalizedEmail, firstName.trim()).catch(
-        (err) => console.error("[PilotRegister] Waitlist email failed:", err)
-      );
-    }
+    sendWaitlistConfirmationEmail(normalizedEmail, firstName.trim()).catch(
+      (err) => console.error("[PilotRegister] Waitlist email failed:", err)
+    );
 
     // If signed up via a referral code, approve the referrer immediately
     if (normalizedReferralCode) {

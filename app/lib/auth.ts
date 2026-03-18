@@ -38,7 +38,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       from: "VYA <hana@theviaplatform.com>",
       apiKey: process.env.RESEND_API_KEY,
-      allowDangerousEmailAccountLinking: true,
       async sendVerificationRequest({ identifier: email, url }) {
         const { Resend: ResendClient } = await import("resend");
         const resend = new ResendClient(process.env.RESEND_API_KEY!);
