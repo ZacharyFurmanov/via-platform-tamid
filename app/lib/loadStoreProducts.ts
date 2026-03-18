@@ -18,11 +18,24 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ["bags", [
     "bag", "clutch", "tote", "purse", "handbag", "pouch",
     "backpack", "rucksack", "satchel", "crossbody", "cross-body",
-    "minaudiere", "minaudière", "wristlet", "baguette bag", "hobo bag",
+    "minaudiere", "minaudière", "wristlet", "baguette", "hobo",
     "bucket bag", "fanny pack", "belt bag", "shopper", "luggage",
     "suitcase", "duffel", "evening bag",
+    // LV
     "pochette", "cabas", "musette", "keepall", "speedy", "neverfull",
     "alma", "papillon", "noé", "noe", "deauville", "vanity",
+    // Fendi
+    "peekaboo", "kan i", "baguette", "first bag", "sunshine",
+    // Chanel
+    "flap bag", "boy bag", "2.55", "cambon", "gabrielle",
+    // Gucci
+    "marmont", "dionysus", "bamboo", "ophidia", "horsebit",
+    // Prada
+    "galleria", "saffiano",
+    // Balenciaga
+    "city bag", "le cagole",
+    // Generic styles without "bag" in name
+    "envelope", "frame bag", "chain wallet", "chain bag",
   ]],
   // Specific garment types first — these take priority over material keywords
   ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress"]],
