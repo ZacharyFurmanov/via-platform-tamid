@@ -71,12 +71,28 @@ export default function RegisterPage() {
           </div>
 
           {submitted ? (
-            <div className="text-center">
-              <h1 className="font-serif text-3xl text-[#5D0F17] mb-4">You&apos;re on the list.</h1>
-              <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-6">
+            <div>
+              <h1 className="font-serif text-3xl text-[#5D0F17] mb-3">You&apos;re on the list.</h1>
+              <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-8">
                 We&apos;ve added <strong>{email}</strong> to the waitlist. We&apos;ll let you know when you&apos;re in.
               </p>
-              <p className="text-[#5D0F17]/40 text-xs">
+
+              {/* Giveaway CTA */}
+              <div className="bg-[#5D0F17] px-6 py-6 mb-6">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
+                <p className="font-serif text-xl text-[#F7F3EA] mb-2">Win a $1,000 vintage shopping spree</p>
+                <p className="text-xs text-[#F7F3EA]/60 leading-relaxed mb-4">
+                  Invite 2 friends who join the waitlist using your link to be officially entered.
+                </p>
+                <Link
+                  href="/pilot-pending"
+                  className="inline-block bg-[#F7F3EA] text-[#5D0F17] px-6 py-2.5 text-xs uppercase tracking-[0.15em] hover:bg-white transition"
+                >
+                  Get My Referral Link
+                </Link>
+              </div>
+
+              <p className="text-[#5D0F17]/40 text-xs text-center">
                 Already have an account?{" "}
                 <Link href="/login" className="underline text-[#5D0F17]/60">
                   Sign in
