@@ -10,6 +10,23 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  images: {
+    remotePatterns: [
+      // Shopify CDN (product images)
+      { protocol: "https", hostname: "**.shopify.com" },
+      { protocol: "https", hostname: "**.shopifycdn.com" },
+      // Shopify Collabs CDN
+      { protocol: "https", hostname: "**.collabs.shop" },
+      // Squarespace (LEI, Montrose Edit)
+      { protocol: "https", hostname: "**.squarespace.com" },
+      { protocol: "https", hostname: "**.sqspcdn.com" },
+      // Big Cartel
+      { protocol: "https", hostname: "**.bigcartel.com" },
+      // Generic CDNs used by stores
+      { protocol: "https", hostname: "**.cloudinary.com" },
+      { protocol: "https", hostname: "**.imgix.net" },
+    ],
+  },
 };
 
 export default nextConfig;

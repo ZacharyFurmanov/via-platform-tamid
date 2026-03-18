@@ -63,7 +63,7 @@ body { margin: 0; padding: 0; background-color: #F7F3EA !important; font-family:
 
     <!-- Header: logo + subtitle -->
     <div style="text-align:center;margin-bottom:56px;">
-      <img src="${BASE_URL}/vya-logo.png" alt="VYA." width="160"
+      <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="160"
         style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
       <p style="margin:10px 0 0;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;
         color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">${subtitle}</p>
@@ -706,7 +706,8 @@ async function createMagicSignInLink(email: string): Promise<string> {
     `;
 
     // callbackUrl goes through pilot-check so the via_access cookie gets set
-    const callbackUrl = `${BASE_URL}/api/pilot-check?next=/`;
+    // Use a relative path so Auth.js doesn't reject it as cross-origin
+    const callbackUrl = `/api/pilot-check?next=/`;
     const params = new URLSearchParams({ callbackUrl, token: rawToken, email });
     return `${BASE_URL}/api/auth/callback/resend?${params}`;
   } catch {

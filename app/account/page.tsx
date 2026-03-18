@@ -352,7 +352,9 @@ export default async function AccountPage() {
             </div>
             <div className="shrink-0 sm:w-48">
               <a
-                href="sms:+12407628431"
+                href="https://form.typeform.com/to/ssrEgHZ1"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block w-full border border-[#5D0F17] text-[#5D0F17] text-xs uppercase tracking-[0.15em] py-3 text-center hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition-colors duration-200"
               >
                 Send Feedback
@@ -363,7 +365,7 @@ export default async function AccountPage() {
 
         {/* ===== Settings ===== */}
         <section className="py-12 mb-8">
-          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} isMember={isMember} memberSince={memberSince} />
+          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} isMember={isMember} memberSinceLabel={memberSince ? memberSince.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} />
         </section>
       </div>
     </main>

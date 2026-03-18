@@ -141,7 +141,7 @@ export const stores = [
     name: "Lovergirl Vintage",
     location: "Newport Beach, CA",
     description:
-      "Lover Girl Vintage is a curated collection of vintage and pre-loved fashion, hand-selected with a feminine, romantic eye. Based in Newport Beach, each piece is chosen for its charm, character, and timeless appeal.",
+      "Lovergirl Vintage is a curated vintage denim & blazer destination, focused on sourcing timeless pieces that combine quality, fit, and everyday wearability.",
     website: "https://lovergirlvintage.com",
     dataSource: "lover-girl-vintage",
     image: "/stores/lover-girl-vintage.jpg",
@@ -228,6 +228,27 @@ export const stores = [
       "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind — with a focus on bags and shoes, each selected to give it a second life. Sustainability is at the heart of the curation, and every item is personally chosen and accurately described before listing.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
+    slug: "montrose-edit",
+    dashboardToken: "me-4a7c2e9f1b8d",
+    name: "Montrose Edit",
+    location: "Houston, TX",
+    description:
+      "MontroseEdit is a Houston based curated luxury resale brand specializing in elevated pre loved designer pieces. Rooted in storytelling and personal style, MontroseEdit is more than a storefront — it is a community built around the Montrose girl, someone who is effortless, fashion forward, and intentional in the way she lives and dresses. Through curated drops, pop ups, luxury markets, and digital content, we bring a fresh and approachable perspective to luxury resale, making timeless pieces feel personal, accessible, and meaningful.",
+    website: "https://www.montroseedit.com",
+    dataSource: "montrose-edit",
+    image: "/stores/montrose-edit.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "squarespace-manual" as const,
+    authenticityPolicy:
+      "Every piece at Montrose Edit is personally sourced and hand-selected for its quality, character, and elevated aesthetic. Specializing in pre-loved designer pieces, each item is carefully inspected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from Houston, TX. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
@@ -397,10 +418,10 @@ export const stores = [
     name: "The Objects of Affection",
     location: "New Hope, Pennsylvania",
     description:
-      "Founded by Mackenzie, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras. With an archival mindset and an editorial eye, each piece is sourced not for trend but for reverence — hand-selected for craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives.",
+      "The Objects of Affection is a curated archive of vintage heels, handbags, and rare designer finds, centered around pieces that hold both history and lasting value.",
     website: "https://theobjectsofaffection.com",
     dataSource: "the-objects-of-affection",
-    image: "/stores/the-objects-of-affection-2.jpg",
+    image: "/stores/the-objects-of-affection-3.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
@@ -573,6 +594,7 @@ export const storeContactEmails: Record<string, string> = {
   "moonstruck-vintage": "moonstruckvintagenyc@gmail.com",
   "sheer-vintage": "jena.hirsch@hotmail.com",
   "maison-optimism-vintage": "maisonoptimism@gmail.com",
+  "montrose-edit": "themontroseedit@gmail.com",
   "vintari-vault": "admin@vintarivault.com",
   "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications

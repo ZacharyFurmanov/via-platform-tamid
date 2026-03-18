@@ -8,12 +8,12 @@ export default function AccountActions({
   notificationsEnabled: initialEnabled,
   initialPhone,
   isMember,
-  memberSince,
+  memberSinceLabel,
 }: {
   notificationsEnabled: boolean;
   initialPhone: string;
   isMember: boolean;
-  memberSince: Date | null;
+  memberSinceLabel: string | null;
 }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [saving, setSaving] = useState(false);
@@ -126,14 +126,8 @@ export default function AccountActions({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-100">
             <div>
               <h3 className="text-sm font-medium mb-1">Active Member</h3>
-              {memberSince && (
-                <p className="text-xs text-black/50">
-                  Since{" "}
-                  {memberSince.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
+              {memberSinceLabel && (
+                <p className="text-xs text-black/50">Since {memberSinceLabel}</p>
               )}
             </div>
             <MembershipPortalButton />

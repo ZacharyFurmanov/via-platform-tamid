@@ -3,7 +3,6 @@ import { auth } from "@/app/lib/auth";
 import {
   getPilotStatus,
   createPilotEntry,
-  isEmailInWaitlist,
   checkAndApproveReferrer,
 } from "@/app/lib/pilot-db";
 import { sendPilotApprovalEmail } from "@/app/lib/email";
@@ -18,27 +17,35 @@ export async function GET(request: NextRequest) {
   }
 
   const email = session.user.email.toLowerCase().trim();
-  let status = await getPilotStatus(email);
+  let status: Awaited<ReturnType<typeof getPilotStatus>>;
 
-  if (status === null) {
-    const inWaitlist = await isEmailInWaitlist(email);
-    status = inWaitlist ? "approved" : "pending";
+  try {
+    status = await getPilotStatus(email);
 
-    // Pick up referral code set by Google OAuth flow (short-lived client cookie)
-    const pendingRef = request.cookies.get("vya_pending_ref")?.value;
-    const referredBy = pendingRef ? decodeURIComponent(pendingRef).toUpperCase() : undefined;
+    if (status === null) {
+      // Everyone starts as pending — approved via cron after 7 days or manual approval
+      status = "pending";
 
-    await createPilotEntry({ email, status, referredBy });
+      // Pick up referral code set by Google OAuth flow (short-lived client cookie)
+      const pendingRef = request.cookies.get("vya_pending_ref")?.value;
+      const referredBy = pendingRef ? decodeURIComponent(pendingRef).toUpperCase() : undefined;
 
-    // If referred, approve the referrer immediately
-    if (referredBy) {
-      const approved = await checkAndApproveReferrer(referredBy);
-      if (approved) {
-        sendPilotApprovalEmail(approved.email, approved.firstName ?? undefined).catch(
-          (err) => console.error("[PilotCheck] Referrer approval email failed:", err)
-        );
+      await createPilotEntry({ email, status, referredBy });
+
+      // If referred, approve the referrer immediately
+      if (referredBy) {
+        const approved = await checkAndApproveReferrer(referredBy).catch(() => null);
+        if (approved) {
+          sendPilotApprovalEmail(approved.email, approved.firstName ?? undefined).catch(
+            (err) => console.error("[PilotCheck] Referrer approval email failed:", err)
+          );
+        }
       }
     }
+  } catch (err) {
+    console.error("[PilotCheck] DB error:", err);
+    // On DB failure, redirect to pending rather than showing a 500
+    return NextResponse.redirect(new URL("/pilot-pending", request.url));
   }
 
   if (status === "approved") {

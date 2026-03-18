@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { stores } from "@/app/lib/stores";
 
+export const revalidate = 3600; // Re-render at most once per hour
+
 export default function StoresPage() {
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
@@ -63,9 +65,6 @@ export default function StoresPage() {
                   {store.location}
                 </p>
 
-                <p className="hidden sm:block text-sm text-[#5D0F17]/70 leading-relaxed line-clamp-3">
-                  {store.description}
-                </p>
 
               </div>
             ))}

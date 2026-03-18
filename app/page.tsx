@@ -55,6 +55,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ================= EDITOR'S PICKS ================= */}
+      <ScrollReveal>
+        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
+          <EditorsPicksSection />
+        </Suspense>
+      </ScrollReveal>
+
       {/* ================= SHOP BY STORE ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24">
         <div className="max-w-7xl mx-auto">
@@ -131,22 +138,15 @@ export default function HomePage() {
 
       {/* ================= NEW ARRIVALS ================= */}
       <ScrollReveal>
-        <Suspense>
+        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
           <NewArrivalsSection />
         </Suspense>
       </ScrollReveal>
 
       {/* ================= SHOP BY DESIGNER ================= */}
       <ScrollReveal>
-        <Suspense>
+        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-48" />}>
           <BrandsSection />
-        </Suspense>
-      </ScrollReveal>
-
-      {/* ================= EDITOR'S PICKS ================= */}
-      <ScrollReveal>
-        <Suspense>
-          <EditorsPicksSection />
         </Suspense>
       </ScrollReveal>
 

@@ -34,6 +34,12 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
     slug: "lei-vintage",
     shopUrl: "https://www.leivintage.com/shop",
   },
+  {
+    type: "squarespace",
+    name: "Montrose Edit",
+    slug: "montrose-edit",
+    shopUrl: "https://www.montroseedit.com/shop",
+  },
 ];
 
 // Shopify stores (Storefront API)

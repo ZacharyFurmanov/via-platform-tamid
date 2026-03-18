@@ -52,8 +52,7 @@ export default function PilotPendingPage() {
           </h1>
 
           <p className="text-sm text-[#5D0F17]/60 leading-relaxed mb-3">
-            We&apos;re reviewing applications and will email you when your account is approved.
-            Approvals are sent within 7 days.
+            You&apos;re added to the wait. We&apos;ll let you know when you can start shopping our pilot.
           </p>
 
           <p className="text-sm text-[#5D0F17]/40 leading-relaxed mb-8">

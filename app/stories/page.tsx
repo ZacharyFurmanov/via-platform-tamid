@@ -73,6 +73,25 @@ const stories = [
     logoBg: "#ffffff",
     logoFit: "cover" as const,
   },
+  {
+    slug: "lover-girl-vintage",
+    store: "Lovergirl Vintage",
+    teaser:
+      "A curated vintage denim & blazer destination — every piece handpicked by Lexi for quality, fit, and everyday wearability.",
+    logo: "/stores/lover-girl-vintage-logo.jpg",
+    logoBg: "#F2EDE6",
+    logoFit: "contain" as const,
+    logoZoom: 3,
+  },
+  {
+    slug: "the-objects-of-affection",
+    store: "The Objects of Affection",
+    teaser:
+      "A collector's archive of vintage heels, handbags, and rare designer finds — chosen for history, craftsmanship, and lasting value.",
+    logo: "/stores/the-objects-of-affection-brand.jpg",
+    logoBg: "#8B2257",
+    logoFit: "cover" as const,
+  },
 ];
 
 export default function StoriesPage() {

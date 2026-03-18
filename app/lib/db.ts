@@ -109,6 +109,10 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC)
   `;
 
+  // Remove products synced under the old computed slug for Bloda's Choice
+  // (computed: "bloda-s-choice", correct: "blodas-choice")
+  await sql`DELETE FROM products WHERE store_slug = 'bloda-s-choice'`;
+
   // Deduplicate any existing rows before enforcing the unique constraint
   await sql`
     DELETE FROM products
@@ -121,6 +125,20 @@ export async function initDatabase() {
   await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_products_store_title
     ON products(store_slug, title)
+  `;
+
+  // Composite index for store detail pages (filter by store + available for purchase)
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_products_store_collabs
+    ON products(store_slug, collabs_link)
+    WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL
+  `;
+
+  // Index for insider notification queries
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_products_insider_notified
+    ON products(insider_notified, created_at DESC)
+    WHERE insider_notified = FALSE
   `;
 }
 

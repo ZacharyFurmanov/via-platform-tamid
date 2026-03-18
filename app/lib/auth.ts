@@ -38,6 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       from: "VYA <hana@theviaplatform.com>",
       apiKey: process.env.RESEND_API_KEY,
+      allowDangerousEmailAccountLinking: true,
       async sendVerificationRequest({ identifier: email, url }) {
         const { Resend: ResendClient } = await import("resend");
         const resend = new ResendClient(process.env.RESEND_API_KEY!);
@@ -70,7 +71,7 @@ ${baseStyles()}
 <div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
   <div class="container" style="max-width:600px;margin:0 auto;">
     <div class="header" style="text-align:center;padding:32px 0 28px;">
-      <img src="${BASE_URL}/vya-logo.png" alt="VYA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
+      <img src="https://vyaplatform.com/vya-logo.png" alt="VYA" width="120" style="display:block;margin:0 auto;max-height:80px;width:auto;" border="0" />
     </div>
     <div class="content" style="background:#ffffff;padding:40px 32px;">
       <h2>Sign in to VYA</h2>
