@@ -17,6 +17,114 @@ type Customer = {
   emailSubscribe: boolean;
 };
 
+type ActivityData = {
+  userId: string | null;
+  favorites: { product_id: number; title: string | null; image: string | null; store_name: string | null; price: string | null; created_at: string }[];
+  cart: { product_id: number; product_title: string; product_image: string | null; store_name: string; price: string; currency: string; added_at: string }[];
+  clicks: { product_name: string; store: string; timestamp: string }[];
+  orders: { order_id: string; order_total: number; store_name: string; timestamp: string }[];
+};
+
+function fmtTime(date: string | null) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () => void }) {
+  const [data, setData] = useState<ActivityData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/admin/customers/activity?email=${encodeURIComponent(customer.email)}`)
+      .then((r) => r.json())
+      .then((d) => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [customer.email]);
+
+  const section = (title: string, count: number) => (
+    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "24px 0 10px" }}>
+      {title} <span style={{ color: "#5D0F17" }}>({count})</span>
+    </p>
+  );
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }} />
+
+      {/* Panel */}
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 420, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" }}>
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <p style={{ fontWeight: 600, color: "#5D0F17", fontSize: 15, margin: 0 }}>{customer.name || "—"}</p>
+            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", margin: "2px 0 0" }}>{customer.email}</p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "rgba(93,15,23,0.4)", lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+
+        <div style={{ padding: "0 24px 32px" }}>
+          {loading ? (
+            <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)", marginTop: 24 }}>Loading…</p>
+          ) : !data?.userId ? (
+            <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)", marginTop: 24 }}>No account activity yet — user hasn&apos;t signed in.</p>
+          ) : (
+            <>
+              {/* Favorites */}
+              {section("Liked Items", data.favorites.length)}
+              {data.favorites.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.favorites.map((f, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                  {f.image ? <img src={f.image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#F7F3EA", flexShrink: 0 }} />}
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.title || "Unknown"}</p>
+                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{f.store_name} {f.price ? `· $${f.price}` : ""}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Cart */}
+              {section("In Cart", data.cart.length)}
+              {data.cart.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.cart.map((c, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                  {c.product_image ? <img src={c.product_image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#F7F3EA", flexShrink: 0 }} />}
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.product_title}</p>
+                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.store_name} · ${c.price}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Clicks */}
+              {section("Clicked Through to Store", data.clicks.length)}
+              {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.clicks.map((c, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.product_name}</p>
+                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.store}</p>
+                  </div>
+                  <p style={{ fontSize: 11, color: "rgba(93,15,23,0.35)", whiteSpace: "nowrap", flexShrink: 0 }}>{fmtTime(c.timestamp)}</p>
+                </div>
+              ))}
+
+              {/* Orders */}
+              {section("Orders", data.orders.length)}
+              {data.orders.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.orders.map((o, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div>
+                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0 }}>{o.store_name}</p>
+                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{fmtTime(o.timestamp)}</p>
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#5D0F17" }}>${o.order_total.toFixed(2)}</p>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function fmt(date: string | null) {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("en-US", {
@@ -35,6 +143,7 @@ export default function CustomersPage() {
   const [approving, setApproving] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
   const [emailProgress, setEmailProgress] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   async function handleApproveAll() {
     const pendingCustomers = customers.filter((c) => c.status !== "approved");
@@ -140,6 +249,7 @@ export default function CustomersPage() {
   };
 
   return (
+    <>
     <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
       <AdminNav />
 
@@ -253,7 +363,7 @@ export default function CustomersPage() {
               </thead>
               <tbody>
                 {filtered.map((c, i) => (
-                  <tr key={c.email} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <tr key={c.email} onClick={() => setSelectedCustomer(c)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                     <td style={{ padding: "12px 16px", color: "rgba(93,15,23,0.3)" }}>{i + 1}</td>
                     <td style={{ padding: "12px 16px" }}>
                       <p style={{ fontWeight: 500, color: "#5D0F17" }}>{c.name || "—"}</p>
@@ -306,7 +416,7 @@ export default function CustomersPage() {
                     <td style={{ padding: "12px 16px" }}>
                       {c.status !== "approved" && (
                         <button
-                          onClick={() => handleApprove(c.email, c.name)}
+                          onClick={(e) => { e.stopPropagation(); handleApprove(c.email, c.name); }}
                           disabled={approving === c.email}
                           style={{
                             fontSize: 11,
@@ -336,5 +446,9 @@ export default function CustomersPage() {
         )}
       </div>
     </main>
+    {selectedCustomer && (
+      <ActivityPanel customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
+    )}
+    </>
   );
 }
