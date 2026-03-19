@@ -252,17 +252,17 @@ export async function GET(request: NextRequest) {
         LIMIT 15
       `,
 
-      // recentActivity — last 30 clicks
+      // recentActivity — last 50 product views (clicking a product on VYA)
       sql`
         SELECT
-          'click' AS type,
-          timestamp,
-          product_name AS "productName",
-          store,
-          product_id AS "productId"
-        FROM clicks
-        ORDER BY timestamp DESC
-        LIMIT 30
+          pv.timestamp,
+          pv.product_id AS "productId",
+          COALESCE(p.title, pv.product_id) AS "productName",
+          COALESCE(p.store_name, '') AS store
+        FROM product_views pv
+        LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+        ORDER BY pv.timestamp DESC
+        LIMIT 50
       `,
 
       // recentConversions — last 50 orders with attribution + buyer identity

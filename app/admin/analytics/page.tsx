@@ -504,7 +504,7 @@ export default function DeepAnalyticsPage() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {item.type}
+                        VIEW
                       </span>
                       <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, color: MAROON }}>
                         {item.productName ?? item.productId ?? "Unknown product"}
