@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { approvePilotUser } from "@/app/lib/pilot-db";
 import { sendPilotApprovalEmail } from "@/app/lib/email";
+import crypto from "crypto";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${adminPassword}`) return true;
   const adminToken = request.cookies.get("via_admin_token")?.value;
-  const expectedToken = process.env.ADMIN_PASSWORD;
-  if (!expectedToken || !adminToken) return false;
-  let hash = 0;
-  for (let i = 0; i < expectedToken.length; i++) {
-    const char = expectedToken.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return adminToken === hash.toString(36);
+  return !!adminToken && adminToken === crypto.createHash("sha256").update(adminPassword).digest("hex");
 }
 
 export async function POST(request: NextRequest) {
