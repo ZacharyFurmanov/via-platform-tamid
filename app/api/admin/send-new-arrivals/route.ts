@@ -11,15 +11,9 @@ import { sendInsiderNewArrivalsEmail } from "@/app/lib/email";
 export const maxDuration = 300;
 
 function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
-
 function isAuthorized(request: NextRequest): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) return false;

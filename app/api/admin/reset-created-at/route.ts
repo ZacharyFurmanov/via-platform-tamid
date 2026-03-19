@@ -1,35 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { cookies } from "next/headers";
+import crypto from "crypto";
 
-export async function POST(request: NextRequest) {
-  // Auth check
-  const cookieStore = await cookies();
-  const adminToken = cookieStore.get("via_admin_token")?.value;
+function isAuthorized(request: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
   const authHeader = request.headers.get("authorization");
-  const expectedToken = process.env.ADMIN_API_KEY;
+  if (authHeader === `Bearer ${adminPassword}`) return true;
+  const token = request.cookies.get("via_admin_token")?.value;
+  return !!token && token === crypto.createHash("sha256").update(adminPassword).digest("hex");
+}
 
-  const isAuthorized =
-    adminToken === expectedToken ||
-    authHeader === `Bearer ${expectedToken}`;
-
-  if (!isAuthorized) {
+/**
+ * POST /api/admin/reset-created-at
+ *
+ * One-time wipe: marks all existing products as insider_notified = TRUE
+ * so they don't appear on the Insider page or trigger another email blast.
+ * Safe to run multiple times.
+ */
+export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
 
-  // Reset created_at to NULL for all products so the insider page starts fresh.
-  // Going forward, only products that are genuinely new to VYA (first-time inserts)
-  // will get created_at = NOW() and appear on the insider page.
   const result = await sql`
-    UPDATE products SET created_at = NULL, insider_notified = FALSE
+    UPDATE products SET insider_notified = TRUE
+    WHERE insider_notified = FALSE OR insider_notified IS NULL
     RETURNING id
   `;
 
   return NextResponse.json({
     ok: true,
-    message: `Reset created_at and insider_notified for ${result.length} products. Insider page is now fresh — only new products will appear going forward.`,
+    message: `Marked ${result.length} products as already notified. Insider page and email cron are now fresh — only new products synced going forward will appear.`,
     count: result.length,
   });
 }

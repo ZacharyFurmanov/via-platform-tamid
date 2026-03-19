@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveConversion, getConversionAnalytics, getClickByClickId } from "@/app/lib/analytics-db";
+import { stores } from "@/app/lib/stores";
+
+const ALLOWED_ORIGINS = new Set([
+  "https://vyaplatform.com",
+  "https://www.vyaplatform.com",
+  ...stores.map((s) => s.website.replace(/\/$/, "")),
+]);
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  const normalized = origin.replace(/\/$/, "");
+  return ALLOWED_ORIGINS.has(normalized);
+}
 
 function generateConversionId(): string {
   return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -9,6 +22,10 @@ function generateConversionId(): string {
 export async function POST(request: NextRequest) {
   try {
     const origin = request.headers.get("origin");
+
+    if (!isAllowedOrigin(origin)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const body = await request.json();
     const {
@@ -100,10 +117,14 @@ export async function POST(request: NextRequest) {
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get("origin");
 
+  if (!isAllowedOrigin(origin)) {
+    return new NextResponse(null, { status: 403 });
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      "Access-Control-Allow-Origin": origin || "*",
+      "Access-Control-Allow-Origin": origin!,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Max-Age": "86400",

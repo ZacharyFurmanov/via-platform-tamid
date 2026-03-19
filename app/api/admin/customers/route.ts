@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import crypto from "crypto";
 
 function getDb() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -7,7 +8,23 @@ function getDb() {
   return neon(url);
 }
 
-export async function GET() {
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+function isAuthorized(request: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${adminPassword}`) return true;
+  const adminToken = request.cookies.get("via_admin_token")?.value;
+  return !!adminToken && adminToken === hashPassword(adminPassword);
+}
+
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const sql = getDb();
 

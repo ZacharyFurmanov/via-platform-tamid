@@ -1,7 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
 export const runtime = "edge";
+
+async function isAuthorized(request: NextRequest): Promise<boolean> {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${adminPassword}`) return true;
+  const adminToken = request.cookies.get("via_admin_token")?.value;
+  if (!adminToken) return false;
+  const encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(adminPassword));
+  const expected = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return adminToken === expected;
+}
 
 function getCutoff(range: string): Date | null {
   const now = new Date();
@@ -14,7 +27,11 @@ function getCutoff(range: string): Date | null {
   return null;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  if (!(await isAuthorized(request))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") ?? "7d";
@@ -349,7 +366,7 @@ export async function GET(request: Request) {
       sql`SELECT value FROM app_settings WHERE key = 'collabs_data'`.catch(() => []),
     ]);
 
-    // Parse Shopify Collabs cached data
+    // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
     let collabsTotalOrders = 0;
     let collabsEstimatedRevenue = 0;
     try {
@@ -357,29 +374,24 @@ export async function GET(request: Request) {
       if (rawCollabs) {
         const partnerships = JSON.parse(rawCollabs) as Array<{
           totalOrders: number;
-          totalCommissionEarned: string; // e.g. "$18.20"
+          totalCommissionEarned: string;
         }>;
         for (const p of partnerships) {
           collabsTotalOrders += p.totalOrders ?? 0;
-          // Parse commission display string — strip currency symbols, keep digits and dot
-          const commissionStr = p.totalCommissionEarned ?? "";
-          const commissionNum = parseFloat(commissionStr.replace(/[^0-9.]/g, ""));
+          const commissionNum = parseFloat((p.totalCommissionEarned ?? "").replace(/[^0-9.]/g, ""));
           if (!isNaN(commissionNum) && commissionNum > 0) {
-            // Back-calculate order total: VYA earns 7% on orders under $1k
             collabsEstimatedRevenue += commissionNum / 0.07;
           }
         }
       }
     } catch {}
 
-    const webhookRevenue = (kpiRevenueResult[0]?.revenue as number) ?? 0;
-    const webhookOrders = (kpiRevenueResult[0]?.conversions as number) ?? 0;
-
+    // Main KPIs come directly from the conversions table (which now includes Collabs-sourced records)
     const kpis = {
       totalClicks: (kpiClicksResult[0]?.total as number) ?? 0,
       totalViews: (kpiViewsResult[0]?.total as number) ?? 0,
-      totalRevenue: Math.max(webhookRevenue, collabsEstimatedRevenue),
-      totalConversions: Math.max(webhookOrders, collabsTotalOrders),
+      totalRevenue: (kpiRevenueResult[0]?.revenue as number) ?? 0,
+      totalConversions: (kpiRevenueResult[0]?.conversions as number) ?? 0,
       matchedConversions: (kpiRevenueResult[0]?.matched as number) ?? 0,
       unmatchedConversions: (kpiRevenueResult[0]?.unmatched as number) ?? 0,
       totalCustomers: (kpiCustomersResult[0]?.total as number) ?? 0,

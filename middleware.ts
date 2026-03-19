@@ -31,16 +31,6 @@ const PUBLIC_ROUTES = [
   "/api/admin/send-new-arrivals",
   "/api/editors-picks",
   "/api/admin/editors-picks",
-  "/api/admin/test-pilot-email",
-  "/api/admin/test-waitlist-email",
-  "/api/admin/test-abandoned-cart",
-  "/api/admin/test-trending-item",
-  "/api/admin/approve-waitlist",
-  "/api/admin/approve-stores",
-  "/api/admin/delete-product",
-  "/api/admin/customers",
-  "/api/admin/customers/approve",
-  "/api/admin/analytics-deep",
   "/api/store/me",
   "/api/store/analytics",
   "/api/store/sourcing",
@@ -63,22 +53,21 @@ const SESSION_ONLY_ROUTES = [
   "/api/cart",
 ];
 
-// Simple hash function for admin password comparison
-function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-function isAdminAuthenticated(request: NextRequest): boolean {
+async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   const adminToken = request.cookies.get("via_admin_token")?.value;
   const expectedToken = process.env.ADMIN_PASSWORD;
   if (!expectedToken || !adminToken) return false;
-  return adminToken === hashPassword(expectedToken);
+  const expected = await hashPassword(expectedToken);
+  return adminToken === expected;
 }
 
 function hasUserSession(request: NextRequest): boolean {
@@ -112,7 +101,7 @@ function isSessionOnlyRoute(pathname: string): boolean {
   );
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
 
@@ -123,7 +112,7 @@ export function middleware(request: NextRequest) {
 
   // Admin routes
   if (pathname.startsWith("/admin")) {
-    if (!isAdminAuthenticated(request)) {
+    if (!(await isAdminAuthenticated(request))) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
@@ -147,15 +136,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const adminAuthed = await isAdminAuthenticated(request);
+
   // All other routes: require session + pilot approval (via_access cookie)
-  if (!hasUserSession(request) && !isAdminAuthenticated(request)) {
+  if (!hasUserSession(request) && !adminAuthed) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", fullPath);
     return NextResponse.redirect(loginUrl);
   }
 
   // Has session but no approval cookie → run pilot check
-  if (hasUserSession(request) && !hasAccessCode(request) && !isAdminAuthenticated(request)) {
+  if (hasUserSession(request) && !hasAccessCode(request) && !adminAuthed) {
     const checkUrl = new URL("/api/pilot-check", request.url);
     checkUrl.searchParams.set("next", fullPath);
     return NextResponse.redirect(checkUrl);

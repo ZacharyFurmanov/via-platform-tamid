@@ -1,8 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sendTrendingItemEmail } from "@/app/lib/email";
 import { neon } from "@neondatabase/serverless";
+import crypto from "crypto";
 
-export async function GET() {
+function isAuthorized(request: NextRequest): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${adminPassword}`) return true;
+  const token = request.cookies.get("via_admin_token")?.value;
+  return !!token && token === crypto.createHash("sha256").update(adminPassword).digest("hex");
+}
+
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   const sql = neon(url!);
 

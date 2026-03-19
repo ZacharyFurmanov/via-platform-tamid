@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { resizeImage } from "@/app/lib/imageUtils";
+import ProductCard from "@/app/components/ProductCard";
 
 type SearchProduct = {
   id: number;
@@ -12,6 +12,7 @@ type SearchProduct = {
   storeName: string;
   price: string;
   image?: string;
+  images?: string[];
 };
 
 type SearchDesigner = { slug: string; label: string };
@@ -247,36 +248,19 @@ function SearchResults() {
           {displayProducts.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
               {displayProducts.map((p) => (
-                <Link
+                <ProductCard
                   key={p.id}
-                  href={`/products/${p.storeSlug}-${p.id}`}
-                  className="group block"
-                >
-                  <div className="aspect-[3/4] bg-[#D8CABD]/30 overflow-hidden mb-3">
-                    {p.image ? (
-                      <img
-                        src={resizeImage(p.image, 600)}
-                        alt={p.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#5D0F17]/40 text-xs">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-[11px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-1">
-                    {p.storeName}
-                  </p>
-                  <h3 className="font-serif text-sm sm:text-base text-[#5D0F17] leading-snug line-clamp-2">
-                    {p.name}
-                  </h3>
-                  <p className="text-sm mt-1 font-medium text-[#5D0F17]">
-                    {p.price}
-                  </p>
-                </Link>
+                  id={`${p.storeSlug}-${p.id}`}
+                  dbId={p.id}
+                  name={p.name}
+                  price={p.price}
+                  category="Clothing"
+                  storeName={p.storeName}
+                  storeSlug={p.storeSlug}
+                  image={p.image ?? ""}
+                  images={p.images}
+                  from="search"
+                />
               ))}
             </div>
           )}

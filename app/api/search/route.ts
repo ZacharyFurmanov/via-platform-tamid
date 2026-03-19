@@ -202,7 +202,7 @@ export async function GET(request: Request) {
       // ── Single-word category search: "dress", "shoes", "bag", "jewelry" ───
       const catRegex = buildCatRegex(catSlug);
       products = await sql`
-        SELECT id, store_slug, store_name, title, price, currency, image, created_at
+        SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
@@ -230,7 +230,7 @@ export async function GET(request: Request) {
           const modLike = modifiers.map((m) => `%${m}%`);
 
           products = await sql`
-            SELECT id, store_slug, store_name, title, price, currency, image, created_at
+            SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
             FROM products
             WHERE LOWER(title) ~* ${catRegex}
               AND LOWER(title) LIKE ALL(${modLike})
@@ -243,7 +243,7 @@ export async function GET(request: Request) {
           // Fallback: category only if modifiers too specific (e.g. rare brand + category)
           if (!products.length) {
             products = await sql`
-              SELECT id, store_slug, store_name, title, price, currency, image, created_at
+              SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
@@ -257,7 +257,7 @@ export async function GET(request: Request) {
           // AND match: all words must appear as substrings in title
           const likePatterns = words.map((w) => `%${w}%`);
           products = await sql`
-            SELECT id, store_slug, store_name, title, price, currency, image, created_at
+            SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
             FROM products
             WHERE LOWER(title) LIKE ALL(${likePatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
@@ -269,7 +269,7 @@ export async function GET(request: Request) {
           // Fallback: any word matches (OR), ranked by how many words match
           if (!products.length) {
             products = await sql`
-              SELECT id, store_slug, store_name, title, price, currency, image, created_at
+              SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
               FROM products
               WHERE LOWER(title) LIKE ANY(${likePatterns})
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
@@ -285,7 +285,7 @@ export async function GET(request: Request) {
         const pattern = `%${singleWord}%`;
         const startPattern = `${singleWord}%`;
         products = await sql`
-          SELECT id, store_slug, store_name, title, price, currency, image, created_at
+          SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
@@ -302,14 +302,21 @@ export async function GET(request: Request) {
       designers: matchedDesigners,
       categories: matchedCategories,
       stores: matchedStores,
-      products: products.map((p) => ({
-        id: p.id,
-        name: p.title,
-        storeSlug: p.store_slug,
-        storeName: p.store_name,
-        price: `$${Math.round(Number(p.price))}`,
-        image: p.image,
-      })),
+      products: products.map((p) => {
+        let parsedImages: string[] | undefined;
+        try {
+          parsedImages = p.images ? JSON.parse(p.images as string) : undefined;
+        } catch {}
+        return {
+          id: p.id,
+          name: p.title,
+          storeSlug: p.store_slug,
+          storeName: p.store_name,
+          price: `$${Math.round(Number(p.price))}`,
+          image: p.image,
+          images: parsedImages,
+        };
+      }),
     });
   } catch (error) {
     console.error("Search API error:", error);
