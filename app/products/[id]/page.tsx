@@ -402,13 +402,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               </button>
             )}
 
-            <p className="text-[11px] text-black/40 mt-4">
-              You&apos;ll complete your purchase on {store.name}&apos;s website.
-            </p>
-            <p className="text-[11px] text-black/40 mt-1">
-              All sales are final.
-            </p>
-
             <ProductQuestion
               productTitle={product.title}
               storeName={store.name}

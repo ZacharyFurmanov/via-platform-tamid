@@ -146,10 +146,27 @@ export async function getPendingUsersToApprove(): Promise<
 > {
   await ensureTable();
   const sql = getDb();
+  // Wait time tiers based on referral count:
+  //   0 referrals → 7 days
+  //   1 referral  → 5 days
+  //   2 referrals → 4 days
+  //   3+ referrals → 3 days
   const rows = await sql`
-    SELECT email, first_name FROM pilot_access
-    WHERE status = 'pending'
-    AND created_at < NOW() - INTERVAL '7 days'
+    SELECT pa.email, pa.first_name
+    FROM pilot_access pa
+    LEFT JOIN (
+      SELECT referred_by, COUNT(*) AS ref_count
+      FROM pilot_access
+      WHERE referred_by IS NOT NULL
+      GROUP BY referred_by
+    ) refs ON refs.referred_by = pa.referral_code
+    WHERE pa.status = 'pending'
+    AND (
+      (COALESCE(refs.ref_count, 0) >= 3 AND pa.created_at < NOW() - INTERVAL '3 days')
+      OR (COALESCE(refs.ref_count, 0) = 2   AND pa.created_at < NOW() - INTERVAL '4 days')
+      OR (COALESCE(refs.ref_count, 0) = 1   AND pa.created_at < NOW() - INTERVAL '5 days')
+      OR (COALESCE(refs.ref_count, 0) = 0   AND pa.created_at < NOW() - INTERVAL '7 days')
+    )
   `;
   return rows as { email: string; first_name: string | null }[];
 }
@@ -209,9 +226,9 @@ export async function getReferralInfo(email: string): Promise<{
 }
 
 /**
- * After a new referral signup, checks if the referrer (identified by code) is
- * still pending and, if so, approves them.
- * Returns the referrer's email + first_name if they were just approved, or null.
+ * After a new referral signup, returns the referrer's info so a notification
+ * email can be sent. No longer instantly approves — the cron picks them up
+ * sooner based on their referral tier (1=5d, 2=4d, 3+=3d).
  */
 export async function checkAndApproveReferrer(referralCode: string): Promise<{
   email: string;
@@ -227,7 +244,5 @@ export async function checkAndApproveReferrer(referralCode: string): Promise<{
   if (rows.length === 0) return null;
   const referrer = rows[0] as { email: string; first_name: string | null; status: string };
   if (referrer.status !== "pending") return null;
-
-  await approvePilotUser(referrer.email);
   return { email: referrer.email, firstName: referrer.first_name };
 }

@@ -33,6 +33,26 @@ export default function CustomersPage() {
   const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
   const [search, setSearch] = useState("");
   const [approving, setApproving] = useState<string | null>(null);
+  const [approvingAll, setApprovingAll] = useState(false);
+
+  async function handleApproveAll() {
+    const pendingCustomers = customers.filter((c) => c.status !== "approved");
+    if (pendingCustomers.length === 0) return;
+    if (!confirm(`Approve all ${pendingCustomers.length} pending customers? This will send approval emails to each one.`)) return;
+    setApprovingAll(true);
+    try {
+      for (const c of pendingCustomers) {
+        await fetch("/api/admin/customers/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: c.email, firstName: c.name?.split(" ")[0] ?? undefined }),
+        });
+      }
+      setCustomers((prev) => prev.map((c) => ({ ...c, status: c.status !== "approved" ? "approved" : c.status })));
+    } finally {
+      setApprovingAll(false);
+    }
+  }
 
   async function handleApprove(email: string, name: string | null) {
     setApproving(email);
@@ -140,13 +160,24 @@ export default function CustomersPage() {
             </div>
           ))}
         </div>
-        <button
-          onClick={exportCSV}
-          disabled={filtered.length === 0}
-          style={{ padding: "10px 24px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: filtered.length === 0 ? "not-allowed" : "pointer", opacity: filtered.length === 0 ? 0.4 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
-        >
-          Export CSV
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {pending > 0 && (
+            <button
+              onClick={handleApproveAll}
+              disabled={approvingAll}
+              style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: approvingAll ? "not-allowed" : "pointer", opacity: approvingAll ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+            >
+              {approvingAll ? "Approving…" : `Approve All (${pending})`}
+            </button>
+          )}
+          <button
+            onClick={exportCSV}
+            disabled={filtered.length === 0}
+            style={{ padding: "10px 24px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: filtered.length === 0 ? "not-allowed" : "pointer", opacity: filtered.length === 0 ? 0.4 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

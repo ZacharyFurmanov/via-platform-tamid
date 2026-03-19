@@ -14,6 +14,7 @@ import { FriendsProvider } from "./components/FriendsProvider";
 import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 import FeedbackModal from "./components/FeedbackModal";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "VYA — Vintage & Secondhand Platform",
@@ -102,6 +103,7 @@ export default function RootLayout({
                 <MainWrapper>{children}</MainWrapper>
                 <AdminHide><Footer /></AdminHide>
               {/* </GiveawayProvider> */}
+              <Analytics />
               </SignUpProvider>
             </CartProvider>
             </FriendsProvider>

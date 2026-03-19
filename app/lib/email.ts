@@ -737,15 +737,26 @@ export async function sendPilotApprovalEmail(
   const magicLink = await createMagicSignInLink(email);
   const greeting = firstName ? `Hi ${firstName},` : "Hi,";
   const content = `
-    <p style="font-size:15px;color:#5D0F17;margin:0 0 16px;">${greeting}</p>
-    <p style="font-size:15px;color:#5D0F17;margin:0 0 16px;">
-      You have exclusive access to shop the VYA pilot &mdash; our curated edit of independent vintage and secondhand stores, all in one place.
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,serif;margin:0 0 16px;">${greeting}</p>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,serif;line-height:1.75;margin:0 0 24px;">
+      You have exclusive access to shop the VYA pilot, our curated edit of independent vintage and secondhand stores, all in one place.
     </p>
     <a href="${magicLink}"
        style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:14px 32px;font-size:12px;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">
       Start Shopping
     </a>
-    <p style="font-size:13px;color:rgba(93,15,23,0.5);margin-top:24px;">
+    <div style="margin-top:40px;padding-top:32px;border-top:1px solid rgba(93,15,23,0.1);">
+      <p style="font-size:13px;color:#5D0F17;font-family:Georgia,serif;font-style:italic;margin:0 0 6px;">From the founder of VYA:</p>
+      <p style="font-size:14px;color:#5D0F17;font-family:Georgia,serif;line-height:1.8;margin:0 0 24px;">
+        I started VYA only two months ago with an idea in mind. Since then, the VYA community has grown to over 2,000 people, and 27 partner stores. I am so excited for you to shop the amazing pieces we have. Every store has been handpicked by me, with the intention to provide the best quality. Thank you for supporting me, and stay tuned for more.
+      </p>
+      <p style="font-size:14px;color:#5D0F17;font-family:Georgia,serif;line-height:1.8;margin:0;">
+        Xoxo,<br/>
+        <strong>Hana Elster</strong><br/>
+        <span style="font-size:12px;color:rgba(93,15,23,0.6);">Founder of VYA</span>
+      </p>
+    </div>
+    <p style="font-size:12px;color:rgba(93,15,23,0.4);margin-top:32px;font-family:Georgia,serif;">
       This link expires in 7 days. After that, sign in at vyaplatform.com with this email address.
     </p>
   `;

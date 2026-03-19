@@ -376,26 +376,6 @@ export async function getNewArrivals(
           LIMIT ${limit}
         `;
 
-    // If no created_at-tracked new arrivals, fall back to most recently added products by DB id
-    if (result.length === 0) {
-      const fallback = isMember
-        ? await sql`
-            SELECT * FROM products
-            WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND title NOT ILIKE '%gift card%'
-            ORDER BY id DESC
-            LIMIT ${limit}
-          `
-        : await sql`
-            SELECT * FROM products
-            WHERE (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND title NOT ILIKE '%gift card%'
-              AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
-            ORDER BY id DESC
-            LIMIT ${limit}
-          `;
-      return fallback as DBProduct[];
-    }
     return result as DBProduct[];
   } catch {
     return [];

@@ -198,16 +198,27 @@ export const neonAdapter: Adapter = {
   async useVerificationToken({ identifier, token }) {
     await ensureTables();
     const sql = neon(getDatabaseUrl());
+    // Delete the token but re-insert it if not expired, so the same magic link
+    // can be used from multiple devices (e.g. mobile then laptop) until expiry.
     const rows = await sql`
       DELETE FROM verification_tokens
       WHERE identifier = ${identifier} AND token = ${token}
       RETURNING *
     `;
     if (!rows[0]) return null;
+    const expires = new Date(rows[0].expires as string);
+    // Re-insert if still valid so future clicks from other devices work
+    if (expires > new Date()) {
+      await sql`
+        INSERT INTO verification_tokens (identifier, token, expires)
+        VALUES (${identifier}, ${token}, ${expires.toISOString()})
+        ON CONFLICT (identifier, token) DO NOTHING
+      `;
+    }
     return {
       identifier: rows[0].identifier as string,
       token: rows[0].token as string,
-      expires: new Date(rows[0].expires as string),
+      expires,
     };
   },
 

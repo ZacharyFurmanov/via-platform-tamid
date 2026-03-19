@@ -56,8 +56,7 @@ export default function PilotPendingPage() {
           </p>
 
           <p className="text-sm text-[#5D0F17]/40 leading-relaxed mb-8">
-            Can&apos;t wait? Refer a friend — the moment they sign up using your link,
-            you&apos;re in.
+            Refer friends to move up faster — the more friends you refer, the sooner you&apos;re in.
           </p>
 
           {/* Giveaway banner */}
@@ -83,34 +82,26 @@ export default function PilotPendingPage() {
 
               {/* Progress */}
               <div className="flex flex-col gap-2 mb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                      referralCount >= 1
-                        ? "bg-[#5D0F17] border-[#5D0F17]"
-                        : "border-[#5D0F17]/30 bg-transparent"
-                    }`}
-                  />
-                  <p className="text-xs text-[#5D0F17]/60">
-                    {referralCount >= 1
-                      ? "1 friend signed up — you should be approved shortly!"
-                      : "1 friend signup = instant access"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                      referralCount >= 2
-                        ? "bg-[#5D0F17] border-[#5D0F17]"
-                        : "border-[#5D0F17]/30 bg-transparent"
-                    }`}
-                  />
-                  <p className="text-xs text-[#5D0F17]/60">
-                    {referralCount >= 2
-                      ? "2 friends signed up — you're entered in the giveaway!"
-                      : "2 friend signups = giveaway entry"}
-                  </p>
-                </div>
+                {[
+                  { threshold: 1, days: 5, label: "1 friend" },
+                  { threshold: 2, days: 4, label: "2 friends" },
+                  { threshold: 3, days: 3, label: "3+ friends" },
+                ].map(({ threshold, days, label }) => (
+                  <div key={threshold} className="flex items-center gap-3">
+                    <div
+                      className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                        referralCount >= threshold
+                          ? "bg-[#5D0F17] border-[#5D0F17]"
+                          : "border-[#5D0F17]/30 bg-transparent"
+                      }`}
+                    />
+                    <p className="text-xs text-[#5D0F17]/60">
+                      {referralCount >= threshold
+                        ? `${label} referred — ${days}-day wait unlocked`
+                        : `${label} = ${days}-day wait`}
+                    </p>
+                  </div>
+                ))}
               </div>
 
               {/* Link + copy */}
