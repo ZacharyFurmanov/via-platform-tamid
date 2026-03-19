@@ -15,6 +15,7 @@ type Customer = {
   referredBy: string | null;
   loginMethod: string;
   emailSubscribe: boolean;
+  activityScore: number;
 };
 
 type ActivityData = {
@@ -366,9 +367,14 @@ export default function CustomersPage() {
                   <tr key={c.email} onClick={() => setSelectedCustomer(c)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                     <td style={{ padding: "12px 16px", color: "rgba(93,15,23,0.3)" }}>{i + 1}</td>
                     <td style={{ padding: "12px 16px" }}>
-                      <p style={{ fontWeight: 500, color: "#5D0F17" }}>{c.name || "—"}</p>
-                      <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)" }}>{c.email}</p>
-                      {c.phone && <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)" }}>{c.phone}</p>}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <p style={{ fontWeight: 500, color: "#5D0F17", margin: 0 }}>{c.name || "—"}</p>
+                        {c.activityScore > 0 && (
+                          <span style={{ fontSize: 10, background: "#5D0F17", color: "#F7F3EA", padding: "1px 6px", borderRadius: 10 }}>{c.activityScore}</span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.email}</p>
+                      {c.phone && <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.phone}</p>}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <span style={{

@@ -72,7 +72,11 @@ export async function GET(request: NextRequest) {
         ac.email_subscribe,
         u.name AS user_name,
         u.id   AS user_id,
-        STRING_AGG(DISTINCT a.provider, ',') AS providers
+        STRING_AGG(DISTINCT a.provider, ',') AS providers,
+        COALESCE((SELECT COUNT(*) FROM product_favorites pf WHERE pf.user_id = u.id), 0) +
+        COALESCE((SELECT COUNT(*) FROM user_cart_items ci WHERE ci.user_id = u.id::text OR ci.user_id::text = u.id::text), 0) +
+        COALESCE((SELECT COUNT(*) FROM clicks cl WHERE cl.user_id = u.id::text), 0) +
+        COALESCE((SELECT COUNT(*) FROM conversions cv WHERE cv.user_id = u.id::text), 0) AS activity_score
       FROM all_customers ac
       LEFT JOIN users u ON LOWER(u.email) = LOWER(ac.email)
       LEFT JOIN accounts a ON a.user_id = u.id
@@ -81,7 +85,7 @@ export async function GET(request: NextRequest) {
         ac.status, ac.created_at, ac.approved_at,
         ac.referral_code, ac.referred_by, ac.email_subscribe,
         u.name, u.id
-      ORDER BY ac.created_at DESC
+      ORDER BY activity_score DESC, ac.created_at DESC
     `;
 
     const customers = rows.map((r) => {
@@ -106,6 +110,7 @@ export async function GET(request: NextRequest) {
         referredBy: (r.referred_by as string | null) ?? null,
         loginMethod,
         emailSubscribe: r.email_subscribe as boolean,
+        activityScore: Number(r.activity_score ?? 0),
       };
     });
 
