@@ -221,7 +221,7 @@ export default function DeepAnalyticsPage() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/analytics-deep?range=${r}`);
+      const res = await fetch(`/api/admin/analytics-deep?range=${r}&t=${Date.now()}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `HTTP ${res.status}`);

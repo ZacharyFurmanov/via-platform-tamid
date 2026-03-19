@@ -427,7 +427,7 @@ export async function GET(request: NextRequest) {
       })),
     };
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       kpis,
       topProductsByClicks: topClicksResult,
       topProductsByViews: topViewsResult,
@@ -456,6 +456,8 @@ export async function GET(request: NextRequest) {
       })),
       inventory,
     });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return response;
   } catch (err) {
     console.error("[analytics-deep] error:", err);
     return NextResponse.json(
