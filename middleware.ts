@@ -63,9 +63,14 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
-  const adminToken = request.cookies.get("via_admin_token")?.value;
   const expectedToken = process.env.ADMIN_PASSWORD;
-  if (!expectedToken || !adminToken) return false;
+  if (!expectedToken) return false;
+  // Accept Bearer token in Authorization header (for curl/API access)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${expectedToken}`) return true;
+  // Accept hashed token in cookie (for browser sessions)
+  const adminToken = request.cookies.get("via_admin_token")?.value;
+  if (!adminToken) return false;
   const expected = await hashPassword(expectedToken);
   return adminToken === expected;
 }
