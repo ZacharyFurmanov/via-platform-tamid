@@ -352,10 +352,8 @@ export async function sendInsiderNewArrivalsEmail(
   function productCell(p: DBProduct): string {
     const url = productViaUrl(p);
     const imgBlock = p.image
-      ? `<a href="${url}" style="text-decoration:none;display:block;">
-           <img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
-             style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />
-         </a>`
+      ? `<img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
+           style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />`
       : `<div style="width:100%;height:220px;background:rgba(93,15,23,0.06);"></div>`;
 
     const priceStr = formatEmailPrice(p.price, p.currency);
@@ -367,18 +365,17 @@ export async function sendInsiderNewArrivalsEmail(
       : `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>`;
 
     return `
-      ${imgBlock}
-      <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-         margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</p>
-      <a href="${url}" style="text-decoration:none;">
+      <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
+        ${imgBlock}
+        <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+           margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</p>
         <p style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
            line-height:1.35;">${p.title}</p>
+        <p style="margin:0 0 14px;">${priceBlock}</p>
+        <span style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+               font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+               font-family:Georgia,'Times New Roman',serif;">View Item</span>
       </a>
-      <p style="margin:0 0 14px;">${priceBlock}</p>
-      <a href="${url}"
-         style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
-                text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
-                font-family:Georgia,'Times New Roman',serif;">View Item</a>
     `;
   }
 
