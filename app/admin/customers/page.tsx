@@ -69,7 +69,7 @@ export default function CustomersPage() {
   }
 
   useEffect(() => {
-    fetch("/api/admin/customers")
+    fetch(`/api/admin/customers?t=${Date.now()}`)
       .then((r) => r.json())
       .then((d) => {
         setCustomers(d.customers ?? []);
