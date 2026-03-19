@@ -30,12 +30,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, approved: 0 });
   }
 
-  // Bulk approve in one query
-  const emails = pending.map((r) => r.email);
+  // Bulk approve all pending in one query
   await sql`
     UPDATE pilot_access
     SET status = 'approved', approved_at = NOW()
-    WHERE email = ANY(${emails as unknown as string[]}) AND status = 'pending'
+    WHERE status = 'pending'
   `;
 
   // Send approval emails — fire and forget (don't block the response)
