@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
   const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
 
   const result = await sql`
-    UPDATE products SET insider_notified = TRUE
-    WHERE insider_notified = FALSE OR insider_notified IS NULL
+    UPDATE products
+    SET insider_notified = TRUE, created_at = NULL
     RETURNING id
   `;
 
   return NextResponse.json({
     ok: true,
-    message: `Marked ${result.length} products as already notified. Insider page and email cron are now fresh — only new products synced going forward will appear.`,
+    message: `Reset ${result.length} products — all are now live for everyone, insider page is empty. Only brand-new products from future syncs will appear on insider.`,
     count: result.length,
   });
 }
