@@ -88,18 +88,6 @@ export default function RegisterPage() {
                   <p className="text-xs text-[#5D0F17]/60 leading-relaxed mb-4">
                     The more friends you refer, the sooner you&apos;re in.
                   </p>
-                  <div className="flex flex-col gap-2 mb-4">
-                    {[
-                      { label: "1 friend", days: 5 },
-                      { label: "2 friends", days: 4 },
-                      { label: "3+ friends", days: 3 },
-                    ].map(({ label, days }) => (
-                      <div key={label} className="flex items-center gap-3">
-                        <div className="w-2.5 h-2.5 rounded-full border border-[#5D0F17]/30 bg-transparent flex-shrink-0" />
-                        <p className="text-xs text-[#5D0F17]/60">{label} = {days}-day wait</p>
-                      </div>
-                    ))}
-                  </div>
                   <div className="flex items-stretch border border-[#5D0F17]/20 overflow-hidden">
                     <p className="flex-1 px-3 py-2.5 text-xs text-[#5D0F17]/70 truncate bg-white">
                       {`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`}
