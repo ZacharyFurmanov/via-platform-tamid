@@ -58,7 +58,11 @@ export async function GET(request: NextRequest) {
           FALSE AS email_subscribe
         FROM waitlist w
         WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
-      )
+      ),
+      fav_counts    AS (SELECT user_id, COUNT(*) AS cnt FROM product_favorites GROUP BY user_id),
+      cart_counts   AS (SELECT user_id, COUNT(*) AS cnt FROM user_cart_items   GROUP BY user_id),
+      click_counts  AS (SELECT user_id, COUNT(*) AS cnt FROM clicks             GROUP BY user_id),
+      order_counts  AS (SELECT user_id, COUNT(*) AS cnt FROM conversions WHERE order_total > 0 GROUP BY user_id)
       SELECT
         ac.email,
         ac.first_name,
@@ -73,13 +77,17 @@ export async function GET(request: NextRequest) {
         u.name AS user_name,
         u.id   AS user_id,
         STRING_AGG(DISTINCT a.provider, ',') AS providers,
-        COALESCE((SELECT COUNT(*) FROM product_favorites pf WHERE pf.user_id = u.id), 0) +
-        COALESCE((SELECT COUNT(*) FROM user_cart_items ci WHERE ci.user_id = u.id::text OR ci.user_id::text = u.id::text), 0) +
-        COALESCE((SELECT COUNT(*) FROM clicks cl WHERE cl.user_id = u.id::text), 0) +
-        COALESCE((SELECT COUNT(*) FROM conversions cv WHERE cv.user_id = u.id::text), 0) AS activity_score
+        COALESCE(MAX(fav.cnt),  0) +
+        COALESCE(MAX(cart.cnt), 0) +
+        COALESCE(MAX(clk.cnt),  0) +
+        COALESCE(MAX(ord.cnt),  0) AS activity_score
       FROM all_customers ac
-      LEFT JOIN users u ON LOWER(u.email) = LOWER(ac.email)
-      LEFT JOIN accounts a ON a.user_id = u.id
+      LEFT JOIN users u         ON LOWER(u.email) = LOWER(ac.email)
+      LEFT JOIN accounts a      ON a.user_id = u.id
+      LEFT JOIN fav_counts   fav ON fav.user_id  = u.id
+      LEFT JOIN cart_counts  cart ON cart.user_id = u.id
+      LEFT JOIN click_counts clk  ON clk.user_id  = u.id
+      LEFT JOIN order_counts ord  ON ord.user_id   = u.id
       GROUP BY
         ac.email, ac.first_name, ac.last_name, ac.phone,
         ac.status, ac.created_at, ac.approved_at,
