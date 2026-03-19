@@ -41,14 +41,10 @@ export default function CustomersPage() {
     if (!confirm(`Approve all ${pendingCustomers.length} pending customers? This will send approval emails to each one.`)) return;
     setApprovingAll(true);
     try {
-      for (const c of pendingCustomers) {
-        await fetch("/api/admin/customers/approve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: c.email, firstName: c.name?.split(" ")[0] ?? undefined }),
-        });
+      const res = await fetch("/api/admin/customers/approve-all", { method: "POST" });
+      if (res.ok) {
+        setCustomers((prev) => prev.map((c) => ({ ...c, status: c.status !== "approved" ? "approved" : c.status })));
       }
-      setCustomers((prev) => prev.map((c) => ({ ...c, status: c.status !== "approved" ? "approved" : c.status })));
     } finally {
       setApprovingAll(false);
     }
