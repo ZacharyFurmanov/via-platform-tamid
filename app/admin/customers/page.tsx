@@ -246,7 +246,7 @@ export default function CustomersPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#F7F3EA" }}>
-                  {["#", "Name / Email", "Status", "Login", "Signed Up", "Referral Code", "Referred By", ""].map((h) => (
+                  {["#", "Name / Email", "Status", "Login", "Signed Up", "Approved", "Referral Code", "Referred By", ""].map((h) => (
                     <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(93,15,23,0.5)", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
@@ -292,6 +292,7 @@ export default function CustomersPage() {
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: "rgba(93,15,23,0.5)" }}>{fmt(c.signedUpAt)}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "rgba(93,15,23,0.5)" }}>{fmt(c.approvedAt)}</td>
                     <td style={{ padding: "12px 16px" }}>
                       {c.referralCode ? (
                         <code style={{ fontSize: 11, background: "#F7F3EA", padding: "2px 6px", color: "#5D0F17", fontFamily: "monospace" }}>{c.referralCode}</code>
