@@ -13,7 +13,7 @@ export default async function NewArrivalsPage() {
     ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
     : false;
 
-  const products = await getNewArrivals(48, 7, isMember);
+  const products = await getNewArrivals(10000, 7, isMember);
 
   const gridProducts = products.map((p) => ({
     ...p,
