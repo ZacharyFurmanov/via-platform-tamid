@@ -60,6 +60,18 @@ export default function AcceptOfferSection({
               <p className="text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/40 mb-0.5">Timeline</p>
               <p>{acceptedOffer.timeline}</p>
             </div>
+            {(acceptedOffer.expectedPriceMin || acceptedOffer.expectedPriceMax) && (
+              <div className="col-span-2">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/40 mb-0.5">Expected Item Price</p>
+                <p>
+                  {acceptedOffer.expectedPriceMin && acceptedOffer.expectedPriceMax
+                    ? `$${acceptedOffer.expectedPriceMin}–$${acceptedOffer.expectedPriceMax}`
+                    : acceptedOffer.expectedPriceMin
+                    ? `From $${acceptedOffer.expectedPriceMin}`
+                    : `Up to $${acceptedOffer.expectedPriceMax}`}
+                </p>
+              </div>
+            )}
           </div>
           {acceptedOffer.notes && (
             <div className="mt-3">
@@ -125,6 +137,18 @@ export default function AcceptOfferSection({
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/40 mb-0.5">Timeline</p>
                 <p>{offer.timeline}</p>
               </div>
+              {(offer.expectedPriceMin || offer.expectedPriceMax) && (
+                <div className="col-span-2">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/40 mb-0.5">Expected Item Price</p>
+                  <p>
+                    {offer.expectedPriceMin && offer.expectedPriceMax
+                      ? `$${offer.expectedPriceMin}–$${offer.expectedPriceMax}`
+                      : offer.expectedPriceMin
+                      ? `From $${offer.expectedPriceMin}`
+                      : `Up to $${offer.expectedPriceMax}`}
+                  </p>
+                </div>
+              )}
             </div>
 
             {offer.notes && (

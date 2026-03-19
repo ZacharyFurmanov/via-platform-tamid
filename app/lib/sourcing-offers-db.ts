@@ -9,12 +9,15 @@ function getDatabaseUrl(): string {
 export type SourcingOffer = {
   id: string;
   requestId: string;
+  requestDescription?: string;
   storeSlug: string;
   storeName: string;
   storeEmail: string;
   fee: number;
   timeline: string;
   notes: string | null;
+  expectedPriceMin: number | null;
+  expectedPriceMax: number | null;
   status: "pending" | "accepted" | "declined";
   createdAt: string;
 };
@@ -31,10 +34,14 @@ async function initOffersTable(): Promise<void> {
       fee INTEGER NOT NULL,
       timeline TEXT NOT NULL,
       notes TEXT,
+      expected_price_min INTEGER,
+      expected_price_max INTEGER,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE sourcing_offers ADD COLUMN IF NOT EXISTS expected_price_min INTEGER`;
+  await sql`ALTER TABLE sourcing_offers ADD COLUMN IF NOT EXISTS expected_price_max INTEGER`;
   await sql`CREATE INDEX IF NOT EXISTS idx_sourcing_offers_request_id ON sourcing_offers(request_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_sourcing_offers_store_slug ON sourcing_offers(store_slug)`;
 }
@@ -47,12 +54,15 @@ function mapOffer(row: Record<string, unknown>): SourcingOffer {
   return {
     id: row.id as string,
     requestId: row.request_id as string,
+    requestDescription: row.request_description as string | undefined,
     storeSlug: row.store_slug as string,
     storeName: row.store_name as string,
     storeEmail: row.store_email as string,
     fee: Number(row.fee),
     timeline: row.timeline as string,
     notes: row.notes as string | null,
+    expectedPriceMin: row.expected_price_min != null ? Number(row.expected_price_min) : null,
+    expectedPriceMax: row.expected_price_max != null ? Number(row.expected_price_max) : null,
     status: row.status as SourcingOffer["status"],
     createdAt: (row.created_at as Date).toISOString(),
   };
@@ -66,16 +76,19 @@ export async function createSourcingOffer(data: {
   fee: number;
   timeline: string;
   notes: string | null;
+  expectedPriceMin: number | null;
+  expectedPriceMax: number | null;
 }): Promise<SourcingOffer> {
   const sql = neon(getDatabaseUrl());
   await initOffersTable();
   const id = generateOfferId();
   const rows = await sql`
     INSERT INTO sourcing_offers
-      (id, request_id, store_slug, store_name, store_email, fee, timeline, notes)
+      (id, request_id, store_slug, store_name, store_email, fee, timeline, notes, expected_price_min, expected_price_max)
     VALUES
       (${id}, ${data.requestId}, ${data.storeSlug}, ${data.storeName},
-       ${data.storeEmail}, ${data.fee}, ${data.timeline}, ${data.notes})
+       ${data.storeEmail}, ${data.fee}, ${data.timeline}, ${data.notes},
+       ${data.expectedPriceMin}, ${data.expectedPriceMax})
     RETURNING *
   `;
   return mapOffer(rows[0]);
@@ -94,7 +107,11 @@ export async function getOffersByStoreSlug(storeSlug: string): Promise<SourcingO
   const sql = neon(getDatabaseUrl());
   await initOffersTable();
   const rows = await sql`
-    SELECT * FROM sourcing_offers WHERE store_slug = ${storeSlug} ORDER BY created_at DESC
+    SELECT so.*, sr.description AS request_description
+    FROM sourcing_offers so
+    LEFT JOIN sourcing_requests sr ON sr.id = so.request_id
+    WHERE so.store_slug = ${storeSlug}
+    ORDER BY so.created_at DESC
   `;
   return rows.map(mapOffer);
 }

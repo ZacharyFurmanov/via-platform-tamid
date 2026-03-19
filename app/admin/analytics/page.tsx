@@ -34,6 +34,9 @@ type ConversionRow = {
   matched: boolean;
   viaClickId: string | null;
   clickedProduct: string | null;
+  userId: string | null;
+  buyerEmail: string | null;
+  buyerName: string | null;
 };
 
 type TopProduct = {
@@ -214,8 +217,8 @@ export default function DeepAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (r: DateRange) => {
-    setLoading(true);
+  const fetchData = useCallback(async (r: DateRange, silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/admin/analytics-deep?range=${r}`);
@@ -228,12 +231,18 @@ export default function DeepAnalyticsPage() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData(range);
+  }, [range, fetchData]);
+
+  // Auto-refresh every 30 seconds (silent — no loading spinner)
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(range, true), 30_000);
+    return () => clearInterval(interval);
   }, [range, fetchData]);
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -1012,6 +1021,7 @@ function ConversionsTable({ rows }: { rows: ConversionRow[] }) {
             <th style={hStyle}>Time</th>
             <th style={hStyle}>Store</th>
             <th style={{ ...hStyle, textAlign: "right" }}>Order Total</th>
+            <th style={hStyle}>Buyer</th>
             <th style={hStyle}>Attribution</th>
             <th style={hStyle}>Clicked Product</th>
           </tr>
@@ -1027,6 +1037,16 @@ function ConversionsTable({ rows }: { rows: ConversionRow[] }) {
               </td>
               <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>
                 {formatRevenue(r.orderTotal)}
+              </td>
+              <td style={{ padding: "9px 12px", color: MAROON, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {r.buyerEmail ? (
+                  <span title={r.buyerEmail} style={{ fontSize: 12 }}>
+                    {r.buyerName || r.buyerEmail}
+                    {r.buyerName && <span style={{ display: "block", fontSize: 10, opacity: 0.5 }}>{r.buyerEmail}</span>}
+                  </span>
+                ) : (
+                  <span style={{ opacity: 0.35, fontSize: 11 }}>—</span>
+                )}
               </td>
               <td style={{ padding: "9px 12px" }}>
                 <span style={{

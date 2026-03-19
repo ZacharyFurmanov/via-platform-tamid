@@ -265,38 +265,46 @@ export async function GET(request: NextRequest) {
         LIMIT 30
       `,
 
-      // recentConversions — last 50 orders with attribution
+      // recentConversions — last 50 orders with attribution + buyer identity
       cutoffIso
         ? sql`
             SELECT
-              conversion_id,
-              timestamp,
-              order_id,
-              order_total::float,
-              store_slug,
-              store_name,
-              matched,
-              via_click_id,
-              matched_click_data
-            FROM conversions
-            WHERE order_total > 0 AND timestamp >= ${cutoffIso}
-            ORDER BY timestamp DESC
+              c.conversion_id,
+              c.timestamp,
+              c.order_id,
+              c.order_total::float,
+              c.store_slug,
+              c.store_name,
+              c.matched,
+              c.via_click_id,
+              c.matched_click_data,
+              c.user_id,
+              u.email AS buyer_email,
+              u.name AS buyer_name
+            FROM conversions c
+            LEFT JOIN users u ON u.id::text = c.user_id
+            WHERE c.order_total > 0 AND c.timestamp >= ${cutoffIso}
+            ORDER BY c.timestamp DESC
             LIMIT 50
           `
         : sql`
             SELECT
-              conversion_id,
-              timestamp,
-              order_id,
-              order_total::float,
-              store_slug,
-              store_name,
-              matched,
-              via_click_id,
-              matched_click_data
-            FROM conversions
-            WHERE order_total > 0
-            ORDER BY timestamp DESC
+              c.conversion_id,
+              c.timestamp,
+              c.order_id,
+              c.order_total::float,
+              c.store_slug,
+              c.store_name,
+              c.matched,
+              c.via_click_id,
+              c.matched_click_data,
+              c.user_id,
+              u.email AS buyer_email,
+              u.name AS buyer_name
+            FROM conversions c
+            LEFT JOIN users u ON u.id::text = c.user_id
+            WHERE c.order_total > 0
+            ORDER BY c.timestamp DESC
             LIMIT 50
           `,
 
@@ -442,6 +450,9 @@ export async function GET(request: NextRequest) {
         matched: r.matched as boolean,
         viaClickId: r.via_click_id as string | null,
         clickedProduct: (r.matched_click_data as { productName?: string } | null)?.productName ?? null,
+        userId: r.user_id as string | null,
+        buyerEmail: r.buyer_email as string | null,
+        buyerName: r.buyer_name as string | null,
       })),
       inventory,
     });

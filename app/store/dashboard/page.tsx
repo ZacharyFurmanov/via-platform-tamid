@@ -46,10 +46,13 @@ type SourcingRequest = {
 type SourcingOffer = {
   id: string;
   requestId: string;
+  requestDescription?: string;
   storeName: string;
   fee: number;
   timeline: string;
   notes: string | null;
+  expectedPriceMin: number | null;
+  expectedPriceMax: number | null;
   status: "pending" | "accepted" | "declined";
   createdAt: string;
 };
@@ -63,6 +66,8 @@ type SourcingData = {
 type OfferForm = {
   fee: string;
   timeline: string;
+  expectedPriceMin: string;
+  expectedPriceMax: string;
   notes: string;
 };
 
@@ -135,7 +140,7 @@ export default function StoreDashboardPage() {
   }
 
   function getOfferForm(requestId: string): OfferForm {
-    return offerForms[requestId] ?? { fee: "", timeline: "", notes: "" };
+    return offerForms[requestId] ?? { fee: "", timeline: "", expectedPriceMin: "", expectedPriceMax: "", notes: "" };
   }
 
   function updateOfferForm(requestId: string, patch: Partial<OfferForm>) {
@@ -167,6 +172,8 @@ export default function StoreDashboardPage() {
           fee: Number(form.fee),
           timeline: form.timeline.trim(),
           notes: form.notes.trim() || null,
+          expectedPriceMin: form.expectedPriceMin ? Number(form.expectedPriceMin) : null,
+          expectedPriceMax: form.expectedPriceMax ? Number(form.expectedPriceMax) : null,
         }),
       });
 
@@ -499,6 +506,11 @@ export default function StoreDashboardPage() {
                       />
                     </div>
                   )}
+                  {req.userName && (
+                    <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(93,15,23,0.4)" }}>
+                      {req.userName}
+                    </p>
+                  )}
                   <p
                     className="text-sm mb-3 line-clamp-2"
                     style={{ color: "#5D0F17" }}
@@ -509,9 +521,7 @@ export default function StoreDashboardPage() {
                     className="text-xs space-y-1 mb-4"
                     style={{ color: "rgba(93,15,23,0.6)" }}
                   >
-                    <p>
-                      Budget: ${req.priceMin}–${req.priceMax}
-                    </p>
+                    <p>Budget: ${req.priceMin}–${req.priceMax}</p>
                     <p>Condition: {req.condition}</p>
                     {req.size && <p>Size: {req.size}</p>}
                     <p>Deadline: {req.deadline}</p>
@@ -565,6 +575,41 @@ export default function StoreDashboardPage() {
                           className="w-full border border-[#5D0F17]/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition"
                           style={{ color: "#5D0F17" }}
                         />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>
+                          Expected Price Range (USD) <span className="normal-case tracking-normal" style={{ color: "rgba(93,15,23,0.3)" }}>(optional)</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="Min"
+                              value={getOfferForm(req.id).expectedPriceMin}
+                              onChange={(e) => updateOfferForm(req.id, { expectedPriceMin: e.target.value })}
+                              className="w-full border border-[#5D0F17]/20 bg-transparent pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition"
+                              style={{ color: "#5D0F17" }}
+                            />
+                          </div>
+                          <span className="text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>–</span>
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="Max"
+                              value={getOfferForm(req.id).expectedPriceMax}
+                              onChange={(e) => updateOfferForm(req.id, { expectedPriceMax: e.target.value })}
+                              className="w-full border border-[#5D0F17]/20 bg-transparent pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition"
+                              style={{ color: "#5D0F17" }}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
+                          What you expect to find the item for, not including your sourcing fee.
+                        </p>
                       </div>
                       <div>
                         <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>
@@ -662,7 +707,7 @@ export default function StoreDashboardPage() {
                     <tr key={offer.id} className="border-b last:border-0" style={{ borderColor: "#F7F3EA" }}>
                       <td className="px-5 py-3 max-w-xs" style={{ color: "#5D0F17" }}>
                         <p className="line-clamp-2 text-xs" style={{ color: "rgba(93,15,23,0.6)" }}>
-                          {offer.requestId}
+                          {offer.requestDescription ?? offer.requestId}
                         </p>
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap" style={{ color: "#5D0F17" }}>

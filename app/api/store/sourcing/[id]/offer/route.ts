@@ -39,6 +39,8 @@ export async function POST(
   const fee = Number(body.fee);
   const timeline = String(body.timeline ?? "").trim();
   const notes = body.notes ? String(body.notes).trim() || null : null;
+  const expectedPriceMin = body.expectedPriceMin ? Number(body.expectedPriceMin) : null;
+  const expectedPriceMax = body.expectedPriceMax ? Number(body.expectedPriceMax) : null;
 
   if (!fee || fee <= 0 || !Number.isInteger(fee)) {
     return NextResponse.json({ error: "Fee must be a positive whole number" }, { status: 400 });
@@ -79,6 +81,8 @@ export async function POST(
     fee,
     timeline,
     notes,
+    expectedPriceMin,
+    expectedPriceMax,
   });
 
   // Email the customer
