@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { sendPilotApprovalEmail } from "@/app/lib/email";
 import crypto from "crypto";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
@@ -21,34 +20,16 @@ export async function POST(request: NextRequest) {
   if (!url) return NextResponse.json({ error: "No DB" }, { status: 500 });
   const sql = neon(url);
 
-  // Fetch all pending users
-  const pending = await sql`
-    SELECT email, first_name FROM pilot_access WHERE status = 'pending'
-  ` as { email: string; first_name: string | null }[];
+  // Ensure approval_email_sent column exists
+  await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS approval_email_sent BOOLEAN DEFAULT false`;
 
-  if (pending.length === 0) {
-    return NextResponse.json({ ok: true, approved: 0 });
-  }
-
-  // Bulk approve all pending in one query
-  await sql`
+  // Bulk approve all pending, marking email as not yet sent
+  const result = await sql`
     UPDATE pilot_access
-    SET status = 'approved', approved_at = NOW()
+    SET status = 'approved', approved_at = NOW(), approval_email_sent = false
     WHERE status = 'pending'
+    RETURNING email
   `;
 
-  // Send approval emails — fire and forget (don't block the response)
-  (async () => {
-    for (const { email, first_name } of pending) {
-      try {
-        await sendPilotApprovalEmail(email, first_name ?? undefined);
-        // Small delay to avoid hitting Resend rate limits
-        await new Promise((r) => setTimeout(r, 150));
-      } catch (err) {
-        console.error("[approve-all] email failed for", email, err);
-      }
-    }
-  })();
-
-  return NextResponse.json({ ok: true, approved: pending.length });
+  return NextResponse.json({ ok: true, approved: result.length });
 }

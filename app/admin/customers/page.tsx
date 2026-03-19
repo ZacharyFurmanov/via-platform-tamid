@@ -34,17 +34,34 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [approving, setApproving] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
+  const [emailProgress, setEmailProgress] = useState<string | null>(null);
 
   async function handleApproveAll() {
     const pendingCustomers = customers.filter((c) => c.status !== "approved");
     if (pendingCustomers.length === 0) return;
     if (!confirm(`Approve all ${pendingCustomers.length} pending customers? This will send approval emails to each one.`)) return;
     setApprovingAll(true);
+    setEmailProgress("Approving...");
     try {
       const res = await fetch("/api/admin/customers/approve-all", { method: "POST" });
-      if (res.ok) {
-        setCustomers((prev) => prev.map((c) => ({ ...c, status: c.status !== "approved" ? "approved" : c.status })));
+      if (!res.ok) return;
+      const { approved } = await res.json();
+      setCustomers((prev) => prev.map((c) => ({ ...c, status: c.status !== "approved" ? "approved" : c.status })));
+
+      // Send emails in batches of 50 until done
+      let remaining = approved;
+      let totalSent = 0;
+      while (remaining > 0) {
+        setEmailProgress(`Sending emails… ${totalSent} sent, ${remaining} remaining`);
+        const emailRes = await fetch("/api/admin/customers/send-emails", { method: "POST" });
+        if (!emailRes.ok) break;
+        const data = await emailRes.json();
+        totalSent += data.sent ?? 0;
+        remaining = data.remaining ?? 0;
+        if (data.sent === 0) break; // nothing was sent, stop to avoid infinite loop
       }
+      setEmailProgress(`Done — ${totalSent} emails sent`);
+      setTimeout(() => setEmailProgress(null), 4000);
     } finally {
       setApprovingAll(false);
     }
@@ -157,14 +174,19 @@ export default function CustomersPage() {
           ))}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          {pending > 0 && (
-            <button
-              onClick={handleApproveAll}
-              disabled={approvingAll}
-              style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: approvingAll ? "not-allowed" : "pointer", opacity: approvingAll ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
-            >
-              {approvingAll ? "Approving…" : `Approve All (${pending})`}
-            </button>
+          {(pending > 0 || approvingAll) && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <button
+                onClick={handleApproveAll}
+                disabled={approvingAll}
+                style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: approvingAll ? "not-allowed" : "pointer", opacity: approvingAll ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+              >
+                {approvingAll ? "Working…" : `Approve All (${pending})`}
+              </button>
+              {emailProgress && (
+                <p style={{ fontSize: 11, color: "rgba(93,15,23,0.6)", margin: 0 }}>{emailProgress}</p>
+              )}
+            </div>
           )}
           <button
             onClick={exportCSV}
