@@ -426,7 +426,9 @@ export async function fetchShopifyProductsPublic(
   const products: ShopifyProduct[] = [];
   let skippedCount = 0;
   let page = 1;
-  const limit = 250; // Shopify's max per page
+  // Use 50 per page — some stores cap their public API at 50 regardless of the
+  // limit param, so requesting 50 ensures correct page-based pagination.
+  const limit = 50;
 
   while (products.length < maxProducts) {
     const url = `https://${normalizedDomain}/products.json?limit=${limit}&page=${page}`;

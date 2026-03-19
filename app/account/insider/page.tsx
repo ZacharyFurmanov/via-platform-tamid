@@ -27,7 +27,7 @@ export default async function InsiderPage() {
     redirect("/membership");
   }
 
-  const products = await getInsiderProducts(48);
+  const products = await getInsiderProducts();
 
   const gridProducts = products.map((p) => ({
     ...p,

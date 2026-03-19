@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         storeDomain,
         storefrontAccessToken,
         storeName,
-        maxProducts || 250
+        maxProducts || 1000
       );
     } else {
       // Try public products.json endpoint (no token required)
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         fetchResult = await fetchShopifyProductsPublic(
           storeDomain,
           storeName,
-          maxProducts || 250
+          maxProducts || 1000
         );
       } catch (publicError) {
         return NextResponse.json(

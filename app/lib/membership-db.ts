@@ -104,9 +104,7 @@ export async function getUserByEmail(
 }
 
 /**
- * Get emails of all active VYA Insider members.
- * Includes both legacy Stripe members (users.is_member = TRUE)
- * and approved pilot users (pilot_access.status = 'approved').
+ * Get emails of all active VYA Insider members (paid subscribers only).
  */
 export async function getInsiderUserEmails(): Promise<string[]> {
   await initMembershipColumns();
@@ -114,9 +112,6 @@ export async function getInsiderUserEmails(): Promise<string[]> {
   const rows = await sql`
     SELECT LOWER(email) AS email FROM users
     WHERE is_member = TRUE AND email IS NOT NULL
-    UNION
-    SELECT LOWER(email) AS email FROM pilot_access
-    WHERE status = 'approved' AND email IS NOT NULL
   `;
   return rows.map((r) => r.email as string);
 }

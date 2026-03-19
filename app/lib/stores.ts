@@ -276,6 +276,29 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "porters-preloved",
+    dashboardToken: "pp-8e3f1a7c2d9b4",
+    name: "Porter's Preloved",
+    location: "New York, NY",
+    description:
+      "Porter's Preloved is a New York–based vintage luxury boutique founded by Alexandra Porter, a Fashion Business student at the Fashion Institute of Technology. With a sharp eye for archival detail and market value, Alexandra curates rare early-2000s designer pieces, timeless handbags, and collectible ready-to-wear sourced both locally and internationally. The edit focuses on iconic silhouettes, elevated everyday essentials, and statement runway-era finds — from Balenciaga City bags to Galliano-era Dior heels.",
+    website: "https://porterspreloved.com",
+    dataSource: "porters-preloved",
+    image: "/stores/porters-preloved.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VIA",
+    collabsStoreId: "232515",
+    authenticityPolicy:
+      "Every piece at Porter's Preloved is personally sourced and hand-selected by Alexandra for its archival detail, market value, and lasting appeal. Each item is accurately described with full condition details before listing.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "petria-vintage",
     dashboardToken: "pv-2a9c3e1f7b4d",
     name: "Petria Vintage",
@@ -552,6 +575,29 @@ export const stores = [
       "All sales are final — no refunds, exchanges, or returns. Please review all item details carefully before purchasing.",
   },
   {
+    slug: "vintage-girlfriend",
+    dashboardToken: "vg-5c2a8e1d4f9b3",
+    name: "Vintage Girlfriend",
+    location: "Menlo Park, CA",
+    description:
+      "Anna, a 28-year-old reseller based in Menlo Park, CA, has always loved bougie, beautiful things with a story to tell. In a hyper-commercialized world that insists on putting polyester in everything we touch and is constantly pushing us to consume, consume, and consume some more, it's comforting just to hold something well-made, something that you could tell was made with heart. She wants to bring this feeling to more people, and that's why she started Vintage Girlfriend Luxury. Unlike the big players in the industry that give resellers a bad rap, the store upholds authenticity and transparency as the bare minimum so anyone, anywhere, can shop preowned luxury without worry.",
+    website: "https://vintage-girlfriend.com",
+    dataSource: "vintage-girlfriend",
+    image: "/stores/vintage-girlfriend.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYAPARTNER",
+    collabsStoreId: "231641",
+    authenticityPolicy:
+      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "vintari-vault",
     dashboardToken: "vv-9c1e7a4d2f8b",
     name: "Vintari Vault",
@@ -622,11 +668,13 @@ export const storeContactEmails: Record<string, string> = {
   "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
+  "porters-preloved": "porterspreloved@gmail.com",
   "petria-vintage": "petriavintage@gmail.com",
   "promised-vintage": "kellanmccormick@gmail.com",
   "dayton-jane": "jacquelyne.rankin@gmail.com",
   "club-fleur": "theclubfleur@gmail.com",
   "front-page-finds": "charlee@frontpagefinds.com",
+  "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@theviaplatform.com",

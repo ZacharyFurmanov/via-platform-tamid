@@ -47,13 +47,13 @@ export async function GET(request: Request) {
             store.storeDomain,
             store.storefrontAccessToken,
             store.name,
-            250
+            1000
           );
         } else {
           fetchResult = await fetchShopifyProductsPublic(
             store.storeDomain,
             store.name,
-            250
+            1000
           );
         }
 

@@ -157,7 +157,6 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Petria Vintage",
     slug: "petria-vintage",
     storeDomain: "petriavintage.com",
-    excludeTitles: ["Item Authentication Other Luxury Bags"],
   },
   {
     type: "shopify",
@@ -182,6 +181,18 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Front Page Finds",
     slug: "front-page-finds",
     storeDomain: "frontpagefinds.com",
+  },
+  {
+    type: "shopify",
+    name: "Vintage Girlfriend",
+    slug: "vintage-girlfriend",
+    storeDomain: "vintage-girlfriend.com",
+  },
+  {
+    type: "shopify",
+    name: "Porter's Preloved",
+    slug: "porters-preloved",
+    storeDomain: "porterspreloved.com",
   },
 ];
 
