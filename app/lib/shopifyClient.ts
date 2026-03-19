@@ -145,15 +145,24 @@ const SIZE_VALUE_PATTERN = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3
 const GENERIC_CLOTHING_SIZE = /^(XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
 // Full-string size validator — used to reject color/other values stored as size
 const SIZE_VALUE_REGEX = new RegExp(`^(${SIZE_VALUE_PATTERN})$`, "i");
+// Exported so other modules can validate DB-stored sizes (e.g. reject "Gold", "Black")
+export function isValidSizeValue(val: string): boolean {
+  return SIZE_VALUE_REGEX.test(val.trim());
+}
 
 /**
  * Extracts a size from a product title as a fallback when no variant size option exists.
  * Matches patterns like "Size M", "Size 38", "/ Size 9.5", "- Size US 8", "(Size L)"
  * Also matches bare trailing numbers common in vintage listings: "Dior Heels 35", "Gucci Slides 40.5"
  */
-function extractSizeFromTitle(title: string): string | null {
+export function extractSizeFromTitle(title: string): string | null {
   const parenMatch = /\(\s*(?:size|sz)\s*:?\s*([^)]+)\)/i.exec(title);
   if (parenMatch) return parenMatch[1].trim();
+
+  // Match bare size in parentheses: "(S)", "(M)", "(38)", "(EU 38)"
+  const bareParenRe = new RegExp(`\\(\\s*(${SIZE_VALUE_PATTERN})\\s*\\)`, "i");
+  const bareParenMatch = bareParenRe.exec(title);
+  if (bareParenMatch && SIZE_VALUE_REGEX.test(bareParenMatch[1].trim())) return bareParenMatch[1].trim();
 
   const re = new RegExp(`(?:[-–—|\\/,]\\s*|\\s+)(?:size|sz)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
   const sepMatch = re.exec(title);
@@ -181,10 +190,14 @@ function extractSizeFromDescription(description: string | null): string | null {
   if (!description) return null;
   // Strip HTML tags and decode common entities
   const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
-  // Also matches "Label: EU 37" and "Label size: 38" patterns common in vintage listings
+  // Matches "Size: M", "Tagged size: 38", "Label: EU 37", etc.
   const re = new RegExp(`(?:tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
   const match = re.exec(text);
   if (match) return match[1].trim();
+  // Fallback: "fits XS", "fits XS-M", "best fits M" — common in vintage descriptions
+  const fitsRe = new RegExp(`(?:best\\s+)?fits?\\s+(${SIZE_VALUE_PATTERN})`, "i");
+  const fitsMatch = fitsRe.exec(text);
+  if (fitsMatch) return fitsMatch[1].trim();
   return null;
 }
 

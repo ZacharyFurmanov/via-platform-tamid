@@ -37,6 +37,8 @@ function stripSizeFromTitle(title: string, size: string | null | undefined): str
   const result = title
     // "(Size M)" or "(size 38)" anywhere
     .replace(/\s*\(\s*size\s*:?\s*[^)]+\)\s*/gi, " ")
+    // Bare size in parens: "(S)", "(M)", "(38)", "(EU 38)"
+    .replace(/\s*\(\s*(?:Extra\s+Small|Extra\s+Large|X{0,3}S|M|L|X{1,3}L|OS(?:FM)?|One\s+Size|(?:US|UK|EU|IT)?\s*\d{1,2}(?:[.,]\d)?|(?:US|UK|EU|IT)\s*\d{1,2}(?:[.,]\d)?)\s*\)\s*/gi, " ")
     // "- Size M", "/ Size M", ", Size M", "| Size M" at end
     .replace(/\s*[-–—|\/,]+\s*size\s*:?\s*\S+\s*$/gi, "")
     // " Size M" at end (space before "size")

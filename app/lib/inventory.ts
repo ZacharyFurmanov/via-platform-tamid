@@ -2,6 +2,7 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
+import { extractSizeFromTitle, isValidSizeValue } from "./shopifyClient";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
@@ -128,7 +129,7 @@ function transformDBProduct(product: DBProduct): InventoryItem {
       : product.created_at
         ? String(product.created_at)
         : undefined,
-    size: product.size ?? inferSizeFromMeasurements(product.description) ?? null,
+    size: (product.size && isValidSizeValue(product.size) ? product.size : null) ?? inferSizeFromMeasurements(product.description) ?? extractSizeFromTitle(product.title) ?? null,
   };
 }
 

@@ -54,6 +54,7 @@ export default async function BrowsePage() {
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
+      size: item.size,
       isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),
       engagementScore,
       createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),

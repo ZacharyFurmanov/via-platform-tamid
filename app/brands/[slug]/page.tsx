@@ -59,6 +59,7 @@ export default async function BrandPage({
       externalUrl: item.externalUrl,
       image: item.image,
       images: item.images,
+      size: item.size,
       engagementScore,
       createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),
       popularityScore: computeProductScore({
