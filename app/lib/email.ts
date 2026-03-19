@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
 import type { ReminderCategory } from "@/app/lib/giveaway-db";
 import type { DBProduct } from "@/app/lib/db";
@@ -703,8 +703,10 @@ async function createMagicSignInLink(email: string): Promise<string> {
     const rawToken = randomUUID();
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    // Auth.js v5 hashes the token as SHA-256(rawToken + secret) before storing
-    const hashedToken = createHash("sha256").update(`${rawToken}${secret}`).digest("hex");
+    // Auth.js v5 hashes the token using Web Crypto: SHA-256(rawToken + secret)
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(`${rawToken}${secret}`));
+    const hashedToken = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
     const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!databaseUrl) return `${BASE_URL}/login`;
