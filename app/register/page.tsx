@@ -80,16 +80,28 @@ export default function RegisterPage() {
                 We&apos;ve added <strong>{email}</strong> to the waitlist. We&apos;ll let you know when you&apos;re in.
               </p>
 
-              {/* Giveaway CTA */}
-              <div className="bg-[#5D0F17] px-6 py-6 mb-6">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
-                <p className="font-serif text-xl text-[#F7F3EA] mb-2">Win a $1,000 vintage shopping spree</p>
-                <p className="text-xs text-[#F7F3EA]/60 leading-relaxed mb-4">
-                  Invite 2 friends who join the waitlist using your link to be officially entered.
-                </p>
-                {myReferralCode && (
-                  <div className="flex items-stretch border border-[#F7F3EA]/20 overflow-hidden">
-                    <p className="flex-1 px-3 py-2.5 text-xs text-[#F7F3EA]/70 truncate bg-[#5D0F17]">
+              {/* Referral — move up the waitlist */}
+              {myReferralCode && (
+                <div className="bg-[#F7F3EA] px-6 py-6 mb-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-1">Move up faster</p>
+                  <p className="font-serif text-lg text-[#5D0F17] mb-1">Refer friends to skip the wait</p>
+                  <p className="text-xs text-[#5D0F17]/60 leading-relaxed mb-4">
+                    The more friends you refer, the sooner you&apos;re in.
+                  </p>
+                  <div className="flex flex-col gap-2 mb-4">
+                    {[
+                      { label: "1 friend", days: 5 },
+                      { label: "2 friends", days: 4 },
+                      { label: "3+ friends", days: 3 },
+                    ].map(({ label, days }) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full border border-[#5D0F17]/30 bg-transparent flex-shrink-0" />
+                        <p className="text-xs text-[#5D0F17]/60">{label} = {days}-day wait</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-stretch border border-[#5D0F17]/20 overflow-hidden">
+                    <p className="flex-1 px-3 py-2.5 text-xs text-[#5D0F17]/70 truncate bg-white">
                       {`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`}
                     </p>
                     <button
@@ -98,12 +110,21 @@ export default function RegisterPage() {
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="px-4 border-l border-[#F7F3EA]/20 text-[#F7F3EA]/70 hover:text-[#F7F3EA] hover:bg-[#F7F3EA]/10 transition flex items-center gap-1.5 text-xs uppercase tracking-wide whitespace-nowrap"
+                      className="px-4 border-l border-[#5D0F17]/20 text-[#5D0F17]/50 hover:text-[#5D0F17] hover:bg-[#5D0F17]/5 transition flex items-center gap-1.5 text-xs uppercase tracking-wide whitespace-nowrap"
                     >
                       {copied ? "Copied!" : "Copy"}
                     </button>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Giveaway CTA */}
+              <div className="bg-[#5D0F17] px-6 py-6 mb-6">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
+                <p className="font-serif text-xl text-[#F7F3EA] mb-2">Win a $1,000 vintage shopping spree</p>
+                <p className="text-xs text-[#F7F3EA]/60 leading-relaxed">
+                  Invite 2 friends who join the waitlist using your link to be officially entered.
+                </p>
               </div>
 
               <p className="text-[#5D0F17]/40 text-xs text-center">

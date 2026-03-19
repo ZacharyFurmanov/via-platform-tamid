@@ -213,8 +213,12 @@ export async function getReferralInfo(email: string): Promise<{
     SELECT referral_code FROM pilot_access WHERE email = ${email.toLowerCase().trim()}
   `;
   if (rows.length === 0) return { referralCode: null, referralCount: 0 };
-  const referralCode = rows[0].referral_code as string | null;
-  if (!referralCode) return { referralCode: null, referralCount: 0 };
+  let referralCode = rows[0].referral_code as string | null;
+  if (!referralCode) {
+    // User exists but never got a referral code — assign one now
+    referralCode = await createUniqueReferralCode();
+    await sql`UPDATE pilot_access SET referral_code = ${referralCode} WHERE email = ${email.toLowerCase().trim()}`;
+  }
 
   const countRows = await sql`
     SELECT COUNT(*) AS cnt FROM pilot_access WHERE referred_by = ${referralCode}
