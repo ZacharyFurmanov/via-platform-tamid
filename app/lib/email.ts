@@ -51,15 +51,25 @@ function viaShell(subtitle: string, content: string, unsubscribeUrl?: string): s
 <style>
 :root { color-scheme: light only; }
 body { margin: 0; padding: 0; background-color: #F7F3EA !important; font-family: Georgia, 'Times New Roman', serif; }
+/* Gmail dark mode override */
+u + .body { background-color: #F7F3EA !important; }
+u + .body .email-wrapper { background-color: #F7F3EA !important; }
+u + .body .email-inner { background-color: #F7F3EA !important; }
+/* Outlook dark mode override */
+[data-ogsc] body { background-color: #F7F3EA !important; }
+[data-ogsc] .email-wrapper { background-color: #F7F3EA !important; }
+[data-ogsc] .email-inner { background-color: #F7F3EA !important; }
+[data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] h1, [data-ogsc] h2 { color: #5D0F17 !important; }
 @media (prefers-color-scheme: dark) {
-  body { background-color: #F7F3EA !important; color: #5D0F17 !important; }
+  body, .email-wrapper, .email-inner { background-color: #F7F3EA !important; }
+  p, span, h1, h2 { color: #5D0F17 !important; }
   a { color: #5D0F17 !important; }
 }
 </style>
 </head>
-<body style="margin:0;padding:0;background-color:#F7F3EA;">
-<div style="background-color:#F7F3EA;padding:52px 24px 48px;">
-  <div style="max-width:560px;margin:0 auto;">
+<body class="body" style="margin:0;padding:0;background-color:#F7F3EA;" bgcolor="#F7F3EA">
+<div class="email-wrapper" style="background-color:#F7F3EA;padding:52px 24px 48px;" bgcolor="#F7F3EA">
+  <div class="email-inner" style="max-width:560px;margin:0 auto;background-color:#F7F3EA;" bgcolor="#F7F3EA">
 
     <!-- Header: logo + subtitle -->
     <div style="text-align:center;margin-bottom:56px;">
@@ -105,6 +115,11 @@ function emailShell(content: string): string {
 :root { color-scheme: light only; }
 ${baseStyles()}
 /* Force light mode — prevent Apple Mail / Outlook dark mode inversion */
+u + .body { background-color: #F7F3EA !important; }
+u + .body .wrapper { background-color: #F7F3EA !important; }
+[data-ogsc] body, [data-ogsc] .wrapper { background-color: #F7F3EA !important; }
+[data-ogsc] .content { background-color: #ffffff !important; }
+[data-ogsc] p, [data-ogsc] span, [data-ogsc] h2 { color: #5D0F17 !important; }
 @media (prefers-color-scheme: dark) {
   body, .wrapper { background-color: #F7F3EA !important; }
   .content { background-color: #ffffff !important; }
@@ -115,8 +130,8 @@ ${baseStyles()}
 }
 </style>
 </head>
-<body style="margin:0;padding:0;background-color:#F7F3EA;">
-<div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;">
+<body class="body" style="margin:0;padding:0;background-color:#F7F3EA;" bgcolor="#F7F3EA">
+<div class="wrapper" style="background-color:#F7F3EA;padding:40px 16px;" bgcolor="#F7F3EA">
   <div class="container" style="max-width:600px;margin:0 auto;">
     <div class="header" style="text-align:center;padding:32px 0 28px;">
       <img src="${BASE_URL}/vya-logo.png" alt="VYA" width="160" style="display:block;margin:0 auto;max-height:80px;width:160px;" border="0" />
