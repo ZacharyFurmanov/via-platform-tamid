@@ -59,10 +59,10 @@ export async function GET(request: NextRequest) {
         FROM waitlist w
         WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
       ),
-      fav_counts    AS (SELECT user_id, COUNT(*) AS cnt FROM product_favorites GROUP BY user_id),
-      cart_counts   AS (SELECT user_id, COUNT(*) AS cnt FROM user_cart_items   GROUP BY user_id),
-      click_counts  AS (SELECT user_id, COUNT(*) AS cnt FROM clicks             GROUP BY user_id),
-      order_counts  AS (SELECT user_id, COUNT(*) AS cnt FROM conversions WHERE order_total > 0 GROUP BY user_id)
+      fav_counts    AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM product_favorites GROUP BY user_id::text),
+      cart_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM user_cart_items   GROUP BY user_id::text),
+      click_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM clicks             GROUP BY user_id::text),
+      order_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM conversions WHERE order_total > 0 GROUP BY user_id::text)
       SELECT
         ac.email,
         ac.first_name,
@@ -84,10 +84,10 @@ export async function GET(request: NextRequest) {
       FROM all_customers ac
       LEFT JOIN users u         ON LOWER(u.email) = LOWER(ac.email)
       LEFT JOIN accounts a      ON a.user_id = u.id
-      LEFT JOIN fav_counts   fav ON fav.user_id  = u.id
-      LEFT JOIN cart_counts  cart ON cart.user_id = u.id
-      LEFT JOIN click_counts clk  ON clk.user_id  = u.id
-      LEFT JOIN order_counts ord  ON ord.user_id   = u.id
+      LEFT JOIN fav_counts   fav ON fav.uid = u.id::text
+      LEFT JOIN cart_counts  cart ON cart.uid = u.id::text
+      LEFT JOIN click_counts clk  ON clk.uid = u.id::text
+      LEFT JOIN order_counts ord  ON ord.uid  = u.id::text
       GROUP BY
         ac.email, ac.first_name, ac.last_name, ac.phone,
         ac.status, ac.created_at, ac.approved_at,
