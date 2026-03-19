@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       ON CONFLICT (order_id, store_slug) DO NOTHING
     `;
 
-    if (result.count > 0) {
+    if (result.length > 0) {
       saved++;
     } else {
       skipped++;
