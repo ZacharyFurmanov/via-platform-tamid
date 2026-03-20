@@ -8,7 +8,8 @@ import { stores } from "@/app/lib/stores";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 const CONDITIONS = ["New", "Like New", "Good", "Fair"] as const;
 const DEADLINES = ["ASAP", "1 week", "2 weeks", "1 month", "No deadline"] as const;
@@ -241,9 +242,13 @@ export default function SourcingPage() {
           <p className="text-sm text-[#5D0F17]/60 mb-8 leading-relaxed">
             Your $20 fee is refundable if we can&apos;t find a match within 21 business days.
           </p>
-          <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
-            <EmbeddedCheckout />
-          </EmbeddedCheckoutProvider>
+          {!stripePromise ? (
+            <p className="text-sm text-red-600 py-8 text-center">Payment system unavailable — missing Stripe key. Please contact support.</p>
+          ) : (
+            <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
+              <EmbeddedCheckout />
+            </EmbeddedCheckoutProvider>
+          )}
         </div>
       </main>
     );
