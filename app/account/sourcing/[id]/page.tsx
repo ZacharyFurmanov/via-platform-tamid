@@ -4,6 +4,7 @@ import { auth } from "@/app/lib/auth";
 import { getSourcingRequestById } from "@/app/lib/sourcing-db";
 import { getOffersByRequestId } from "@/app/lib/sourcing-offers-db";
 import AcceptOfferSection from "./AcceptOfferSection";
+import EditRequestSection from "./EditRequestSection";
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: "Payment Processing",
@@ -120,6 +121,25 @@ export default async function SourcingRequestDetailPage({
             </p>
           </div>
         </div>
+
+        {/* Edit — only while still searching */}
+        {req.status === "paid" && (
+          <div className="mt-8">
+            <EditRequestSection
+              requestId={req.id}
+              initial={{
+                description: req.description,
+                priceMin: req.priceMin,
+                priceMax: req.priceMax,
+                condition: req.condition,
+                size: req.size,
+                deadline: req.deadline,
+                userPhone: req.userPhone,
+                userInstagram: req.userInstagram,
+              }}
+            />
+          </div>
+        )}
 
         {/* Offers — only show when request is active or matched */}
         {(req.status === "paid" || req.status === "matched") && (

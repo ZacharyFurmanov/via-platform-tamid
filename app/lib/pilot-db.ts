@@ -171,6 +171,19 @@ export async function getPendingUsersToApprove(): Promise<
   return rows as { email: string; first_name: string | null }[];
 }
 
+/**
+ * Get emails of all approved pilot users (access to VYA platform, not Insider members).
+ */
+export async function getApprovedPilotEmails(): Promise<string[]> {
+  await ensureTable();
+  const sql = getDb();
+  const rows = await sql`
+    SELECT LOWER(email) AS email FROM pilot_access
+    WHERE status = 'approved' AND email IS NOT NULL
+  `;
+  return rows.map((r) => r.email as string);
+}
+
 export async function isEmailInWaitlist(email: string): Promise<boolean> {
   const sql = getDb();
   try {

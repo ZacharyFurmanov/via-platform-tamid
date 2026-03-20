@@ -6,6 +6,7 @@ import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { getInsiderProducts } from "@/app/lib/db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
+import { deriveSize } from "@/app/lib/inventory";
 import MixedProductGrid from "@/app/components/MixedProductGrid";
 
 export default async function InsiderPage() {
@@ -32,6 +33,7 @@ export default async function InsiderPage() {
   const gridProducts = products.map((p) => ({
     ...p,
     categoryLabel: categoryMap[inferCategoryFromTitle(p.title)],
+    size: deriveSize(p),
   }));
 
   return (

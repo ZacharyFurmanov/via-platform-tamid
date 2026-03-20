@@ -1,6 +1,7 @@
 import { getNewArrivals } from "@/app/lib/db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
+import { deriveSize } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import Link from "next/link";
 
@@ -49,7 +50,7 @@ export default async function NewArrivalsSection() {
                     storeSlug={product.store_slug}
                     image={product.image || ""}
                     images={images}
-                    size={product.size}
+                    size={deriveSize(product)}
                   />
                 </div>
               );

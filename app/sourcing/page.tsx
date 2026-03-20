@@ -26,6 +26,8 @@ type FormData = {
   size: string;
   deadline: string;
   preferredStoreSlugs: string[];
+  phone: string;
+  instagram: string;
 };
 
 const DEFAULT_FORM: FormData = {
@@ -38,6 +40,8 @@ const DEFAULT_FORM: FormData = {
   size: "",
   deadline: "1 week",
   preferredStoreSlugs: [],
+  phone: "",
+  instagram: "",
 };
 
 export default function SourcingPage() {
@@ -83,6 +87,8 @@ export default function SourcingPage() {
           size: parsed.size ?? f.size,
           deadline: parsed.deadline ?? f.deadline,
           preferredStoreSlugs: parsed.preferredStoreSlugs ?? f.preferredStoreSlugs,
+          phone: parsed.phone ?? f.phone,
+          instagram: parsed.instagram ?? f.instagram,
         }));
         sessionStorage.removeItem(STORAGE_KEY);
       }
@@ -132,6 +138,8 @@ export default function SourcingPage() {
             size: formData.size,
             deadline: formData.deadline,
             preferredStoreSlugs: formData.preferredStoreSlugs,
+            phone: formData.phone,
+            instagram: formData.instagram,
           })
         );
       } catch {
@@ -172,6 +180,8 @@ export default function SourcingPage() {
           preferredStoreSlugs: formData.preferredStoreSlugs.length > 0
             ? formData.preferredStoreSlugs
             : null,
+          phone: formData.phone.trim() || null,
+          instagram: formData.instagram.trim() || null,
         }),
       });
 
@@ -385,6 +395,37 @@ export default function SourcingPage() {
               />
             </div>
           </div>
+
+          {/* Contact info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-3">
+                Phone <span className="normal-case tracking-normal text-[#5D0F17]/30">(optional)</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="e.g. +1 212 555 0100"
+                value={formData.phone}
+                onChange={(e) => setFormData((f) => ({ ...f, phone: e.target.value }))}
+                className="w-full border border-[#5D0F17]/20 bg-transparent px-4 py-3 text-sm text-[#5D0F17] placeholder:text-[#5D0F17]/30 focus:outline-none focus:border-[#5D0F17] transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-3">
+                Instagram <span className="normal-case tracking-normal text-[#5D0F17]/30">(optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="@handle"
+                value={formData.instagram}
+                onChange={(e) => setFormData((f) => ({ ...f, instagram: e.target.value }))}
+                className="w-full border border-[#5D0F17]/20 bg-transparent px-4 py-3 text-sm text-[#5D0F17] placeholder:text-[#5D0F17]/30 focus:outline-none focus:border-[#5D0F17] transition"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-[#5D0F17]/40 -mt-4">
+            Your contact info is private and only shared with a store after you accept their offer.
+          </p>
 
           {/* Deadline */}
           <div>

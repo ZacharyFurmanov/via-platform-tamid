@@ -456,6 +456,107 @@ export async function sendInsiderNewArrivalsEmail(
   return { sent, failed };
 }
 
+/**
+ * Send a new arrivals email to all approved VYA platform users.
+ * Different from Insider — goes to everyone approved on the platform.
+ */
+export async function sendNewArrivalsEmail(
+  emails: string[],
+  products: DBProduct[]
+): Promise<{ sent: number; failed: number }> {
+  if (emails.length === 0 || products.length === 0) return { sent: 0, failed: 0 };
+
+  const resend = getResend();
+  const newArrivalsUrl = `${BASE_URL}/new-arrivals`;
+
+  function productCell(p: DBProduct): string {
+    const url = productViaUrl(p);
+    const imgBlock = p.image
+      ? `<img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
+           style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />`
+      : `<div style="width:100%;height:220px;background:rgba(93,15,23,0.06);"></div>`;
+
+    const priceStr = formatEmailPrice(p.price, p.currency);
+    const compareStr = p.compare_at_price ? formatEmailPrice(p.compare_at_price, p.currency) : null;
+    const priceBlock = compareStr
+      ? `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>
+         <span style="color:rgba(93,15,23,0.4);font-size:12px;text-decoration:line-through;margin-left:6px;
+           font-family:Georgia,'Times New Roman',serif;">${compareStr}</span>`
+      : `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>`;
+
+    return `
+      <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
+        ${imgBlock}
+        <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+           margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</p>
+        <p style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
+           line-height:1.35;">${p.title}</p>
+        <p style="margin:0 0 14px;">${priceBlock}</p>
+        <span style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+               font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+               font-family:Georgia,'Times New Roman',serif;">View Item</span>
+      </a>
+    `;
+  }
+
+  const rows: string[] = [];
+  for (let i = 0; i < products.length; i += 2) {
+    const left = products[i];
+    const right = products[i + 1] || null;
+    rows.push(`
+      <tr>
+        <td width="50%" valign="top" style="padding:0 14px 40px 0;">
+          ${productCell(left)}
+        </td>
+        <td width="50%" valign="top" style="padding:0 0 40px 0;">
+          ${right ? productCell(right) : ""}
+        </td>
+      </tr>
+    `);
+  }
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      New pieces just arrived on VYA.
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
+       line-height:1.75;margin:0 0 40px;">
+      Fresh finds from our network of stores &mdash; vintage is one-of-a-kind, so shop before it&rsquo;s gone.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+      ${rows.join("")}
+    </table>
+    <div style="text-align:center;margin-top:8px;padding-top:28px;border-top:1px solid rgba(93,15,23,0.12);">
+      <a href="${newArrivalsUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
+    </div>
+  `;
+
+  const html = viaShell("New Arrivals", content, `${BASE_URL}/account`);
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const email of emails) {
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "New Arrivals Just Dropped on VYA",
+        html,
+      });
+      sent++;
+      await new Promise((r) => setTimeout(r, 100));
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
+
 export type SourcingEmailDetails = {
   userEmail: string;
   userName: string | null;
@@ -505,6 +606,7 @@ export async function sendSourcingRequestToStores(
 ): Promise<void> {
   const resend = getResend();
   const VIA_EMAIL = "hana@theviaplatform.com";
+  const DASHBOARD_URL = "https://vyaplatform.com/store/dashboard";
 
   const imageBlock = details.imageUrl
     ? `<div style="text-align: center; margin: 20px 0;">
@@ -512,8 +614,28 @@ export async function sendSourcingRequestToStores(
        </div>`
     : "";
 
-  const html = emailShell(`
+  // Store email: no customer contact info — only shared after offer is accepted
+  const storeHtml = emailShell(`
     <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);margin:0 0 8px;">Sourcing Request from VYA</p>
+    <h2 style="margin-bottom:20px;">New Sourcing Request</h2>
+    <p style="font-size:14px;color:rgba(93,15,23,0.7);margin:0 0 20px;">A customer is looking for the following item. If you have something that matches, submit your offer through your store dashboard.</p>
+    ${imageBlock}
+    <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);width:120px;">Description</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.description}</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Budget</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">$${details.priceMin} – $${details.priceMax}</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Condition</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.condition}</td></tr>
+      ${details.size ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Size</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.size}</td></tr>` : ""}
+      <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
+    </table>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="${DASHBOARD_URL}" style="display:inline-block;background:#5D0F17;color:#F7F3EA;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 32px;">Submit Your Offer</a>
+    </div>
+    <p style="font-size:12px;color:rgba(93,15,23,0.4);text-align:center;">Customer contact details are only shared after they accept your offer.</p>
+  `);
+
+  // Admin email: full details including customer info
+  const adminHtml = emailShell(`
+    <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);margin:0 0 8px;">Sourcing Request — Admin Copy</p>
     <h2 style="margin-bottom:20px;">New Sourcing Request</h2>
     ${imageBlock}
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
@@ -524,19 +646,31 @@ export async function sendSourcingRequestToStores(
       ${details.size ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Size</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.size}</td></tr>` : ""}
       <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
     </table>
-    <p class="muted" style="font-size:13px;">If you have an item that matches this request, reply directly to the customer at <a href="mailto:${details.userEmail}" style="color:#5D0F17;">${details.userEmail}</a>.</p>
   `);
 
   const isDev = process.env.NODE_ENV === "development";
-  const allRecipients = isDev ? [VIA_EMAIL] : [VIA_EMAIL, ...storeEmails];
+  const storeRecipients = isDev ? [] : storeEmails.filter((e) => e !== VIA_EMAIL);
 
-  for (const email of allRecipients) {
+  // Admin copy with full customer details
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: VIA_EMAIL,
+      subject: "New Sourcing Request — VYA Admin",
+      html: adminHtml,
+    });
+  } catch (err) {
+    console.error("Failed to send sourcing admin email:", err);
+  }
+
+  // Store copy without customer contact info
+  for (const email of storeRecipients) {
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
         to: email,
-        subject: "Sourcing Request from VYA",
-        html,
+        subject: "New Sourcing Request — Submit Your Offer",
+        html: storeHtml,
       });
     } catch (err) {
       console.error(`Failed to send sourcing request email to ${email}:`, err);

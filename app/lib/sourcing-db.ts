@@ -11,6 +11,8 @@ export type SourcingRequest = {
   userId: string;
   userEmail: string;
   userName: string | null;
+  userPhone: string | null;
+  userInstagram: string | null;
   imageUrl: string | null;
   description: string;
   priceMin: number;
@@ -58,6 +60,9 @@ async function initSourcingTable(): Promise<void> {
   await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS matched_store_at TIMESTAMPTZ`;
   // Idempotent migration for preferred store slugs (JSON array stored as text)
   await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS preferred_store_slugs TEXT`;
+  // Idempotent migrations for contact info
+  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS user_phone TEXT`;
+  await sql`ALTER TABLE sourcing_requests ADD COLUMN IF NOT EXISTS user_instagram TEXT`;
 }
 
 function generateRequestId(): string {
@@ -70,6 +75,8 @@ function mapRow(row: Record<string, unknown>): SourcingRequest {
     userId: row.user_id as string,
     userEmail: row.user_email as string,
     userName: row.user_name as string | null,
+    userPhone: row.user_phone as string | null,
+    userInstagram: row.user_instagram as string | null,
     imageUrl: row.image_url as string | null,
     description: row.description as string,
     priceMin: row.price_min as number,
@@ -94,6 +101,8 @@ export async function createSourcingRequest(data: {
   userId: string;
   userEmail: string;
   userName: string | null;
+  userPhone: string | null;
+  userInstagram: string | null;
   imageUrl: string | null;
   description: string;
   priceMin: number;
@@ -113,11 +122,12 @@ export async function createSourcingRequest(data: {
     : null;
   const rows = await sql`
     INSERT INTO sourcing_requests (
-      id, user_id, user_email, user_name, image_url, description,
+      id, user_id, user_email, user_name, user_phone, user_instagram, image_url, description,
       price_min, price_max, condition, size, deadline, stripe_session_id, status,
       preferred_store_slugs
     ) VALUES (
       ${id}, ${data.userId}, ${data.userEmail}, ${data.userName},
+      ${data.userPhone}, ${data.userInstagram},
       ${data.imageUrl}, ${data.description}, ${data.priceMin}, ${data.priceMax},
       ${data.condition}, ${data.size}, ${data.deadline}, ${data.stripeSessionId},
       'pending_payment', ${preferredJson}
@@ -125,6 +135,49 @@ export async function createSourcingRequest(data: {
     RETURNING *
   `;
   return mapRow(rows[0]);
+}
+
+export async function updateSourcingRequest(
+  id: string,
+  userId: string,
+  data: {
+    description: string;
+    priceMin: number;
+    priceMax: number;
+    condition: string;
+    size: string | null;
+    deadline: string;
+    userPhone: string | null;
+    userInstagram: string | null;
+  }
+): Promise<SourcingRequest | null> {
+  const sql = neon(getDatabaseUrl());
+  await initSourcingTable();
+
+  const rows = await sql`
+    UPDATE sourcing_requests SET
+      description    = ${data.description},
+      price_min      = ${data.priceMin},
+      price_max      = ${data.priceMax},
+      condition      = ${data.condition},
+      size           = ${data.size},
+      deadline       = ${data.deadline},
+      user_phone     = ${data.userPhone},
+      user_instagram = ${data.userInstagram}
+    WHERE id = ${id} AND user_id = ${userId} AND status = 'paid'
+    RETURNING *
+  `;
+  return rows.length > 0 ? mapRow(rows[0]) : null;
+}
+
+export async function getAllSourcingRequests(): Promise<SourcingRequest[]> {
+  const sql = neon(getDatabaseUrl());
+  await initSourcingTable();
+  const rows = await sql`
+    SELECT * FROM sourcing_requests
+    ORDER BY created_at DESC
+  `;
+  return rows.map(mapRow);
 }
 
 export async function markSourcingRequestPaid(stripeSessionId: string): Promise<SourcingRequest | null> {

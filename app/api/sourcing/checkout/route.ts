@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { imageUrl, description, priceMin, priceMax, condition, size, deadline, preferredStoreSlugs } = body;
+    const { imageUrl, description, priceMin, priceMax, condition, size, deadline, preferredStoreSlugs, phone, instagram } = body;
 
     if (!description || !priceMin || !priceMax || !condition || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       userEmail: session.user.email,
       userName: session.user.name ?? null,
+      userPhone: phone ? String(phone).trim() : null,
+      userInstagram: instagram ? String(instagram).trim() : null,
       imageUrl: imageUrl ?? null,
       description,
       priceMin: Number(priceMin),

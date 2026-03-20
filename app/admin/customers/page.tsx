@@ -145,6 +145,26 @@ export default function CustomersPage() {
   const [approvingAll, setApprovingAll] = useState(false);
   const [emailProgress, setEmailProgress] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [sendingNewArrivals, setSendingNewArrivals] = useState(false);
+  const [newArrivalsResult, setNewArrivalsResult] = useState<string | null>(null);
+
+  async function handleSendNewArrivals() {
+    if (!confirm("Send New Arrivals email to all approved users?")) return;
+    setSendingNewArrivals(true);
+    setNewArrivalsResult(null);
+    try {
+      const res = await fetch("/api/admin/send-new-arrivals-all", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setNewArrivalsResult(`Error: ${data.error}`);
+      } else {
+        setNewArrivalsResult(`Sent to ${data.sent} users (${data.productCount} products)`);
+      }
+      setTimeout(() => setNewArrivalsResult(null), 6000);
+    } finally {
+      setSendingNewArrivals(false);
+    }
+  }
 
   async function handleApproveAll() {
     const pendingCustomers = customers.filter((c) => c.status !== "approved");
@@ -299,6 +319,18 @@ export default function CustomersPage() {
               )}
             </div>
           )}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            <button
+              onClick={handleSendNewArrivals}
+              disabled={sendingNewArrivals}
+              style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: sendingNewArrivals ? "not-allowed" : "pointer", opacity: sendingNewArrivals ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+            >
+              {sendingNewArrivals ? "Sending…" : "Send New Arrivals Email"}
+            </button>
+            {newArrivalsResult && (
+              <p style={{ fontSize: 11, color: "rgba(93,15,23,0.6)", margin: 0 }}>{newArrivalsResult}</p>
+            )}
+          </div>
           <button
             onClick={exportCSV}
             disabled={filtered.length === 0}

@@ -142,7 +142,7 @@ const PRODUCTS_QUERY = `
 
 const SIZE_VALUE_PATTERN = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\\s+Size`;
 // Matches sizes that are ONLY generic clothing letters (not numeric, not EU/UK etc.)
-const GENERIC_CLOTHING_SIZE = /^(XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
+export const GENERIC_CLOTHING_SIZE = /^(XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
 // Full-string size validator — used to reject color/other values stored as size
 const SIZE_VALUE_REGEX = new RegExp(`^(${SIZE_VALUE_PATTERN})$`, "i");
 // Exported so other modules can validate DB-stored sizes (e.g. reject "Gold", "Black")
@@ -168,6 +168,16 @@ export function extractSizeFromTitle(title: string): string | null {
   const sepMatch = re.exec(title);
   if (sepMatch) return sepMatch[1].trim();
 
+  // Match size letter(s) after separator at end of title (no "size" keyword).
+  // Catches "Dress – XS-S", "Top – S/M", "Blouse - XS" etc.
+  const LETTER_SIZE = `XS|XXL|XL|X|S|M|L`;
+  const trailingSizeSepRe = new RegExp(
+    `[-\u2013\u2014\\/|,]\\s*((?:${LETTER_SIZE})(?:[\\/-](?:${LETTER_SIZE}))?)\\s*$`,
+    "i"
+  );
+  const trailingSizeSepMatch = trailingSizeSepRe.exec(title);
+  if (trailingSizeSepMatch) return trailingSizeSepMatch[1].trim().toUpperCase();
+
   // Match a bare size at the very end of the title (no "size" keyword needed).
   // Handles "Dior Heels 35", "Jimmy Choo Pumps 40.5", "Loafers EU 38".
   // Capped at 50 to exclude years (2024, 2025) and other large numbers.
@@ -182,22 +192,72 @@ export function extractSizeFromTitle(title: string): string | null {
   return null;
 }
 
+// Map full word sizes to abbreviations
+const WORD_SIZE_MAP: Record<string, string> = {
+  "extra small": "XS",
+  "extrasmall": "XS",
+  "small": "S",
+  "medium": "M",
+  "large": "L",
+  "extra large": "XL",
+  "extralarge": "XL",
+  "x-large": "XL",
+  "xlarge": "XL",
+  "xx-large": "XXL",
+  "xxlarge": "XXL",
+  "xxl": "XXL",
+  "one size": "One Size",
+  "onesize": "One Size",
+};
+
 /**
  * Extracts a size from product description HTML.
- * Handles patterns like "Size: M", "Size M", "Tagged size: 38", "Labeled size S"
+ * Priority:
+ * 1. Explicit parenthetical abbreviation: "Label: Medium (M)" → "M"
+ * 2. Full word size after label keyword: "Label: Medium" → "M"
+ * 3. Abbreviated size after label keyword: "Label: M" → "M"
+ * 4. "fits XS", "best fits M" — common in vintage descriptions
  */
-function extractSizeFromDescription(description: string | null): string | null {
+export function extractSizeFromDescription(description: string | null): string | null {
   if (!description) return null;
-  // Strip HTML tags and decode common entities
   const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
-  // Matches "Size: M", "Tagged size: 38", "Label: EU 37", etc.
-  const re = new RegExp(`(?:tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size)\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
+
+  const LABEL_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size`;
+
+  // 1. Parenthetical abbreviation after label keyword: "Label: Medium (M)" → "M"
+  const parenRe = new RegExp(
+    `(?:${LABEL_KW})\\s*:?[^(\\n]*?\\(\\s*(${SIZE_VALUE_PATTERN})\\s*\\)`,
+    "i"
+  );
+  const parenMatch = parenRe.exec(text);
+  if (parenMatch) return parenMatch[1].trim();
+
+  // 2. Full word size after label keyword: "Label: Medium", "Size: Large"
+  const wordRe = new RegExp(
+    `(?:${LABEL_KW})\\s*:?\\s*(extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large)(?:\\s|$|[^a-z])`,
+    "i"
+  );
+  const wordMatch = wordRe.exec(text);
+  if (wordMatch) {
+    const key = wordMatch[1].toLowerCase().replace(/\s+/g, " ").trim();
+    return WORD_SIZE_MAP[key.replace(/-/g, "")] ?? WORD_SIZE_MAP[key] ?? wordMatch[1];
+  }
+
+  // 3. Abbreviated size after label keyword: "Size: M", "Tagged size: EU 38"
+  // Bare "size" requires a colon to avoid matching "size S" in freeform text.
+  const STRICT_LABEL_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
+  const re = new RegExp(
+    `(?:(?:${STRICT_LABEL_KW})\\s*:?|size\\s*:)\\s*(${SIZE_VALUE_PATTERN})`,
+    "i"
+  );
   const match = re.exec(text);
   if (match) return match[1].trim();
-  // Fallback: "fits XS", "fits XS-M", "best fits M" — common in vintage descriptions
+
+  // 4. Fallback: "fits XS", "best fits M"
   const fitsRe = new RegExp(`(?:best\\s+)?fits?\\s+(${SIZE_VALUE_PATTERN})`, "i");
   const fitsMatch = fitsRe.exec(text);
   if (fitsMatch) return fitsMatch[1].trim();
+
   return null;
 }
 

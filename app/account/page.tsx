@@ -10,6 +10,7 @@ import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import { deriveSize } from "@/app/lib/inventory";
 import ProductCard from "@/app/components/ProductCard";
 import AccountActions from "./AccountActions";
 import InviteButton from "./InviteButton";
@@ -197,7 +198,7 @@ export default async function AccountPage() {
                         storeSlug={product.store_slug}
                         image={product.image || ""}
                         images={images}
-                        size={product.size}
+                        size={deriveSize(product)}
                         favoriteCount={favCounts[product.id]}
                         from="/account/favorites"
                       />

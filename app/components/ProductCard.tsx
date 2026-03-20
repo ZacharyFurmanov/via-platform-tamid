@@ -133,7 +133,7 @@ export default function ProductCard({
 
       {/* Favorite button overlay */}
       {numericId != null && (
-        <div className="absolute top-2 right-2 z-40 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 z-40 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
           <FavoriteButton type="product" targetId={numericId} size="sm" favoriteCount={favoriteCount} />
         </div>
       )}

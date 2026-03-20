@@ -19,6 +19,7 @@ export const brands: BrandDef[] = [
   { slug: "loewe", label: "Loewe", keywords: ["loewe"] },
   { slug: "fendi", label: "Fendi", keywords: ["fendi"] },
   { slug: "valentino", label: "Valentino", keywords: ["valentino"] },
+  { slug: "giuseppe-zanotti", label: "Giuseppe Zanotti", keywords: ["giuseppe zanotti", "zanotti"] },
   { slug: "givenchy", label: "Givenchy", keywords: ["givenchy"] },
   { slug: "versace", label: "Versace", keywords: ["versace", "gianni versace"] },
   { slug: "dolce-gabbana", label: "Dolce & Gabbana", keywords: ["dolce & gabbana", "dolce and gabbana", "dolce gabbana", "d&g"] },
