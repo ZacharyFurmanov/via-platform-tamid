@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
         : null,
     });
 
-    return NextResponse.json({ clientSecret: checkoutSession.client_secret });
+    return NextResponse.json({
+      clientSecret: checkoutSession.client_secret,
+      publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Sourcing checkout error:", message);

@@ -62,7 +62,10 @@ export async function POST() {
       return_url: `${getBaseUrl()}/account/insider?membership=success`,
     });
 
-    return NextResponse.json({ clientSecret: checkoutSession.client_secret });
+    return NextResponse.json({
+      clientSecret: checkoutSession.client_secret,
+      publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Stripe checkout error:", message);
