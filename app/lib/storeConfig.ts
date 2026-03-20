@@ -194,6 +194,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "porters-preloved",
     storeDomain: "porterspreloved.com",
   },
+  {
+    type: "shopify",
+    name: "For The Globe",
+    slug: "for-the-globe",
+    storeDomain: "shopfortheglobe.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
