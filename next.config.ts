@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       // Shopify CDN (product images)
       { protocol: "https", hostname: "**.shopify.com" },
       { protocol: "https", hostname: "**.shopifycdn.com" },
+      { protocol: "https", hostname: "cdn.shopify.com" },
       // Shopify Collabs CDN
       { protocol: "https", hostname: "**.collabs.shop" },
       // Squarespace (LEI, Montrose Edit)
@@ -28,6 +29,10 @@ const nextConfig: NextConfig = {
       // Generic CDNs used by stores
       { protocol: "https", hostname: "**.cloudinary.com" },
       { protocol: "https", hostname: "**.imgix.net" },
+      { protocol: "https", hostname: "**.amazonaws.com" },
+      // Store custom domains (images served directly from store sites)
+      { protocol: "https", hostname: "shopfortheglobe.com" },
+      { protocol: "https", hostname: "**.shopfortheglobe.com" },
     ],
   },
 };
