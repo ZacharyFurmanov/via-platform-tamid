@@ -1,25 +1,28 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { useCallback, useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 
-export default function MembershipCheckout({ onCancel }: { onCancel: () => void }) {
-  const [error, setError] = useState<string | null>(null);
-  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+const stripePromise = loadStripe(
+  (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "").trim()
+);
 
-  // Fetch clientSecret + publishableKey on mount — avoids relying on NEXT_PUBLIC_ env vars
+export default function MembershipCheckout({ onCancel }: { onCancel: () => void }) {
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("/api/membership/checkout", { method: "POST" })
       .then((r) => r.json())
       .then((data) => {
-        if (!data.clientSecret || !data.publishableKey) {
-          setError(data.error || "Could not start checkout. Please try again.");
-          return;
+        if (data.error) {
+          setError(data.error);
+        } else if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else {
+          setError("Could not start checkout. Please try again.");
         }
-        setStripePromise(loadStripe(data.publishableKey));
-        setClientSecret(data.clientSecret);
       })
       .catch(() => setError("Network error. Please try again."));
   }, []);
@@ -37,7 +40,7 @@ export default function MembershipCheckout({ onCancel }: { onCancel: () => void 
     );
   }
 
-  if (!stripePromise || !clientSecret) {
+  if (!clientSecret) {
     return (
       <div className="text-center py-8">
         <p className="text-sm text-[#5D0F17]/40">Loading checkout…</p>
