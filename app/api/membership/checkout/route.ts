@@ -62,14 +62,9 @@ export async function POST() {
       return_url: `${getBaseUrl()}/account/insider?membership=success`,
     });
 
-    const pk1 = process.env["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"];
-    const pk2 = process.env["STRIPE_PUBLISHABLE_KEY"];
-    console.log("PK debug:", { pk1Len: pk1?.length, pk2Len: pk2?.length, pk1Start: pk1?.slice(0, 8), pk2Start: pk2?.slice(0, 8) });
-
     return NextResponse.json({
       clientSecret: checkoutSession.client_secret,
-      publishableKey: (pk1 || pk2)?.trim(),
-      _debug: { pk1Len: pk1?.length ?? null, pk2Len: pk2?.length ?? null },
+      publishableKey: (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY)?.trim(),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
