@@ -39,7 +39,7 @@ async function stripePost(path: string, params: Record<string, string>) {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
@@ -47,7 +47,8 @@ export async function POST(
   }
 
   try {
-    const req = await getSourcingRequestById(params.id, session.user.id);
+    const { id } = await params;
+    const req = await getSourcingRequestById(id, session.user.id);
     if (!req) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
@@ -87,7 +88,7 @@ export async function POST(
     });
 
     // Update the session ID so the webhook can mark it paid
-    await updateSourcingStripeSession(req.id, session.user.id, checkoutSession.id);
+    await updateSourcingStripeSession(id, session.user.id, checkoutSession.id);
 
     return NextResponse.json({ clientSecret: checkoutSession.client_secret });
   } catch (err) {

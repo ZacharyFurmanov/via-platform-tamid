@@ -16,7 +16,7 @@ function isAuthorized(request: NextRequest): boolean {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,7 +34,7 @@ export async function PATCH(
   }
 
   const sql = neon(dbUrl);
-  const id = params.id;
+  const { id } = await params;
 
   if (status === "matched" && matchedStoreSlug) {
     await sql`
