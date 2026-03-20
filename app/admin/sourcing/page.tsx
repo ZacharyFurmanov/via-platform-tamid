@@ -100,7 +100,33 @@ function RequestRow({
   );
 }
 
-function DetailPanel({ req, onClose }: { req: SourcingRequest; onClose: () => void }) {
+function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose: () => void; onUpdate: (id: string, status: string, matchedStoreSlug: string | null) => void }) {
+  const [editStatus, setEditStatus] = useState(req.status);
+  const [editStore, setEditStore] = useState(req.matchedStoreSlug ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/admin/sourcing/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: editStatus,
+          matchedStoreSlug: editStatus === "matched" ? editStore || null : null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      onUpdate(req.id, editStatus, editStatus === "matched" ? editStore || null : null);
+    } catch {
+      setSaveError("Could not save. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
       <div
@@ -199,6 +225,53 @@ function DetailPanel({ req, onClose }: { req: SourcingRequest; onClose: () => vo
               {req.matchedStoreAt && <Row label="Offer Accepted" value={fmt(req.matchedStoreAt)} />}
             </>
           )}
+
+          <Section title="Admin Actions" />
+          <div style={{ marginTop: 8 }}>
+            <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Status</label>
+            <select
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value)}
+              style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, marginBottom: 10 }}
+            >
+              <option value="pending_payment">Pending Payment</option>
+              <option value="paid">Paid</option>
+              <option value="matched">Matched</option>
+              <option value="refunded">Refunded</option>
+            </select>
+
+            {editStatus === "matched" && (
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Matched Store Slug</label>
+                <input
+                  type="text"
+                  value={editStore}
+                  onChange={(e) => setEditStore(e.target.value)}
+                  placeholder="e.g. house-on-a-chain"
+                  style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }}
+                />
+              </div>
+            )}
+
+            {saveError && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 8 }}>{saveError}</p>}
+
+            <button
+              onClick={handleSave}
+              disabled={saving || editStatus === req.status}
+              style={{
+                padding: "8px 16px",
+                background: saving || editStatus === req.status ? "#e5e7eb" : "#5D0F17",
+                color: saving || editStatus === req.status ? "#9ca3af" : "#fff",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: saving || editStatus === req.status ? "default" : "pointer",
+              }}
+            >
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -322,7 +395,14 @@ export default function AdminSourcingPage() {
       </div>
 
       {selected && (
-        <DetailPanel req={selected} onClose={() => setSelected(null)} />
+        <DetailPanel
+          req={selected}
+          onClose={() => setSelected(null)}
+          onUpdate={(id, status, matchedStoreSlug) => {
+            setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status, matchedStoreSlug } : r));
+            setSelected((prev) => prev?.id === id ? { ...prev, status, matchedStoreSlug } : prev);
+          }}
+        />
       )}
     </div>
   );
