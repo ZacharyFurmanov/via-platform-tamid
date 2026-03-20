@@ -69,6 +69,6 @@ export async function POST() {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Stripe checkout error:", message);
-    return NextResponse.json({ error: "Could not start checkout. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
