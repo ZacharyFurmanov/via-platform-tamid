@@ -75,9 +75,10 @@ export async function GET(request: NextRequest) {
         : sql`SELECT COUNT(*)::int AS total FROM product_views`,
 
       // totalRevenue + totalConversions + matched breakdown
+      // Exclude unmatched orders from squarespace stores (those fire for all sales, not just VYA referrals)
       cutoffIso
-        ? sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0 AND timestamp >= ${cutoffIso}`
-        : sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0`,
+        ? sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0 AND timestamp >= ${cutoffIso} AND NOT (store_slug IN ('lei-vintage', 'montrose-edit') AND (matched = false OR matched IS NULL))`
+        : sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0 AND NOT (store_slug IN ('lei-vintage', 'montrose-edit') AND (matched = false OR matched IS NULL))`,
 
       // totalCustomers (pilot_access + waitlist deduped) + approvedCustomers
       sql`
@@ -170,6 +171,7 @@ export async function GET(request: NextRequest) {
               SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue
               FROM conversions
               WHERE order_total > 0 AND timestamp >= ${cutoffIso}
+                AND NOT (store_slug IN ('lei-vintage', 'montrose-edit') AND (matched = false OR matched IS NULL))
               GROUP BY store_slug
             )
             SELECT
@@ -192,6 +194,7 @@ export async function GET(request: NextRequest) {
               SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue
               FROM conversions
               WHERE order_total > 0
+                AND NOT (store_slug IN ('lei-vintage', 'montrose-edit') AND (matched = false OR matched IS NULL))
               GROUP BY store_slug
             )
             SELECT
@@ -286,6 +289,7 @@ export async function GET(request: NextRequest) {
             FROM conversions c
             LEFT JOIN users u ON u.id::text = c.user_id
             WHERE c.order_total > 0 AND c.timestamp >= ${cutoffIso}
+              AND NOT (c.store_slug IN ('lei-vintage', 'montrose-edit') AND (c.matched = false OR c.matched IS NULL))
             ORDER BY c.timestamp DESC
             LIMIT 50
           `
@@ -306,6 +310,7 @@ export async function GET(request: NextRequest) {
             FROM conversions c
             LEFT JOIN users u ON u.id::text = c.user_id
             WHERE c.order_total > 0
+              AND NOT (c.store_slug IN ('lei-vintage', 'montrose-edit') AND (c.matched = false OR c.matched IS NULL))
             ORDER BY c.timestamp DESC
             LIMIT 50
           `,

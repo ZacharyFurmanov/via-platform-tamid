@@ -355,26 +355,18 @@ export async function getNewArrivals(
   const sql = neon(getDatabaseUrl());
 
   try {
-    const result = isMember
-      ? await sql`
-          SELECT * FROM products
-          WHERE created_at IS NOT NULL
-            AND created_at >= NOW() - make_interval(days => ${days})
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND title NOT ILIKE '%gift card%'
-          ORDER BY created_at DESC
-          LIMIT ${limit}
-        `
-      : await sql`
-          SELECT * FROM products
-          WHERE created_at IS NOT NULL
-            AND created_at >= NOW() - make_interval(days => ${days})
-            AND created_at <= NOW() - interval '24 hours'
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND title NOT ILIKE '%gift card%'
-          ORDER BY created_at DESC
-          LIMIT ${limit}
-        `;
+    // Both members and non-members see the same New Arrivals feed — items older than 24 hours.
+    // Items within the 24-hour window are exclusively in the VYA Insider section.
+    const result = await sql`
+        SELECT * FROM products
+        WHERE created_at IS NOT NULL
+          AND created_at >= NOW() - make_interval(days => ${days})
+          AND created_at <= NOW() - interval '24 hours'
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND title NOT ILIKE '%gift card%'
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `;
 
     return result as DBProduct[];
   } catch {

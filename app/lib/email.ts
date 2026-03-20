@@ -379,18 +379,20 @@ export async function sendInsiderNewArrivalsEmail(
            font-family:Georgia,'Times New Roman',serif;">${compareStr}</span>`
       : `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>`;
 
+    // Use a table layout so each element is its own link-safe block.
+    // Avoid <p> inside <a> — email clients break the outer <a> at block elements.
     return `
       <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
         ${imgBlock}
-        <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-           margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</p>
-        <p style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
-           line-height:1.35;">${p.title}</p>
-        <p style="margin:0 0 14px;">${priceBlock}</p>
-        <span style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
-               font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
-               font-family:Georgia,'Times New Roman',serif;">View Item</span>
       </a>
+      <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</div>
+      <div style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
+         line-height:1.35;">${p.title}</div>
+      <div style="margin:0 0 14px;">${priceBlock}</div>
+      <a href="${url}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+             text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+             font-family:Georgia,'Times New Roman',serif;">View Item</a>
     `;
   }
 
@@ -484,18 +486,19 @@ export async function sendNewArrivalsEmail(
            font-family:Georgia,'Times New Roman',serif;">${compareStr}</span>`
       : `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>`;
 
+    // Avoid <p> inside <a> — email clients break the outer <a> at block elements.
     return `
       <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
         ${imgBlock}
-        <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-           margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</p>
-        <p style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
-           line-height:1.35;">${p.title}</p>
-        <p style="margin:0 0 14px;">${priceBlock}</p>
-        <span style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
-               font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
-               font-family:Georgia,'Times New Roman',serif;">View Item</span>
       </a>
+      <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         margin:10px 0 3px;font-family:Georgia,'Times New Roman',serif;">${p.store_name}</div>
+      <div style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
+         line-height:1.35;">${p.title}</div>
+      <div style="margin:0 0 14px;">${priceBlock}</div>
+      <a href="${url}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+             text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+             font-family:Georgia,'Times New Roman',serif;">View Item</a>
     `;
   }
 

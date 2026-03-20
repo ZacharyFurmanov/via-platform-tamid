@@ -245,6 +245,15 @@ export default function DeepAnalyticsPage() {
     return () => clearInterval(interval);
   }, [range, fetchData]);
 
+  // Re-fetch silently when the tab becomes visible again (e.g. after matching in Conversions)
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") fetchData(range, true);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [range, fetchData]);
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -417,7 +426,7 @@ export default function DeepAnalyticsPage() {
               </div>
 
               {/* Orders table */}
-              <ConversionsTable rows={data.recentConversions} />
+              <ConversionsTable rows={data.recentConversions} onRefresh={() => fetchData(range, true)} />
             </div>
 
             {/* ── Referral Leaderboard ─────────────────────────────────────── */}
@@ -1002,9 +1011,71 @@ function ProductList({ items }: { items: ProductListItem[] }) {
 
 // ── ConversionsTable ──────────────────────────────────────────────────────────
 
-function ConversionsTable({ rows }: { rows: ConversionRow[] }) {
-  if (rows.length === 0) {
-    return <p style={{ fontSize: 13, opacity: 0.5 }}>No orders in this period.</p>;
+type CandidateClick = { clickId: string; timestamp: string; productName: string; storeSlug: string; userId: string | null; userEmail: string | null; userName: string | null };
+
+function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefresh: () => void }) {
+  const [selected, setSelected] = React.useState<ConversionRow | null>(null);
+  const [candidates, setCandidates] = React.useState<CandidateClick[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = React.useState(false);
+  const [userInput, setUserInput] = React.useState("");
+  const [matching, setMatching] = React.useState<string | null>(null);
+  const [addingOrder, setAddingOrder] = React.useState(false);
+  const [newOrder, setNewOrder] = React.useState({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
+  const [savingOrder, setSavingOrder] = React.useState(false);
+  const [saveOrderError, setSaveOrderError] = React.useState<string | null>(null);
+
+  function openMatch(r: ConversionRow) {
+    setSelected(r);
+    setUserInput(r.buyerEmail ?? "");
+    setCandidates([]);
+    setCandidatesLoading(true);
+    fetch(`/api/admin/conversions/${r.conversionId}`)
+      .then((res) => res.json())
+      .then((d) => { setCandidates(d.clicks ?? []); setCandidatesLoading(false); })
+      .catch(() => setCandidatesLoading(false));
+  }
+
+  async function matchToClick(clickId: string) {
+    if (!selected) return;
+    setMatching(clickId);
+    await fetch(`/api/admin/conversions/${selected.conversionId}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clickId }),
+    });
+    setMatching(null);
+    setSelected(null);
+    onRefresh();
+  }
+
+  async function matchToUser() {
+    if (!selected || !userInput.trim()) return;
+    setMatching("user");
+    const input = userInput.trim();
+    const body = input.includes("@") ? { userEmail: input } : { userId: input };
+    const res = await fetch(`/api/admin/conversions/${selected.conversionId}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) { const d = await res.json(); alert(d.error ?? "Not found"); }
+    setMatching(null);
+    setSelected(null);
+    onRefresh();
+  }
+
+  async function saveManualOrder() {
+    if (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) return;
+    setSavingOrder(true);
+    setSaveOrderError(null);
+    const res = await fetch("/api/admin/conversions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newOrder),
+    });
+    const d = await res.json();
+    if (!res.ok) { setSaveOrderError(d.error ?? "Failed"); setSavingOrder(false); return; }
+    setSavingOrder(false);
+    setAddingOrder(false);
+    setNewOrder({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
+    onRefresh();
   }
 
   const hStyle: React.CSSProperties = {
@@ -1014,63 +1085,159 @@ function ConversionsTable({ rows }: { rows: ConversionRow[] }) {
   };
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-        <thead>
-          <tr>
-            <th style={hStyle}>Time</th>
-            <th style={hStyle}>Store</th>
-            <th style={{ ...hStyle, textAlign: "right" }}>Order Total</th>
-            <th style={hStyle}>Buyer</th>
-            <th style={hStyle}>Attribution</th>
-            <th style={hStyle}>Clicked Product</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.conversionId} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7", borderBottom: `1px solid ${CREAM}` }}>
-              <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.6, whiteSpace: "nowrap" }}>
-                {relativeTime(r.timestamp)}
-              </td>
-              <td style={{ padding: "9px 12px", fontWeight: 600, color: MAROON }}>
-                {r.storeName}
-              </td>
-              <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>
-                {formatRevenue(r.orderTotal)}
-              </td>
-              <td style={{ padding: "9px 12px", color: MAROON, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {r.buyerEmail ? (
-                  <span title={r.buyerEmail} style={{ fontSize: 12 }}>
-                    {r.buyerName || r.buyerEmail}
-                    {r.buyerName && <span style={{ display: "block", fontSize: 10, opacity: 0.5 }}>{r.buyerEmail}</span>}
-                  </span>
-                ) : (
-                  <span style={{ opacity: 0.35, fontSize: 11 }}>—</span>
-                )}
-              </td>
-              <td style={{ padding: "9px 12px" }}>
-                <span style={{
-                  display: "inline-block",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  padding: "2px 8px",
-                  borderRadius: 4,
-                  background: r.matched ? "#dcfce7" : "#fef9c3",
-                  color: r.matched ? "#166534" : "#854d0e",
-                }}>
-                  {r.matched ? "Matched" : "Unmatched"}
-                </span>
-              </td>
-              <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.7, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {r.clickedProduct ?? (r.matched ? "—" : <span style={{ opacity: 0.4 }}>no click recorded</span>)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button
+          onClick={() => setAddingOrder(true)}
+          style={{ fontSize: 11, padding: "5px 14px", background: MAROON, color: "#F7F3EA", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}
+        >
+          + Record Order
+        </button>
+      </div>
+
+      {rows.length === 0 ? (
+        <p style={{ fontSize: 13, opacity: 0.5 }}>No orders in this period.</p>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr>
+                <th style={hStyle}>Time</th>
+                <th style={hStyle}>Store</th>
+                <th style={{ ...hStyle, textAlign: "right" }}>Order Total</th>
+                <th style={hStyle}>Buyer</th>
+                <th style={hStyle}>Attribution</th>
+                <th style={hStyle}>Clicked Product</th>
+                <th style={hStyle}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r.conversionId} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7", borderBottom: `1px solid ${CREAM}` }}>
+                  <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.6, whiteSpace: "nowrap" }}>{relativeTime(r.timestamp)}</td>
+                  <td style={{ padding: "9px 12px", fontWeight: 600, color: MAROON }}>{r.storeName}</td>
+                  <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>{formatRevenue(r.orderTotal)}</td>
+                  <td style={{ padding: "9px 12px", color: MAROON, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.buyerEmail ? (
+                      <span title={r.buyerEmail} style={{ fontSize: 12 }}>
+                        {r.buyerName || r.buyerEmail}
+                        {r.buyerName && <span style={{ display: "block", fontSize: 10, opacity: 0.5 }}>{r.buyerEmail}</span>}
+                      </span>
+                    ) : <span style={{ opacity: 0.35, fontSize: 11 }}>—</span>}
+                  </td>
+                  <td style={{ padding: "9px 12px" }}>
+                    <span style={{ display: "inline-block", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 8px", borderRadius: 4, background: r.matched ? "#dcfce7" : "#fef9c3", color: r.matched ? "#166534" : "#854d0e" }}>
+                      {r.matched ? "Matched" : "Unmatched"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.7, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.clickedProduct ?? (r.matched ? "—" : <span style={{ opacity: 0.4 }}>no click recorded</span>)}
+                  </td>
+                  <td style={{ padding: "9px 12px", whiteSpace: "nowrap" }}>
+                    <button
+                      onClick={() => openMatch(r)}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid rgba(93,15,23,0.3)`, borderRadius: 4, color: MAROON, cursor: "pointer", fontWeight: 600 }}
+                    >
+                      {r.matched ? "Re-match" : "Match"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Match panel */}
+      {selected && (
+        <>
+          <div onClick={() => setSelected(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }} />
+          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 500, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 24px rgba(0,0,0,0.12)", fontFamily: "system-ui, sans-serif" }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Match Order</p>
+                <p style={{ fontSize: 12, color: "#9ca3af", margin: "3px 0 0" }}>{selected.storeName} · {formatRevenue(selected.orderTotal)} · {relativeTime(selected.timestamp)}</p>
+              </div>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+            </div>
+            <div style={{ padding: "20px 24px" }}>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>Match to Customer</p>
+              <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  placeholder="Email address"
+                  style={{ flex: 1, padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13 }}
+                />
+                <button
+                  onClick={matchToUser}
+                  disabled={!userInput.trim() || matching === "user"}
+                  style={{ padding: "7px 14px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !userInput.trim() ? 0.4 : 1 }}
+                >
+                  {matching === "user" ? "Saving…" : "Set"}
+                </button>
+              </div>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>Candidate Clicks (same store, ±48h)</p>
+              {candidatesLoading ? (
+                <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading…</p>
+              ) : candidates.length === 0 ? (
+                <p style={{ fontSize: 13, color: "#9ca3af" }}>No clicks found in this window.</p>
+              ) : candidates.map((click) => (
+                <div key={click.clickId} style={{ border: "1px solid #e5e7eb", borderRadius: 6, padding: "10px 14px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>{click.productName || "—"}</p>
+                    <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
+                      {new Date(click.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      {click.userEmail && ` · ${click.userName || click.userEmail}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => matchToClick(click.clickId)}
+                    disabled={matching === click.clickId}
+                    style={{ padding: "5px 12px", background: MAROON, color: "#fff", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                  >
+                    {matching === click.clickId ? "Saving…" : "Use this"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Record Order modal */}
+      {addingOrder && (
+        <>
+          <div onClick={() => setAddingOrder(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 200 }} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 460, background: "#fff", zIndex: 201, borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "24px 28px", fontFamily: "system-ui, sans-serif" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Record Order Manually</p>
+              <button onClick={() => setAddingOrder(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Store Slug *</label><input value={newOrder.storeSlug} onChange={(e) => setNewOrder({ ...newOrder, storeSlug: e.target.value })} placeholder="porters-preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Store Name</label><input value={newOrder.storeName} onChange={(e) => setNewOrder({ ...newOrder, storeName: e.target.value })} placeholder="Porter's Preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Order ID *</label><input value={newOrder.orderId} onChange={(e) => setNewOrder({ ...newOrder, orderId: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Amount *</label><input type="number" value={newOrder.orderTotal} onChange={(e) => setNewOrder({ ...newOrder, orderTotal: e.target.value })} placeholder="0.00" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Currency</label><input value={newOrder.currency} onChange={(e) => setNewOrder({ ...newOrder, currency: e.target.value })} placeholder="USD" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Order Date</label><input type="datetime-local" value={newOrder.timestamp} onChange={(e) => setNewOrder({ ...newOrder, timestamp: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+              </div>
+              <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Customer Email (optional)</label><input value={newOrder.userEmail} onChange={(e) => setNewOrder({ ...newOrder, userEmail: e.target.value })} placeholder="Links to a VYA account" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+              {saveOrderError && <p style={{ fontSize: 12, color: "#dc2626", margin: 0 }}>{saveOrderError}</p>}
+              <button onClick={saveManualOrder} disabled={savingOrder || !newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal} style={{ padding: "9px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) ? 0.5 : 1 }}>
+                {savingOrder ? "Saving…" : "Save Order"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 

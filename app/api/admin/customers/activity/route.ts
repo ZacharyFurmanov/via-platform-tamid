@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     ` : Promise.resolve([]),
 
     userId ? sql`
-      SELECT product_name, store, timestamp
+      SELECT click_id, product_name, store, store_slug, timestamp
       FROM clicks
       WHERE user_id = ${userId}
       ORDER BY timestamp DESC

@@ -91,6 +91,29 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "for-the-globe",
+    dashboardToken: "ftg-2c8a1e5d9b3f",
+    name: "For The Globe",
+    location: "Richmond, VA",
+    description:
+      "For The Globe is a Richmond, VA based vintage studio. Founded by Abbey Miller in 2020, our mission is to provide vintage enthusiasts with a carefully curated collection of high-quality, unique and sustainable clothing and decor from around the globe. We aim to spread our appreciation for vintage treasures + attainable designer fashion, while also encouraging a more conscious approach to style. Through a commitment to looking good while doing good for the globe, we strive to be the go-to destination for those seeking pieces for an always stylish, globe-conscious wardrobe.",
+    website: "https://shopfortheglobe.com/VYA",
+    dataSource: "for-the-globe",
+    image: "/stores/for-the-globe.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "232048",
+    authenticityPolicy:
+      "Every piece at For The Globe is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Ships from Richmond, VA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "front-page-finds",
     dashboardToken: "fpf-6c2e9a1d4b7f3",
     name: "Front Page Finds",
@@ -673,6 +696,7 @@ export const storeContactEmails: Record<string, string> = {
   "promised-vintage": "kellanmccormick@gmail.com",
   "dayton-jane": "jacquelyne.rankin@gmail.com",
   "club-fleur": "theclubfleur@gmail.com",
+  "for-the-globe": "for.the.globe1@gmail.com",
   "front-page-finds": "charlee@frontpagefinds.com",
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "rareality-archive": "holly.cooper01@hotmail.com",

@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { label: "Collabs", href: "/admin/collabs-links" },
   { label: "Giveaway", href: "/admin/giveaway" },
   { label: "Sourcing", href: "/admin/sourcing" },
+  { label: "Stores", href: "/admin/stores" },
 ];
 
 export default function AdminNav() {

@@ -22,13 +22,104 @@ type ActivityData = {
   userId: string | null;
   favorites: { product_id: number; title: string | null; image: string | null; store_name: string | null; price: string | null; created_at: string }[];
   cart: { product_id: number; product_title: string; product_image: string | null; store_name: string; price: string; currency: string; added_at: string }[];
-  clicks: { product_name: string; store: string; timestamp: string }[];
+  clicks: { click_id: string; product_name: string; store: string; store_slug: string; timestamp: string }[];
   orders: { order_id: string; order_total: number; store_name: string; timestamp: string }[];
+};
+
+type UnmatchedConversion = {
+  conversionId: string;
+  timestamp: string;
+  orderId: string;
+  orderTotal: number;
+  currency: string;
+  storeName: string;
 };
 
 function fmtTime(date: string | null) {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function ClickMatchRow({ click, userId }: { click: ActivityData["clicks"][number]; userId: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [conversions, setConversions] = useState<UnmatchedConversion[]>([]);
+  const [loadingConv, setLoadingConv] = useState(false);
+  const [matching, setMatching] = useState<string | null>(null);
+  const [matched, setMatched] = useState<string | null>(null);
+
+  function toggle() {
+    if (!expanded && conversions.length === 0) {
+      setLoadingConv(true);
+      fetch(`/api/admin/conversions?filter=unmatched&store=${encodeURIComponent(click.store_slug)}`)
+        .then((r) => r.json())
+        .then((d) => { setConversions(d.conversions ?? []); setLoadingConv(false); })
+        .catch(() => setLoadingConv(false));
+    }
+    setExpanded((v) => !v);
+  }
+
+  async function matchConversion(conversionId: string) {
+    setMatching(conversionId);
+    await fetch(`/api/admin/conversions/${conversionId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clickId: click.click_id }),
+    });
+    setMatched(conversionId);
+    setMatching(null);
+    setConversions((prev) => prev.filter((c) => c.conversionId !== conversionId));
+  }
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{click.product_name}</p>
+          <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{click.store}</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <p style={{ fontSize: 11, color: "rgba(93,15,23,0.35)", whiteSpace: "nowrap" }}>{fmtTime(click.timestamp)}</p>
+          <button
+            onClick={toggle}
+            style={{ fontSize: 10, padding: "2px 8px", background: expanded ? "#5D0F17" : "transparent", color: expanded ? "#fff" : "#5D0F17", border: "1px solid rgba(93,15,23,0.3)", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            {expanded ? "Hide" : "Match order"}
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <div style={{ marginTop: 6, marginLeft: 0, borderLeft: "2px solid rgba(93,15,23,0.15)", paddingLeft: 10 }}>
+          {loadingConv ? (
+            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>Loading orders…</p>
+          ) : conversions.length === 0 ? (
+            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>No unmatched orders for this store.</p>
+          ) : (
+            conversions.map((conv) => (
+              <div key={conv.conversionId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6, padding: "6px 8px", background: "#faf9f7", border: "1px solid #e5e7eb", borderRadius: 4 }}>
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: 0 }}>
+                    {new Intl.NumberFormat("en-US", { style: "currency", currency: conv.currency || "USD", maximumFractionDigits: 0 }).format(conv.orderTotal)}
+                  </p>
+                  <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{fmtTime(conv.timestamp)} · <span style={{ fontFamily: "monospace" }}>{conv.orderId.slice(0, 20)}</span></p>
+                </div>
+                {matched === conv.conversionId ? (
+                  <span style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>Matched ✓</span>
+                ) : (
+                  <button
+                    onClick={() => matchConversion(conv.conversionId)}
+                    disabled={matching === conv.conversionId}
+                    style={{ fontSize: 11, padding: "3px 10px", background: "#5D0F17", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap", opacity: matching === conv.conversionId ? 0.6 : 1 }}
+                  >
+                    {matching === conv.conversionId ? "…" : "Match"}
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () => void }) {
@@ -98,13 +189,7 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
               {/* Clicks */}
               {section("Clicked Through to Store", data.clicks.length)}
               {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.clicks.map((c, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.product_name}</p>
-                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.store}</p>
-                  </div>
-                  <p style={{ fontSize: 11, color: "rgba(93,15,23,0.35)", whiteSpace: "nowrap", flexShrink: 0 }}>{fmtTime(c.timestamp)}</p>
-                </div>
+                <ClickMatchRow key={i} click={c} userId={data.userId!} />
               ))}
 
               {/* Orders */}

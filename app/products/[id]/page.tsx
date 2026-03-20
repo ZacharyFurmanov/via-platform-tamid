@@ -6,6 +6,7 @@ import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
 import BackButton from "@/app/components/BackButton";
+import { deriveSize } from "@/app/lib/inventory";
 import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
@@ -23,6 +24,21 @@ type ProductPageProps = {
 
 // Guard against non-size values (like colors) that may have been stored as size in older syncs
 const VALID_SIZE_RE = /^(?:(?:US|UK|EU|IT)\s*)?\d[\d.]*$|^(?:XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
+
+function expandSize(size: string): string {
+  const map: Record<string, string> = {
+    XS: "Extra Small",
+    S: "Small",
+    M: "Medium",
+    L: "Large",
+    XL: "Extra Large",
+    XXL: "XXL",
+    XXXL: "XXXL",
+    OS: "One Size",
+    OSFM: "One Size",
+  };
+  return map[size.toUpperCase()] ?? size;
+}
 
 const MEASUREMENT_KEYWORDS = [
   "shoulder", "sleeve", "bust", "chest", "waist", "hip", "inseam",
@@ -198,6 +214,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const categoryLabel = categoryMap[categorySlug];
   const price = `$${Math.round(Number(product.price))}`;
 
+  // Use deriveSize to extract the correct size (checks title first, then description, then DB)
+  const rawSize = deriveSize(product);
+  const displaySize = rawSize ? expandSize(rawSize) : null;
+
   // Parse images from DB
   let productImages: string[] = [];
   if (product.images) {
@@ -275,9 +295,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
             <p className="text-sm text-black/50 mb-0.5">{categoryLabel}</p>
 
-            {product.size && VALID_SIZE_RE.test(product.size.trim()) && (
+            {displaySize && (
               <p className="text-sm text-black/70 mb-0.5">
-                Size: <span className="font-medium">{product.size}</span>
+                Size: <span className="font-medium">{displaySize}</span>
               </p>
             )}
 
@@ -316,9 +336,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     title: "Sizing & Measurements",
                     content: (
                       <div>
-                        {product.size && VALID_SIZE_RE.test(product.size.trim()) && (
+                        {displaySize && (
                           <p className="mb-3">
-                            <span className="font-medium">Size:</span> {product.size}
+                            <span className="font-medium">Size:</span> {displaySize}
                           </p>
                         )}
                         {sizingItems.length > 0 && (
@@ -332,7 +352,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                           This is a vintage or secondhand item. Sizing may vary from modern standards.
                           We recommend checking measurements carefully before purchasing.
                         </p>
-                        {sizingItems.length === 0 && (!product.size || !VALID_SIZE_RE.test(product.size.trim())) && (
+                        {sizingItems.length === 0 && !displaySize && (
                           <p className="mt-2 text-sm">
                             For specific measurements,{" "}
                             <a href="#more-info" className="underline hover:text-black transition">
