@@ -187,7 +187,10 @@ export default function SourcingPage() {
       const data = await res.json();
       if (!res.ok || !data.clientSecret) throw new Error(data.error || "Could not start checkout.");
 
-      if (data.publishableKey) setStripePromise(loadStripe(data.publishableKey));
+      setStripePromise(loadStripe(
+        data.publishableKey?.trim() ||
+        "pk_live_51SuO4fH2dVF0WrN0yaIdMeQo3yco2VskEh10ggAbEp5OaTKvfnINJhXTHkUPk6deacXTcmySqx7PzsILoK2BCpwN00WCbtIaPK"
+      ));
       setClientSecret(data.clientSecret);
       setStep("checkout");
     } catch (err) {

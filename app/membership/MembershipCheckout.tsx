@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 
-// NEXT_PUBLIC_ vars are baked at build time — this forces a fresh build to pick up the key
 const stripePromise = loadStripe(
-  (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "").trim()
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ||
+  "pk_live_51SuO4fH2dVF0WrN0yaIdMeQo3yco2VskEh10ggAbEp5OaTKvfnINJhXTHkUPk6deacXTcmySqx7PzsILoK2BCpwN00WCbtIaPK"
 );
 
 export default function MembershipCheckout({ onCancel }: { onCancel: () => void }) {
