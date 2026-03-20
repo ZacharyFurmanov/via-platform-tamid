@@ -55,7 +55,7 @@ export async function POST() {
     const checkoutSession = await stripePost("checkout/sessions", {
       mode: "subscription",
       customer: stripeCustomerId as string,
-      "line_items[0][price]": process.env.STRIPE_PRICE_ID!,
+      "line_items[0][price]": process.env.STRIPE_PRICE_ID!.trim(),
       "line_items[0][quantity]": "1",
       ui_mode: "embedded",
       allow_promotion_codes: "true",
