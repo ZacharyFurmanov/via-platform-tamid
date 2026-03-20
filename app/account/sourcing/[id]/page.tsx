@@ -5,6 +5,7 @@ import { getSourcingRequestById } from "@/app/lib/sourcing-db";
 import { getOffersByRequestId } from "@/app/lib/sourcing-offers-db";
 import AcceptOfferSection from "./AcceptOfferSection";
 import EditRequestSection from "./EditRequestSection";
+import PayNowSection from "./PayNowSection";
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: "Payment Processing",
@@ -14,7 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  pending_payment: "Your payment is being processed. This usually takes just a moment.",
+  pending_payment: "Your request has been saved but payment hasn't been completed. Edit your request below, then complete payment to send it to stores.",
   paid: "We've received your request and our network of stores is actively searching for your item. Offers from stores will appear below.",
   matched: "You've accepted a sourcing offer. The store will reach out to you directly via email.",
   refunded: "This request has been refunded.",
@@ -122,8 +123,8 @@ export default async function SourcingRequestDetailPage({
           </div>
         </div>
 
-        {/* Edit — only while still searching */}
-        {req.status === "paid" && (
+        {/* Edit + Pay — available before payment or while still searching */}
+        {(req.status === "paid" || req.status === "pending_payment") && (
           <div className="mt-8">
             <EditRequestSection
               requestId={req.id}
@@ -138,6 +139,13 @@ export default async function SourcingRequestDetailPage({
                 userInstagram: req.userInstagram,
               }}
             />
+          </div>
+        )}
+
+        {/* Pay now — only for unpaid requests */}
+        {req.status === "pending_payment" && (
+          <div className="mt-6">
+            <PayNowSection requestId={req.id} />
           </div>
         )}
 

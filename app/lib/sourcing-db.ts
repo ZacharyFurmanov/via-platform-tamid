@@ -164,10 +164,25 @@ export async function updateSourcingRequest(
       deadline       = ${data.deadline},
       user_phone     = ${data.userPhone},
       user_instagram = ${data.userInstagram}
-    WHERE id = ${id} AND user_id = ${userId} AND status = 'paid'
+    WHERE id = ${id} AND user_id = ${userId} AND status IN ('paid', 'pending_payment')
     RETURNING *
   `;
   return rows.length > 0 ? mapRow(rows[0]) : null;
+}
+
+export async function updateSourcingStripeSession(
+  id: string,
+  userId: string,
+  stripeSessionId: string
+): Promise<boolean> {
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`
+    UPDATE sourcing_requests
+    SET stripe_session_id = ${stripeSessionId}
+    WHERE id = ${id} AND user_id = ${userId} AND status = 'pending_payment'
+    RETURNING id
+  `;
+  return rows.length > 0;
 }
 
 export async function getAllSourcingRequests(): Promise<SourcingRequest[]> {
