@@ -35,35 +35,112 @@ function estimateRevenue(commission: number): number {
   return commission / 0.03;
 }
 
-async function saveCollabsConversion(
+async function saveCollabsConversions(
   partnershipId: string,
   brandName: string,
   deltaOrders: number,
   deltaCommission: number,
-  now: string
+  now: string,
+  lastSyncedAt: string | null
 ) {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!dbUrl) return;
   const sql = neon(dbUrl);
 
   const storeSlug = resolveStoreSlug(brandName);
-  const estimatedTotal = estimateRevenue(deltaCommission);
-  const orderId = `collabs-${partnershipId}-${Date.now()}`;
-  const conversionId = `collabs_${partnershipId}_${Date.now()}`;
+  const perOrderTotal = estimateRevenue(deltaCommission) / deltaOrders;
 
-  await sql`
-    INSERT INTO conversions (
-      conversion_id, timestamp, order_id, order_total, currency,
-      items, via_click_id, store_slug, store_name, matched, matched_click_data
-    )
-    VALUES (
-      ${conversionId}, ${now}, ${orderId}, ${estimatedTotal}, 'USD',
-      ${JSON.stringify([{ productName: `${deltaOrders} order${deltaOrders !== 1 ? "s" : ""} via Shopify Collabs`, quantity: deltaOrders, price: estimatedTotal }])},
-      NULL, ${storeSlug}, ${brandName}, true,
-      ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission })}
-    )
-    ON CONFLICT (order_id, store_slug) DO NOTHING
+  // Look for unmatched clicks to this store since the last sync
+  // (fall back to 24h window if this is the first sync)
+  const windowStart = lastSyncedAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const recentClicks = await sql`
+    SELECT click_id, user_id, timestamp, product_name
+    FROM clicks
+    WHERE store_slug = ${storeSlug}
+      AND user_id IS NOT NULL
+      AND timestamp >= ${windowStart}
+      AND timestamp <= ${now}
+      AND click_id NOT IN (
+        SELECT via_click_id FROM conversions
+        WHERE via_click_id IS NOT NULL AND store_slug = ${storeSlug}
+      )
+    ORDER BY timestamp DESC
+    LIMIT ${deltaOrders}
   `;
+
+  // Create one conversion row per order, matched to a click where possible
+  for (let i = 0; i < deltaOrders; i++) {
+    const click = recentClicks[i] ?? null;
+    const orderId = `collabs-${partnershipId}-${Date.now()}-${i}`;
+    const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
+
+    await sql`
+      INSERT INTO conversions (
+        conversion_id, timestamp, order_id, order_total, currency,
+        items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
+      )
+      VALUES (
+        ${conversionId}, ${now}, ${orderId}, ${perOrderTotal}, 'USD',
+        ${JSON.stringify([{ productName: click ? (click.product_name as string) : `Order via Shopify Collabs`, quantity: 1, price: perOrderTotal }])},
+        ${click ? (click.click_id as string) : null},
+        ${storeSlug}, ${brandName}, true,
+        ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission })},
+        ${click ? (click.user_id as string) : null}
+      )
+      ON CONFLICT (order_id, store_slug) DO NOTHING
+    `;
+  }
+}
+
+/**
+ * Retroactively match existing collabs conversions that have no user_id.
+ * For each, look for a click to the same store within 48h before the conversion.
+ */
+async function retroactivelyMatchCollabsConversions() {
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!dbUrl) return 0;
+  const sql = neon(dbUrl);
+
+  const unmatched = await sql`
+    SELECT id, store_slug, timestamp
+    FROM conversions
+    WHERE user_id IS NULL
+      AND matched_click_data->>'source' = 'shopify-collabs'
+    ORDER BY timestamp DESC
+    LIMIT 200
+  `;
+
+  let matchedCount = 0;
+
+  for (const conv of unmatched) {
+    const windowStart = new Date(new Date(conv.timestamp as string).getTime() - 48 * 60 * 60 * 1000).toISOString();
+
+    const clicks = await sql`
+      SELECT click_id, user_id
+      FROM clicks
+      WHERE store_slug = ${conv.store_slug as string}
+        AND user_id IS NOT NULL
+        AND timestamp >= ${windowStart}
+        AND timestamp <= ${conv.timestamp as string}
+        AND click_id NOT IN (
+          SELECT via_click_id FROM conversions WHERE via_click_id IS NOT NULL
+        )
+      ORDER BY timestamp DESC
+      LIMIT 1
+    `;
+
+    if (clicks.length > 0 && clicks[0].user_id) {
+      await sql`
+        UPDATE conversions
+        SET user_id = ${clicks[0].user_id as string}, via_click_id = ${clicks[0].click_id as string}
+        WHERE id = ${conv.id as number}
+      `;
+      matchedCount++;
+    }
+  }
+
+  return matchedCount;
 }
 
 const COLLABS_GRAPHQL_URL = "https://api.collabs.shopify.com/creator/graphql";
@@ -169,7 +246,10 @@ export async function GET(request: Request) {
   });
 
   // Load previous snapshot to compute deltas
-  const prevRaw = await getSetting("collabs_data");
+  const [prevRaw, lastSyncedAt] = await Promise.all([
+    getSetting("collabs_data"),
+    getSetting("collabs_last_synced_at"),
+  ]);
   const prevMap = new Map<string, { totalOrders: number; totalCommissionEarned: string }>();
   if (prevRaw) {
     try {
@@ -180,6 +260,7 @@ export async function GET(request: Request) {
 
   const now = new Date().toISOString();
   let newOrdersRecorded = 0;
+  let dbWriteFailed = false;
 
   for (const p of partnerships) {
     const prev = prevMap.get(p.id);
@@ -192,15 +273,29 @@ export async function GET(request: Request) {
     const deltaCommission = currCommission - prevCommission;
 
     if (deltaOrders > 0 && deltaCommission > 0) {
-      await saveCollabsConversion(p.id, p.name, deltaOrders, deltaCommission, now);
-      newOrdersRecorded += deltaOrders;
-      console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +$${deltaCommission.toFixed(2)} commission`);
+      try {
+        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, now, lastSyncedAt);
+        newOrdersRecorded += deltaOrders;
+        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +$${deltaCommission.toFixed(2)} commission`);
+      } catch (err) {
+        dbWriteFailed = true;
+        console.error(`[Sync Collabs Revenue] DB write failed for ${p.name}:`, err);
+      }
     }
   }
 
-  await saveSetting("collabs_last_synced_at", now);
-  await saveSetting("collabs_data", JSON.stringify(partnerships));
+  // Only advance the snapshot if all DB writes succeeded — if any failed (e.g. quota exceeded),
+  // keep the old snapshot so the next run retries the missed orders.
+  if (!dbWriteFailed) {
+    await saveSetting("collabs_last_synced_at", now);
+    await saveSetting("collabs_data", JSON.stringify(partnerships));
+  } else {
+    console.warn("[Sync Collabs Revenue] Snapshot NOT advanced due to DB write failures — will retry on next run");
+  }
 
-  console.log(`[Sync Collabs Revenue] Synced ${partnerships.length} partnerships, recorded ${newOrdersRecorded} new orders`);
-  return NextResponse.json({ ok: true, partnerships: partnerships.length, newOrdersRecorded, syncedAt: now });
+  // Retroactively match any older collabs conversions that still have no user_id
+  const retroMatched = await retroactivelyMatchCollabsConversions();
+
+  console.log(`[Sync Collabs Revenue] Synced ${partnerships.length} partnerships, recorded ${newOrdersRecorded} new orders, retro-matched ${retroMatched} existing orders${dbWriteFailed ? " (snapshot NOT advanced — DB errors)" : ""}`);
+  return NextResponse.json({ ok: !dbWriteFailed, partnerships: partnerships.length, newOrdersRecorded, retroMatched, syncedAt: now, snapshotAdvanced: !dbWriteFailed });
 }

@@ -115,7 +115,7 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
                     <p style={{ fontSize: 13, color: "#5D0F17", margin: 0 }}>{o.store_name}</p>
                     <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{fmtTime(o.timestamp)}</p>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#5D0F17" }}>${o.order_total.toFixed(2)}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#5D0F17" }}>${Number(o.order_total).toFixed(2)}</p>
                 </div>
               ))}
             </>

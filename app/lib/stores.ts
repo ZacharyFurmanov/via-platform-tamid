@@ -263,7 +263,7 @@ export const stores = [
       "MontroseEdit is a Houston based curated luxury resale brand specializing in elevated pre loved designer pieces. Rooted in storytelling and personal style, MontroseEdit is more than a storefront — it is a community built around the Montrose girl, someone who is effortless, fashion forward, and intentional in the way she lives and dresses. Through curated drops, pop ups, luxury markets, and digital content, we bring a fresh and approachable perspective to luxury resale, making timeless pieces feel personal, accessible, and meaningful.",
     website: "https://www.montroseedit.com",
     dataSource: "montrose-edit",
-    image: "/stores/placeholder.svg",
+    image: "/stores/montrose-edit-brand.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
