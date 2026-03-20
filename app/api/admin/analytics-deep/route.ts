@@ -156,14 +156,15 @@ export async function GET(request: NextRequest) {
             LIMIT 15
           `,
 
-      // topStores — clicks + conversions + revenue joined by store slug
+      // topStores — product views on VYA + conversions + revenue joined by store slug
       cutoffIso
         ? sql`
             WITH click_counts AS (
-              SELECT store AS store_slug, COUNT(*)::int AS clicks
-              FROM clicks
-              WHERE timestamp >= ${cutoffIso}
-              GROUP BY store
+              SELECT p.store_slug, COUNT(*)::int AS clicks
+              FROM product_views pv
+              JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+              WHERE pv.timestamp >= ${cutoffIso}
+              GROUP BY p.store_slug
             ),
             conv_stats AS (
               SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue
@@ -182,9 +183,10 @@ export async function GET(request: NextRequest) {
           `
         : sql`
             WITH click_counts AS (
-              SELECT store AS store_slug, COUNT(*)::int AS clicks
-              FROM clicks
-              GROUP BY store
+              SELECT p.store_slug, COUNT(*)::int AS clicks
+              FROM product_views pv
+              JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+              GROUP BY p.store_slug
             ),
             conv_stats AS (
               SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue

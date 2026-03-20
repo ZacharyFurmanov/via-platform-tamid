@@ -1106,7 +1106,7 @@ function StoresTable({ stores }: { stores: TopStore[] }) {
         <thead>
           <tr>
             <th style={headerStyle}>Store</th>
-            <th style={{ ...headerStyle, textAlign: "right" }}>Clicks</th>
+            <th style={{ ...headerStyle, textAlign: "right" }}>Views on VYA</th>
             <th style={{ ...headerStyle, textAlign: "right" }}>Conversions</th>
             <th style={{ ...headerStyle, textAlign: "right" }}>Revenue</th>
           </tr>
