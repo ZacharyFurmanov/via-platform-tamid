@@ -98,7 +98,7 @@ export async function POST(
       UPDATE conversions SET
         matched = true,
         via_click_id = ${clickId},
-        user_id = COALESCE(user_id, ${click.user_id ?? null}),
+        user_id = COALESCE(user_id, ${resolvedUserId ?? click.user_id ?? null}),
         matched_click_data = ${JSON.stringify(matchedClickData)}
       WHERE conversion_id = ${id}
     `;
@@ -118,8 +118,30 @@ export async function POST(
   return NextResponse.json({ ok: true });
 }
 
-// DELETE — unmatch a conversion
-export async function DELETE(
+// PUT — update order total
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const { orderTotal } = await request.json();
+  if (!orderTotal || isNaN(Number(orderTotal))) {
+    return NextResponse.json({ error: "Valid orderTotal required" }, { status: 400 });
+  }
+
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
+
+  const sql = neon(dbUrl);
+  await sql`UPDATE conversions SET order_total = ${Number(orderTotal)} WHERE conversion_id = ${id}`;
+
+  return NextResponse.json({ ok: true });
+}
+
+// PATCH — unmatch a conversion (clear match data, keep record)
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -135,6 +157,23 @@ export async function DELETE(
       matched = false, via_click_id = NULL, matched_click_data = NULL
     WHERE conversion_id = ${id}
   `;
+
+  return NextResponse.json({ ok: true });
+}
+
+// DELETE — permanently delete a conversion record
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
+
+  const sql = neon(dbUrl);
+  await sql`DELETE FROM conversions WHERE conversion_id = ${id}`;
 
   return NextResponse.json({ ok: true });
 }

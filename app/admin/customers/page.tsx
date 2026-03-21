@@ -63,7 +63,7 @@ function ClickMatchRow({ click, userId }: { click: ActivityData["clicks"][number
     await fetch(`/api/admin/conversions/${conversionId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clickId: click.click_id }),
+      body: JSON.stringify({ clickId: click.click_id, userId }),
     });
     setMatched(conversionId);
     setMatching(null);
@@ -487,7 +487,7 @@ export default function CustomersPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <p style={{ fontWeight: 500, color: "#5D0F17", margin: 0 }}>{c.name || "—"}</p>
                         {c.activityScore > 0 && (
-                          <span style={{ fontSize: 10, background: "#5D0F17", color: "#F7F3EA", padding: "1px 6px", borderRadius: 10 }}>{c.activityScore}</span>
+                          <span title={`Activity score: ${c.activityScore} (clicks + likes + cart + orders)`} style={{ fontSize: 10, background: "#5D0F17", color: "#F7F3EA", padding: "1px 6px", borderRadius: 10 }}>{c.activityScore} actions</span>
                         )}
                       </div>
                       <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.email}</p>
