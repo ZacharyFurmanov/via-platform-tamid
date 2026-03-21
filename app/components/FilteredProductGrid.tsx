@@ -120,6 +120,31 @@ function sortProducts(
   }
 }
 
+const DEFAULT_FILTERS: FilterState = {
+  search: "",
+  priceRange: "all",
+  selectedStores: [],
+  selectedCategories: [],
+  selectedBrands: [],
+  selectedSizes: [],
+  selectedTypes: [],
+  selectedColors: [],
+  sort: "popular",
+};
+
+function getFilterKey() {
+  if (typeof window === "undefined") return "via_filters:/";
+  return `via_filters:${window.location.pathname}`;
+}
+
+function loadSavedFilters(): FilterState {
+  try {
+    const saved = sessionStorage.getItem(getFilterKey());
+    if (saved) return { ...DEFAULT_FILTERS, ...JSON.parse(saved) };
+  } catch {}
+  return DEFAULT_FILTERS;
+}
+
 export default function FilteredProductGrid({
   products,
   stores,
@@ -131,20 +156,44 @@ export default function FilteredProductGrid({
   emptyMessage = "No products found.",
   from,
 }: FilteredProductGridProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    priceRange: "all",
-    selectedStores: [],
-    selectedCategories: [],
-    selectedBrands: [],
-    selectedSizes: [],
-    selectedTypes: [],
-    selectedColors: [],
-    sort: "popular",
-  });
+  const [filters, setFilters] = useState<FilterState>(loadSavedFilters);
+
+  // Scroll restoration: save position when leaving, restore when returning
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Prevent browser from auto-scrolling on back navigation (we do it manually)
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
+    const key = `via_scroll:${window.location.pathname}${window.location.search}`;
+    const saved = sessionStorage.getItem(key);
+
+    if (saved !== null) {
+      const y = parseInt(saved, 10);
+      sessionStorage.removeItem(key);
+      // Double rAF ensures the page has fully painted before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, y);
+        });
+      });
+    }
+
+    return () => {
+      // Save position when navigating away (e.g. clicking a product)
+      if (window.scrollY > 0) {
+        sessionStorage.setItem(key, String(window.scrollY));
+      }
+    };
+  }, []);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
+    try {
+      sessionStorage.setItem(getFilterKey(), JSON.stringify(newFilters));
+    } catch {}
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -354,6 +403,7 @@ export default function FilteredProductGrid({
         showTypeFilter={showTypeFilter}
         showColorFilter={availableColors.length > 0}
         onFilterChange={handleFilterChange}
+        initialFilters={filters}
         productCount={filteredProducts.length}
       />
 
