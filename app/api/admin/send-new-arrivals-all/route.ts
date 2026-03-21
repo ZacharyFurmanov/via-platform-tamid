@@ -29,15 +29,21 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const preview = body?.preview === true;
+  const testEmail: string | undefined = body?.testEmail;
 
-  const [products, emails] = await Promise.all([
-    getNewArrivals(12, 7, true),
-    getApprovedPilotEmails(),
-  ]);
+  const products = await getNewArrivals(12, 7, true);
 
   if (products.length === 0) {
     return NextResponse.json({ error: "No new arrivals in the last 7 days" }, { status: 400 });
   }
+
+  // Test send — only to the provided email, don't touch the real list
+  if (testEmail) {
+    const { sent, failed } = await sendNewArrivalsEmail([testEmail], products);
+    return NextResponse.json({ success: true, test: true, testEmail, products: products.length, sent, failed });
+  }
+
+  const emails = await getApprovedPilotEmails();
 
   if (emails.length === 0) {
     return NextResponse.json({ error: "No approved users to email" }, { status: 400 });
