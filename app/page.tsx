@@ -7,7 +7,7 @@ import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
 import BrandsSection from "./components/BrandsSection";
-import EditorsPicksSection from "./components/EditorsPicksSection";
+import CollectionsSection from "./components/CollectionsSection";
 import { Suspense } from "react";
 
 export default function HomePage() {
@@ -26,7 +26,7 @@ export default function HomePage() {
               </p>
 
               <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
-                The department store<br />for vintage &amp; secondhand.
+                Shop the department store<br />for vintage &amp; secondhand.
               </h1>
 
               <p className="max-w-xl mb-8 sm:mb-12 text-sm sm:text-base text-[#D8CABD] font-sans leading-relaxed">
@@ -55,10 +55,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= EDITOR'S PICKS ================= */}
+      {/* ================= COLLECTIONS ================= */}
       <ScrollReveal>
         <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
-          <EditorsPicksSection />
+          <CollectionsSection />
         </Suspense>
       </ScrollReveal>
 

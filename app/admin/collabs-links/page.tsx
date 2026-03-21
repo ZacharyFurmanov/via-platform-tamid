@@ -12,6 +12,7 @@ type GenerateResult = {
   failed?: number;
   skipped?: number;
   rateLimitSkipped?: number;
+  skippedProducts?: { title: string; store: string; shopifyId: string }[];
   errors?: { id: number; title: string; error: string }[];
   error?: string;
 };
@@ -530,7 +531,7 @@ export default function CollabsLinksPage() {
                   {result.error ? (
                     <p className="text-red-800">{result.error}</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <p
                         className={
                           result.success ? "text-green-800" : "text-amber-800"
@@ -547,6 +548,36 @@ export default function CollabsLinksPage() {
                           ? ` — ${result.failed} failed`
                           : ""}
                       </p>
+                      {result.skippedProducts && result.skippedProducts.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="cursor-pointer text-amber-700 font-medium">
+                            {result.skippedProducts.length} Collabs products not found in VYA DB — re-sync these stores
+                          </summary>
+                          <p className="text-xs text-neutral-500 mt-2 mb-2">
+                            These products exist in Collabs but VYA doesn&apos;t have their Shopify ID. Go to Admin → Inventory Sync and re-sync these stores, then run this again.
+                          </p>
+                          {(() => {
+                            const byStore: Record<string, typeof result.skippedProducts> = {};
+                            for (const p of result.skippedProducts!) {
+                              if (!byStore[p.store]) byStore[p.store] = [];
+                              byStore[p.store]!.push(p);
+                            }
+                            return Object.entries(byStore).map(([slug, prods]) => (
+                              <div key={slug} className="mt-2">
+                                <p className="text-xs font-medium text-black mb-1">{slug} ({prods.length})</p>
+                                <div className="space-y-0.5">
+                                  {prods.map((p, i) => (
+                                    <div key={i} className="flex gap-3 text-xs font-mono text-neutral-500">
+                                      <span className="text-neutral-400 flex-shrink-0">{p.shopifyId}</span>
+                                      <span className="truncate">{p.title}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </details>
+                      )}
                       {result.errors && result.errors.length > 0 && (
                         <div className="mt-3 space-y-1">
                           <p className="font-medium text-red-800">

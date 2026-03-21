@@ -25,11 +25,31 @@ export async function POST(request: NextRequest) {
 
   const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
 
+  // Create the tracking table if it doesn't exist yet
+  await sql`
+    CREATE TABLE IF NOT EXISTS insider_seen_products (
+      store_slug TEXT NOT NULL,
+      title      TEXT NOT NULL,
+      PRIMARY KEY (store_slug, title)
+    )
+  `;
+
   const result = await sql`
     UPDATE products
     SET insider_notified = TRUE, created_at = NULL
-    RETURNING id
+    RETURNING id, store_slug, title
   `;
+
+  // Persist all as "seen" so re-inserted products stay off the Insider page
+  if (result.length > 0) {
+    for (const row of result) {
+      await sql`
+        INSERT INTO insider_seen_products (store_slug, title)
+        VALUES (${row.store_slug}, ${row.title})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+  }
 
   return NextResponse.json({
     ok: true,

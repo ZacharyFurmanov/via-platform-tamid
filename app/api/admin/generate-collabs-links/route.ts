@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       let skipped = 0;
       let rateLimited = false;
       let rateLimitSkipped = 0;
+      const skippedProducts: Array<{ title: string; store: string; shopifyId: string }> = [];
 
       function send(data: Record<string, unknown>) {
         controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
@@ -140,6 +141,11 @@ export async function POST(request: NextRequest) {
           const dbShopifyId = shopifyId ? missingByShopifyId.get(shopifyId) : undefined;
           if (!shopifyId || !dbShopifyId) {
             skipped++;
+            skippedProducts.push({
+              title: product.title,
+              store: store.slug,
+              shopifyId: shopifyId ?? product.shopifyProductId ?? "unknown",
+            });
             continue;
           }
 
@@ -215,6 +221,7 @@ export async function POST(request: NextRequest) {
         failed,
         skipped,
         rateLimitSkipped,
+        skippedProducts,
       });
 
       controller.close();

@@ -24,11 +24,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const collectionSlug = request.nextUrl.searchParams.get("collection") ?? "editors-picks";
+
   try {
-    const picks = await getAllEditorsPicks();
+    const picks = await getAllEditorsPicks(collectionSlug);
     return NextResponse.json({ picks });
   } catch (error) {
-    console.error("Failed to fetch editor's picks:", error);
+    console.error("Failed to fetch picks:", error);
     return NextResponse.json({ error: "Failed to fetch picks" }, { status: 500 });
   }
 }
@@ -39,11 +41,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { productId } = await request.json();
+    const { productId, collectionSlug = "editors-picks" } = await request.json();
     if (!productId || typeof productId !== "number") {
       return NextResponse.json({ error: "productId required" }, { status: 400 });
     }
-    await addEditorsPick(productId);
+    await addEditorsPick(productId, collectionSlug);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to add pick";
@@ -57,14 +59,14 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const { productId } = await request.json();
+    const { productId, collectionSlug = "editors-picks" } = await request.json();
     if (!productId) {
       return NextResponse.json({ error: "productId required" }, { status: 400 });
     }
-    await removeEditorsPick(productId);
+    await removeEditorsPick(productId, collectionSlug);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Failed to remove editor's pick:", error);
+    console.error("Failed to remove pick:", error);
     return NextResponse.json({ error: "Failed to remove pick" }, { status: 500 });
   }
 }

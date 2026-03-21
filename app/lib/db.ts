@@ -140,6 +140,16 @@ export async function initDatabase() {
     ON products(insider_notified, created_at DESC)
     WHERE insider_notified = FALSE
   `;
+
+  // Persistent record of every (store_slug, title) that has ever been shown to Insiders.
+  // Survives product deletions so re-inserted products are never shown as "new" again.
+  await sql`
+    CREATE TABLE IF NOT EXISTS insider_seen_products (
+      store_slug TEXT NOT NULL,
+      title      TEXT NOT NULL,
+      PRIMARY KEY (store_slug, title)
+    )
+  `;
 }
 
 /**
@@ -192,14 +202,23 @@ export async function syncProducts(
       )
   `;
 
+  // Load titles that have ever been shown to Insiders for this store.
+  // If a product was deleted and re-inserted, we restore insider_notified = TRUE
+  // so it doesn't appear on the Insider page as a "new" arrival again.
+  const seenRows = await sql`
+    SELECT title FROM insider_seen_products WHERE store_slug = ${storeSlug}
+  `;
+  const prevSeenTitles = new Set(seenRows.map((r) => r.title as string));
+
   // Upsert each product (preserves id for existing rows)
   const titles: string[] = [];
   for (const product of products) {
     if (isBlocked(product.title)) continue;
     titles.push(product.title);
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
+    const wasSeenOnInsider = prevSeenTitles.has(product.title);
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, synced_at, created_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, insider_notified, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -214,6 +233,7 @@ export async function syncProducts(
         ${product.shopifyProductId || null},
         ${product.size || null},
         ${product.compareAtPrice ?? null},
+        ${wasSeenOnInsider},
         NOW(),
         NOW()
       )
@@ -386,7 +406,6 @@ export async function getInsiderProducts(): Promise<DBProduct[]> {
       SELECT * FROM products
       WHERE created_at IS NOT NULL
         AND created_at >= NOW() - interval '24 hours'
-        AND insider_notified = FALSE
         AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
         AND title NOT ILIKE '%gift card%'
       ORDER BY created_at DESC
@@ -422,12 +441,20 @@ export async function getUnnotifiedInsiderProducts(limit: number = 50): Promise<
 
 /**
  * Mark a list of product IDs as having been included in an Insider new-arrivals email.
+ * Also writes to insider_seen_products so that if these products are later deleted
+ * and re-inserted by a sync, they won't appear as "new" on the Insider page again.
  */
 export async function markProductsAsInsiderNotified(ids: number[]): Promise<void> {
   if (ids.length === 0) return;
   const sql = neon(getDatabaseUrl());
   await sql`
     UPDATE products SET insider_notified = TRUE WHERE id = ANY(${ids})
+  `;
+  // Persist (store_slug, title) pairs so re-inserted products are recognised as "seen"
+  await sql`
+    INSERT INTO insider_seen_products (store_slug, title)
+    SELECT store_slug, title FROM products WHERE id = ANY(${ids})
+    ON CONFLICT DO NOTHING
   `;
 }
 

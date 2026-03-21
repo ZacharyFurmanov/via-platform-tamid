@@ -65,6 +65,18 @@ export async function fetchCollabsProducts(
   let totalCount: number | null = null;
   const gid = `gid://dovetale-api/ShopifyStore/${collabsStoreId}`;
 
+  // Generate the seed once and reuse it for all pages so the Collabs API
+  // returns a consistent ordering — changing seed per page causes different
+  // random orderings, meaning some products never appear and others repeat.
+  const seed = [8, 4, 4, 4, 8]
+    .map((n) =>
+      Array.from(crypto.getRandomValues(new Uint8Array(n / 2)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+    )
+    .join("-")
+    .toUpperCase();
+
   while (true) {
     let fetchRes: Response;
     try {
@@ -81,14 +93,7 @@ export async function fetchCollabsProducts(
           variables: {
             first: 100,
             after,
-            seed: [8, 4, 4, 4, 8]
-              .map((n) =>
-                Array.from(crypto.getRandomValues(new Uint8Array(n / 2)))
-                  .map((b) => b.toString(16).padStart(2, "0"))
-                  .join("")
-              )
-              .join("-")
-              .toUpperCase(),
+            seed,
             searchParams: {
               brandValues: [],
               categories: [],

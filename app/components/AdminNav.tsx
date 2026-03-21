@@ -6,12 +6,13 @@ import Image from "next/image";
 
 const NAV_ITEMS = [
   { label: "Analytics", href: "/admin/analytics" },
+  { label: "Key Metrics", href: "/admin/key-metrics" },
   { label: "Customers", href: "/admin/customers" },
   { label: "Emails", href: "/admin/emails" },
-  { label: "Editor's Picks", href: "/admin/editors-picks" },
+  { label: "Collections", href: "/admin/collections" },
   { label: "Sync", href: "/admin/sync" },
   { label: "Collabs", href: "/admin/collabs-links" },
-  { label: "Giveaway", href: "/admin/giveaway" },
+  { label: "Referral Board", href: "/admin/giveaway" },
   { label: "Sourcing", href: "/admin/sourcing" },
   { label: "Stores", href: "/admin/stores" },
 ];
