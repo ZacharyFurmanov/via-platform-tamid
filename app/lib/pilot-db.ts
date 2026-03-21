@@ -180,6 +180,7 @@ export async function getApprovedPilotEmails(): Promise<string[]> {
   const rows = await sql`
     SELECT LOWER(email) AS email FROM pilot_access
     WHERE status = 'approved' AND email IS NOT NULL
+      AND (email_unsubscribed IS NULL OR email_unsubscribed = FALSE)
   `;
   return rows.map((r) => r.email as string);
 }
