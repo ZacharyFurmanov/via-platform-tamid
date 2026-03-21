@@ -12,7 +12,8 @@ const getResend = () => {
   return new Resend(apiKey);
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const _rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "vyaplatform.com";
+const BASE_URL = _rawBaseUrl.startsWith("http") ? _rawBaseUrl : `https://${_rawBaseUrl}`;
 const FROM_EMAIL = "VYA <hana@theviaplatform.com>";
 
 function baseStyles() {
