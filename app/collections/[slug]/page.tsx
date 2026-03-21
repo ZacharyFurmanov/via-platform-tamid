@@ -1,12 +1,47 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllEditorsPicks, COLLECTIONS } from "@/app/lib/editors-picks-db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import MixedProductGrid from "@/app/components/MixedProductGrid";
 
-export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const collection = COLLECTIONS.find((c) => c.slug === slug);
+  if (!collection) return {};
+
+  const picks = await getAllEditorsPicks(slug);
+  const images = picks
+    .map((p) => p.product.image)
+    .filter((img): img is string => !!img)
+    .slice(0, 4);
+
+  const description = collection.curatedBy
+    ? `Curated by ${collection.curatedBy} — hand-selected vintage & secondhand pieces on VYA.`
+    : `Hand-selected vintage & secondhand pieces — ${collection.name} on VYA.`;
+
+  return {
+    title: `${collection.name} — VYA`,
+    description,
+    openGraph: {
+      title: `${collection.name} — VYA`,
+      description,
+      images: images.map((url) => ({ url, width: 1200, height: 1200 })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${collection.name} — VYA`,
+      description,
+      images: images.slice(0, 1),
+    },
+  };
+}
+
+export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
   const collection = COLLECTIONS.find((c) => c.slug === slug);
   if (!collection) notFound();

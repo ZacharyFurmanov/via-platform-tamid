@@ -1,10 +1,25 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { getAllCollectionPicks, COLLECTIONS } from "@/app/lib/editors-picks-db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import Link from "next/link";
 import EditorsPicksScroller from "@/app/components/EditorsPicksScroller";
+
+export const metadata: Metadata = {
+  title: "Collections — VYA",
+  description: "Hand-selected vintage & secondhand pieces from our editors and partners.",
+  openGraph: {
+    title: "Collections — VYA",
+    description: "Hand-selected vintage & secondhand pieces from our editors and partners.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Collections — VYA",
+    description: "Hand-selected vintage & secondhand pieces from our editors and partners.",
+  },
+};
 
 export default async function CollectionsPage() {
   const allPicks = await getAllCollectionPicks();
