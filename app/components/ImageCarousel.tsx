@@ -21,7 +21,8 @@ export default function ImageCarousel({
   const mouseStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
 
-  const safeImages = images.length > 0 ? images : ["/placeholder.jpg"];
+  const validImages = images.filter((src) => !!src);
+  const safeImages = validImages.length > 0 ? validImages : ["/placeholder.jpg"];
   const hasMultiple = safeImages.length > 1;
 
   const goTo = useCallback(
@@ -119,6 +120,7 @@ export default function ImageCarousel({
           }`}
           loading="eager"
           decoding="async"
+          onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
         />
       );
     });
@@ -254,6 +256,7 @@ export default function ImageCarousel({
                 className="w-full h-full object-cover object-center"
                 loading="eager"
                 decoding="async"
+                onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
               />
             </button>
           ))}
