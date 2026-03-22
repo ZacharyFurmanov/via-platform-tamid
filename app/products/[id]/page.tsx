@@ -16,6 +16,8 @@ import { getProductCartCount } from "@/app/lib/cart-db";
 import ProductQuestion from "@/app/components/ProductQuestion";
 import ProductAccordion from "@/app/components/ProductAccordion";
 import TrackProductView from "@/app/components/TrackProductView";
+import TrackedStoreLink from "@/app/components/TrackedStoreLink";
+import { trackSelectItem } from "@/app/lib/firebase-analytics";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -258,7 +260,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen">
-      <TrackProductView productId={compositeId} />
+      <TrackProductView
+        productId={compositeId}
+        title={product.title}
+        price={Number(product.price)}
+        category={categoryLabel}
+        storeName={store.name}
+        storeSlug={store.slug}
+        size={displaySize}
+      />
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-6 pt-4 pb-2 md:pt-8 md:pb-4">
         <BackButton
@@ -282,12 +292,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
           {/* Details */}
           <div className="flex flex-col justify-center py-1 md:py-8">
-            <Link
+            <TrackedStoreLink
               href={`/stores/${store.slug}`}
+              storeSlug={store.slug}
+              storeName={store.name}
+              surface="product_detail"
               className="text-xs uppercase tracking-[0.2em] text-black/50 hover:text-black transition mb-1"
             >
               {store.name}
-            </Link>
+            </TrackedStoreLink>
 
             <h1 className="text-2xl sm:text-4xl font-serif text-black leading-snug mb-1">
               {product.title}
@@ -462,6 +475,21 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     key={rec.id}
                     href={`/products/${recId}`}
                     className="group block bg-white rounded-sm overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                    onClick={() => {
+                      trackSelectItem(
+                        {
+                          itemId: recId,
+                          itemName: rec.title,
+                          price: Number(rec.price),
+                          category: recCategory,
+                          storeName: rec.store_name,
+                          storeSlug: rec.store_slug,
+                          listId: "product_recommendations",
+                          listName: "product_recommendations",
+                        },
+                        "product_recommendations"
+                      );
+                    }}
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
                       {recImages.length > 0 ? (
