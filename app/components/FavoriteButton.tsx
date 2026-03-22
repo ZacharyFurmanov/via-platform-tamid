@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useFavorites } from "./FavoritesProvider";
+import { trackFavoriteToggle } from "@/app/lib/firebase-analytics";
 
 type FavoriteButtonProps = {
   type: "product" | "store";
@@ -48,6 +49,12 @@ export default function FavoriteButton({
     } else {
       toggleStore(targetId as string);
     }
+
+    trackFavoriteToggle({
+      targetType: type,
+      targetId: String(targetId),
+      action: isFavorited ? "removed" : "added",
+    });
   }
 
   if (showCount) {

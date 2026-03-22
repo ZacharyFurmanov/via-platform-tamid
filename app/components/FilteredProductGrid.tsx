@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import ProductFilter, {
   FilterState,
   PriceRange,
@@ -34,6 +35,10 @@ import { normalizeSize, sortSizes } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import { diversityInterleave } from "@/app/lib/productRanking";
+import {
+  trackFilterChange,
+  trackViewItemList,
+} from "@/app/lib/firebase-analytics";
 
 export type FilterableProduct = {
   id: string;
@@ -156,7 +161,9 @@ export default function FilteredProductGrid({
   emptyMessage = "No products found.",
   from,
 }: FilteredProductGridProps) {
+  const pathname = usePathname();
   const [filters, setFilters] = useState<FilterState>(loadSavedFilters);
+  const hasTrackedFilterChange = useRef(false);
 
   // Scroll restoration: save position when leaving, restore when returning
   useEffect(() => {
@@ -296,6 +303,48 @@ export default function FilteredProductGrid({
 
     return result;
   }, [products, filters]);
+
+  const surface = from ? `${pathname}:${from}` : pathname;
+
+  useEffect(() => {
+    trackViewItemList(
+      filteredProducts.map((product) => ({
+        itemId: product.id,
+        itemName: product.title,
+        price: product.price,
+        category: product.categoryLabel,
+        storeName: product.store,
+        storeSlug: product.storeSlug,
+        size: product.size ?? undefined,
+      })),
+      {
+        listId: surface,
+        listName: surface,
+        surface,
+      }
+    );
+  }, [filteredProducts, surface]);
+
+  useEffect(() => {
+    if (!hasTrackedFilterChange.current) {
+      hasTrackedFilterChange.current = true;
+      return;
+    }
+
+    trackFilterChange({
+      surface,
+      resultCount: filteredProducts.length,
+      search: filters.search,
+      priceRange: filters.priceRange,
+      sort: filters.sort,
+      selectedStores: filters.selectedStores,
+      selectedCategories: filters.selectedCategories,
+      selectedBrands: filters.selectedBrands,
+      selectedSizes: filters.selectedSizes,
+      selectedTypes: filters.selectedTypes,
+      selectedColors: filters.selectedColors,
+    });
+  }, [filteredProducts.length, filters, surface]);
 
   // Get stores that have products, preserving the chronological order from the stores prop
   const availableStores = useMemo(() => {

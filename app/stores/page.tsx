@@ -1,6 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
 import { stores } from "@/app/lib/stores";
+import TrackedStoreLink from "@/app/components/TrackedStoreLink";
 
 export const revalidate = 3600; // Re-render at most once per hour
 
@@ -28,7 +28,13 @@ export default function StoresPage() {
               <div key={store.slug} className="group">
 
                 {/* IMAGE (CLICKABLE) */}
-                <Link href={`/stores/${store.slug}`} className="block mb-3 sm:mb-6">
+                <TrackedStoreLink
+                  href={`/stores/${store.slug}`}
+                  storeSlug={store.slug}
+                  storeName={store.name}
+                  surface="stores_index"
+                  className="block mb-3 sm:mb-6"
+                >
                   <div className="relative aspect-[3/4] overflow-hidden" style={{ backgroundColor: store.image?.includes("placeholder") ? "#FFFDF8" : undefined }}>
                     {store.image && !store.image.includes("placeholder") ? (
                       <Image
@@ -52,14 +58,20 @@ export default function StoresPage() {
                       </div>
                     )}
                   </div>
-                </Link>
+                </TrackedStoreLink>
 
                 {/* TEXT (ALSO CLICKABLE) */}
-                <Link href={`/stores/${store.slug}`} className="block">
+                <TrackedStoreLink
+                  href={`/stores/${store.slug}`}
+                  storeSlug={store.slug}
+                  storeName={store.name}
+                  surface="stores_index"
+                  className="block"
+                >
                   <h2 className="text-sm sm:text-lg font-serif mb-1 link-underline">
                     {store.name}
                   </h2>
-                </Link>
+                </TrackedStoreLink>
 
                 <p className="text-xs sm:text-sm text-[#5D0F17]/50 mb-2 sm:mb-4">
                   {store.location}

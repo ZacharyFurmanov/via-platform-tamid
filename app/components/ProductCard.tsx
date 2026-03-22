@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
 import { normalizeSize } from "@/app/lib/inventory";
+import { trackSelectItem } from "@/app/lib/firebase-analytics";
 
 const SIZE_LABELS: Record<string, string> = {
   XS: "Extra Small",
@@ -82,6 +84,7 @@ export default function ProductCard({
   isEditorsPick,
   soldOut,
 }: ProductCardProps) {
+  const pathname = usePathname();
   const carouselImages =
     images && images.length > 0 ? images : image ? [image] : [];
 
@@ -90,6 +93,13 @@ export default function ProductCard({
     const match = id.match(/-(\d+)$/);
     return match ? parseInt(match[1], 10) : null;
   })();
+
+  const surface = from ? `${pathname}:${from}` : pathname;
+  const href = soldOut
+    ? "#"
+    : from
+    ? `/products/${id}?from=${encodeURIComponent(from)}`
+    : `/products/${id}`;
 
   return (
     <div className="relative group">
@@ -101,8 +111,28 @@ export default function ProductCard({
         </div>
       )}
       <Link
-        href={soldOut ? "#" : (from ? `/products/${id}?from=${encodeURIComponent(from)}` : `/products/${id}`)}
+        href={href}
         className={`cursor-pointer text-[#5D0F17] block ${soldOut ? "opacity-40 pointer-events-none" : ""}`}
+        onClick={() => {
+          if (soldOut) {
+            return;
+          }
+
+          trackSelectItem(
+            {
+              itemId: id,
+              itemName: name,
+              price,
+              category,
+              storeName,
+              storeSlug,
+              size: size ?? undefined,
+              listId: surface,
+              listName: surface,
+            },
+            surface
+          );
+        }}
       >
         <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} />
 
