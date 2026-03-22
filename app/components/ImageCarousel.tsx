@@ -199,7 +199,7 @@ export default function ImageCarousel({
   return (
     <div>
       <div
-        className="relative aspect-[2/3] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+        className="relative aspect-[2/3] max-h-[45vh] md:max-h-none md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}
@@ -238,7 +238,7 @@ export default function ImageCarousel({
       </div>
 
       {hasMultiple && (
-        <div className="flex gap-2 mt-3 overflow-x-auto">
+        <div className="hidden md:flex gap-2 mt-3 overflow-x-auto">
           {safeImages.map((src, idx) => (
             <button
               key={idx}

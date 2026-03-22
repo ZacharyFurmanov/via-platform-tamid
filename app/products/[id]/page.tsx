@@ -301,7 +301,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               {store.name}
             </TrackedStoreLink>
 
-            <h1 className="text-2xl sm:text-4xl font-serif text-black leading-snug mb-1">
+            <h1 className="text-xl sm:text-4xl font-serif text-black leading-snug mb-1">
               {product.title}
             </h1>
 
