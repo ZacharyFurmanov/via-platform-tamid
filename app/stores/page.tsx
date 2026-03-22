@@ -1,8 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { stores } from "@/app/lib/stores";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
-
-export const revalidate = 3600; // Re-render at most once per hour
 
 export default function StoresPage() {
   return (

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
