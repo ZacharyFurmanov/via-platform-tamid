@@ -22,6 +22,7 @@ type StoreInfo = {
 
 type Analytics = {
   totalClicks: number;
+  totalViews?: number;
   totalConversions: number;
   totalRevenue: number;
   topProducts: { name: string; count: number }[];
@@ -394,10 +395,13 @@ export default function StoreDashboardPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white p-6 shadow-sm text-center">
                   <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
-                    {analytics.totalClicks.toLocaleString()}
+                    {(analytics.totalViews ?? 0).toLocaleString()}
                   </p>
                   <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
-                    Total Clicks
+                    Views on VYA
+                  </p>
+                  <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.35)" }}>
+                    {analytics.totalClicks.toLocaleString()} clicked to store
                   </p>
                 </div>
                 <div className="bg-white p-6 shadow-sm text-center">
@@ -497,12 +501,13 @@ export default function StoreDashboardPage() {
               {sourcing.open.map((req) => (
                 <div key={req.id} className="bg-white shadow-sm p-5">
                   {req.imageUrl && (
-                    <div className="mb-3 h-40 relative overflow-hidden bg-neutral-50">
+                    <div className="mb-3 relative overflow-hidden bg-neutral-50 flex items-center justify-center" style={{ maxHeight: 240 }}>
                       <Image
                         src={req.imageUrl}
                         alt="Customer photo"
-                        fill
-                        style={{ objectFit: "cover" }}
+                        width={600}
+                        height={400}
+                        style={{ objectFit: "contain", width: "100%", height: "auto", maxHeight: 240 }}
                       />
                     </div>
                   )}

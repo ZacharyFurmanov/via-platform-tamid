@@ -381,10 +381,13 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
     cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   }
 
-  const [clickCountRows, topProductRows, recentClickRows, conversionRows] = await Promise.all([
+  const [clickCountRows, viewCountRows, topProductRows, recentClickRows, conversionRows] = await Promise.all([
     cutoff
       ? sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff}`
       : sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug}`,
+    cutoff
+      ? sql`SELECT COUNT(*)::int AS total FROM product_views pv JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id WHERE p.store_slug = ${storeSlug} AND pv.timestamp >= ${cutoff}`
+      : sql`SELECT COUNT(*)::int AS total FROM product_views pv JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id WHERE p.store_slug = ${storeSlug}`,
     cutoff
       ? sql`SELECT product_name, COUNT(*)::int AS count FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} GROUP BY product_name ORDER BY count DESC LIMIT 10`
       : sql`SELECT product_name, COUNT(*)::int AS count FROM clicks WHERE store_slug = ${storeSlug} GROUP BY product_name ORDER BY count DESC LIMIT 10`,
@@ -397,6 +400,7 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
   ]);
 
   const totalClicks = clickCountRows[0].total as number;
+  const totalViews = viewCountRows[0].total as number;
   const topProducts = topProductRows.map((row) => ({
     name: row.product_name as string,
     count: row.count as number,
@@ -409,6 +413,7 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
 
   return {
     totalClicks,
+    totalViews,
     totalConversions,
     totalRevenue,
     topProducts,

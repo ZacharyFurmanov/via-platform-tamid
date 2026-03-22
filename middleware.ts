@@ -46,9 +46,6 @@ const SESSION_ONLY_ROUTES = [
   "/api/membership",
   "/api/referral-status",
   "/store/dashboard",
-  "/products",
-  "/stores",
-  "/categories",
   "/cart",
   "/api/cart",
 ];

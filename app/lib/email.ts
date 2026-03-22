@@ -667,8 +667,9 @@ export async function sendSourcingRequestToStores(
     console.error("Failed to send sourcing admin email:", err);
   }
 
-  // Store copy without customer contact info
-  for (const email of storeRecipients) {
+  // Store copy without customer contact info — send in batches to stay under rate limit
+  for (let i = 0; i < storeRecipients.length; i++) {
+    const email = storeRecipients[i];
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -678,6 +679,10 @@ export async function sendSourcingRequestToStores(
       });
     } catch (err) {
       console.error(`Failed to send sourcing request email to ${email}:`, err);
+    }
+    // Pause every 4 sends to stay under Resend's 5 req/sec rate limit
+    if ((i + 1) % 4 === 0) {
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
 }
