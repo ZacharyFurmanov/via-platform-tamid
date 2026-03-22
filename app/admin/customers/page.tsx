@@ -40,7 +40,7 @@ function fmtTime(date: string | null) {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function ClickMatchRow({ click, userId }: { click: ActivityData["clicks"][number]; userId: string }) {
+function ClickMatchRow({ click, userId, onMatchSuccess }: { click: ActivityData["clicks"][number]; userId: string; onMatchSuccess: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [conversions, setConversions] = useState<UnmatchedConversion[]>([]);
   const [loadingConv, setLoadingConv] = useState(false);
@@ -48,7 +48,7 @@ function ClickMatchRow({ click, userId }: { click: ActivityData["clicks"][number
   const [matched, setMatched] = useState<string | null>(null);
 
   function toggle() {
-    if (!expanded && conversions.length === 0) {
+    if (!expanded) {
       setLoadingConv(true);
       fetch(`/api/admin/conversions?filter=unmatched&store=${encodeURIComponent(click.store_slug)}`)
         .then((r) => r.json())
@@ -60,14 +60,20 @@ function ClickMatchRow({ click, userId }: { click: ActivityData["clicks"][number
 
   async function matchConversion(conversionId: string) {
     setMatching(conversionId);
-    await fetch(`/api/admin/conversions/${conversionId}`, {
+    const res = await fetch(`/api/admin/conversions/${conversionId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ clickId: click.click_id, userId }),
     });
-    setMatched(conversionId);
     setMatching(null);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(d.error ?? "Failed to match order");
+      return;
+    }
+    setMatched(conversionId);
     setConversions((prev) => prev.filter((c) => c.conversionId !== conversionId));
+    onMatchSuccess();
   }
 
   return (
@@ -126,12 +132,15 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
   const [data, setData] = useState<ActivityData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function loadActivity() {
+    setLoading(true);
     fetch(`/api/admin/customers/activity?email=${encodeURIComponent(customer.email)}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [customer.email]);
+  }
+
+  useEffect(() => { loadActivity(); }, [customer.email]);
 
   const section = (title: string, count: number) => (
     <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "24px 0 10px" }}>
@@ -189,7 +198,7 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
               {/* Clicks */}
               {section("Clicked Through to Store", data.clicks.length)}
               {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.clicks.map((c, i) => (
-                <ClickMatchRow key={i} click={c} userId={data.userId!} />
+                <ClickMatchRow key={i} click={c} userId={data.userId!} onMatchSuccess={loadActivity} />
               ))}
 
               {/* Orders */}

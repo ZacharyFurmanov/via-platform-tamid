@@ -132,7 +132,24 @@ export default function AdminConversionsPage() {
   }
 
   async function unmatch(conversionId: string) {
+    await fetch(`/api/admin/conversions/${conversionId}`, { method: "PATCH" });
+    load();
+  }
+
+  async function deleteConversion(conversionId: string) {
+    if (!confirm("Permanently delete this conversion record? This cannot be undone.")) return;
     await fetch(`/api/admin/conversions/${conversionId}`, { method: "DELETE" });
+    load();
+  }
+
+  async function editAmount(conversionId: string, currentTotal: number) {
+    const input = prompt("Enter corrected order total:", String(currentTotal));
+    if (!input || isNaN(Number(input))) return;
+    await fetch(`/api/admin/conversions/${conversionId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderTotal: Number(input) }),
+    });
     load();
   }
 
@@ -220,11 +237,23 @@ export default function AdminConversionsPage() {
                       {c.matched && (
                         <button
                           onClick={() => unmatch(c.conversionId)}
-                          style={{ fontSize: 11, color: "#9ca3af", border: "1px solid #e5e7eb", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer" }}
+                          style={{ fontSize: 11, color: "#9ca3af", border: "1px solid #e5e7eb", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", marginRight: 6 }}
                         >
                           Unmatch
                         </button>
                       )}
+                      <button
+                        onClick={() => editAmount(c.conversionId, c.orderTotal)}
+                        style={{ fontSize: 11, color: "#6b7280", border: "1px solid #e5e7eb", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", marginRight: 6 }}
+                      >
+                        Edit $
+                      </button>
+                      <button
+                        onClick={() => deleteConversion(c.conversionId)}
+                        style={{ fontSize: 11, color: "#dc2626", border: "1px solid #fca5a5", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer" }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

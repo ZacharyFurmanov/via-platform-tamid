@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    scrollRestoration: true,
-  },
   async redirects() {
     return [
       {
@@ -33,6 +30,8 @@ const nextConfig: NextConfig = {
       // Store custom domains (images served directly from store sites)
       { protocol: "https", hostname: "shopfortheglobe.com" },
       { protocol: "https", hostname: "**.shopfortheglobe.com" },
+      // Vercel Blob (sourcing request image uploads)
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
     ],
   },
 };
