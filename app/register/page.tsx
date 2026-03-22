@@ -106,15 +106,6 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Giveaway CTA */}
-              <div className="bg-[#5D0F17] px-6 py-6 mb-6">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
-                <p className="font-serif text-xl text-[#F7F3EA] mb-2">Win a $1,000 vintage shopping spree</p>
-                <p className="text-xs text-[#F7F3EA]/60 leading-relaxed">
-                  Invite 2 friends who join the waitlist using your link to be officially entered.
-                </p>
-              </div>
-
               <p className="text-[#5D0F17]/40 text-xs text-center">
                 Already have an account?{" "}
                 <Link href="/login" className="underline text-[#5D0F17]/60">

@@ -35,6 +35,13 @@ export default function CollectionsAdminPage() {
   const [toggling, setToggling] = useState<number | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // User likes import
+  const [likesEmail, setLikesEmail] = useState("");
+  const [likesProducts, setLikesProducts] = useState<Product[]>([]);
+  const [likesLoading, setLikesLoading] = useState(false);
+  const [likesError, setLikesError] = useState<string | null>(null);
+  const [bulkAdding, setBulkAdding] = useState(false);
+
   const loadPicks = useCallback(async (collectionSlug: string) => {
     setLoadingPicks(true);
     try {
@@ -122,6 +129,44 @@ export default function CollectionsAdminPage() {
       await loadPicks(activeCollection.slug);
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleLikesLoad = async () => {
+    if (!likesEmail.trim()) return;
+    setLikesLoading(true);
+    setLikesError(null);
+    setLikesProducts([]);
+    try {
+      const res = await fetch(`/api/admin/user-favorites?email=${encodeURIComponent(likesEmail.trim())}`);
+      if (res.status === 404) { setLikesError("No user found with that email."); return; }
+      if (!res.ok) { setLikesError("Failed to load favorites."); return; }
+      const data = await res.json();
+      setLikesProducts(data.products ?? []);
+      if ((data.products ?? []).length === 0) setLikesError("This user has no saved items.");
+    } catch {
+      setLikesError("Failed to load favorites.");
+    } finally {
+      setLikesLoading(false);
+    }
+  };
+
+  const handleBulkAdd = async () => {
+    if (likesProducts.length === 0 || bulkAdding) return;
+    const toAdd = likesProducts.filter((p) => !pickedIds.has(p.id));
+    if (toAdd.length === 0) { alert("All items are already in this collection."); return; }
+    setBulkAdding(true);
+    try {
+      for (const product of toAdd) {
+        await fetch("/api/admin/editors-picks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: product.id, collectionSlug: activeCollection.slug }),
+        });
+      }
+      await loadPicks(activeCollection.slug);
+    } finally {
+      setBulkAdding(false);
     }
   };
 
@@ -230,6 +275,90 @@ export default function CollectionsAdminPage() {
             </div>
           </div>
         )}
+
+        {/* From User Likes */}
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
+          <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(93,15,23,0.4)", marginBottom: 12 }}>
+            From User Likes
+          </p>
+          <div className="flex gap-3 mb-3">
+            <input
+              type="email"
+              value={likesEmail}
+              onChange={(e) => { setLikesEmail(e.target.value); setLikesProducts([]); setLikesError(null); }}
+              onKeyDown={(e) => e.key === "Enter" && handleLikesLoad()}
+              placeholder="user@example.com"
+              className="flex-1 border px-4 py-2.5 text-sm outline-none"
+              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+            />
+            <button
+              onClick={handleLikesLoad}
+              disabled={likesLoading || !likesEmail.trim()}
+              className="px-5 py-2.5 text-sm uppercase tracking-wider transition-colors"
+              style={{ background: "#5D0F17", color: "#F7F3EA", opacity: likesLoading || !likesEmail.trim() ? 0.5 : 1, border: "none", cursor: "pointer" }}
+            >
+              {likesLoading ? "Loading…" : "Load"}
+            </button>
+          </div>
+          {likesError && <p style={{ fontSize: 12, color: "#b91c1c", marginBottom: 8 }}>{likesError}</p>}
+          {likesProducts.length > 0 && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <p style={{ fontSize: 12, color: "rgba(93,15,23,0.6)" }}>
+                  {likesProducts.length} saved item{likesProducts.length !== 1 ? "s" : ""} · {likesProducts.filter(p => !pickedIds.has(p.id)).length} not yet in collection
+                </p>
+                <button
+                  onClick={handleBulkAdd}
+                  disabled={bulkAdding || likesProducts.every(p => pickedIds.has(p.id))}
+                  className="px-4 py-1.5 text-xs uppercase tracking-wider transition-colors"
+                  style={{ background: "#5D0F17", color: "#F7F3EA", opacity: bulkAdding || likesProducts.every(p => pickedIds.has(p.id)) ? 0.5 : 1, border: "none", cursor: "pointer" }}
+                >
+                  {bulkAdding ? "Adding…" : `Add All (${likesProducts.filter(p => !pickedIds.has(p.id)).length})`}
+                </button>
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
+                {likesProducts.map((product) => {
+                  const isPicked = pickedIds.has(product.id);
+                  const isToggling = toggling === product.id;
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => handleToggle(product)}
+                      disabled={isToggling}
+                      className="relative text-left group transition cursor-pointer"
+                    >
+                      <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#5D0F17]" : ""}`}>
+                        {product.image
+                          ? <img src={product.image} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-[#D8CABD]/30" />
+                        }
+                        {isPicked && (
+                          <div className="absolute inset-0 bg-[#5D0F17]/10 group-hover:bg-[#5D0F17]/30 transition-colors flex items-center justify-center">
+                            <div className="w-5 h-5 bg-[#5D0F17] flex items-center justify-center opacity-80 group-hover:hidden">
+                              <span className="text-[#F7F3EA] text-xs">✓</span>
+                            </div>
+                            <span className="hidden group-hover:inline text-[#F7F3EA] text-[9px] uppercase tracking-wide bg-[#5D0F17] px-1.5 py-0.5">Remove</span>
+                          </div>
+                        )}
+                        {!isPicked && (
+                          <div className="absolute inset-0 bg-[#5D0F17]/0 group-hover:bg-[#5D0F17]/20 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 text-[#F7F3EA] text-[9px] uppercase tracking-wide bg-[#5D0F17] px-1.5 py-0.5 transition-opacity">+ Add</span>
+                          </div>
+                        )}
+                        {isToggling && (
+                          <div className="absolute inset-0 bg-[#F7F3EA]/60 flex items-center justify-center">
+                            <div className="w-3 h-3 border-2 border-[#5D0F17] border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[9px] leading-snug text-[#5D0F17] mt-1 line-clamp-1">{product.title}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Filters */}
         <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>

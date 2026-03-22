@@ -59,20 +59,6 @@ export default function PilotPendingPage() {
             Refer friends to move up faster — the more friends you refer, the sooner you&apos;re in.
           </p>
 
-          {/* Giveaway banner */}
-          <div className="bg-[#5D0F17] px-6 py-5 mb-6 text-left">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#F7F3EA]/50 mb-1">Giveaway</p>
-            <p className="text-base font-serif text-[#F7F3EA] mb-1">Win a $1,000 vintage shopping spree</p>
-            <p className="text-xs text-[#F7F3EA]/60 leading-relaxed">
-              Invite 2 friends who join the waitlist using your link to be officially entered.
-            </p>
-            {referralCount >= 2 && (
-              <p className="text-xs text-[#F7F3EA] mt-3 font-serif italic">
-                ✓ You&apos;re entered!
-              </p>
-            )}
-          </div>
-
           {/* Referral section */}
           {referralCode && (
             <div className="bg-[#F7F3EA] px-6 py-6 mb-8 text-left">

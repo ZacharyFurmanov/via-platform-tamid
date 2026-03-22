@@ -428,6 +428,7 @@ export const stores = [
     commissionType: "shopify-collabs" as const,
     affiliatePath: "SHEER",
     collabsStoreId: "231298",
+    commissionRates: [{ upTo: 1000, rate: 0.05 }, { rate: 0.03 }],
     authenticityPolicy:
       "Every piece at Sheer Vintage is hand-selected with a focus on designer bridal and evening wear — curated for enduring quality, condition, and style. Items are accurately described with full condition details before listing.",
     shippingPolicy:

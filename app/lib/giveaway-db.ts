@@ -337,3 +337,15 @@ export async function markReminderSent(id: number): Promise<void> {
     WHERE id = ${id}
   `;
 }
+
+export async function getLeaderboard(): Promise<GiveawayEntry[]> {
+  const sql = neon(getDatabaseUrl());
+  await initGiveawayDatabase();
+
+  const rows = await sql`
+    SELECT * FROM giveaway_entries
+    ORDER BY referral_count DESC, created_at ASC
+  `;
+
+  return rows.map(mapRow);
+}

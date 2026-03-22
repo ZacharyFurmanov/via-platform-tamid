@@ -63,8 +63,19 @@ function parseCommission(displayValue: string): number {
   const n = parseFloat((displayValue ?? "").replace(/[^0-9.]/g, ""));
   return isNaN(n) ? 0 : n;
 }
-function estimateRevenue(commission: number): number {
+function estimateRevenue(commission: number, storeSlug?: string): number {
   if (commission <= 0) return 0;
+  const store = storeSlug ? stores.find(s => s.slug === storeSlug) : undefined;
+  const rates = (store as any)?.commissionRates as { upTo?: number; rate: number }[] | undefined;
+  if (rates?.length) {
+    // Try each tier: find the rate where implied revenue falls within the tier's ceiling
+    for (const tier of rates) {
+      const implied = commission / tier.rate;
+      if (!tier.upTo || implied <= tier.upTo) return implied;
+    }
+    return commission / rates[rates.length - 1].rate;
+  }
+  // Default tiered fallback
   const implied = commission / 0.07;
   if (implied < 1000) return implied;
   const implied5 = commission / 0.05;
@@ -222,17 +233,18 @@ export async function GET(request: NextRequest) {
 
       if (deltaOrders <= 0) continue;
 
+      const storeSlug = resolveStoreSlug(p.name);
+      const storeName = stores.find(s => s.slug === storeSlug)?.name ?? p.name;
+
       // Estimate revenue for the new orders
       const deltaCommission = Math.max(0, currentCommission - prevCommission);
       const avgPerOrder = currentOrders > 0 ? currentCommission / currentOrders : 0;
       const deltaRevenue = deltaCommission > 0
-        ? estimateRevenue(deltaCommission)
-        : estimateRevenue(avgPerOrder) * deltaOrders;
+        ? estimateRevenue(deltaCommission, storeSlug)
+        : estimateRevenue(avgPerOrder, storeSlug) * deltaOrders;
 
       // Use at least $1 so the order appears (order_total > 0 filter); admin can correct via Match
       const perOrderRevenue = Math.max(1, deltaRevenue / deltaOrders);
-      const storeSlug = resolveStoreSlug(p.name);
-      const storeName = stores.find(s => s.slug === storeSlug)?.name ?? p.name;
 
       // Create one record per new order, numbered from where we left off
       for (let i = 0; i < deltaOrders; i++) {

@@ -8,6 +8,12 @@ import { brands as brandDefs } from "./brandData";
 // BEFORE material/fabric keywords (denim, jeans) so that e.g. a "Denim Skirt"
 // is classified as a skirt, not jeans. Accessories is checked last.
 const categoryKeywords: [CategorySlug, string[]][] = [
+  // Jewelry checked first — an earring/necklace/ring title should never be
+  // misclassified as bags or clothing even if it shares a designer keyword.
+  ["accessories", [
+    "earring", "necklace", "bracelet", "ring", "rings", "pendant",
+    "brooch", "bangle", "choker", "locket", "cuff bracelet", "anklet",
+  ]],
   ["shoes", [
     "heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer",
     "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
@@ -67,10 +73,8 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   ["jeans", ["jeans", "denim"]],
   // Accessories checked last so clothing keywords always win
   ["accessories", [
-    // Jewelry
-    "ring", "rings", "necklace", "bracelet", "earring", "pendant",
-    "brooch", "charm", "anklet", "bangle", "choker", "locket",
-    "signet", "cuff bracelet", "lapel pin", "hair pin",
+    // Jewelry (earring/necklace/bracelet/ring/pendant/brooch/bangle/choker/locket/anklet/cuff bracelet handled above)
+    "charm", "signet", "lapel pin", "hair pin",
     "vermeil", "gemstone", "topaz", "sapphire", "diamond",
     "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
     "turquoise", "onyx",
