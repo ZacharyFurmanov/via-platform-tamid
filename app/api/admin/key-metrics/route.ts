@@ -128,13 +128,15 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user
+    // Revenue per buying user — total GMV ÷ total distinct buyers
+    // Matched orders: count distinct user_ids. Unmatched: each counts as +1 unknown buyer.
     sql`
       SELECT
-        COALESCE(SUM(order_total) / NULLIF(COUNT(DISTINCT user_id), 0), 0)::float  AS revenue_per_user,
-        COUNT(DISTINCT user_id)::int                                                AS buying_users
+        COALESCE(SUM(order_total), 0)::float                                                    AS total_gmv,
+        (COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL)
+         + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                        AS buying_users
       FROM conversions
-      WHERE user_id IS NOT NULL AND order_total > 0
+      WHERE order_total > 0
     `,
 
     // GMV by week — last 10 weeks for sparkline
@@ -235,7 +237,7 @@ export async function GET(request: NextRequest) {
       saversBought,
     },
     revenuePerUser: {
-      value: rev.revenue_per_user,
+      value: rev.buying_users > 0 ? (rev.total_gmv as number) / (rev.buying_users as number) : 0,
       buyingUsers: rev.buying_users,
     },
     gmvByWeek: gmvByWeekRows,

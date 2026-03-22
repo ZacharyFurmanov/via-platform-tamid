@@ -10,6 +10,7 @@ import { useFriends } from "./FriendsProvider";
 
 import { stores } from "@/app/lib/stores";
 import { resizeImage } from "@/app/lib/imageUtils";
+import { COLLECTIONS } from "@/app/lib/collections-config";
 
 type Category = {
   slug: string;
@@ -76,8 +77,10 @@ export default function HeaderClient({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [storesDropdownOpen, setStoresDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [collectionsDropdownOpen, setCollectionsDropdownOpen] = useState(false);
   const [mobileStoresExpanded, setMobileStoresExpanded] = useState(false);
   const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
+  const [mobileCollectionsExpanded, setMobileCollectionsExpanded] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
   const { itemCount } = useCart();
@@ -85,6 +88,7 @@ export default function HeaderClient({
 
   const storesDropdownRef = useRef<HTMLDivElement>(null);
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
+  const collectionsDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -93,6 +97,9 @@ export default function HeaderClient({
       }
       if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(e.target as Node)) {
         setCategoriesDropdownOpen(false);
+      }
+      if (collectionsDropdownRef.current && !collectionsDropdownRef.current.contains(e.target as Node)) {
+        setCollectionsDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -255,6 +262,7 @@ export default function HeaderClient({
                   onClick={() => {
                     setStoresDropdownOpen(!storesDropdownOpen);
                     setCategoriesDropdownOpen(false);
+                    setCollectionsDropdownOpen(false);
                   }}
                   className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
                 >
@@ -305,6 +313,7 @@ export default function HeaderClient({
                   onClick={() => {
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
                     setStoresDropdownOpen(false);
+                    setCollectionsDropdownOpen(false);
                   }}
                   className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
                 >
@@ -361,13 +370,55 @@ export default function HeaderClient({
                 Designers
               </Link>
 
-              {/* COLLECTIONS LINK */}
-              <Link
-                href="/collections"
-                className="hover:text-[#5D0F17]/60 transition-colors duration-300"
-              >
-                Collections
-              </Link>
+              {/* COLLECTIONS DROPDOWN */}
+              <div className="relative" ref={collectionsDropdownRef}>
+                <button
+                  onClick={() => {
+                    setCollectionsDropdownOpen(!collectionsDropdownOpen);
+                    setStoresDropdownOpen(false);
+                    setCategoriesDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-1 hover:text-[#5D0F17]/60 transition-colors duration-300"
+                >
+                  Collections
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${collectionsDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                <div
+                  className={`absolute left-1/2 -translate-x-1/2 top-full pt-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    collectionsDropdownOpen
+                      ? 'opacity-100 visible translate-y-0'
+                      : 'opacity-0 invisible -translate-y-2'
+                  }`}
+                >
+                  <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[200px] shadow-xl border border-[#5D0F17]/10" style={{ fontFamily: "'Almarai', sans-serif" }}>
+                    <div className="py-2">
+                      {COLLECTIONS.map((col) => (
+                        <Link
+                          key={col.slug}
+                          href={`/collections#${col.slug}`}
+                          onClick={() => setCollectionsDropdownOpen(false)}
+                          className="block px-6 py-2.5 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
+                        >
+                          {col.name}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="border-t border-[#5D0F17]/10">
+                      <Link
+                        href="/collections"
+                        onClick={() => setCollectionsDropdownOpen(false)}
+                        className="block px-6 py-3 text-xs uppercase tracking-wide text-[#5D0F17]/60 hover:text-[#5D0F17] hover:bg-[#D8CABD]/50 transition-colors"
+                      >
+                        View All Collections
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* SOURCING REQUESTS LINK */}
               <Link
@@ -547,13 +598,34 @@ export default function HeaderClient({
                   </Link>
                 </li>
                 <li className="border-b border-[#5D0F17]/15">
-                  <Link
-                    href="/collections"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block py-4 text-lg text-[#5D0F17]"
+                  <button
+                    onClick={() => setMobileCollectionsExpanded(!mobileCollectionsExpanded)}
+                    className="flex items-center justify-between w-full py-4 text-lg text-[#5D0F17]"
                   >
                     Collections
-                  </Link>
+                    <ChevronDown size={16} className={`transition-transform duration-200 ${mobileCollectionsExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                  {mobileCollectionsExpanded && (
+                    <div className="pb-2 pl-4">
+                      {COLLECTIONS.map((col) => (
+                        <Link
+                          key={col.slug}
+                          href={`/collections#${col.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block py-2.5 text-base text-[#5D0F17]/70"
+                        >
+                          {col.name}
+                        </Link>
+                      ))}
+                      <Link
+                        href="/collections"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block py-2.5 text-sm text-[#5D0F17]/50 uppercase tracking-wide"
+                      >
+                        View All
+                      </Link>
+                    </div>
+                  )}
                 </li>
                 <li className="border-b border-[#5D0F17]/15">
                   <Link

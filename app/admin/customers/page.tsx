@@ -23,7 +23,7 @@ type ActivityData = {
   favorites: { product_id: number; title: string | null; image: string | null; store_name: string | null; price: string | null; created_at: string }[];
   cart: { product_id: number; product_title: string; product_image: string | null; store_name: string; price: string; currency: string; added_at: string }[];
   clicks: { click_id: string; product_name: string; store: string; store_slug: string; timestamp: string }[];
-  orders: { order_id: string; order_total: number; store_name: string; timestamp: string }[];
+  orders: { conversion_id: string; order_id: string; order_total: number; store_name: string; store_slug: string | null; timestamp: string }[];
 };
 
 type UnmatchedConversion = {
@@ -40,12 +40,21 @@ function fmtTime(date: string | null) {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function ClickMatchRow({ click, userId, onMatchSuccess }: { click: ActivityData["clicks"][number]; userId: string; onMatchSuccess: () => void }) {
+function ClickMatchRow({ click, userId, orders, onMatchSuccess }: { click: ActivityData["clicks"][number]; userId: string; orders: ActivityData["orders"]; onMatchSuccess: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [conversions, setConversions] = useState<UnmatchedConversion[]>([]);
   const [loadingConv, setLoadingConv] = useState(false);
   const [matching, setMatching] = useState<string | null>(null);
   const [matched, setMatched] = useState<string | null>(null);
+
+  // Check if this click is already linked to an existing order (same store, within 48h before or 6h after click)
+  const clickTs = new Date(click.timestamp).getTime();
+  const linkedOrder = orders.find((o) => {
+    const sameStore = o.store_slug === click.store_slug || o.store_name === click.store;
+    if (!sameStore) return false;
+    const orderTs = new Date(o.timestamp).getTime();
+    return orderTs >= clickTs - 48 * 60 * 60 * 1000 && orderTs <= clickTs + 6 * 60 * 60 * 1000;
+  });
 
   function toggle() {
     if (!expanded) {
@@ -85,12 +94,18 @@ function ClickMatchRow({ click, userId, onMatchSuccess }: { click: ActivityData[
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <p style={{ fontSize: 11, color: "rgba(93,15,23,0.35)", whiteSpace: "nowrap" }}>{fmtTime(click.timestamp)}</p>
-          <button
-            onClick={toggle}
-            style={{ fontSize: 10, padding: "2px 8px", background: expanded ? "#5D0F17" : "transparent", color: expanded ? "#fff" : "#5D0F17", border: "1px solid rgba(93,15,23,0.3)", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}
-          >
-            {expanded ? "Hide" : "Match order"}
-          </button>
+          {linkedOrder ? (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "rgba(16,185,129,0.1)", color: "#065f46", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, whiteSpace: "nowrap", fontWeight: 600 }}>
+              Order ${Number(linkedOrder.order_total).toFixed(0)} ✓
+            </span>
+          ) : (
+            <button
+              onClick={toggle}
+              style={{ fontSize: 10, padding: "2px 8px", background: expanded ? "#5D0F17" : "transparent", color: expanded ? "#fff" : "#5D0F17", border: "1px solid rgba(93,15,23,0.3)", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}
+            >
+              {expanded ? "Hide" : "Match order"}
+            </button>
+          )}
         </div>
       </div>
       {expanded && (
@@ -198,7 +213,7 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
               {/* Clicks */}
               {section("Clicked Through to Store", data.clicks.length)}
               {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.clicks.map((c, i) => (
-                <ClickMatchRow key={i} click={c} userId={data.userId!} onMatchSuccess={loadActivity} />
+                <ClickMatchRow key={i} click={c} userId={data.userId!} orders={data.orders} onMatchSuccess={loadActivity} />
               ))}
 
               {/* Orders */}

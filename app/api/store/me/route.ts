@@ -45,7 +45,22 @@ export async function GET() {
 
   const store = stores.find((s) => s.slug === storeSlug);
   if (!store) {
-    return NextResponse.json({ error: "Store not found" }, { status: 404 });
+    // Store is in storeContactEmails but not yet fully onboarded — return a minimal portal
+    return NextResponse.json({
+      storeSlug,
+      storeName: storeSlug,
+      location: "",
+      currency: "USD",
+      website: "",
+      logo: "",
+      logoBg: "#F7F3EA",
+      commissionType: "squarespace-manual",
+      totalInventoryValue: 0,
+      viaCommissionPotential: 0,
+      storeFollowers: 0,
+      topFavoritedProducts: [],
+      pendingOnboarding: true,
+    });
   }
 
   // Calculate total inventory value, commission potential, store followers, and top favorited products

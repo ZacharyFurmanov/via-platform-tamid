@@ -28,6 +28,7 @@ type CandidateClick = {
   userId: string | null;
   userEmail: string | null;
   userName: string | null;
+  productSoldOut?: boolean;
 };
 
 const MAROON = "#5D0F17";
@@ -306,8 +307,11 @@ export default function AdminConversionsPage() {
               </div>
 
               {/* Candidate clicks */}
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 4px" }}>
                 Candidate Clicks (same store, ±48h)
+              </p>
+              <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 12px" }}>
+                🔴 = product now sold out — strong match signal
               </p>
               {candidatesLoading ? (
                 <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading clicks…</p>
@@ -315,10 +319,19 @@ export default function AdminConversionsPage() {
                 <p style={{ fontSize: 13, color: "#9ca3af" }}>No clicks found in this window.</p>
               ) : (
                 candidates.map((click) => (
-                  <div key={click.clickId} style={{ border: "1px solid #e5e7eb", borderRadius: 6, padding: "10px 14px", marginBottom: 8 }}>
+                  <div key={click.clickId} style={{
+                    border: click.productSoldOut ? `1px solid ${MAROON}` : "1px solid #e5e7eb",
+                    borderRadius: 6,
+                    padding: "10px 14px",
+                    marginBottom: 8,
+                    background: click.productSoldOut ? "rgba(93,15,23,0.03)" : "#fff",
+                  }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{click.productName || "—"}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: 6 }}>
+                          {click.productSoldOut && <span title="Product is now sold out — likely purchased">🔴</span>}
+                          {click.productName || "—"}
+                        </div>
                         <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
                           {fmtDate(click.timestamp)} · {minsApart(click.timestamp, selected.timestamp)}m from order
                         </div>

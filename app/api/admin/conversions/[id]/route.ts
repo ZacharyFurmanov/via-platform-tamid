@@ -36,14 +36,25 @@ export async function GET(
   const windowStart = new Date(ts.getTime() - 48 * 60 * 60 * 1000).toISOString();
   const windowEnd = new Date(ts.getTime() + 6 * 60 * 60 * 1000).toISOString();
 
-  // Candidate clicks: same store, within 48h before + 6h after the order
+  // Candidate clicks: same store, within 48h before + 6h after the order.
+  // Also check if the clicked product is still in inventory — if it's gone, that's
+  // a strong signal the click led to the purchase (product sold out after click).
   const clicks = await sql`
-    SELECT cl.*, u.email AS user_email, u.name AS user_name
+    SELECT
+      cl.*,
+      u.email AS user_email,
+      u.name AS user_name,
+      (p.id IS NOT NULL) AS product_still_exists
     FROM clicks cl
     LEFT JOIN users u ON u.id::text = cl.user_id
+    LEFT JOIN products p ON p.store_slug = cl.store_slug
+      AND LOWER(p.title) = LOWER(cl.product_name)
     WHERE cl.store_slug = ${conv.store_slug as string}
       AND cl.timestamp BETWEEN ${windowStart} AND ${windowEnd}
-    ORDER BY ABS(EXTRACT(EPOCH FROM (cl.timestamp - ${ts.toISOString()}::timestamptz))) ASC
+    ORDER BY
+      -- Prioritise: product gone from inventory (likely sold) + closest in time
+      (p.id IS NULL) DESC,
+      ABS(EXTRACT(EPOCH FROM (cl.timestamp - ${ts.toISOString()}::timestamptz))) ASC
     LIMIT 50
   `;
 
@@ -56,6 +67,7 @@ export async function GET(
       userId: c.user_id ?? null,
       userEmail: c.user_email ?? null,
       userName: c.user_name ?? null,
+      productSoldOut: !c.product_still_exists,
     })),
   });
 }

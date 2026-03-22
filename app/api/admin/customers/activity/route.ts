@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     ` : Promise.resolve([]),
 
     userId ? sql`
-      SELECT order_id, order_total, store_name, timestamp, matched_click_data
+      SELECT conversion_id, order_id, order_total, store_name, store_slug, timestamp, matched_click_data
       FROM conversions
       WHERE user_id = ${userId} AND order_total > 0
       ORDER BY timestamp DESC

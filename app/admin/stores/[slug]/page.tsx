@@ -89,12 +89,13 @@ export default function AdminStorePortalPage() {
             </div>
 
             {/* KPI row */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
                 { label: "Inventory Value", value: fmt(data.totalInventoryValue) },
                 { label: "Commission Potential", value: fmt(data.viaCommissionPotential) },
                 { label: "Store Followers", value: data.storeFollowers.toLocaleString() },
-                { label: "Clicks on VYA", value: data.analytics.totalClicks.toLocaleString() },
+                { label: "Views on VYA", value: (data.analytics.totalViews ?? 0).toLocaleString() },
+                { label: "Clicks to Store", value: data.analytics.totalClicks.toLocaleString() },
                 { label: "Orders", value: data.analytics.totalConversions.toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label} style={card}>

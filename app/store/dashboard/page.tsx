@@ -18,6 +18,7 @@ type StoreInfo = {
   viaCommissionPotential: number;
   storeFollowers: number;
   topFavoritedProducts: { title: string; price: number; favoriteCount: number }[];
+  pendingOnboarding?: boolean;
 };
 
 type Analytics = {
@@ -214,6 +215,123 @@ export default function StoreDashboardPage() {
   }
 
   if (!store) return null;
+
+  // Pending onboarding — show sourcing-only portal
+  if (store.pendingOnboarding) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "#F7F3EA" }}>
+        <header
+          className="border-b px-6 py-4 flex items-center justify-between"
+          style={{ backgroundColor: "#5D0F17", borderColor: "rgba(255,255,255,0.1)" }}
+        >
+          <div className="flex items-center gap-4">
+            <Image src="/vya-logo.png" alt="VYA" width={48} height={48} className="brightness-0 invert" style={{ objectFit: "contain" }} />
+            <span className="text-sm uppercase tracking-widest text-white opacity-70">Store Partner Portal</span>
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/store/login" })}
+            className="text-xs uppercase tracking-wide text-white opacity-60 hover:opacity-100 transition-opacity"
+          >
+            Sign Out
+          </button>
+        </header>
+
+        <main className="max-w-3xl mx-auto px-6 py-10 space-y-10">
+          <div className="bg-white p-6 shadow-sm border-l-4" style={{ borderLeftColor: "#5D0F17" }}>
+            <h2 className="text-lg font-serif mb-1" style={{ color: "#5D0F17" }}>Welcome to VYA</h2>
+            <p className="text-sm" style={{ color: "rgba(93,15,23,0.6)" }}>
+              Your store is being set up on VYA. In the meantime, you can browse and respond to open sourcing requests below.
+            </p>
+          </div>
+
+          {/* Sourcing Requests */}
+          <section>
+            <h2 className="text-lg font-serif uppercase tracking-wide mb-2" style={{ color: "#5D0F17" }}>
+              Open Sourcing Requests
+              {sourcing && (
+                <span className="ml-2 text-sm font-sans normal-case" style={{ color: "rgba(93,15,23,0.5)" }}>
+                  ({sourcing.open.length} available)
+                </span>
+              )}
+            </h2>
+            <p className="text-xs mb-6" style={{ color: "rgba(93,15,23,0.5)" }}>
+              Paid customer requests open for offers. Submit your sourcing fee, timeline, and any notes — the customer will choose which offer to accept.
+            </p>
+
+            {!sourcing || sourcing.open.length === 0 ? (
+              <p className="text-sm" style={{ color: "rgba(93,15,23,0.5)" }}>No open requests right now.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sourcing.open.map((req) => (
+                  <div key={req.id} className="bg-white shadow-sm p-5">
+                    {req.imageUrl && (
+                      <div className="mb-3 relative overflow-hidden bg-neutral-50 flex items-center justify-center" style={{ maxHeight: 240 }}>
+                        <Image src={req.imageUrl} alt="Customer photo" width={600} height={400} style={{ objectFit: "contain", width: "100%", height: "auto", maxHeight: 240 }} />
+                      </div>
+                    )}
+                    {req.userName && (
+                      <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "rgba(93,15,23,0.4)" }}>{req.userName}</p>
+                    )}
+                    <p className="text-sm mb-3 line-clamp-2" style={{ color: "#5D0F17" }}>{req.description}</p>
+                    <div className="text-xs space-y-1 mb-4" style={{ color: "rgba(93,15,23,0.6)" }}>
+                      <p>Budget: ${req.priceMin}–${req.priceMax}</p>
+                      <p>Condition: {req.condition}</p>
+                      {req.size && <p>Size: {req.size}</p>}
+                      <p>Deadline: {req.deadline}</p>
+                    </div>
+                    {(sourcing?.myOffers ?? []).some((o) => o.requestId === req.id) ? (
+                      <div className="text-xs py-2 text-center" style={{ color: "rgba(93,15,23,0.5)", border: "1px solid rgba(93,15,23,0.15)" }}>
+                        {(sourcing?.myOffers ?? []).find((o) => o.requestId === req.id)?.status === "accepted"
+                          ? "✓ Offer Accepted"
+                          : (sourcing?.myOffers ?? []).find((o) => o.requestId === req.id)?.status === "declined"
+                          ? "Offer Declined"
+                          : "✓ Offer Submitted — Awaiting Customer"}
+                      </div>
+                    ) : offerSuccess[req.id] ? (
+                      <div className="text-xs py-2 text-center" style={{ color: "rgba(93,15,23,0.5)", border: "1px solid rgba(93,15,23,0.15)" }}>
+                        ✓ Offer Submitted — Awaiting Customer
+                      </div>
+                    ) : offerFormOpen === req.id ? (
+                      <div className="border border-[#5D0F17]/15 p-4 space-y-3">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>Sourcing Fee (USD) *</label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>$</span>
+                            <input type="number" min={1} step={1} placeholder="e.g. 25" value={getOfferForm(req.id).fee} onChange={(e) => updateOfferForm(req.id, { fee: e.target.value })} className="w-full border border-[#5D0F17]/20 bg-transparent pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition" style={{ color: "#5D0F17" }} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>Timeline *</label>
+                          <input type="text" placeholder="e.g. 3–5 business days" value={getOfferForm(req.id).timeline} onChange={(e) => updateOfferForm(req.id, { timeline: e.target.value })} className="w-full border border-[#5D0F17]/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition" style={{ color: "#5D0F17" }} />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(93,15,23,0.5)" }}>Notes <span className="normal-case tracking-normal" style={{ color: "rgba(93,15,23,0.3)" }}>(optional)</span></label>
+                          <textarea rows={3} placeholder="Anything helpful for the customer…" value={getOfferForm(req.id).notes} onChange={(e) => updateOfferForm(req.id, { notes: e.target.value })} className="w-full border border-[#5D0F17]/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#5D0F17] transition resize-none" style={{ color: "#5D0F17" }} />
+                        </div>
+                        {offerErrors[req.id] && <p className="text-xs text-red-600">{offerErrors[req.id]}</p>}
+                        <div className="flex gap-2">
+                          <button onClick={() => handleSubmitOffer(req.id)} disabled={submittingOffer === req.id} className="flex-1 py-2 text-xs uppercase tracking-widest text-white transition" style={{ backgroundColor: "#5D0F17", opacity: submittingOffer === req.id ? 0.6 : 1 }}>
+                            {submittingOffer === req.id ? "Submitting…" : "Submit Offer"}
+                          </button>
+                          <button onClick={() => setOfferFormOpen(null)} className="px-4 py-2 text-xs uppercase tracking-widest transition" style={{ color: "#5D0F17", border: "1px solid rgba(93,15,23,0.2)" }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setOfferFormOpen(req.id)} className="w-full py-2 text-xs uppercase tracking-widest transition" style={{ color: "#5D0F17", border: "1px solid rgba(93,15,23,0.3)" }}>
+                        Submit Offer
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F7F3EA" }}>
