@@ -981,7 +981,7 @@ export async function sendAbandonedCartEmail(
 
   const content = `
     <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
-      Looks like you left something behind.
+      Vintage doesn&rsquo;t wait around.
     </p>
     <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
       Your cart is waiting &mdash; but vintage is one of a kind. Get it now before someone else does.
@@ -1005,7 +1005,7 @@ export async function sendAbandonedCartEmail(
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: "You left something behind",
+    subject: "Get it before it's gone forever",
     html: viaShell("Your Cart", content),
   });
 }

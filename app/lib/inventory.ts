@@ -29,10 +29,10 @@ export function normalizeSize(raw: string): string {
   if (/^(l)[\/\-](xl)$/i.test(s)) return "L";
   if (/^(xl)[\/\-](xxl)$/i.test(s)) return "XL";
 
-  // EU / IT / FR / DE are all the same European scale — collapse to bare number
-  // e.g. "IT 40", "IT40", "EU 38.", "FR 42" → "40", "38", "42"
-  const euMatch = /^(?:IT|EU|FR|DE)\s*(\d+(?:\.\d+)?)$/i.exec(s);
-  if (euMatch) return euMatch[1];
+  // EU / IT / FR / DE are all the same European scale — normalise to "EU XX"
+  // e.g. "IT 40", "IT40", "EU 38.", "FR 42" → "EU 40", "EU 38", "EU 42"
+  const euMatch = /^(IT|EU|FR|DE)\s*(\d+(?:\.\d+)?)$/i.exec(s);
+  if (euMatch) return `EU ${euMatch[2]}`;
 
   // US/UK sizing: strip prefix, treat as plain number
   const usMatch = /^US\s*(\d+(?:\.\d+)?)$/i.exec(s);

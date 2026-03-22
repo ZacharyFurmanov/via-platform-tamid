@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check access code — valid code grants immediate approval
-    const ACCESS_CODES = new Set(["kendell", "elsa"]);
+    const ACCESS_CODES = new Set(["kendell", "elsa", "vintageedit", "kamryn"]);
     const hasValidCode = accessCode && ACCESS_CODES.has(accessCode.trim().toLowerCase());
     const status = hasValidCode ? "approved" : "pending";
 

@@ -223,6 +223,16 @@ export function extractSizeFromDescription(description: string | null): string |
   const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
 
   const LABEL_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size`;
+  const STRICT_LABEL_KW_LOCAL = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
+
+  // 0. EU/IT/FR/DE prefixed size after label keyword — takes priority over parenthetical
+  //    Handles "Label: EU 37 (UK 4)" → "EU 37", "Label: EU 39" → "EU 39"
+  const euLabelRe = new RegExp(
+    `(?:${STRICT_LABEL_KW_LOCAL}|size)\\s*:?\\s*((?:EU|IT|FR|DE)\\s*\\d[\\d.]*)`,
+    "i"
+  );
+  const euLabelMatch = euLabelRe.exec(text);
+  if (euLabelMatch) return euLabelMatch[1].trim();
 
   // 1. Parenthetical abbreviation after label keyword: "Label: Medium (M)" → "M"
   const parenRe = new RegExp(
@@ -253,7 +263,12 @@ export function extractSizeFromDescription(description: string | null): string |
   const match = re.exec(text);
   if (match) return match[1].trim();
 
-  // 4. Fallback: "fits XS", "best fits M"
+  // 4. Standalone EU/IT/FR/DE size anywhere in description (e.g. "• EU 39" as a bullet point)
+  const euStandaloneRe = /\b((?:EU|IT|FR|DE)\s*\d[\d.]*)\b/i;
+  const euStandaloneMatch = euStandaloneRe.exec(text);
+  if (euStandaloneMatch) return euStandaloneMatch[1].trim();
+
+  // 5. Fallback: "fits XS", "best fits M"
   const fitsRe = new RegExp(`(?:best\\s+)?fits?\\s+(${SIZE_VALUE_PATTERN})`, "i");
   const fitsMatch = fitsRe.exec(text);
   if (fitsMatch) return fitsMatch[1].trim();
