@@ -404,6 +404,9 @@ export default function HeaderClient({
                           className="block px-6 py-2.5 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
                         >
                           {col.name}
+                          {col.curatedBy && (
+                            <span className="block text-[10px] text-[#5D0F17]/45 mt-0.5">by {col.curatedBy}</span>
+                          )}
                         </Link>
                       ))}
                     </div>

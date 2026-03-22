@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    scrollRestoration: true,
-  },
   async redirects() {
     return [
       {
@@ -24,6 +21,7 @@ const nextConfig: NextConfig = {
       // Squarespace (LEI, Montrose Edit)
       { protocol: "https", hostname: "**.squarespace.com" },
       { protocol: "https", hostname: "**.sqspcdn.com" },
+      { protocol: "https", hostname: "**.squarespace-cdn.com" },
       // Big Cartel
       { protocol: "https", hostname: "**.bigcartel.com" },
       // Generic CDNs used by stores

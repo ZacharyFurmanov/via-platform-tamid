@@ -1,9 +1,9 @@
 export const COLLECTIONS = [
-  { slug: "editors-picks", name: "Editor's Picks", curatedBy: null },
-  { slug: "bridal-era", name: "Bridal Era", curatedBy: "TheElleCollective" },
-  { slug: "coachella", name: "Coachella", curatedBy: "Kendell Browning" },
-  { slug: "spring-edition", name: "Spring Edition", curatedBy: "Alexa June" },
-  { slug: "zara-larsson", name: "Zara Larsson", curatedBy: "Elsa Fink" },
+  { slug: "editors-picks", name: "Editor's Picks", curatedBy: null, description: "Hand-selected vintage & secondhand finds from across all of our stores." },
+  { slug: "bridal-era", name: "Bridal Era", curatedBy: "TheElleCollective", description: "For every bride-to-be searching for her something borrowed — vintage pieces worthy of the biggest day." },
+  { slug: "coachella", name: "Coachella", curatedBy: "Kendell Browning", description: "Festival-ready vintage finds curated for the desert. Bold, free-spirited, and made to be worn under the sun." },
+  { slug: "spring-edition", name: "Spring Edition", curatedBy: "Alexa June", description: "Fresh picks for a new season. Light layers, floral prints, and the kind of pieces that feel like spring." },
+  { slug: "zara-larsson", name: "Zara Larsson", curatedBy: "Elsa Fink", description: "Pop star energy meets vintage charm. Statement pieces with attitude, curated for anyone who dresses like they're headlining." },
 ] as const;
 
 export type CollectionSlug = (typeof COLLECTIONS)[number]["slug"];

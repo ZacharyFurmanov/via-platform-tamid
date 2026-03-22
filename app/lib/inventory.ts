@@ -22,18 +22,24 @@ export function normalizeSize(raw: string): string {
   if (/^(xxxl|3xl)$/i.test(s)) return "XXXL";
   if (/^(os|osfm|one\s*size)$/i.test(s)) return "One Size";
 
+  // Range sizes — collapse to the smaller size
+  if (/^(xs)[\/\-](s)$/i.test(s)) return "XS";
+  if (/^(s)[\/\-](m)$/i.test(s)) return "S";
+  if (/^(m)[\/\-](l)$/i.test(s)) return "M";
+  if (/^(l)[\/\-](xl)$/i.test(s)) return "L";
+  if (/^(xl)[\/\-](xxl)$/i.test(s)) return "XL";
+
   // EU / IT / FR / DE are all the same European scale — collapse to bare number
   // e.g. "IT 40", "IT40", "EU 38.", "FR 42" → "40", "38", "42"
   const euMatch = /^(?:IT|EU|FR|DE)\s*(\d+(?:\.\d+)?)$/i.exec(s);
   if (euMatch) return euMatch[1];
 
-  // US sizing: normalise spacing, keep prefix (different scale from EU)
+  // US/UK sizing: strip prefix, treat as plain number
   const usMatch = /^US\s*(\d+(?:\.\d+)?)$/i.exec(s);
-  if (usMatch) return `US ${usMatch[1]}`;
+  if (usMatch) return usMatch[1];
 
-  // UK sizing: normalise spacing
   const ukMatch = /^UK\s*(\d+(?:\.\d+)?)$/i.exec(s);
-  if (ukMatch) return `UK ${ukMatch[1]}`;
+  if (ukMatch) return ukMatch[1];
 
   // Plain number (already stripped trailing period above)
   if (/^\d+(?:\.\d+)?$/.test(s)) return s;

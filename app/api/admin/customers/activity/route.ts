@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       FROM product_favorites pf
       WHERE pf.user_id = ${userId}
       ORDER BY pf.created_at DESC
-      LIMIT 50
+      LIMIT 500
     ` : Promise.resolve([]),
 
     userId ? sql`

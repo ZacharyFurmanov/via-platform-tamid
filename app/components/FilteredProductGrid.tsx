@@ -23,9 +23,10 @@ const COLOR_KEYWORDS = [
 ];
 
 function extractColor(title: string): string | null {
-  const lower = title.toLowerCase();
   for (const color of COLOR_KEYWORDS) {
-    if (lower.includes(color)) {
+    // Use word boundaries so "red" doesn't match inside "colored", "embroidered", etc.
+    const regex = new RegExp(`\\b${color.replace("-", "\\-")}\\b`, "i");
+    if (regex.test(title)) {
       return color.charAt(0).toUpperCase() + color.slice(1);
     }
   }
@@ -385,13 +386,21 @@ export default function FilteredProductGrid({
     return Array.from(bMap.values());
   }, [products]);
 
-  // Get unique normalized sizes from products for the filter
+  // Get unique normalized sizes for the filter.
+  // Show all letter sizes, but only include numeric sizes that appear on 3+ products.
   const availableSizes = useMemo(() => {
-    const seen = new Set<string>();
+    const LETTER_SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"]);
+    const counts = new Map<string, number>();
     products.forEach((p) => {
-      if (p.size) seen.add(normalizeSize(p.size));
+      if (p.size) {
+        const norm = normalizeSize(p.size);
+        counts.set(norm, (counts.get(norm) ?? 0) + 1);
+      }
     });
-    return sortSizes(Array.from(seen));
+    const filtered = Array.from(counts.entries())
+      .filter(([size, count]) => LETTER_SIZES.has(size) || count >= 3)
+      .map(([size]) => size);
+    return sortSizes(filtered);
   }, [products]);
 
   // Get unique accessory types from products for the filter

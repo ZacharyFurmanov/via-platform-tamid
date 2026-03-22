@@ -305,10 +305,10 @@ export default function ProductFilter({
             {priceDropdownOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-10"
+                  className="fixed inset-0 z-40"
                   onClick={() => setPriceDropdownOpen(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] animate-fade-in">
+                <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] animate-fade-in">
                   {(Object.keys(priceRangeLabels) as PriceRange[]).map(
                     (range) => (
                       <button
@@ -355,10 +355,10 @@ export default function ProductFilter({
               {categoryDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setCategoryDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[180px] animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[180px] animate-fade-in">
                     {categories.map((cat) => (
                       <button
                         key={cat.slug}
@@ -404,10 +404,10 @@ export default function ProductFilter({
               {brandDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setBrandDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {brands.map((brand) => (
                       <button
                         key={brand.slug}
@@ -453,10 +453,10 @@ export default function ProductFilter({
               {colorDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setColorDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {colors.map((color) => (
                       <button
                         key={color}
@@ -502,10 +502,10 @@ export default function ProductFilter({
               {storeDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setStoreDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[200px] animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[200px] animate-fade-in">
                     {stores.map((store) => (
                       <button
                         key={store.slug}
@@ -551,10 +551,10 @@ export default function ProductFilter({
               {sizeDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setSizeDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {sizes.map((size) => (
                       <button
                         key={size}
@@ -600,10 +600,10 @@ export default function ProductFilter({
               {typeDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setTypeDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
+                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
                     {types.map((type) => (
                       <button
                         key={type}
@@ -642,10 +642,10 @@ export default function ProductFilter({
             {sortDropdownOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-10"
+                  className="fixed inset-0 z-40"
                   onClick={() => setSortDropdownOpen(false)}
                 />
-                <div className="absolute top-full right-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-20 min-w-[180px] animate-fade-in">
+                <div className="absolute top-full right-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[180px] animate-fade-in">
                   {(Object.keys(sortLabels) as SortOption[]).map((option) => (
                     <button
                       key={option}

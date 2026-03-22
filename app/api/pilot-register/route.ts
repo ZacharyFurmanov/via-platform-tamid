@@ -10,7 +10,7 @@ import { sendPilotApprovalEmail, sendWaitlistConfirmationEmail } from "@/app/lib
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode } = body;
+    const { firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode, accessCode } = body;
 
     if (!email || !firstName) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
@@ -25,8 +25,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: existingStatus, alreadyRegistered: true, referralCode: existingCode });
     }
 
-    // Everyone starts as pending — approved via cron after 7 days or manual approval
-    const status = "pending";
+    // Check access code — valid code grants immediate approval
+    const ACCESS_CODES = new Set(["kendell", "elsa"]);
+    const hasValidCode = accessCode && ACCESS_CODES.has(accessCode.trim().toLowerCase());
+    const status = hasValidCode ? "approved" : "pending";
 
     const myReferralCode = await createPilotEntry({
       email: normalizedEmail,
@@ -39,9 +41,15 @@ export async function POST(request: NextRequest) {
       referredBy: normalizedReferralCode,
     });
 
-    sendWaitlistConfirmationEmail(normalizedEmail, firstName.trim()).catch(
-      (err) => console.error("[PilotRegister] Waitlist email failed:", err)
-    );
+    if (hasValidCode) {
+      sendPilotApprovalEmail(normalizedEmail, firstName.trim()).catch(
+        (err) => console.error("[PilotRegister] Approval email failed:", err)
+      );
+    } else {
+      sendWaitlistConfirmationEmail(normalizedEmail, firstName.trim()).catch(
+        (err) => console.error("[PilotRegister] Waitlist email failed:", err)
+      );
+    }
 
     // If signed up via a referral code, approve the referrer immediately
     if (normalizedReferralCode) {

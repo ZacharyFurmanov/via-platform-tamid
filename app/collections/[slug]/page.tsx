@@ -69,7 +69,7 @@ export default async function CollectionPage({ params }: Props) {
           </p>
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">{collection.name}</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            Hand-selected from all of our stores.
+            {collection.description}
           </p>
         </div>
       </section>

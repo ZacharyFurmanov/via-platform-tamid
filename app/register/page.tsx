@@ -17,8 +17,10 @@ export default function RegisterPage() {
   const [smsSubscribe, setSmsSubscribe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [approved, setApproved] = useState(false);
   const [myReferralCode, setMyReferralCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -31,7 +33,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/pilot-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode: referralCode || undefined }),
+        body: JSON.stringify({ firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode: referralCode || undefined, accessCode: accessCode.trim() || undefined }),
       });
 
       const data = await res.json();
@@ -39,6 +41,14 @@ export default function RegisterPage() {
       if (!res.ok) {
         setError(data.error || "Something went wrong. Please try again.");
         setLoading(false);
+        return;
+      }
+
+      if (data.status === "approved") {
+        // Immediately send a magic-link sign-in email so they land on the site
+        await signIn("resend", { email: email.trim().toLowerCase(), callbackUrl: "/api/pilot-check", redirect: false });
+        setApproved(true);
+        setSubmitted(true);
         return;
       }
 
@@ -75,13 +85,24 @@ export default function RegisterPage() {
 
           {submitted ? (
             <div>
-              <h1 className="font-serif text-3xl text-[#5D0F17] mb-3">You&apos;re on the list.</h1>
-              <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-8">
-                We&apos;ve added <strong>{email}</strong> to the waitlist. We&apos;ll let you know when you&apos;re in.
-              </p>
+              {approved ? (
+                <>
+                  <h1 className="font-serif text-3xl text-[#5D0F17] mb-3">You&apos;re in.</h1>
+                  <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-8">
+                    Welcome, <strong>{firstName}</strong>. We&apos;ve sent a sign-in link to <strong>{email}</strong> — click it to access VYA.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="font-serif text-3xl text-[#5D0F17] mb-3">You&apos;re on the list.</h1>
+                  <p className="text-[#5D0F17]/60 text-sm leading-relaxed mb-8">
+                    We&apos;ve added <strong>{email}</strong> to the waitlist. We&apos;ll let you know when you&apos;re in.
+                  </p>
+                </>
+              )}
 
-              {/* Referral — move up the waitlist */}
-              {myReferralCode && (
+              {/* Referral — move up the waitlist (only for pending users) */}
+              {!approved && myReferralCode && (
                 <div className="bg-[#F7F3EA] px-6 py-6 mb-4">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-1">Move up faster</p>
                   <p className="font-serif text-lg text-[#5D0F17] mb-1">Refer friends to skip the wait</p>
@@ -202,6 +223,20 @@ export default function RegisterPage() {
                       className="flex-1 px-3 py-2.5 text-sm text-[#5D0F17] bg-transparent focus:outline-none placeholder:text-[#5D0F17]/30"
                     />
                   </div>
+                </div>
+
+                {/* Access code */}
+                <div>
+                  <label className="block text-xs text-[#5D0F17]/60 mb-1.5">
+                    Access code <span className="text-[#5D0F17]/40">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    placeholder="Enter code if you have one"
+                    className="w-full border border-[#5D0F17]/20 px-3 py-2.5 text-sm text-[#5D0F17] focus:border-[#5D0F17] focus:outline-none transition placeholder:text-[#5D0F17]/30"
+                  />
                 </div>
 
                 {/* Checkboxes */}

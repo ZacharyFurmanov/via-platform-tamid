@@ -8,8 +8,10 @@ import EditorsPicksScroller from "./EditorsPicksScroller";
 export default async function CollectionsSection() {
   const allPicks = await getAllCollectionPicks();
 
-  // Only render collections that have at least one pick
-  const visibleCollections = COLLECTIONS.filter((col) => (allPicks[col.slug]?.length ?? 0) > 0);
+  // Homepage only shows Editor's Picks
+  const visibleCollections = COLLECTIONS.filter(
+    (col) => col.slug === "editors-picks" && (allPicks[col.slug]?.length ?? 0) > 0
+  );
 
   if (visibleCollections.length === 0) return null;
 
