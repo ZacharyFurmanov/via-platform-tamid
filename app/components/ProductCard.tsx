@@ -76,6 +76,7 @@ export default function ProductCard({
   compareAtPrice,
   category,
   storeName,
+  storeSlug,
   image,
   images,
   favoriteCount,
