@@ -2,11 +2,11 @@ export const dynamic = "force-dynamic";
 
 import "./globals.css";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { AdminHide, MainWrapper } from "./components/RootLayoutWrapper";
 import Script from "next/script";
-import { GiveawayProvider } from "./components/GiveawayProvider";
 import { SignUpProvider } from "./components/SignUpProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { FavoritesProvider } from "./components/FavoritesProvider";
@@ -15,6 +15,7 @@ import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 import FeedbackModal from "./components/FeedbackModal";
 import { Analytics } from "@vercel/analytics/next";
+import FirebaseAnalyticsProvider from "./components/FirebaseAnalyticsProvider";
 
 export const metadata: Metadata = {
   title: "VYA — Vintage & Secondhand Platform",
@@ -59,19 +60,6 @@ export default function RootLayout({
     <html lang="en">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      {/* Google Analytics */}
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-ZDBBYJCNVT"
-        strategy="afterInteractive"
-      />
-      <Script id="ga4" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-ZDBBYJCNVT');
-        `}
-      </Script>
 
       {/* Pinterest Tag */}
       <Script id="pinterest-tag" strategy="afterInteractive">
@@ -92,6 +80,9 @@ export default function RootLayout({
 
       <body className="bg-[#F7F3EA] text-[#5D0F17]">
         <AuthProvider>
+          <Suspense fallback={null}>
+            <FirebaseAnalyticsProvider />
+          </Suspense>
           <FavoritesProvider>
             <FriendsProvider>
             <CartProvider>

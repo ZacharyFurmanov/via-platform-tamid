@@ -1,15 +1,18 @@
 import Image from "next/image";
-import Link from "next/link";
 import { stores } from "../lib/stores";
+import TrackedStoreLink from "./TrackedStoreLink";
 
 export default function StoreCarousel() {
   return (
     <div className="px-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">
         {stores.map((store) => (
-          <Link
+          <TrackedStoreLink
             key={store.slug}
             href={`/stores/${store.slug}`}
+            storeSlug={store.slug}
+            storeName={store.name}
+            surface="home_store_carousel"
             className="group block"
           >
             <div className="aspect-[3/4] relative overflow-hidden" style={{ backgroundColor: store.image.includes("placeholder") ? "#FFFDF8" : undefined }}>
@@ -43,7 +46,7 @@ export default function StoreCarousel() {
                 {store.name}
               </h3>
             </div>
-          </Link>
+          </TrackedStoreLink>
         ))}
       </div>
     </div>

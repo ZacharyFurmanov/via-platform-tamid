@@ -6,6 +6,11 @@ import { X, ShoppingCart } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCart, CartItem } from "@/app/components/CartProvider";
 import { useSignUp } from "@/app/components/SignUpProvider";
+import TrackedStoreLink from "@/app/components/TrackedStoreLink";
+import {
+  trackBeginCheckout,
+  trackViewCart,
+} from "@/app/lib/firebase-analytics";
 
 /**
  * Build a Shopify multi-cart URL from a group of items.
@@ -49,6 +54,23 @@ export default function CartPage() {
       openModal("/cart", { required: true });
     }
   }, [needsAuth, openModal]);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      return;
+    }
+
+    trackViewCart(
+      items.map((item) => ({
+        itemId: item.compositeId,
+        itemName: item.title,
+        price: item.price,
+        storeName: item.storeName,
+        storeSlug: item.storeSlug,
+      })),
+      "cart"
+    );
+  }, [items]);
 
   // Check which cart items are still available
   useEffect(() => {
@@ -154,8 +176,11 @@ export default function CartPage() {
               >
                 {/* Store header */}
                 <div className="bg-[#D8CABD]/20 px-5 py-4 flex items-center justify-between">
-                  <Link
+                  <TrackedStoreLink
                     href={`/stores/${group.storeSlug}`}
+                    storeSlug={group.storeSlug}
+                    storeName={group.storeName}
+                    surface="cart"
                     className="hover:underline transition"
                   >
                     <span className="font-medium text-[#5D0F17]">
@@ -165,7 +190,7 @@ export default function CartPage() {
                       {group.items.length}{" "}
                       {group.items.length === 1 ? "item" : "items"}
                     </span>
-                  </Link>
+                  </TrackedStoreLink>
                   <span className="text-sm font-medium text-[#5D0F17]">
                     ${groupTotal.toFixed(2)}
                   </span>
@@ -271,6 +296,32 @@ export default function CartPage() {
                         });
                         return `/api/track?${params.toString()}`;
                       })()}
+                      onClick={() => {
+                        const availableItems = group.items.filter((item) => {
+                          const dbId = (() => {
+                            const match = item.compositeId.match(/-(\d+)$/);
+                            return match ? parseInt(match[1], 10) : null;
+                          })();
+                          return dbId == null || !soldOutIds.has(dbId);
+                        });
+
+                        trackBeginCheckout(
+                          availableItems.map((item) => ({
+                            itemId: item.compositeId,
+                            itemName: item.title,
+                            price: item.price,
+                            storeName: item.storeName,
+                            storeSlug: item.storeSlug,
+                          })),
+                          {
+                            surface: "cart",
+                            checkoutType:
+                              availableItems.length > 1 ? "multi_item_store_checkout" : "single_item_store_checkout",
+                            storeSlug: group.storeSlug,
+                            storeName: group.storeName,
+                          }
+                        );
+                      }}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center py-3 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useCart, CartItem } from "./CartProvider";
+import { trackAddToCart } from "@/app/lib/firebase-analytics";
 
 type AddToCartButtonProps = {
   item: CartItem;
@@ -10,6 +12,7 @@ type AddToCartButtonProps = {
 export default function AddToCartButton({ item }: AddToCartButtonProps) {
   const { addItem, items } = useCart();
   const [justAdded, setJustAdded] = useState(false);
+  const pathname = usePathname();
 
   const alreadyInCart = items.some((i) => i.compositeId === item.compositeId);
 
@@ -18,6 +21,17 @@ export default function AddToCartButton({ item }: AddToCartButtonProps) {
     addItem(item);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
+
+    trackAddToCart(
+      {
+        itemId: item.compositeId,
+        itemName: item.title,
+        price: item.price,
+        storeName: item.storeName,
+        storeSlug: item.storeSlug,
+      },
+      pathname
+    );
 
     // Track cart add for demand signal and abandoned cart emails
     const dbId = parseInt(item.compositeId.match(/-(\d+)$/)?.[1] ?? "0", 10);

@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import ProductCard from "@/app/components/ProductCard";
+import TrackedStoreLink from "@/app/components/TrackedStoreLink";
+import { trackSearchResults } from "@/app/lib/firebase-analytics";
 
 type SearchProduct = {
   id: number;
@@ -25,10 +27,7 @@ function parsePrice(price: string): number {
   return Number(price.replace(/[^0-9.]/g, "")) || 0;
 }
 
-function SearchResults() {
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q") || "";
-
+function SearchResultsContent({ q }: { q: string }) {
   const [products, setProducts] = useState<SearchProduct[]>([]);
   const [designers, setDesigners] = useState<SearchDesigner[]>([]);
   const [categories, setCategories] = useState<SearchCategory[]>([]);
@@ -39,19 +38,18 @@ function SearchResults() {
   const [sort, setSort] = useState<SortOption>("relevance");
 
   useEffect(() => {
-    setSelectedStore(null);
-    setSort("relevance");
-
     if (!q.trim()) {
-      setProducts([]);
-      setDesigners([]);
-      setCategories([]);
-      setMatchedStores([]);
-      setLoading(false);
+      queueMicrotask(() => {
+        setProducts([]);
+        setDesigners([]);
+        setCategories([]);
+        setMatchedStores([]);
+        setLoading(false);
+      });
       return;
     }
 
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     fetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
       .then((res) => res.json())
       .then((data) => {
@@ -94,6 +92,33 @@ function SearchResults() {
   }, [products, selectedStore, sort]);
 
   const hasQuickLinks = designers.length > 0 || categories.length > 0 || matchedStores.length > 0;
+
+  useEffect(() => {
+    if (loading || !q.trim()) {
+      return;
+    }
+
+    trackSearchResults({
+      searchTerm: q.trim(),
+      resultsCount: products.length,
+      displayedCount: displayProducts.length,
+      storeCount: matchedStores.length,
+      designerCount: designers.length,
+      categoryCount: categories.length,
+      selectedStore,
+      sort,
+    });
+  }, [
+    categories.length,
+    designers.length,
+    displayProducts.length,
+    loading,
+    matchedStores.length,
+    products.length,
+    q,
+    selectedStore,
+    sort,
+  ]);
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
@@ -160,13 +185,16 @@ function SearchResults() {
                   <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Stores</p>
                   <div className="flex flex-wrap gap-2">
                     {matchedStores.map((s) => (
-                      <Link
+                      <TrackedStoreLink
                         key={s.slug}
                         href={`/stores/${s.slug}`}
+                        storeSlug={s.slug}
+                        storeName={s.name}
+                        surface="search_results"
                         className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {s.name}
-                      </Link>
+                      </TrackedStoreLink>
                     ))}
                   </div>
                 </div>
@@ -281,6 +309,13 @@ function SearchResults() {
       </section>
     </main>
   );
+}
+
+function SearchResults() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
+
+  return <SearchResultsContent key={q} q={q} />;
 }
 
 export default function SearchPage() {

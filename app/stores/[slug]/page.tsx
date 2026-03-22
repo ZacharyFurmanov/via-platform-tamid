@@ -13,6 +13,7 @@ import { computeProductScore } from "@/app/lib/productRanking";
 import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 import { brandMap } from "@/app/lib/brandData";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import TrackStoreView from "@/app/components/TrackStoreView";
 
 type StorePageProps = {
   params: Promise<{
@@ -113,6 +114,11 @@ export default async function StorePage({ params }: StorePageProps) {
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <TrackStoreView
+        storeSlug={store.slug}
+        storeName={store.name}
+        inventoryCount={products.length}
+      />
       {/* ================= STORE HEADER ================= */}
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
