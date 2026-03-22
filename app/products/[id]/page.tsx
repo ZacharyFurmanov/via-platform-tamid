@@ -17,7 +17,6 @@ import ProductQuestion from "@/app/components/ProductQuestion";
 import ProductAccordion from "@/app/components/ProductAccordion";
 import TrackProductView from "@/app/components/TrackProductView";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
-import { trackSelectItem } from "@/app/lib/firebase-analytics";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -411,6 +410,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               />
             </div>
 
+            <ProductQuestion
+              productTitle={product.title}
+              storeName={store.name}
+              productUrl={`https://vyaplatform.com/products/${compositeId}`}
+            />
+
             {/* Add to Cart */}
             {product.external_url ? (
               <AddToCartButton
@@ -434,12 +439,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 Coming Soon
               </button>
             )}
-
-            <ProductQuestion
-              productTitle={product.title}
-              storeName={store.name}
-              productUrl={`https://vyaplatform.com/products/${compositeId}`}
-            />
           </div>
         </div>
       </div>
@@ -475,21 +474,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     key={rec.id}
                     href={`/products/${recId}`}
                     className="group block bg-white rounded-sm overflow-hidden transition-shadow duration-300 hover:shadow-lg"
-                    onClick={() => {
-                      trackSelectItem(
-                        {
-                          itemId: recId,
-                          itemName: rec.title,
-                          price: Number(rec.price),
-                          category: recCategory,
-                          storeName: rec.store_name,
-                          storeSlug: rec.store_slug,
-                          listId: "product_recommendations",
-                          listName: "product_recommendations",
-                        },
-                        "product_recommendations"
-                      );
-                    }}
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
                       {recImages.length > 0 ? (
