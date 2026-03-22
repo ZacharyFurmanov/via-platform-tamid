@@ -13,6 +13,7 @@ type StorePortalData = {
   topFavoritedProducts: { title: string; price: number; favoriteCount: number }[];
   analytics: {
     totalClicks: number;
+    totalViews?: number;
     totalConversions: number;
     totalRevenue: number;
     topProducts: { name: string; count: number }[];
