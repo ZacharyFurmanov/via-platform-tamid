@@ -22,10 +22,6 @@
     },
     {
       "path": "/api/cron/send-insider-arrivals",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/send-insider-arrivals",
       "schedule": "0 14 * * *"
     },
     {
@@ -38,7 +34,7 @@
     },
     {
       "path": "/api/cron/approve-pilot-users",
-      "schedule": "0 10 * * *"
+      "schedule": "0 16 * * 1"
     },
     {
       "path": "/api/cron/abandoned-cart",

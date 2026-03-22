@@ -141,16 +141,16 @@ export async function approvePilotUser(email: string) {
   }
 }
 
+/**
+ * Returns the next 20 pending users to approve.
+ * Priority: most referrals first, then longest on the waitlist (oldest created_at).
+ * Called by the Monday 11 AM EST cron.
+ */
 export async function getPendingUsersToApprove(): Promise<
   { email: string; first_name: string | null }[]
 > {
   await ensureTable();
   const sql = getDb();
-  // Wait time tiers based on referral count:
-  //   0 referrals → 7 days
-  //   1 referral  → 5 days
-  //   2 referrals → 4 days
-  //   3+ referrals → 3 days
   const rows = await sql`
     SELECT pa.email, pa.first_name
     FROM pilot_access pa
@@ -161,12 +161,8 @@ export async function getPendingUsersToApprove(): Promise<
       GROUP BY referred_by
     ) refs ON refs.referred_by = pa.referral_code
     WHERE pa.status = 'pending'
-    AND (
-      (COALESCE(refs.ref_count, 0) >= 3 AND pa.created_at < NOW() - INTERVAL '3 days')
-      OR (COALESCE(refs.ref_count, 0) = 2   AND pa.created_at < NOW() - INTERVAL '4 days')
-      OR (COALESCE(refs.ref_count, 0) = 1   AND pa.created_at < NOW() - INTERVAL '5 days')
-      OR (COALESCE(refs.ref_count, 0) = 0   AND pa.created_at < NOW() - INTERVAL '7 days')
-    )
+    ORDER BY COALESCE(refs.ref_count, 0) DESC, pa.created_at ASC
+    LIMIT 20
   `;
   return rows as { email: string; first_name: string | null }[];
 }
@@ -241,6 +237,48 @@ export async function getReferralInfo(email: string): Promise<{
     referralCode,
     referralCount: Number(countRows[0].cnt),
   };
+}
+
+/**
+ * Returns all waitlist users ranked by referral count descending.
+ */
+export async function getWaitlistLeaderboard(): Promise<{
+  rank: number;
+  email: string;
+  firstName: string | null;
+  referralCode: string | null;
+  referralCount: number;
+  status: string;
+  createdAt: Date;
+}[]> {
+  await ensureTable();
+  const sql = getDb();
+  const rows = await sql`
+    SELECT
+      pa.email,
+      pa.first_name,
+      pa.referral_code,
+      pa.status,
+      pa.created_at,
+      COALESCE(refs.ref_count, 0) AS referral_count
+    FROM pilot_access pa
+    LEFT JOIN (
+      SELECT referred_by, COUNT(*) AS ref_count
+      FROM pilot_access
+      WHERE referred_by IS NOT NULL
+      GROUP BY referred_by
+    ) refs ON refs.referred_by = pa.referral_code
+    ORDER BY referral_count DESC, pa.created_at ASC
+  `;
+  return rows.map((r, i) => ({
+    rank: i + 1,
+    email: r.email as string,
+    firstName: r.first_name as string | null,
+    referralCode: r.referral_code as string | null,
+    referralCount: Number(r.referral_count),
+    status: r.status as string,
+    createdAt: new Date(r.created_at as string),
+  }));
 }
 
 /**
