@@ -25,13 +25,6 @@ type LeaderboardData = {
   entries: Entry[];
 };
 
-// Tier label based on referral count (mirrors pilot-db approval logic)
-function tierLabel(count: number): string {
-  if (count >= 3) return "3 day wait";
-  if (count === 2) return "4 day wait";
-  if (count === 1) return "5 day wait";
-  return "7 day wait";
-}
 
 export default function ReferralBoardPage() {
   const [data, setData] = useState<LeaderboardData | null>(null);
@@ -133,7 +126,7 @@ export default function ReferralBoardPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "56px 1fr 100px 120px 110px 110px",
+                  gridTemplateColumns: "56px 1fr 100px 110px 110px",
                   gap: 12,
                   padding: "12px 24px",
                   background: "#F7F3EA",
@@ -148,7 +141,6 @@ export default function ReferralBoardPage() {
                 <div>Rank</div>
                 <div>Email</div>
                 <div>Referrals</div>
-                <div>Wait Tier</div>
                 <div>Status</div>
                 <div>Joined</div>
               </div>
@@ -185,7 +177,7 @@ export default function ReferralBoardPage() {
                         {e.email}
                       </p>
                       <p style={{ color: "rgba(93,15,23,0.5)", fontSize: 12, marginTop: 2 }}>
-                        {e.referralCount} referral{e.referralCount !== 1 ? "s" : ""} · {tierLabel(e.referralCount)}
+                        {e.referralCount} referral{e.referralCount !== 1 ? "s" : ""}
                       </p>
                     </div>
 
@@ -194,7 +186,7 @@ export default function ReferralBoardPage() {
                       className="hidden sm:grid"
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "56px 1fr 100px 120px 110px 110px",
+                        gridTemplateColumns: "56px 1fr 100px 110px 110px",
                         gap: 12,
                         fontSize: 13,
                         alignItems: "center",
@@ -206,9 +198,6 @@ export default function ReferralBoardPage() {
                       </div>
                       <div style={{ color: e.referralCount > 0 ? "#5D0F17" : "rgba(93,15,23,0.35)", fontWeight: e.referralCount > 0 ? 600 : 400 }}>
                         {e.referralCount}
-                      </div>
-                      <div style={{ color: "rgba(93,15,23,0.5)", fontSize: 12 }}>
-                        {tierLabel(e.referralCount)}
                       </div>
                       <div>
                         <span style={{
