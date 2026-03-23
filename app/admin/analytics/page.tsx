@@ -1062,6 +1062,12 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
     onRefresh();
   }
 
+  async function deleteConversion(conversionId: string) {
+    if (!confirm("Permanently delete this order record? This cannot be undone.")) return;
+    await fetch(`/api/admin/conversions/${conversionId}`, { method: "DELETE" });
+    onRefresh();
+  }
+
   async function editAmount(conversionId: string, currentTotal: number) {
     const input = prompt("Enter corrected order total:", String(currentTotal));
     if (!input || isNaN(Number(input))) return;
@@ -1153,9 +1159,15 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
                     </button>
                     <button
                       onClick={() => editAmount(r.conversionId, r.orderTotal)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer" }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer", marginRight: 6 }}
                     >
                       Edit $
+                    </button>
+                    <button
+                      onClick={() => deleteConversion(r.conversionId)}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #fca5a5", borderRadius: 4, color: "#dc2626", cursor: "pointer" }}
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
