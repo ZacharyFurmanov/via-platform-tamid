@@ -1062,6 +1062,17 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
     onRefresh();
   }
 
+  async function editAmount(conversionId: string, currentTotal: number) {
+    const input = prompt("Enter corrected order total:", String(currentTotal));
+    if (!input || isNaN(Number(input))) return;
+    await fetch(`/api/admin/conversions/${conversionId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderTotal: Number(input) }),
+    });
+    onRefresh();
+  }
+
   async function saveManualOrder() {
     if (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) return;
     setSavingOrder(true);
@@ -1136,9 +1147,15 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
                   <td style={{ padding: "9px 12px", whiteSpace: "nowrap" }}>
                     <button
                       onClick={() => openMatch(r)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid rgba(93,15,23,0.3)`, borderRadius: 4, color: MAROON, cursor: "pointer", fontWeight: 600 }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid rgba(93,15,23,0.3)`, borderRadius: 4, color: MAROON, cursor: "pointer", fontWeight: 600, marginRight: 6 }}
                     >
                       {r.matched ? "Re-match" : "Match"}
+                    </button>
+                    <button
+                      onClick={() => editAmount(r.conversionId, r.orderTotal)}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer" }}
+                    >
+                      Edit $
                     </button>
                   </td>
                 </tr>
