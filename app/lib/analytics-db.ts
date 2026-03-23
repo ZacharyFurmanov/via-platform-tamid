@@ -180,9 +180,17 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
 
   // Check for duplicate
   const existing = await sql`
-    SELECT id FROM conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${conversion.storeSlug} LIMIT 1
+    SELECT id, order_total FROM conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${conversion.storeSlug} LIMIT 1
   `;
   if (existing.length > 0) {
+    // If the first webhook saved with total=0 and we now have the real total, update it
+    const existingTotal = Number(existing[0].order_total ?? 0);
+    if (conversion.orderTotal > existingTotal) {
+      await sql`
+        UPDATE conversions SET order_total = ${conversion.orderTotal}
+        WHERE order_id = ${conversion.orderId} AND store_slug = ${conversion.storeSlug}
+      `;
+    }
     return { duplicate: true };
   }
 

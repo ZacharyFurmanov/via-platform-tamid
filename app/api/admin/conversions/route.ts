@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           SELECT c.*, u.email AS user_email, u.name AS user_name
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
-          WHERE c.order_total > 0 AND c.store_slug = ${storeSlug}
+          WHERE c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
           LIMIT 200
         `
@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
           SELECT c.*, u.email AS user_email, u.name AS user_name
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
-          WHERE c.order_total > 0
           ORDER BY c.timestamp DESC
           LIMIT 200
         `
@@ -49,7 +48,7 @@ export async function GET(request: NextRequest) {
           SELECT c.*, u.email AS user_email, u.name AS user_name
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
-          WHERE c.order_total > 0 AND (c.matched = false OR c.matched IS NULL) AND c.store_slug = ${storeSlug}
+          WHERE (c.matched = false OR c.matched IS NULL) AND c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
           LIMIT 200
         `
@@ -57,7 +56,7 @@ export async function GET(request: NextRequest) {
           SELECT c.*, u.email AS user_email, u.name AS user_name
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
-          WHERE c.order_total > 0 AND (c.matched = false OR c.matched IS NULL)
+          WHERE (c.matched = false OR c.matched IS NULL)
           ORDER BY c.timestamp DESC
           LIMIT 200
         `;

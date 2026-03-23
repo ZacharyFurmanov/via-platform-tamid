@@ -104,7 +104,6 @@ export async function POST(request: NextRequest) {
   const { slug: storeSlug, name: storeName } = resolved;
 
   const orderId = String(order.id);
-  const orderTotal = parseFloat(String(order.total_price || "0"));
   const currency = (order.currency as string) || "USD";
 
   const lineItems = (order.line_items as Array<Record<string, unknown>>) || [];
@@ -114,6 +113,11 @@ export async function POST(request: NextRequest) {
     price: parseFloat(String(item.price || "0")),
     productId: item.product_id ? String(item.product_id) : undefined,
   }));
+
+  // Prefer total_price from Shopify; fall back to summing line items if missing/zero
+  const rawTotal = parseFloat(String(order.total_price || order.subtotal_price || "0"));
+  const itemsTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const orderTotal = rawTotal > 0 ? rawTotal : itemsTotal;
 
   // Try to find a matching VYA click — most recent click for this store in the
   // last 24 hours. Not a perfect match but covers the typical purchase window.

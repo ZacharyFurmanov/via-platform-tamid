@@ -203,7 +203,9 @@ export default function AdminConversionsPage() {
                     <td style={{ padding: "11px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmtDate(c.timestamp)}</td>
                     <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.storeName || c.storeSlug}</td>
                     <td style={{ padding: "11px 16px", fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{c.orderId}</td>
-                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: "#111827" }}>{fmt(c.orderTotal, c.currency)}</td>
+                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: c.orderTotal === 0 ? "#ef4444" : "#111827" }}>
+                      {c.orderTotal === 0 ? "—  (missing)" : fmt(c.orderTotal, c.currency)}
+                    </td>
                     <td style={{ padding: "11px 16px", fontSize: 12, color: "#374151" }}>
                       {c.userEmail ? (
                         <div>
