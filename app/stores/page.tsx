@@ -22,7 +22,7 @@ export default function StoresPage() {
       {/* ================= STORES GRID ================= */}
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 lg:gap-x-12 gap-y-8 sm:gap-y-24">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-16">
 
             {stores.map((store) => (
               <div key={store.slug} className="group">
@@ -41,7 +41,7 @@ export default function StoresPage() {
                         src={store.image}
                         alt={store.name}
                         fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 50vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
                     ) : (

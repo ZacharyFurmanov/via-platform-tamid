@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
 
   const sql = neon(dbUrl);
 
+  // Ensure user_id column exists on product_views before querying it
+  await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`.catch(() => {});
+
   const [
     gmvRows,
     clickRows,
@@ -37,6 +40,7 @@ export async function GET(request: NextRequest) {
     registeredUsersRows,
     waitlistRows,
     activityBreakdownRows,
+    returningUsersRows,
   ] = await Promise.all([
     // GMV — total, this 7d, prev 7d, this 30d, prev 30d
     sql`
@@ -165,6 +169,31 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites WHERE user_id IS NOT NULL)         AS store_savers,
         (SELECT COUNT(DISTINCT user_id)::int FROM conversions WHERE user_id IS NOT NULL)                   AS buyers
     `,
+
+    // Returning users — users active on 2+ distinct calendar days (views, clicks, saves, conversions)
+    sql`
+      SELECT
+        COUNT(DISTINCT user_id) FILTER (WHERE day_count_30d > 1)::int AS returning_30d,
+        COUNT(DISTINCT user_id) FILTER (WHERE day_count_7d > 1)::int  AS returning_7d
+      FROM (
+        SELECT
+          user_id,
+          COUNT(DISTINCT DATE(ts)) FILTER (WHERE ts >= NOW() - INTERVAL '30 days') AS day_count_30d,
+          COUNT(DISTINCT DATE(ts)) FILTER (WHERE ts >= NOW() - INTERVAL '7 days')  AS day_count_7d
+        FROM (
+          SELECT user_id::text, timestamp  AS ts FROM product_views    WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT user_id::text, timestamp  AS ts FROM clicks           WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT user_id::text, created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT user_id::text, created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT user_id::text, timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
+        ) activity
+        GROUP BY user_id
+      ) sub
+    `,
   ]);
 
   const g = gmvRows[0];
@@ -246,5 +275,9 @@ export async function GET(request: NextRequest) {
       waitlist: totalWaitlist,
     },
     activityBreakdown,
+    returningUsers: {
+      last7d: (returningUsersRows[0]?.returning_7d as number) ?? 0,
+      last30d: (returningUsersRows[0]?.returning_30d as number) ?? 0,
+    },
   });
 }

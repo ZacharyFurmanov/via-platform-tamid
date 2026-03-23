@@ -21,6 +21,8 @@ export async function initAnalyticsTables() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_product_views_product_id ON product_views(product_id)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_product_views_timestamp ON product_views(timestamp)`;
+  await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_product_views_user_id ON product_views(user_id) WHERE user_id IS NOT NULL`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS clicks (
@@ -267,7 +269,7 @@ export async function getConversionAnalytics(range: string) {
 /**
  * Record a product page view. Called fire-and-forget from the product page.
  */
-export async function saveProductView(productId: string): Promise<void> {
+export async function saveProductView(productId: string, userId?: string | null): Promise<void> {
   const sql = neon(getDatabaseUrl());
   // CREATE IF NOT EXISTS is idempotent — safe to call each time
   await sql`
@@ -278,7 +280,8 @@ export async function saveProductView(productId: string): Promise<void> {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_product_views_product_id ON product_views(product_id)`;
-  await sql`INSERT INTO product_views (product_id) VALUES (${productId})`;
+  await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`;
+  await sql`INSERT INTO product_views (product_id, user_id) VALUES (${productId}, ${userId ?? null})`;
 }
 
 /**

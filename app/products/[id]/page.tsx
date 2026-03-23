@@ -11,6 +11,7 @@ import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, in
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
+import BuyNowButton from "@/app/components/BuyNowButton";
 import { getProductFavoriteCount } from "@/app/lib/favorites-db";
 import { getProductCartCount } from "@/app/lib/cart-db";
 import ProductQuestion from "@/app/components/ProductQuestion";
@@ -432,14 +433,16 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     collabsLink: product.collabs_link ?? undefined,
                   }}
                 />
-                <a
-                  href={checkoutUrl || product.external_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full py-4 text-sm uppercase tracking-wide text-center border border-[#5D0F17] text-[#5D0F17] hover:bg-[#5D0F17]/5 transition mt-2"
-                >
-                  Buy Now
-                </a>
+                <BuyNowButton
+                  compositeId={compositeId}
+                  title={product.title}
+                  price={`$${product.price}`}
+                  image={productImages[0] || ""}
+                  storeName={store.name}
+                  storeSlug={store.slug}
+                  externalUrl={product.external_url || ""}
+                  checkoutUrl={checkoutUrl}
+                />
               </>
             ) : (
               <button

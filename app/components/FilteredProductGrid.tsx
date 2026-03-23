@@ -128,7 +128,7 @@ function sortProducts(
 
 const DEFAULT_FILTERS: FilterState = {
   search: "",
-  priceRange: "all",
+  selectedPrices: [],
   selectedStores: [],
   selectedCategories: [],
   selectedBrands: [],
@@ -250,9 +250,9 @@ export default function FilteredProductGrid({
     }
 
     // Price range filter
-    if (filters.priceRange !== "all") {
+    if (filters.selectedPrices.length > 0) {
       result = result.filter((p) =>
-        matchesPriceRange(p.price, filters.priceRange)
+        filters.selectedPrices.some((range) => matchesPriceRange(p.price, range))
       );
     }
 
@@ -336,7 +336,7 @@ export default function FilteredProductGrid({
       surface,
       resultCount: filteredProducts.length,
       search: filters.search,
-      priceRange: filters.priceRange,
+      selectedPrices: filters.selectedPrices,
       sort: filters.sort,
       selectedStores: filters.selectedStores,
       selectedCategories: filters.selectedCategories,
@@ -469,7 +469,7 @@ export default function FilteredProductGrid({
         <div className="text-center py-16">
           <p className="text-[#5D0F17]/70 mb-4">{emptyMessage}</p>
           {filters.search ||
-          filters.priceRange !== "all" ||
+          filters.selectedPrices.length > 0 ||
           filters.selectedStores.length > 0 ||
           filters.selectedCategories.length > 0 ||
           filters.selectedBrands.length > 0 ||
@@ -480,7 +480,7 @@ export default function FilteredProductGrid({
               onClick={() =>
                 handleFilterChange({
                   search: "",
-                  priceRange: "all",
+                  selectedPrices: [],
                   selectedStores: [],
                   selectedCategories: [],
                   selectedBrands: [],

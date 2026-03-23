@@ -24,9 +24,9 @@ type SearchResult =
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 const ANNOUNCEMENTS = [
-  { text: "Vintage & Secondhand", href: null },
   { text: "New Arrivals Added Weekly", href: "/new-arrivals" },
   { text: "NYC Pop Up March 29th! Click here for tickets", href: "https://posh.vip/e/via-nyc-pop-up" },
+  { text: "Want early access to each drop? Check out VYA Insider →", href: "/membership" },
 ];
 
 function AnnouncementBar() {

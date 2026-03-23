@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AdminNav from "@/app/components/AdminNav";
 
@@ -245,11 +246,12 @@ function fmt(date: string | null) {
 }
 
 export default function CustomersPage() {
+  const searchParams = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [approving, setApproving] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
   const [emailProgress, setEmailProgress] = useState<string | null>(null);
@@ -402,14 +404,22 @@ export default function CustomersPage() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
           {[
-            { label: "Total", value: customers.length },
-            { label: "Approved", value: approved },
-            { label: "Pending", value: pending },
-            { label: "Via Google", value: loggedIn },
+            { label: "Total", value: customers.length, filterVal: "all" as const },
+            { label: "Approved", value: approved, filterVal: "approved" as const },
+            { label: "Pending", value: pending, filterVal: "pending" as const },
+            { label: "Via Google", value: loggedIn, filterVal: null },
           ].map((s) => (
-            <div key={s.label}>
+            <div
+              key={s.label}
+              onClick={() => s.filterVal && setFilter(s.filterVal)}
+              style={{ cursor: s.filterVal ? "pointer" : "default", opacity: s.filterVal && filter === s.filterVal ? 1 : s.filterVal ? 0.85 : 1, transition: "opacity 0.15s" }}
+              onMouseEnter={e => { if (s.filterVal) (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+              onMouseLeave={e => { if (s.filterVal && filter !== s.filterVal) (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
+            >
               <p className="font-serif" style={{ fontSize: 28, color: "#5D0F17", lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>{s.label}</p>
+              <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>
+                {s.label}{s.filterVal && filter === s.filterVal ? " ●" : ""}
+              </p>
             </div>
           ))}
         </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import AdminNav from "@/app/components/AdminNav";
 
 type Conversion = {
@@ -44,9 +46,11 @@ function minsApart(a: string, b: string) {
 }
 
 export default function AdminConversionsPage() {
+  const searchParams = useSearchParams();
   const [conversions, setConversions] = useState<Conversion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"unmatched" | "all">("unmatched");
+  const initialFilter = searchParams.get("filter") === "all" ? "all" : "unmatched";
+  const [filter, setFilter] = useState<"unmatched" | "all">(initialFilter);
   const [selected, setSelected] = useState<Conversion | null>(null);
   const [candidates, setCandidates] = useState<CandidateClick[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
@@ -161,7 +165,12 @@ export default function AdminConversionsPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>Conversions</h1>
-            <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>Match purchases to VYA clicks and customers</p>
+            <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+              Match purchases to VYA clicks and customers.{" "}
+              <Link href="/admin/analytics" style={{ color: MAROON, textDecoration: "underline" }}>View revenue in Analytics →</Link>
+              {" · "}
+              <Link href="/admin/key-metrics" style={{ color: MAROON, textDecoration: "underline" }}>Key Metrics →</Link>
+            </p>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button

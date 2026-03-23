@@ -93,14 +93,22 @@ export async function GET(request: NextRequest) {
             WHERE LOWER(email) NOT IN (SELECT LOWER(email) FROM pilot_access))::int AS waitlist_only
       `,
 
-      // newSignupsThisWeek (UNION dedup by email, last 7 days)
-      sql`
-        SELECT COUNT(*)::int AS total FROM (
-          SELECT email FROM pilot_access WHERE created_at >= NOW() - INTERVAL '7 days'
-          UNION
-          SELECT email FROM waitlist WHERE signup_date >= NOW() - INTERVAL '7 days'
-        ) AS combined
-      `,
+      // newSignupsInPeriod (respects the selected range)
+      cutoffIso
+        ? sql`
+            SELECT COUNT(*)::int AS total FROM (
+              SELECT email FROM pilot_access WHERE created_at >= ${cutoffIso}
+              UNION
+              SELECT email FROM waitlist WHERE signup_date >= ${cutoffIso}
+            ) AS combined
+          `
+        : sql`
+            SELECT COUNT(*)::int AS total FROM (
+              SELECT email FROM pilot_access
+              UNION
+              SELECT email FROM waitlist
+            ) AS combined
+          `,
 
       // topProductsByClicks
       cutoffIso
@@ -160,7 +168,7 @@ export async function GET(request: NextRequest) {
       cutoffIso
         ? sql`
             WITH click_counts AS (
-              SELECT p.store_slug, COUNT(*)::int AS clicks
+              SELECT p.store_slug, COUNT(*)::int AS views
               FROM product_views pv
               JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
               WHERE pv.timestamp >= ${cutoffIso}
@@ -174,7 +182,7 @@ export async function GET(request: NextRequest) {
             )
             SELECT
               COALESCE(c.store_slug, v.store_slug) AS store,
-              COALESCE(c.clicks, 0) AS clicks,
+              COALESCE(c.views, 0) AS clicks,
               COALESCE(v.conversions, 0) AS conversions,
               COALESCE(v.revenue, 0) AS revenue
             FROM click_counts c
@@ -183,7 +191,7 @@ export async function GET(request: NextRequest) {
           `
         : sql`
             WITH click_counts AS (
-              SELECT p.store_slug, COUNT(*)::int AS clicks
+              SELECT p.store_slug, COUNT(*)::int AS views
               FROM product_views pv
               JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
               GROUP BY p.store_slug
@@ -196,7 +204,7 @@ export async function GET(request: NextRequest) {
             )
             SELECT
               COALESCE(c.store_slug, v.store_slug) AS store,
-              COALESCE(c.clicks, 0) AS clicks,
+              COALESCE(c.views, 0) AS clicks,
               COALESCE(v.conversions, 0) AS conversions,
               COALESCE(v.revenue, 0) AS revenue
             FROM click_counts c

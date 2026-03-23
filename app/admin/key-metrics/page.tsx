@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AdminNav from "@/app/components/AdminNav";
 
 const MAROON = "#5D0F17";
@@ -54,6 +55,7 @@ function MetricCard({
   trend: trendEl,
   note,
   wide,
+  href,
 }: {
   label: string;
   value: string;
@@ -61,25 +63,42 @@ function MetricCard({
   trend?: React.ReactNode;
   note?: string;
   wide?: boolean;
+  href?: string;
 }) {
-  return (
-    <div style={{
-      background: "#fff",
-      border: "1px solid #e5e7eb",
-      borderRadius: 12,
-      padding: "24px 28px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-      gridColumn: wide ? "span 2" : undefined,
-    }}>
-      <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: 0 }}>{label}</p>
+  const inner = (
+    <>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: 0 }}>{label}</p>
+        {href && <span style={{ fontSize: 11, color: MUTED, opacity: 0.6 }}>→</span>}
+      </div>
       <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>{value}</p>
       {sub && <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>{sub}</p>}
       {trendEl && <div style={{ marginTop: 2 }}>{trendEl}</div>}
       {note && <p style={{ fontSize: 11, color: "#9ca3af", margin: 0, marginTop: 4, borderTop: "1px solid #f3f4f6", paddingTop: 8 }}>{note}</p>}
-    </div>
+    </>
   );
+  const cardStyle: React.CSSProperties = {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: "24px 28px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    gridColumn: wide ? "span 2" : undefined,
+    textDecoration: "none",
+    color: "inherit",
+    transition: "box-shadow 0.15s, border-color 0.15s",
+    cursor: href ? "pointer" : "default",
+  };
+  if (href) {
+    return (
+      <Link href={href} style={cardStyle} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)"; (e.currentTarget as HTMLElement).style.borderColor = "#d1d5db"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ""; (e.currentTarget as HTMLElement).style.borderColor = "#e5e7eb"; }}>
+        {inner}
+      </Link>
+    );
+  }
+  return <div style={cardStyle}>{inner}</div>;
 }
 
 function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
@@ -119,6 +138,7 @@ type Metrics = {
   wau: { current: number; prev: number };
   mau: { current: number; prev: number; totalEverActive: number };
   stickiness: { current: number; prev: number };
+  returningUsers: { last7d: number; last30d: number };
   saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
   revenuePerUser: { value: number; buyingUsers: number };
   gmvByWeek: { week: string; gmv: number }[];
@@ -164,23 +184,28 @@ export default function KeyMetricsPage() {
             <section>
               <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Gross Merchandise Value</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px", gridColumn: "span 1" }}>
-                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>All-Time GMV</p>
+                <Link href="/admin/analytics" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px", gridColumn: "span 1", textDecoration: "none", display: "block", transition: "box-shadow 0.15s" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)")} onMouseLeave={e => (e.currentTarget.style.boxShadow = "")}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>All-Time GMV</p>
+                    <span style={{ fontSize: 11, color: MUTED, opacity: 0.6 }}>→</span>
+                  </div>
                   <p style={{ fontSize: 40, fontWeight: 700, color: MAROON, margin: "0 0 12px", lineHeight: 1 }}>{fmt$(data.gmv.total)}</p>
                   <MiniSparkline data={data.gmvByWeek} />
                   <p style={{ fontSize: 11, color: "#9ca3af", margin: "10px 0 0" }}>Weekly GMV — last 10 weeks</p>
-                </div>
+                </Link>
                 <MetricCard
                   label="GMV — Last 7 Days"
                   value={fmt$(data.gmv.last7d)}
                   trend={<TrendBadge current={data.gmv.last7d} prev={data.gmv.prev7d} fmtFn={fmt$} />}
                   note={`Previous 7 days: ${fmt$(data.gmv.prev7d)}`}
+                  href="/admin/analytics"
                 />
                 <MetricCard
                   label="GMV — Last 30 Days"
                   value={fmt$(data.gmv.last30d)}
                   trend={<TrendBadge current={data.gmv.last30d} prev={data.gmv.prev30d} fmtFn={fmt$} />}
                   note={`Previous 30 days: ${fmt$(data.gmv.prev30d)}`}
+                  href="/admin/analytics"
                 />
               </div>
             </section>
@@ -195,18 +220,21 @@ export default function KeyMetricsPage() {
                   sub={`${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalClicks)} clicks (all time)`}
                   trend={<TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
                   note="Clicks that resulted in an attributed purchase"
+                  href="/admin/conversions"
                 />
                 <MetricCard
                   label="Revenue per Buying User"
                   value={fmt$(data.revenuePerUser.value)}
                   sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} users who've purchased`}
                   note="Total GMV ÷ distinct users with at least one order"
+                  href="/admin/customers"
                 />
                 <MetricCard
                   label="Save-to-Purchase Rate"
                   value={fmtPct(data.saveToPurchase.rate)}
                   sub={`${fmtNum(data.saveToPurchase.saversBought)} of ${fmtNum(data.saveToPurchase.totalSavers)} users who saved also bought`}
                   note="Users who favorited anything and later placed an order"
+                  href="/admin/customers"
                 />
               </div>
             </section>
@@ -219,11 +247,13 @@ export default function KeyMetricsPage() {
                   label="Registered Accounts"
                   value={fmtNum(data.users.registered)}
                   note="Total users who have created an account"
+                  href="/admin/customers"
                 />
                 <MetricCard
                   label="Waitlist Signups"
                   value={fmtNum(data.users.waitlist)}
                   note="Total entries in pilot_access (pending + approved)"
+                  href="/admin/customers"
                 />
               </div>
             </section>
@@ -237,6 +267,7 @@ export default function KeyMetricsPage() {
                   value={fmtNum(data.wau.current)}
                   trend={<TrendBadge current={data.wau.current} prev={data.wau.prev} fmtFn={fmtNum} />}
                   note="Users who signed up, clicked a product, saved something, or placed an order this week."
+                  href="/admin/analytics"
                 />
                 <MetricCard
                   label="Monthly Active Users"
@@ -244,7 +275,17 @@ export default function KeyMetricsPage() {
                   sub={`${fmtNum(data.mau.totalEverActive)} total registered users ever`}
                   trend={<TrendBadge current={data.mau.current} prev={data.mau.prev} fmtFn={fmtNum} />}
                   note="Users who signed up, clicked a product, saved something, or placed an order this month."
+                  href="/admin/analytics"
                 />
+                <MetricCard
+                  label="Returning Users (30d)"
+                  value={fmtNum(data.returningUsers.last30d)}
+                  sub={`${fmtNum(data.returningUsers.last7d)} returned this week`}
+                  note="Logged-in users who clicked through on 2+ different days"
+                  href="/admin/customers"
+                />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 16 }}>
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
                   <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>Stickiness (WAU/MAU)</p>
                   <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 6px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
@@ -275,15 +316,15 @@ export default function KeyMetricsPage() {
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                     {[
-                      { label: "Clicked a product", value: data.activityBreakdown.clickers },
-                      { label: "Saved a product", value: data.activityBreakdown.productSavers },
-                      { label: "Saved a store", value: data.activityBreakdown.storeSavers },
-                      { label: "Made a purchase", value: data.activityBreakdown.buyers },
+                      { label: "Clicked a product", value: data.activityBreakdown.clickers, href: "/admin/analytics" },
+                      { label: "Saved a product", value: data.activityBreakdown.productSavers, href: "/admin/customers" },
+                      { label: "Saved a store", value: data.activityBreakdown.storeSavers, href: "/admin/customers" },
+                      { label: "Made a purchase", value: data.activityBreakdown.buyers, href: "/admin/conversions" },
                     ].map((s) => (
-                      <div key={s.label}>
+                      <Link key={s.label} href={s.href} style={{ textDecoration: "none", display: "block", padding: "8px", borderRadius: 8, transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                         <p style={{ fontSize: 28, fontWeight: 700, color: MAROON, lineHeight: 1, margin: "0 0 4px" }}>{fmtNum(s.value)}</p>
-                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{s.label}</p>
-                      </div>
+                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{s.label} →</p>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -296,17 +337,24 @@ export default function KeyMetricsPage() {
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "28px 32px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0 }}>
                   {[
-                    { label: "Approved Pilots", value: fmtNum(data.insiderConversion.approvedPilots), note: "Users with platform access" },
-                    { label: "→", value: "", note: "" },
-                    { label: "Insider Members", value: fmtNum(data.insiderConversion.insiderMembers), note: "Paying subscribers" },
+                    { label: "Approved Pilots", value: fmtNum(data.insiderConversion.approvedPilots), note: "Users with platform access", href: "/admin/customers" },
+                    { label: "→", value: "", note: "", href: null },
+                    { label: "Insider Members", value: fmtNum(data.insiderConversion.insiderMembers), note: "Paying subscribers", href: "/admin/customers" },
                     {
                       label: "Conversion Rate",
                       value: fmtPct(data.insiderConversion.rate),
                       note: "Pilots who became Insiders",
+                      href: "/admin/customers",
                     },
                   ].map((item, i) =>
                     item.label === "→" ? (
                       <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#d1d5db" }}>→</div>
+                    ) : item.href ? (
+                      <Link key={i} href={item.href} style={{ padding: "0 8px", textDecoration: "none", borderRadius: 8, display: "block", transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>
+                        <p style={{ fontSize: 32, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{item.value}</p>
+                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{item.note} →</p>
+                      </Link>
                     ) : (
                       <div key={i} style={{ padding: "0 8px" }}>
                         <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>

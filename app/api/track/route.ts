@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     if (!productId || typeof productId !== "string") {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
-    await saveProductView(productId);
+    const session = await auth().catch(() => null);
+    const userId = session?.user?.id ?? null;
+    await saveProductView(productId, userId);
   } catch {
     // Silently swallow — view tracking should never break the page
   }

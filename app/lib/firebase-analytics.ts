@@ -61,7 +61,7 @@ type FilterChangePayload = {
   surface: string;
   resultCount: number;
   search?: string;
-  priceRange?: string;
+  selectedPrices?: string[];
   sort?: string;
   selectedStores?: string[];
   selectedCategories?: string[];
@@ -319,7 +319,7 @@ export async function trackFilterChange(params: FilterChangePayload) {
     surface: params.surface,
     result_count: params.resultCount,
     search_term: params.search?.trim() || undefined,
-    price_range: params.priceRange,
+    price_range: params.selectedPrices?.join(",") || undefined,
     sort: params.sort,
     selected_store_count: params.selectedStores?.length ?? 0,
     selected_category_count: params.selectedCategories?.length ?? 0,

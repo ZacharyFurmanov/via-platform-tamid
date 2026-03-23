@@ -141,20 +141,33 @@ const CREAM = "#F7F3EA";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div
-      style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px" }}
-    >
-      <p style={{ fontSize: 11, color: MAROON, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px" }}>
-        {label}
-      </p>
+function StatCard({ label, value, sub, href }: { label: string; value: string | number; sub?: string; href?: string }) {
+  const inner = (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <p style={{ fontSize: 11, color: MAROON, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px" }}>
+          {label}
+        </p>
+        {href && <span style={{ fontSize: 11, color: MAROON, opacity: 0.4 }}>→</span>}
+      </div>
       <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
         {value}
       </p>
       {sub && (
         <p style={{ fontSize: 10, color: MAROON, opacity: 0.4, margin: "4px 0 0" }}>{sub}</p>
       )}
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px", textDecoration: "none", display: "block", transition: "opacity 0.15s" }} onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")} onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px" }}>
+      {inner}
     </div>
   );
 }
@@ -320,26 +333,32 @@ export default function DeepAnalyticsPage() {
             {/* Signups group */}
             <p style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Signups</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
-              <StatCard label="Total (all sources)" value={data.kpis.totalCustomers.toLocaleString()} />
-              <StatCard label="Pilot Users" value={data.kpis.pilotTotal.toLocaleString()} />
-              <StatCard label="Approved" value={data.kpis.approvedCustomers.toLocaleString()} />
-              <StatCard label="Waitlist Only" value={data.kpis.waitlistOnly.toLocaleString()} />
-              <StatCard label="New This Week" value={data.kpis.newSignupsThisWeek.toLocaleString()} />
+              <StatCard label="Total (all sources)" value={data.kpis.totalCustomers.toLocaleString()} href="/admin/customers" />
+              <StatCard label="Pilot Users" value={data.kpis.pilotTotal.toLocaleString()} href="/admin/customers" />
+              <StatCard label="Approved" value={data.kpis.approvedCustomers.toLocaleString()} href="/admin/customers" />
+              <StatCard label="Waitlist Only" value={data.kpis.waitlistOnly.toLocaleString()} href="/admin/customers" />
+              <StatCard
+                label={range === "7d" ? "New This Week" : range === "30d" ? "New This Month" : "New (All Time)"}
+                value={data.kpis.newSignupsThisWeek.toLocaleString()}
+                href="/admin/customers"
+              />
             </div>
             {/* Activity group */}
             <p style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Activity</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 36 }}>
-              <StatCard label="Total Clicks" value={data.kpis.totalClicks.toLocaleString()} />
+              <StatCard label="Store Click-throughs" value={data.kpis.totalClicks.toLocaleString()} sub="clicks out to store pages" />
               <StatCard label="Product Views" value={data.kpis.totalViews.toLocaleString()} />
               <StatCard
                 label="Orders"
                 value={data.kpis.totalConversions.toLocaleString()}
                 sub={data.kpis.collabsTotalOrders ? `${data.kpis.collabsTotalOrders} via Shopify Collabs` : undefined}
+                href="/admin/conversions"
               />
               <StatCard
                 label="Revenue"
                 value={formatRevenue(data.kpis.totalRevenue)}
                 sub={data.kpis.collabsEstimatedRevenue ? `~${formatRevenue(data.kpis.collabsEstimatedRevenue)} est. from Collabs` : undefined}
+                href="/admin/key-metrics"
               />
             </div>
 
@@ -402,26 +421,35 @@ export default function DeepAnalyticsPage() {
               {/* Matched / unmatched split */}
               <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                 {[
-                  { label: "Total Orders", value: data.kpis.totalConversions, sub: null },
-                  { label: "Attributed to VYA Click", value: data.kpis.matchedConversions, sub: "matched" },
-                  { label: "Unattributed", value: data.kpis.unmatchedConversions, sub: "unmatched" },
+                  { label: "Total Orders", value: data.kpis.totalConversions, sub: null, href: "/admin/conversions?filter=all" },
+                  { label: "Attributed to VYA Click", value: data.kpis.matchedConversions, sub: "matched", href: "/admin/conversions?filter=all" },
+                  { label: "Unattributed", value: data.kpis.unmatchedConversions, sub: "unmatched", href: "/admin/conversions?filter=unmatched" },
                 ].map((s) => (
-                  <div
+                  <Link
                     key={s.label}
+                    href={s.href}
                     style={{
                       flex: "1 1 140px",
                       background: s.sub === "matched" ? "#dcfce7" : s.sub === "unmatched" ? "#fef9c3" : CREAM,
                       borderRadius: 8,
                       padding: "14px 18px",
+                      textDecoration: "none",
+                      display: "block",
+                      transition: "opacity 0.15s",
                     }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                   >
-                    <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
-                      {s.value}
-                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
+                        {s.value}
+                      </p>
+                      <span style={{ fontSize: 11, color: MAROON, opacity: 0.4 }}>→</span>
+                    </div>
                     <p style={{ fontSize: 11, color: MAROON, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
                       {s.label}
                     </p>
-                  </div>
+                  </Link>
                 ))}
               </div>
 
@@ -435,8 +463,9 @@ export default function DeepAnalyticsPage() {
                 <SectionTitle>Referral Leaderboard</SectionTitle>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {data.referralLeaderboard.map((entry, i) => (
-                    <div
+                    <Link
                       key={entry.code}
+                      href={`/admin/customers?search=${encodeURIComponent(entry.email)}`}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -445,7 +474,11 @@ export default function DeepAnalyticsPage() {
                         backgroundColor: i === 0 ? CREAM : "white",
                         border: `1px solid ${CREAM}`,
                         borderRadius: 6,
+                        textDecoration: "none",
+                        transition: "opacity 0.15s",
                       }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                     >
                       <span style={{ fontSize: 12, fontWeight: 700, color: MAROON, opacity: 0.4, width: 20, textAlign: "right" }}>
                         {i + 1}
@@ -474,7 +507,7 @@ export default function DeepAnalyticsPage() {
                       >
                         {entry.referralCount} referral{entry.referralCount === 1 ? "" : "s"}
                       </span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

@@ -8,7 +8,7 @@ export type SortOption = "popular" | "newest" | "price-asc" | "price-desc";
 
 export type FilterState = {
   search: string;
-  priceRange: PriceRange;
+  selectedPrices: PriceRange[];
   selectedStores: string[];
   selectedCategories: string[];
   selectedBrands: string[];
@@ -68,7 +68,7 @@ export default function ProductFilter({
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
-    priceRange: initialFilters?.priceRange ?? "all",
+    selectedPrices: initialFilters?.selectedPrices ?? [],
     selectedStores: initialFilters?.selectedStores ?? [],
     selectedCategories: initialFilters?.selectedCategories ?? [],
     selectedBrands: initialFilters?.selectedBrands ?? [],
@@ -184,10 +184,21 @@ export default function ProductFilter({
     [filters.selectedColors, updateFilters]
   );
 
+  const togglePrice = useCallback(
+    (range: PriceRange) => {
+      const current = filters.selectedPrices;
+      const updated = current.includes(range)
+        ? current.filter((r) => r !== range)
+        : [...current, range];
+      updateFilters({ selectedPrices: updated });
+    },
+    [filters.selectedPrices, updateFilters]
+  );
+
   const clearFilters = useCallback(() => {
     const cleared: FilterState = {
       search: "",
-      priceRange: "all",
+      selectedPrices: [],
       selectedStores: [],
       selectedCategories: [],
       selectedBrands: [],
@@ -202,7 +213,7 @@ export default function ProductFilter({
 
   const hasActiveFilters =
     filters.search ||
-    filters.priceRange !== "all" ||
+    filters.selectedPrices.length > 0 ||
     filters.selectedStores.length > 0 ||
     filters.selectedCategories.length > 0 ||
     filters.selectedBrands.length > 0 ||
@@ -212,7 +223,7 @@ export default function ProductFilter({
 
   const activeFilterCount =
     (filters.search ? 1 : 0) +
-    (filters.priceRange !== "all" ? 1 : 0) +
+    filters.selectedPrices.length +
     filters.selectedStores.length +
     filters.selectedCategories.length +
     filters.selectedBrands.length +
@@ -294,12 +305,14 @@ export default function ProductFilter({
                 setPriceDropdownOpen(!wasOpen);
               }}
               className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                filters.priceRange !== "all"
+                filters.selectedPrices.length > 0
                   ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
                   : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
               }`}
             >
-              {priceRangeLabels[filters.priceRange]}
+              {filters.selectedPrices.length > 0
+                ? `Price (${filters.selectedPrices.length})`
+                : "Price"}
               <ChevronDown size={16} />
             </button>
             {priceDropdownOpen && (
@@ -309,21 +322,21 @@ export default function ProductFilter({
                   onClick={() => setPriceDropdownOpen(false)}
                 />
                 <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] animate-fade-in">
-                  {(Object.keys(priceRangeLabels) as PriceRange[]).map(
+                  {(["under100", "100to250", "250to500", "over500"] as PriceRange[]).map(
                     (range) => (
                       <button
                         key={range}
-                        onClick={() => {
-                          updateFilters({ priceRange: range });
-                          setPriceDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition ${
-                          filters.priceRange === range
+                        onClick={() => togglePrice(range)}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
+                          filters.selectedPrices.includes(range)
                             ? "bg-[#D8CABD]/30 font-medium"
                             : ""
                         }`}
                       >
                         {priceRangeLabels[range]}
+                        {filters.selectedPrices.includes(range) && (
+                          <span className="w-3.5 h-3.5 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-[10px]">✓</span>
+                        )}
                       </button>
                     )
                   )}
@@ -749,15 +762,15 @@ export default function ProductFilter({
               <MobileSection
                 id="price"
                 label="Price Range"
-                activeCount={filters.priceRange !== "all" ? 1 : 0}
+                activeCount={filters.selectedPrices.length}
               >
                 <div className="grid grid-cols-2 gap-2">
-                  {(Object.keys(priceRangeLabels) as PriceRange[]).map((range) => (
+                  {(["under100", "100to250", "250to500", "over500"] as PriceRange[]).map((range) => (
                     <button
                       key={range}
-                      onClick={() => updateFilters({ priceRange: range })}
+                      onClick={() => togglePrice(range)}
                       className={`px-3 py-2 text-sm border transition ${
-                        filters.priceRange === range
+                        filters.selectedPrices.includes(range)
                           ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
                           : "border-[#5D0F17]/20 bg-[#F7F3EA] hover:border-[#5D0F17]"
                       }`}

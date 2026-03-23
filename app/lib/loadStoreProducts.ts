@@ -11,7 +11,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   // Jewelry checked first — an earring/necklace/ring title should never be
   // misclassified as bags or clothing even if it shares a designer keyword.
   ["accessories", [
-    "earring", "necklace", "bracelet", "ring", "rings", "pendant",
+    "earring", "necklace", "bracelet", "pendant",
     "brooch", "bangle", "choker", "locket", "cuff bracelet", "anklet",
   ]],
   ["shoes", [
@@ -74,7 +74,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   // Accessories checked last so clothing keywords always win
   ["accessories", [
     // Jewelry (earring/necklace/bracelet/ring/pendant/brooch/bangle/choker/locket/anklet/cuff bracelet handled above)
-    "charm", "signet", "lapel pin", "hair pin",
+    "ring", "rings", "charm", "signet", "lapel pin", "hair pin",
     "vermeil", "gemstone", "topaz", "sapphire", "diamond",
     "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
     "turquoise", "onyx",
