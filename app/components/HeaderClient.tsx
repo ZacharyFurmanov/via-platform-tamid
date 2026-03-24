@@ -405,7 +405,7 @@ export default function HeaderClient({
                       {COLLECTIONS.map((col) => (
                         <Link
                           key={col.slug}
-                          href={col.slug === "editors-picks" ? "/editors-picks" : `/collections/${col.slug}`}
+                          href={col.href ?? `/collections/${col.slug}`}
                           onClick={() => setCollectionsDropdownOpen(false)}
                           className="block px-6 py-2.5 text-sm normal-case tracking-normal hover:bg-[#D8CABD]/50 transition-colors"
                         >
@@ -619,7 +619,7 @@ export default function HeaderClient({
                       {COLLECTIONS.map((col) => (
                         <Link
                           key={col.slug}
-                          href={col.slug === "editors-picks" ? "/editors-picks" : `/collections/${col.slug}`}
+                          href={col.href ?? `/collections/${col.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
                           className="block py-2.5 text-base text-[#5D0F17]/70"
                         >
