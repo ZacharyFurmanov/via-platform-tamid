@@ -644,6 +644,29 @@ export const stores = [
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
+  {
+    slug: "carly",
+    dashboardToken: "cc-4e8b2f1a9d7c",
+    name: "Carly's Shoe Collection",
+    location: "",
+    description:
+      "Carly's Shoe Collection by Carly Christina is a curated destination for vintage and secondhand shoes, hand-selected for their style, quality, and character.",
+    website: "",
+    dataSource: "carly",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "",
+    authenticityPolicy:
+      "Every pair is personally selected and inspected before listing. Each item is accurately described so you know exactly what you're getting.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**

@@ -24,9 +24,9 @@ type SearchResult =
   | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 const ANNOUNCEMENTS = [
-  { text: "New Arrivals Added Weekly", href: "/new-arrivals" },
-  { text: "NYC Pop Up March 29th! Click here for tickets", href: "https://posh.vip/e/via-nyc-pop-up" },
-  { text: "Want early access to each drop? Check out VYA Insider →", href: "/membership" },
+  { text: "New Arrivals Added Weekly", short: "New Arrivals Weekly", href: "/new-arrivals" },
+  { text: "NYC Pop Up March 29th! Click here for tickets", short: "NYC Pop Up March 29th →", href: "https://posh.vip/e/via-nyc-pop-up" },
+  { text: "Want early access to each drop? Check out VYA Insider →", short: "Early Access: VYA Insider →", href: "/membership" },
 ];
 
 function AnnouncementBar() {
@@ -40,13 +40,19 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden">
-      <div className="relative h-full flex items-center">
+    <div className="fixed top-0 z-50 w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden px-4">
+      <div className="relative h-full flex items-center w-full justify-center">
         {ANNOUNCEMENTS.map((item, i) => {
           const isActive = i === index;
-          const className = `transition-all duration-500 ease-in-out ${
+          const className = `whitespace-nowrap transition-all duration-500 ease-in-out ${
             isActive ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full absolute"
           }`;
+          const content = (
+            <>
+              <span className="hidden sm:inline">{item.text}</span>
+              <span className="sm:hidden">{item.short ?? item.text}</span>
+            </>
+          );
           return item.href ? (
             <Link
               key={i}
@@ -55,10 +61,10 @@ function AnnouncementBar() {
               rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
               className={`${className} hover:text-[#5D0F17]/70`}
             >
-              {item.text}
+              {content}
             </Link>
           ) : (
-            <span key={i} className={className}>{item.text}</span>
+            <span key={i} className={className}>{content}</span>
           );
         })}
       </div>

@@ -4,7 +4,7 @@ import { getNewArrivals } from "@/app/lib/db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { deriveSize } from "@/app/lib/inventory";
-import MixedProductGrid from "@/app/components/MixedProductGrid";
+import ProductCard from "@/app/components/ProductCard";
 import { auth } from "@/app/lib/auth";
 import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
@@ -14,12 +14,13 @@ export default async function NewArrivalsPage() {
     ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
     : false;
 
-  const products = await getNewArrivals(500, 7, isMember);
+  const products = await getNewArrivals(500, 7, isMember, true);
 
   const gridProducts = products.map((p) => ({
     ...p,
     categoryLabel: categoryMap[inferCategoryFromTitle(p.title)],
     size: deriveSize(p),
+    images: p.images ? JSON.parse(p.images) as string[] : [],
   }));
 
   return (
@@ -35,12 +36,29 @@ export default async function NewArrivalsPage() {
 
       <section className="py-12 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          {products.length === 0 ? (
+          {gridProducts.length === 0 ? (
             <p className="text-[#5D0F17]/50 text-sm">
               No new arrivals right now. Check back soon.
             </p>
           ) : (
-            <MixedProductGrid products={gridProducts} from="/new-arrivals" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {gridProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={`${product.store_slug}-${product.id}`}
+                  dbId={product.id}
+                  name={product.title}
+                  price={`$${Math.round(Number(product.price))}`}
+                  category={product.categoryLabel}
+                  storeName={product.store_name}
+                  storeSlug={product.store_slug}
+                  image={product.image || ""}
+                  images={product.images}
+                  size={product.size}
+                  from="new-arrivals"
+                />
+              ))}
+            </div>
           )}
         </div>
       </section>

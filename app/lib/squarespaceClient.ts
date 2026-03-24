@@ -113,74 +113,100 @@ export async function parseSquarespaceJSON(
   shopUrl: string,
   storeName: string
 ): Promise<SquarespaceResult> {
-  const jsonUrl = shopUrl.replace(/\?.*$/, "") + "?format=json";
-
-  const response = await fetch(jsonUrl, {
-    headers: {
-      "User-Agent": "VYA-Sync/1.0",
-      Accept: "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch Squarespace JSON: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const data = await response.json();
-  const items: SquarespaceItem[] = data.items || [];
+  const baseJsonUrl = shopUrl.replace(/\?.*$/, "") + "?format=json";
   const products: SquarespaceProduct[] = [];
   let skippedCount = 0;
 
   // Derive base URL from the shop URL (e.g., "https://www.leivintage.com")
   const baseUrl = new URL(shopUrl).origin;
 
-  for (const item of items) {
-    const title = item.title?.trim();
-    if (!title) continue;
+  // Squarespace returns all items from the offset onwards, but caps each
+  // response at ~120 items. Paginate by setting offset = total items received
+  // so far, until we get an empty response.
+  const seenTitles = new Set<string>();
+  let offset = 0;
+  let totalFetched = 0;
 
-    // Get price from first variant (Squarespace stores prices in cents)
-    const variant = item.variants?.[0];
-    if (!variant) continue;
+  while (true) {
+    const jsonUrl = offset === 0 ? baseJsonUrl : `${baseJsonUrl}&offset=${offset}`;
 
-    const price = (variant.onSale ? variant.salePrice : variant.price) / 100;
-    const compareAtPrice = variant.onSale ? variant.price / 100 : null;
-    if (price <= 0) continue;
+    const response = await fetch(jsonUrl, {
+      headers: {
+        "User-Agent": "VYA-Sync/1.0",
+        Accept: "application/json",
+      },
+    });
 
-    // Skip sold-out items
-    if (isSoldOut(item)) {
-      skippedCount++;
-      continue;
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch Squarespace JSON: ${response.status} ${response.statusText}`
+      );
     }
 
-    // Build full URL
-    const path = item.fullUrl || (item.urlId ? `/shop/p/${item.urlId}` : null);
-    if (!path) continue;
-    const externalUrl = path.startsWith("http") ? path : `${baseUrl}${path}`;
+    const data = await response.json();
+    const items: SquarespaceItem[] = data.items || [];
 
-    // Image URLs — primary asset + gallery sub-items
-    const image = item.assetUrl || null;
-    const galleryUrls = (item.items || [])
-      .map((gi) => gi.assetUrl)
-      .filter((url): url is string => !!url);
-    const images =
-      galleryUrls.length > 0
-        ? galleryUrls
-        : image
-          ? [image]
-          : [];
+    if (items.length === 0) break;
 
-    // Product description (HTML body from Squarespace)
-    const description = item.body || item.excerpt || null;
+    totalFetched += items.length;
+    // Deduplicate across pages (Squarespace may overlap on page boundaries)
+    let newItemsOnPage = 0;
 
-    // Extract size: tags first, then title, then description body
-    const size =
-      extractSizeFromTags(item.tags || [])
-      ?? extractSizeFromText(title)
-      ?? extractSizeFromText(description);
+    for (const item of items) {
+      const title = item.title?.trim();
+      if (!title) continue;
+      if (seenTitles.has(title)) continue;
+      seenTitles.add(title);
+      newItemsOnPage++;
 
-    products.push({ title, price, compareAtPrice, image, images, externalUrl, store: storeName, description, size });
+      // Get price from first variant (Squarespace stores prices in cents)
+      const variant = item.variants?.[0];
+      if (!variant) continue;
+
+      const price = (variant.onSale ? variant.salePrice : variant.price) / 100;
+      const compareAtPrice = variant.onSale ? variant.price / 100 : null;
+      if (price <= 0) continue;
+
+      // Skip sold-out items
+      if (isSoldOut(item)) {
+        skippedCount++;
+        continue;
+      }
+
+      // Build full URL
+      const path = item.fullUrl || (item.urlId ? `/shop/p/${item.urlId}` : null);
+      if (!path) continue;
+      const externalUrl = path.startsWith("http") ? path : `${baseUrl}${path}`;
+
+      // Image URLs — gallery sub-items (items[].assetUrl) are proper image URLs.
+      // item.assetUrl can be a non-image container URL on some Squarespace stores,
+      // so always prefer gallery images and only fall back to assetUrl if empty.
+      const galleryUrls = (item.items || [])
+        .map((gi: { assetUrl?: string }) => gi.assetUrl)
+        .filter((url): url is string => !!url);
+      const fallbackAsset = (item.assetUrl && /\.(jpe?g|png|gif|webp)/i.test(item.assetUrl))
+        ? item.assetUrl
+        : null;
+      const images = galleryUrls.length > 0 ? galleryUrls : (fallbackAsset ? [fallbackAsset] : []);
+      const image = images[0] || null;
+
+      // Product description (HTML body from Squarespace)
+      const description = item.body || item.excerpt || null;
+
+      // Extract size: tags first, then title, then description body
+      const size =
+        extractSizeFromTags(item.tags || [])
+        ?? extractSizeFromText(title)
+        ?? extractSizeFromText(description);
+
+      products.push({ title, price, compareAtPrice, image, images, externalUrl, store: storeName, description, size });
+    }
+
+    // If this page had no new items, we've reached the end
+    if (newItemsOnPage === 0) break;
+
+    // Advance offset to fetch items beyond what we've received so far
+    offset = totalFetched;
   }
 
   return { products, skippedCount };

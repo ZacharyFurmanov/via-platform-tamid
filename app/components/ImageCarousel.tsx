@@ -129,7 +129,7 @@ export default function ImageCarousel({
   if (variant === "card") {
     return (
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 group/carousel cursor-grab active:cursor-grabbing"
+        className="relative aspect-[3/4] w-full overflow-hidden group/carousel cursor-grab active:cursor-grabbing"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}
@@ -137,10 +137,6 @@ export default function ImageCarousel({
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
         {renderImages(600, "object-center")}
-
-        {safeImages[0] === "/placeholder.jpg" && (
-          <div className="absolute inset-0 bg-[#D8CABD]/50 z-10" />
-        )}
 
         {isEditorsPick && (
           <div className="hidden sm:block absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">

@@ -6,6 +6,7 @@ import {
 } from "@/app/lib/db";
 import { getInsiderUserEmails, initMembershipColumns } from "@/app/lib/membership-db";
 import { sendInsiderNewArrivalsEmail } from "@/app/lib/email";
+import { getSetting, saveSetting } from "@/app/lib/settings-db";
 
 // Allow up to 5 minutes for bulk sending
 export const maxDuration = 300;
@@ -22,6 +23,20 @@ export async function GET(request: Request) {
   try {
     await initDatabase();
     await initMembershipColumns();
+
+    // Only send one insider email per day — prevent duplicates from re-runs
+    const lastSentRaw = await getSetting("insider_arrivals_last_sent_at");
+    if (lastSentRaw) {
+      const lastSent = new Date(lastSentRaw);
+      const hoursSince = (Date.now() - lastSent.getTime()) / (1000 * 60 * 60);
+      if (hoursSince < 23) {
+        return NextResponse.json({
+          ok: true,
+          message: `Insider email already sent ${Math.round(hoursSince)}h ago — skipping.`,
+          skipped: true,
+        });
+      }
+    }
 
     const [products, members] = await Promise.all([
       getUnnotifiedInsiderProducts(50),
@@ -51,6 +66,7 @@ export async function GET(request: Request) {
     // Mark as notified BEFORE sending — prevents re-sending if the bulk email
     // send times out or partially fails.
     await markProductsAsInsiderNotified(products.map((p) => p.id));
+    await saveSetting("insider_arrivals_last_sent_at", new Date().toISOString());
 
     const { sent, failed } = await sendInsiderNewArrivalsEmail(members, products);
 

@@ -138,27 +138,27 @@ export default function ProductCard({
         <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} />
 
         {/* Product info */}
-        <div className="pt-2 sm:pt-3 pb-1 sm:pb-2">
-          <p className="text-[9px] sm:text-xs uppercase tracking-wide text-[#5D0F17]/50 mb-0.5 sm:mb-1 transition-colors duration-300 group-hover:text-[#5D0F17]/80">
-            {storeName}
-          </p>
-
-          <h3 className="font-serif text-xs sm:text-base text-[#5D0F17] leading-snug line-clamp-2 mb-0.5">
+        <div className="pt-3 pb-1 sm:pb-2">
+          <h3 className="font-semibold text-xs sm:text-sm text-[#5D0F17] leading-snug line-clamp-2 mb-1">
             {stripSizeFromTitle(name, size)}
           </h3>
 
           {size && (
-            <p className="text-[9px] sm:text-[11px] uppercase tracking-wide text-[#5D0F17]/50 mb-0.5">
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/50 mb-1">
               Size: {expandSize(size, category, name)}
             </p>
           )}
 
           <div className="flex items-baseline gap-2">
-            <p className="text-xs sm:text-sm text-[#5D0F17]/80">{price}</p>
+            <p className="text-xs sm:text-sm font-medium text-[#5D0F17]">{price}</p>
             {compareAtPrice && (
               <p className="text-xs sm:text-sm text-[#5D0F17]/40 line-through">{compareAtPrice}</p>
             )}
           </div>
+
+          <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/40 mt-1">
+            {storeName}
+          </p>
         </div>
       </Link>
 
