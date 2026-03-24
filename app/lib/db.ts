@@ -380,24 +380,30 @@ export async function getNewArrivals(
     // Items within the 24-hour window are exclusively in the VYA Insider section.
     const result = insiderNotifiedOnly
       ? await sql`
-          SELECT * FROM products
-          WHERE created_at IS NOT NULL
-            AND created_at >= NOW() - make_interval(days => ${days})
-            AND created_at <= NOW() - interval '24 hours'
-            AND insider_notified = TRUE
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND title NOT ILIKE '%gift card%'
-          ORDER BY created_at DESC
+          SELECT p.*, COUNT(c.id) AS click_count
+          FROM products p
+          LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
+          WHERE p.created_at IS NOT NULL
+            AND p.created_at >= NOW() - make_interval(days => ${days})
+            AND p.created_at <= NOW() - interval '24 hours'
+            AND p.insider_notified = TRUE
+            AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+            AND p.title NOT ILIKE '%gift card%'
+          GROUP BY p.id
+          ORDER BY click_count DESC, p.created_at DESC
           LIMIT ${limit}
         `
       : await sql`
-          SELECT * FROM products
-          WHERE created_at IS NOT NULL
-            AND created_at >= NOW() - make_interval(days => ${days})
-            AND created_at <= NOW() - interval '24 hours'
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND title NOT ILIKE '%gift card%'
-          ORDER BY created_at DESC
+          SELECT p.*, COUNT(c.id) AS click_count
+          FROM products p
+          LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
+          WHERE p.created_at IS NOT NULL
+            AND p.created_at >= NOW() - make_interval(days => ${days})
+            AND p.created_at <= NOW() - interval '24 hours'
+            AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+            AND p.title NOT ILIKE '%gift card%'
+          GROUP BY p.id
+          ORDER BY click_count DESC, p.created_at DESC
           LIMIT ${limit}
         `;
 
