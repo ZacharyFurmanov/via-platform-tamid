@@ -17,6 +17,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const testEmail = searchParams.get("testEmail");
+
     // Determine the window: from last send (or 7 days ago) to now
     const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
     const since = lastSentRaw
@@ -51,7 +54,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, message: "No new arrivals this week.", sent: 0 });
     }
 
-    const emails = await getApprovedPilotEmails();
+    const emails = testEmail ? [testEmail] : await getApprovedPilotEmails();
 
     if (emails.length === 0) {
       return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
@@ -59,10 +62,12 @@ export async function GET(request: Request) {
 
     const { sent, failed } = await sendNewArrivalsEmail(emails, products);
 
-    // Save the send time so next Tuesday covers from now → next Tuesday
-    await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
+    // Don't update the timestamp for test sends
+    if (!testEmail) {
+      await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
+    }
 
-    return NextResponse.json({ ok: true, since: sinceIso, products: products.length, sent, failed });
+    return NextResponse.json({ ok: true, since: sinceIso, products: products.length, sent, failed, test: !!testEmail });
   } catch (err) {
     console.error("New arrivals cron error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
