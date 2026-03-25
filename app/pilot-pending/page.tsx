@@ -9,7 +9,6 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
 export default function PilotPendingPage() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referralCount, setReferralCount] = useState(0);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -17,7 +16,6 @@ export default function PilotPendingPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.referralCode) setReferralCode(data.referralCode);
-        if (typeof data.referralCount === "number") setReferralCount(data.referralCount);
       })
       .catch(() => {});
   }, []);
@@ -55,40 +53,12 @@ export default function PilotPendingPage() {
             You&apos;re added to the wait. We&apos;ll let you know when you can start shopping our pilot.
           </p>
 
-          <p className="text-sm text-[#5D0F17]/40 leading-relaxed mb-8">
-            Refer friends to move up faster — the more friends you refer, the sooner you&apos;re in.
-          </p>
-
           {/* Referral section */}
           {referralCode && (
             <div className="bg-[#F7F3EA] px-6 py-6 mb-8 text-left">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-3">
                 Your referral link
               </p>
-
-              {/* Progress */}
-              <div className="flex flex-col gap-2 mb-4">
-                {[
-                  { threshold: 1, days: 5, label: "1 friend" },
-                  { threshold: 2, days: 4, label: "2 friends" },
-                  { threshold: 3, days: 3, label: "3+ friends" },
-                ].map(({ threshold, days, label }) => (
-                  <div key={threshold} className="flex items-center gap-3">
-                    <div
-                      className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                        referralCount >= threshold
-                          ? "bg-[#5D0F17] border-[#5D0F17]"
-                          : "border-[#5D0F17]/30 bg-transparent"
-                      }`}
-                    />
-                    <p className="text-xs text-[#5D0F17]/60">
-                      {referralCount >= threshold
-                        ? `${label} referred — ${days}-day wait unlocked`
-                        : `${label} = ${days}-day wait`}
-                    </p>
-                  </div>
-                ))}
-              </div>
 
               {/* Link + copy */}
               <div className="flex items-stretch border border-[#5D0F17]/20">

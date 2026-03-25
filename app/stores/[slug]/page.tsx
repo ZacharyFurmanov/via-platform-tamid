@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { auth } from "@/app/lib/auth";
 import { stores } from "@/app/lib/stores";
 import { loadStoreProducts } from "@/app/lib/loadStoreProducts";
+import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { StoreProduct } from "@/app/lib/types";
 import { categoryMap, clothingSlugs } from "@/app/lib/categoryMap";
 import type { CategorySlug } from "@/app/lib/categoryMap";
@@ -33,7 +35,12 @@ export default async function StorePage({ params }: StorePageProps) {
   const store = stores.find((s) => s.slug === slug);
   if (!store) return notFound();
 
-  const storeProducts: StoreProduct[] = await loadStoreProducts(slug).catch(() => []);
+  const session = await auth();
+  const isMember = session?.user?.id
+    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
+    : false;
+
+  const storeProducts: StoreProduct[] = await loadStoreProducts(slug, isMember).catch(() => []);
 
   // Extract DB IDs from composite IDs (format: store_slug-dbId)
   const dbIdMap = new Map<string, number>();

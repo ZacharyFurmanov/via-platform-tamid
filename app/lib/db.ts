@@ -268,21 +268,34 @@ export async function syncProducts(
 }
 
 /**
- * Get all products for a specific store
+ * Get all products for a specific store.
+ * Non-members only see products older than 24 hours (the Insider early-access window).
  */
-export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]> {
+export async function getProductsByStore(storeSlug: string, isMember: boolean = false): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  const result = await sql`
-    SELECT * FROM products
-    WHERE store_slug = ${storeSlug}
-      AND (
-        shopify_product_id IS NULL
-        OR collabs_link IS NOT NULL
-      )
-      AND title NOT ILIKE '%gift card%'
-    ORDER BY id
-  `;
+  const result = isMember
+    ? await sql`
+        SELECT * FROM products
+        WHERE store_slug = ${storeSlug}
+          AND (
+            shopify_product_id IS NULL
+            OR collabs_link IS NOT NULL
+          )
+          AND title NOT ILIKE '%gift card%'
+        ORDER BY id
+      `
+    : await sql`
+        SELECT * FROM products
+        WHERE store_slug = ${storeSlug}
+          AND (
+            shopify_product_id IS NULL
+            OR collabs_link IS NOT NULL
+          )
+          AND title NOT ILIKE '%gift card%'
+          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
+        ORDER BY id
+      `;
   return result as DBProduct[];
 }
 

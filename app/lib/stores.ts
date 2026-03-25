@@ -649,6 +649,7 @@ export const stores = [
     dashboardToken: "cc-4e8b2f1a9d7c",
     name: "Carly's Shoe Collection",
     location: "",
+    hideFromNav: true,
     description:
       "Carly's Shoe Collection by Carly Christina is a curated destination for vintage and secondhand shoes, hand-selected for their style, quality, and character.",
     website: "",
