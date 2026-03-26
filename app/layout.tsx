@@ -78,7 +78,7 @@ export default function RootLayout({
         `}
       </Script>
 
-      <body className="bg-[#F7F3EA] text-[#5D0F17]">
+      <body className="bg-[#F7F3EA] text-[#5D0F17] overflow-x-hidden">
         <AuthProvider>
           <Suspense fallback={null}>
             <FirebaseAnalyticsProvider />

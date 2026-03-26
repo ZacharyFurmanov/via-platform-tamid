@@ -24,7 +24,15 @@ export type BigCartelStore = {
   storeSlug: string;
 };
 
-export type Store = SquarespaceStore | ShopifyStore | BigCartelStore;
+export type SquareStore = {
+  type: "square";
+  name: string;
+  slug: string;
+  /** Square Location ID (LXXXXXXXXXXXXXXXXX) — used for product catalog sync */
+  locationId?: string;
+};
+
+export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore;
 
 // Squarespace stores (RSS-based)
 export const SQUARESPACE_STORES: SquarespaceStore[] = [

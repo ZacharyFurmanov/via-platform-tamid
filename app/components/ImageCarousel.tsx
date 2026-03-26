@@ -195,7 +195,7 @@ export default function ImageCarousel({
   return (
     <div>
       <div
-        className="relative aspect-[2/3] max-h-[45vh] md:max-h-none md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+        className="relative aspect-[2/3] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}

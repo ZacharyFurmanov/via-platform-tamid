@@ -18,9 +18,20 @@ function isAuthorized(request: NextRequest): boolean {
 const storeNameToSlug = new Map<string, string>(
   stores.map((s) => [s.name.toLowerCase(), s.slug])
 );
+const slugByNormalized = new Map<string, string>(
+  stores.map((s) => [s.slug.replace(/-/g, ""), s.slug])
+);
+const collabsHandleOverrides: Record<string, string> = {
+  "source 24": "source-twenty-four",
+};
 
 function resolveStoreSlug(name: string): string {
-  return storeNameToSlug.get(name.toLowerCase()) ?? name.toLowerCase().replace(/\s+/g, "-");
+  const key = name.toLowerCase();
+  if (storeNameToSlug.has(key)) return storeNameToSlug.get(key)!;
+  if (collabsHandleOverrides[key]) return collabsHandleOverrides[key];
+  const normalized = key.replace(/[^a-z0-9]/g, "");
+  if (slugByNormalized.has(normalized)) return slugByNormalized.get(normalized)!;
+  return key.replace(/\s+/g, "-");
 }
 
 function estimateFromCommission(commission: number): number {

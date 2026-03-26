@@ -36,17 +36,29 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
 
   const signatureHeader = request.headers.get("x-square-hmacsha256-signature");
-  const signatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+
+  // Resolve store slug early so we can pick the right per-store signature key
+  const { searchParams } = new URL(request.url);
+  const storeSlugForSig = searchParams.get("store");
+
+  // Per-store key takes precedence (e.g. SQUARE_WEBHOOK_SIG_HONEYBEAR_VINTAGE),
+  // falling back to the shared SQUARE_WEBHOOK_SIGNATURE_KEY.
+  const perStoreEnvVar = storeSlugForSig
+    ? `SQUARE_WEBHOOK_SIG_${storeSlugForSig.toUpperCase().replace(/-/g, "_")}`
+    : null;
+  const signatureKey =
+    (perStoreEnvVar && process.env[perStoreEnvVar]) ||
+    process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
   // Reject if we have a key configured but no/bad signature
   if (signatureKey) {
     if (!signatureHeader) {
       return NextResponse.json({ error: "Missing signature" }, { status: 401 });
     }
-    const notificationUrl =
-      process.env.NEXT_PUBLIC_BASE_URL
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/square`
-        : "https://vyaplatform.com/api/webhooks/square";
+    // Square signs the exact URL the webhook was registered with (including query params).
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+    const notificationUrl = `${baseUrl}/api/webhooks/square${storeSlugForSig ? `?store=${storeSlugForSig}` : ""}`;
 
     const valid = await verifySquareSignature(body, signatureHeader, signatureKey, notificationUrl);
     if (!valid) {
@@ -92,8 +104,7 @@ export async function POST(request: NextRequest) {
 
   // Resolve which VYA store this belongs to using the ?store= query param
   // Square doesn't send a shop domain header, so the webhook URL must include ?store=slug
-  const { searchParams } = new URL(request.url);
-  const storeSlug = searchParams.get("store");
+  const storeSlug = storeSlugForSig;
 
   if (!storeSlug) {
     console.error(`[square-webhook] No store slug in webhook URL. Add ?store=your-slug to your Square webhook URL.`);

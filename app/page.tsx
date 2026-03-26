@@ -16,40 +16,52 @@ export default function HomePage() {
       <SmoothScroll />
 
       {/* ================= HERO ================= */}
-      <section className="relative min-h-[85vh] sm:min-h-screen flex items-center bg-[#5D0F17] overflow-hidden">
-        <div className="relative z-10 w-full">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="max-w-3xl animate-hero">
+      {/* Mobile: image on top half, text below. Desktop: text left, image right as bg */}
+      <section
+        className="relative overflow-x-hidden"
+        style={{ backgroundColor: "#D4C8BF" }}
+      >
+        {/* Mobile image */}
+        <div className="md:hidden w-full" style={{ height: "55vw" }}>
+          <img src="/hero-v4.png" alt="" className="w-full h-full object-cover object-right-top" />
+        </div>
 
-              <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-[#D8CABD] mb-4 sm:mb-5 font-sans italic">
-                Stop digging. Start shopping.
-              </p>
+        {/* Desktop: full-bleed background image */}
+        <div
+          className="hidden md:block absolute inset-0"
+          style={{
+            backgroundImage: "url('/hero-v4.png')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right center",
+            backgroundSize: "cover",
+          }}
+        />
 
-              <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-serif mb-5 sm:mb-8 text-[#F7F3EA] leading-tight">
-                Shop the department store<br />for vintage &amp; secondhand.
+        {/* Text content */}
+        <div className="relative z-10 w-full min-h-0 md:min-h-screen flex items-center">
+          <div className="max-w-7xl mx-auto px-6 py-10 md:py-0 w-full">
+            <div className="w-full md:w-1/2 animate-hero">
+              <h1 className="text-4xl sm:text-5xl font-serif mb-4 sm:mb-8 text-[#5D0F17] leading-tight">
+                The world&apos;s best vintage,<br />all in one place.
               </h1>
-
-              <p className="max-w-xl mb-8 sm:mb-12 text-sm sm:text-base text-[#D8CABD] font-sans leading-relaxed">
-                Discover the best independent vintage and secondhand stores worldwide.
-                The pieces you&apos;ve been looking for, in one place. All trusted and verified stores.
+              <p className="mb-8 sm:mb-12 text-sm sm:text-base text-[#5D0F17]/80 font-sans leading-relaxed">
+                Shop from the best independent vintage and secondhand stores worldwide.
+                The pieces you&apos;ve been dreaming of. All trusted and verified stores.
               </p>
-
-              {/* CTA buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-hero delay-150">
                 <Link
                   href="/stores"
-                  className="bg-[#F7F3EA] text-[#5D0F17] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#D8CABD] transition-colors duration-300 text-center font-sans"
+                  className="bg-[#5D0F17] text-[#F7F3EA] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/85 transition-colors duration-300 text-center font-sans"
                 >
                   Explore Stores
                 </Link>
                 <Link
                   href="/categories"
-                  className="border border-[#F7F3EA]/60 text-[#F7F3EA] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#F7F3EA]/10 transition-colors duration-300 text-center font-sans"
+                  className="border border-[#5D0F17]/50 text-[#5D0F17] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/10 transition-colors duration-300 text-center font-sans"
                 >
-                  Browse Categories
+                  Shop All
                 </Link>
               </div>
-
             </div>
           </div>
         </div>

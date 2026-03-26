@@ -10,9 +10,32 @@ const storeNameToSlug = new Map<string, string>(
   stores.map((s) => [s.name.toLowerCase(), s.slug])
 );
 
+// Also build a normalized (no dashes/spaces) slug → slug map
+// so camelCase Collabs handles like "PortersPreloved" resolve correctly
+const slugByNormalized = new Map<string, string>(
+  stores.map((s) => [s.slug.replace(/-/g, ""), s.slug])
+);
+
+// Explicit overrides for Collabs brand names that differ significantly from VYA names
+const collabsHandleOverrides: Record<string, string> = {
+  "source 24": "source-twenty-four",
+};
+
 function resolveStoreSlug(brandName: string): string {
   const key = brandName.toLowerCase();
-  return storeNameToSlug.get(key) ?? brandName.toLowerCase().replace(/\s+/g, "-");
+
+  // 1. Exact name match
+  if (storeNameToSlug.has(key)) return storeNameToSlug.get(key)!;
+
+  // 2. Explicit overrides for known mismatches
+  if (collabsHandleOverrides[key]) return collabsHandleOverrides[key];
+
+  // 3. Normalized match — handles camelCase handles like "PortersPreloved" → "porters-preloved"
+  const normalized = key.replace(/[^a-z0-9]/g, "");
+  if (slugByNormalized.has(normalized)) return slugByNormalized.get(normalized)!;
+
+  // 4. Fallback
+  return key.replace(/\s+/g, "-");
 }
 
 function parseCommission(displayValue: string): number {

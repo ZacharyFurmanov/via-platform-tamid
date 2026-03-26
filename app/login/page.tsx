@@ -56,7 +56,7 @@ export default function LoginPage() {
         {mode === "entry" && (
           <>
             <p className="text-sm text-[#5D0F17]/60 text-center mb-3 leading-relaxed">
-              The online department store for vintage and secondhand.
+              Shop the best vintage stores in the world, all in one place.
             </p>
             <p className="text-sm text-[#5D0F17]/60 text-center mb-8 leading-relaxed">
               Our pilot allows users to browse, shop, and give feedback to improve the platform.
