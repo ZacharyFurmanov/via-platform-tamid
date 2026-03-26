@@ -16,16 +16,11 @@ export default function HomePage() {
       <SmoothScroll />
 
       {/* ================= HERO ================= */}
-      {/* Mobile: image on top half, text below. Desktop: text left, image right as bg */}
+      {/* Mobile: text only on background color. Desktop: text left, image right as bg */}
       <section
         className="relative overflow-x-hidden"
         style={{ backgroundColor: "#D4C8BF" }}
       >
-        {/* Mobile image */}
-        <div className="md:hidden w-full" style={{ height: "55vw" }}>
-          <img src="/hero-v4.png" alt="" className="w-full h-full object-cover object-right-top" />
-        </div>
-
         {/* Desktop: full-bleed background image */}
         <div
           className="hidden md:block absolute inset-0"
@@ -39,7 +34,7 @@ export default function HomePage() {
 
         {/* Text content */}
         <div className="relative z-10 w-full min-h-0 md:min-h-screen flex items-center">
-          <div className="max-w-7xl mx-auto px-6 py-10 md:py-0 w-full">
+          <div className="max-w-7xl mx-auto px-6 py-20 md:py-0 w-full">
             <div className="w-full md:w-1/2 animate-hero">
               <h1 className="text-4xl sm:text-5xl font-serif mb-4 sm:mb-8 text-[#5D0F17] leading-tight">
                 The world&apos;s best vintage,<br />all in one place.
