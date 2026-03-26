@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
 
   // Ensure user_id column exists on product_views before querying it
   await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`.catch(() => {});
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned BOOLEAN DEFAULT FALSE`.catch(() => {});
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned_at TIMESTAMPTZ`.catch(() => {});
 
   const [
     gmvRows,
