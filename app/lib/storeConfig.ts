@@ -213,8 +213,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
 // Big Cartel stores (public JSON API — no token required)
 export const BIGCARTEL_STORES: BigCartelStore[] = [];
 
+// Square stores (webhook-based order tracking, no product catalog sync yet)
+export const SQUARE_STORES: SquareStore[] = [];
+
 export const ALL_STORES: Store[] = [
   ...SQUARESPACE_STORES,
   ...SHOPIFY_STORES,
   ...BIGCARTEL_STORES,
+  ...SQUARE_STORES,
 ];

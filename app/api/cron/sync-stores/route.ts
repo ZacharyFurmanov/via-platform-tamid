@@ -101,6 +101,9 @@ export async function GET(request: Request) {
 
         const productCount = await syncProducts(store.slug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
+      } else if (store.type === "square") {
+        // Square stores: product sync not yet implemented
+        results.push({ store: store.name, success: false, error: "Square product sync not yet implemented" });
       } else {
         // Squarespace
         let rawProducts;
