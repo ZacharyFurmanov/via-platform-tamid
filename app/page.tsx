@@ -18,14 +18,14 @@ export default function HomePage() {
       {/* ================= HERO — MOBILE ================= */}
       {/* Image with buttons overlaid, then text below — all same bg color */}
       <div className="md:hidden" style={{ backgroundColor: "#D4C8BF" }}>
-        <section className="relative overflow-hidden" style={{ height: "82vh" }}>
+        <section className="relative overflow-hidden" style={{ height: "65vh" }}>
           <img
             src="/hero-v4.png"
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: "right 15%" }}
+            style={{ objectPosition: "right top" }}
           />
-          <div className="absolute bottom-16 left-6 flex flex-col gap-3 z-10">
+          <div className="absolute bottom-8 left-6 flex flex-col gap-3 z-10">
             <Link
               href="/stores"
               className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
