@@ -56,7 +56,7 @@ export default function SyncAdminPage() {
             storeSlug: store.storeSlug,
           }),
         });
-      } else {
+      } else if (store.type === "shopify") {
         response = await fetch("/api/sync-shopify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -67,6 +67,9 @@ export default function SyncAdminPage() {
             storefrontAccessToken: store.storefrontAccessToken,
           }),
         });
+      } else {
+        // Square stores don't have a product sync yet
+        return;
       }
 
       const data = await response.json();
