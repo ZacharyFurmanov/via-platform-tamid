@@ -15,15 +15,52 @@ export default function HomePage() {
     <main className="w-full">
       <SmoothScroll />
 
-      {/* ================= HERO ================= */}
-      {/* Mobile: text only on background color. Desktop: text left, image right as bg */}
+      {/* ================= HERO — MOBILE ================= */}
+      {/* Full-screen image with buttons overlaid bottom-left */}
       <section
-        className="relative overflow-x-hidden"
+        className="md:hidden relative overflow-hidden"
+        style={{ backgroundColor: "#D4C8BF", minHeight: "100svh" }}
+      >
+        <img
+          src="/hero-v4.png"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-right"
+        />
+        <div className="absolute bottom-10 left-6 flex flex-col gap-3 z-10">
+          <Link
+            href="/stores"
+            className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
+          >
+            Explore Stores
+          </Link>
+          <Link
+            href="/categories"
+            className="border border-[#5D0F17] text-[#5D0F17] bg-[#D4C8BF]/70 px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
+          >
+            Shop Now
+          </Link>
+        </div>
+      </section>
+
+      {/* Text section below mobile hero */}
+      <section className="md:hidden px-6 py-10" style={{ backgroundColor: "#D4C8BF" }}>
+        <h1 className="text-3xl font-serif text-[#5D0F17] mb-3 leading-tight">
+          The world&apos;s best vintage,<br />all in one place.
+        </h1>
+        <p className="text-sm text-[#5D0F17]/80 font-sans leading-relaxed">
+          Shop from the best independent vintage and secondhand stores worldwide.
+          The pieces you&apos;ve been dreaming of. All trusted and verified stores.
+        </p>
+      </section>
+
+      {/* ================= HERO — DESKTOP ================= */}
+      {/* Text + buttons left, full-bleed image right */}
+      <section
+        className="hidden md:block relative overflow-x-hidden"
         style={{ backgroundColor: "#D4C8BF" }}
       >
-        {/* Desktop: full-bleed background image */}
         <div
-          className="hidden md:block absolute inset-0"
+          className="absolute inset-0"
           style={{
             backgroundImage: "url('/hero-v4.png')",
             backgroundRepeat: "no-repeat",
@@ -31,30 +68,28 @@ export default function HomePage() {
             backgroundSize: "cover",
           }}
         />
-
-        {/* Text content */}
-        <div className="relative z-10 w-full min-h-0 md:min-h-screen flex items-center">
-          <div className="max-w-7xl mx-auto px-6 py-20 md:py-0 w-full">
-            <div className="w-full md:w-1/2 animate-hero">
-              <h1 className="text-4xl sm:text-5xl font-serif mb-4 sm:mb-8 text-[#5D0F17] leading-tight">
+        <div className="relative z-10 w-full min-h-screen flex items-center">
+          <div className="max-w-7xl mx-auto px-6 w-full">
+            <div className="w-1/2 animate-hero">
+              <h1 className="text-5xl font-serif mb-8 text-[#5D0F17] leading-tight">
                 The world&apos;s best vintage,<br />all in one place.
               </h1>
-              <p className="mb-8 sm:mb-12 text-sm sm:text-base text-[#5D0F17]/80 font-sans leading-relaxed">
+              <p className="mb-12 text-base text-[#5D0F17]/80 font-sans leading-relaxed">
                 Shop from the best independent vintage and secondhand stores worldwide.
                 The pieces you&apos;ve been dreaming of. All trusted and verified stores.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-hero delay-150">
+              <div className="flex gap-4 animate-hero delay-150">
                 <Link
                   href="/stores"
-                  className="bg-[#5D0F17] text-[#F7F3EA] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/85 transition-colors duration-300 text-center font-sans"
+                  className="bg-[#5D0F17] text-[#F7F3EA] px-10 py-4 text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/85 transition-colors duration-300 text-center font-sans"
                 >
                   Explore Stores
                 </Link>
                 <Link
                   href="/categories"
-                  className="border border-[#5D0F17]/50 text-[#5D0F17] px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/10 transition-colors duration-300 text-center font-sans"
+                  className="border border-[#5D0F17]/50 text-[#5D0F17] px-10 py-4 text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/10 transition-colors duration-300 text-center font-sans"
                 >
-                  Shop All
+                  Shop Now
                 </Link>
               </div>
             </div>
