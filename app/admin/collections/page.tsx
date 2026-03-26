@@ -66,12 +66,6 @@ export default function CollectionsAdminPage() {
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
 
-    // Require a store filter or search query before loading products
-    if (!query.trim() && !storeFilter) {
-      setProducts([]);
-      return;
-    }
-
     const doLoad = async () => {
       setLoadingProducts(true);
       try {
@@ -388,8 +382,6 @@ export default function CollectionsAdminPage() {
         {/* Product grid */}
         {loadingProducts ? (
           <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>Loading products…</p>
-        ) : !query.trim() && !storeFilter ? (
-          <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>Select a store or search by name to browse products.</p>
         ) : products.length === 0 ? (
           <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>No products found.</p>
         ) : (

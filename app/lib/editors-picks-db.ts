@@ -206,12 +206,14 @@ function mapProductRow(r: Record<string, unknown>): ProductResult {
   };
 }
 
-export async function getAllProducts(): Promise<ProductResult[]> {
+export async function getAllProducts(limit = 300): Promise<ProductResult[]> {
   const sql = neon(getDatabaseUrl());
   const rows = await sql`
     SELECT id, store_slug, store_name, title, price, image
     FROM products
-    ORDER BY store_slug, title
+    WHERE image IS NOT NULL
+    ORDER BY created_at DESC NULLS LAST
+    LIMIT ${limit}
   `;
   return rows.map(mapProductRow);
 }
