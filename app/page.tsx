@@ -16,34 +16,33 @@ export default function HomePage() {
       <SmoothScroll />
 
       {/* ================= HERO — MOBILE ================= */}
-      {/* Full-screen image with buttons overlaid bottom-left */}
-      <section
-        className="md:hidden relative overflow-hidden"
-        style={{ backgroundColor: "#D4C8BF", minHeight: "100svh" }}
-      >
-        <img
-          src="/hero-v4.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover object-right"
-        />
-        <div className="absolute bottom-10 left-6 flex flex-col gap-3 z-10">
-          <Link
-            href="/stores"
-            className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
-          >
-            Explore Stores
-          </Link>
-          <Link
-            href="/categories"
-            className="border border-[#5D0F17] text-[#5D0F17] bg-[#D4C8BF]/70 px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
-          >
-            Shop Now
-          </Link>
-        </div>
-      </section>
+      {/* Image with buttons overlaid, then text below — all same bg color */}
+      <div className="md:hidden" style={{ backgroundColor: "#D4C8BF" }}>
+        <section className="relative overflow-hidden" style={{ height: "82vh" }}>
+          <img
+            src="/hero-v4.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "right 15%" }}
+          />
+          <div className="absolute bottom-16 left-6 flex flex-col gap-3 z-10">
+            <Link
+              href="/stores"
+              className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
+            >
+              Explore Stores
+            </Link>
+            <Link
+              href="/categories"
+              className="border border-[#5D0F17] text-[#5D0F17] bg-[#D4C8BF]/70 px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
+            >
+              Shop Now
+            </Link>
+          </div>
+        </section>
 
-      {/* Text section below mobile hero */}
-      <section className="md:hidden px-6 py-10" style={{ backgroundColor: "#D4C8BF" }}>
+        {/* Text section below mobile hero */}
+        <section className="px-6 py-10">
         <h1 className="text-3xl font-serif text-[#5D0F17] mb-3 leading-tight">
           The world&apos;s best vintage,<br />all in one place.
         </h1>
@@ -52,6 +51,7 @@ export default function HomePage() {
           The pieces you&apos;ve been dreaming of. All trusted and verified stores.
         </p>
       </section>
+      </div>
 
       {/* ================= HERO — DESKTOP ================= */}
       {/* Text + buttons left, full-bleed image right */}
