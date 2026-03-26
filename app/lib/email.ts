@@ -367,8 +367,10 @@ export async function sendInsiderNewArrivalsEmail(
 
   function productCell(p: DBProduct): string {
     const url = productViaUrl(p);
-    const imgBlock = p.image
-      ? `<img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
+    // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
+    const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
+    const imgBlock = safeImgSrc
+      ? `<img src="${safeImgSrc}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
            style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />`
       : `<div style="width:100%;height:220px;background:rgba(93,15,23,0.06);"></div>`;
 
@@ -382,8 +384,9 @@ export async function sendInsiderNewArrivalsEmail(
 
     // Use a table layout so each element is its own link-safe block.
     // Avoid <p> inside <a> — email clients break the outer <a> at block elements.
+    const safeUrl = url.replace(/&/g, "&amp;");
     return `
-      <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
+      <a href="${safeUrl}" style="display:block;text-decoration:none;color:inherit;">
         ${imgBlock}
       </a>
       <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
@@ -391,7 +394,7 @@ export async function sendInsiderNewArrivalsEmail(
       <div style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
          line-height:1.35;">${p.title}</div>
       <div style="margin:0 0 14px;">${priceBlock}</div>
-      <a href="${url}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+      <a href="${safeUrl}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
              text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
              font-family:Georgia,'Times New Roman',serif;">View Item</a>
     `;
@@ -474,8 +477,10 @@ export async function sendNewArrivalsEmail(
 
   function productCell(p: DBProduct): string {
     const url = productViaUrl(p);
-    const imgBlock = p.image
-      ? `<img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
+    // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
+    const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
+    const imgBlock = safeImgSrc
+      ? `<img src="${safeImgSrc}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
            style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />`
       : `<div style="width:100%;height:220px;background:rgba(93,15,23,0.06);"></div>`;
 
@@ -488,8 +493,9 @@ export async function sendNewArrivalsEmail(
       : `<span style="color:#5D0F17;font-size:13px;font-family:Georgia,'Times New Roman',serif;">${priceStr}</span>`;
 
     // Avoid <p> inside <a> — email clients break the outer <a> at block elements.
+    const safeUrl = url.replace(/&/g, "&amp;");
     return `
-      <a href="${url}" style="display:block;text-decoration:none;color:inherit;">
+      <a href="${safeUrl}" style="display:block;text-decoration:none;color:inherit;">
         ${imgBlock}
       </a>
       <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
@@ -497,7 +503,7 @@ export async function sendNewArrivalsEmail(
       <div style="font-size:13px;color:#5D0F17;margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;
          line-height:1.35;">${p.title}</div>
       <div style="margin:0 0 14px;">${priceBlock}</div>
-      <a href="${url}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+      <a href="${safeUrl}" style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
              text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
              font-family:Georgia,'Times New Roman',serif;">View Item</a>
     `;

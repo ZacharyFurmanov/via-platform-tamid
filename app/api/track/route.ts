@@ -109,8 +109,9 @@ export async function GET(request: NextRequest) {
   // Generate click ID for attribution
   const clickId = generateClickId();
 
-  // Save click to database (fire and forget)
-  saveClick({
+  // Save click to database — must await before returning redirect so the
+  // serverless function doesn't terminate before the DB write completes.
+  await saveClick({
     clickId,
     timestamp: new Date().toISOString(),
     productId: productId || "unknown",

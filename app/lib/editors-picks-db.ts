@@ -77,14 +77,15 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
       p.images,
       p.size,
       p.external_url,
+      p.created_at,
       COUNT(c.id) AS click_count
     FROM editors_picks ep
     JOIN products p ON p.id = ep.product_id
     LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
     WHERE ep.collection_slug = ${collectionSlug}
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-    GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
-    ORDER BY click_count DESC, ep.position ASC
+    GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url, p.created_at
+    ORDER BY p.created_at DESC NULLS LAST, ep.position ASC
   `;
 
   return rows.map((r) => ({

@@ -312,7 +312,7 @@ export default function KeyMetricsPage() {
                 <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Active User Breakdown</h2>
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 28px" }}>
                   <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 16px" }}>
-                    Distinct users per activity type (overlapping — a user can appear in multiple). WAU/MAU de-duplicates across all.
+                    Clicks = distinct click_ids (includes anonymous). Purchases = total conversions (includes anonymous). Saves = distinct logged-in users. WAU/MAU de-duplicates across all.
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                     {[

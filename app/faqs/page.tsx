@@ -53,49 +53,44 @@ export default function FAQsPage() {
   ];
 
   return (
-    <main className="bg-[#F7F3EA] min-h-screen py-32">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="flex items-center gap-4 mb-1">
-          <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">Have questions?</p>
-          <div className="flex-1 h-px bg-[#5D0F17]/15" />
-        </div>
-        <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif text-[#5D0F17]/10 leading-none -mt-2 mb-8">
-          FAQs
-        </h1>
-
-        <p className="text-[#5D0F17]/60 mb-16 max-w-2xl">
-          Answers to common questions about shopping, shipping, and partnering with VYA.
-        </p>
-
-        <FAQAccordion faqs={faqs} />
-
-        {/* ================= STILL HAVE QUESTIONS ================= */}
-        <div className="mt-24 border-t border-[#5D0F17]/10 pt-16 text-center">
-          <h3 className="text-3xl font-serif mb-4 text-[#5D0F17]">
-            Still have questions?
-          </h3>
-
-          <p className="text-[#5D0F17]/60 max-w-xl mx-auto mb-8">
-            If you&apos;re a shopper or a store and need more information, we&apos;re happy to help.
+    <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      {/* Header */}
+      <section className="border-b border-[#5D0F17]/10">
+        <div className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">FAQs</h1>
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
+            Answers to common questions about shopping, shipping, and partnering with VYA.
           </p>
+        </div>
+      </section>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="mailto:hana@theviaplatform.com"
-              className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17]/85 transition"
-            >
-              Contact Us
-            </a>
+      {/* Accordion */}
+      <section className="py-12 sm:py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <FAQAccordion faqs={faqs} />
 
-            <a
-              href="/for-stores"
-              className="border border-[#5D0F17] text-[#5D0F17] px-8 py-4 text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
-            >
-              Partner With VYA
-            </a>
+          <div className="mt-20 border-t border-[#5D0F17]/10 pt-16 text-center">
+            <h3 className="text-2xl font-serif mb-3">Still have questions?</h3>
+            <p className="text-sm text-[#5D0F17]/60 max-w-xl mx-auto mb-8">
+              If you&apos;re a shopper or a store and need more information, we&apos;re happy to help.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="mailto:hana@theviaplatform.com"
+                className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition"
+              >
+                Contact Us
+              </a>
+              <a
+                href="/for-stores"
+                className="border border-[#5D0F17] text-[#5D0F17] px-8 py-3 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
+              >
+                Partner With VYA
+              </a>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

@@ -152,7 +152,8 @@ export async function PUT(
   return NextResponse.json({ ok: true });
 }
 
-// PATCH — unmatch a conversion (clear match data, keep record)
+// PATCH — unmatch a conversion OR mark it as returned
+// Body: {} = unmatch, { action: "return" } = mark returned, { action: "unreturn" } = undo return
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -164,11 +165,28 @@ export async function PATCH(
   if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const sql = neon(dbUrl);
-  await sql`
-    UPDATE conversions SET
-      matched = false, via_click_id = NULL, matched_click_data = NULL
-    WHERE conversion_id = ${id}
-  `;
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned BOOLEAN DEFAULT FALSE`.catch(() => {});
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned_at TIMESTAMPTZ`.catch(() => {});
+
+  const body = await request.json().catch(() => ({}));
+
+  if (body.action === "return") {
+    await sql`
+      UPDATE conversions SET returned = true, returned_at = NOW()
+      WHERE conversion_id = ${id}
+    `;
+  } else if (body.action === "unreturn") {
+    await sql`
+      UPDATE conversions SET returned = false, returned_at = NULL
+      WHERE conversion_id = ${id}
+    `;
+  } else {
+    await sql`
+      UPDATE conversions SET
+        matched = false, via_click_id = NULL, matched_click_data = NULL
+      WHERE conversion_id = ${id}
+    `;
+  }
 
   return NextResponse.json({ ok: true });
 }

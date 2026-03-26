@@ -37,6 +37,8 @@ type ConversionRow = {
   userId: string | null;
   buyerEmail: string | null;
   buyerName: string | null;
+  returned: boolean;
+  returnedAt: string | null;
 };
 
 type TopProduct = {
@@ -1095,6 +1097,17 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
     onRefresh();
   }
 
+  async function markReturned(conversionId: string, currentlyReturned: boolean) {
+    const action = currentlyReturned ? "unreturn" : "return";
+    if (!currentlyReturned && !confirm("Mark this order as returned? It will be excluded from GMV.")) return;
+    await fetch(`/api/admin/conversions/${conversionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    onRefresh();
+  }
+
   async function deleteConversion(conversionId: string) {
     if (!confirm("Permanently delete this order record? This cannot be undone.")) return;
     await fetch(`/api/admin/conversions/${conversionId}`, { method: "DELETE" });
@@ -1166,7 +1179,10 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
                 <tr key={r.conversionId} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7", borderBottom: `1px solid ${CREAM}` }}>
                   <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.6, whiteSpace: "nowrap" }}>{relativeTime(r.timestamp)}</td>
                   <td style={{ padding: "9px 12px", fontWeight: 600, color: MAROON }}>{r.storeName}</td>
-                  <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>{formatRevenue(r.orderTotal)}</td>
+                  <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>
+                    <span style={{ textDecoration: r.returned ? "line-through" : "none", opacity: r.returned ? 0.4 : 1 }}>{formatRevenue(r.orderTotal)}</span>
+                    {r.returned && <span style={{ display: "block", fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#dc2626", letterSpacing: "0.08em" }}>Returned</span>}
+                  </td>
                   <td style={{ padding: "9px 12px", color: MAROON, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {r.buyerEmail ? (
                       <span title={r.buyerEmail} style={{ fontSize: 12 }}>
@@ -1195,6 +1211,12 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
                       style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer", marginRight: 6 }}
                     >
                       Edit $
+                    </button>
+                    <button
+                      onClick={() => markReturned(r.conversionId, r.returned)}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid ${r.returned ? "#d1d5db" : "#fca5a5"}`, borderRadius: 4, color: r.returned ? "#6b7280" : "#dc2626", cursor: "pointer", marginRight: 6 }}
+                    >
+                      {r.returned ? "Undo Return" : "Return"}
                     </button>
                     <button
                       onClick={() => deleteConversion(r.conversionId)}

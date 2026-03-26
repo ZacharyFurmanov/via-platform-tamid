@@ -20,8 +20,20 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const testEmail = searchParams.get("testEmail");
 
-    // Determine the window: from last send (or 7 days ago) to now
+    // Prevent duplicate sends — only one real email per 6 days
     const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
+    if (!testEmail && lastSentRaw) {
+      const hoursSince = (Date.now() - new Date(lastSentRaw).getTime()) / (1000 * 60 * 60);
+      if (hoursSince < 144) {
+        return NextResponse.json({
+          ok: true,
+          message: `New arrivals email already sent ${Math.round(hoursSince)}h ago — skipping.`,
+          skipped: true,
+        });
+      }
+    }
+
+    // Determine the window: from last send (or 7 days ago) to now
     const since = lastSentRaw
       ? new Date(lastSentRaw)
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

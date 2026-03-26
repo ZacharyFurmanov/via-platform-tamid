@@ -16,7 +16,7 @@ export const stores = [
     affiliatePath: "1234",
     collabsStoreId: "228601",
     authenticityPolicy:
-      "Each item is thoroughly checked by our team for quality and authenticity before listing. We specialize in archival pieces from well-known brands, hand-selected with an eye for craftsmanship and condition — every listing is accurate, detailed, and exactly as described.",
+      "We authenticate items through a rigorous process, examining labels, stitching, hardware, and historical design details. Our team cross-references pieces with archival records and works with industry experts to ensure every designer item is genuine.",
     shippingPolicy:
       "Ships from Shropshire, England. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
@@ -130,7 +130,7 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "232498",
     authenticityPolicy:
-      "Every bag at Front Page Finds is personally sourced and hand-selected for its craftsmanship, relevance, and lasting appeal. Each piece is curated with an archival eye and accurately described before listing.",
+      "Every bag is meticulously reviewed and authenticated using Entrupy and/or CheckCheck before listing, giving you complete peace of mind with every purchase.",
     shippingPolicy:
       "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -221,7 +221,7 @@ export const stores = [
     affiliatePath: "VIA2026",
     collabsStoreId: "230654",
     authenticityPolicy:
-      "Every piece at Maison Optimism Vintage is hand-picked and personally curated before listing. Specializing in 90s and early 2000s luxury designer bags, shoes, and accessories, each item is selected for its iconic style and accurately described with any notable condition details disclosed.",
+      "All bags are 100% authentic. Each purchase includes a Certificate of Authenticity, and every item is hand-picked and personally curated before listing.",
     shippingPolicy:
       "Ships from Houston, TX. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -248,7 +248,7 @@ export const stores = [
     discountCode: "0001",
     perk: "VYA customers get free shipping — use code 0001 at checkout",
     authenticityPolicy:
-      "Every item at Missi Archives is hand-picked and personally inspected before listing. Each piece is described accurately and transparently — if you have any concerns about your order, the team is available directly via email.",
+      "All vintage designer pieces are sourced from trusted, reputable sellers who specialize in authenticated luxury goods. Each item then undergoes a thorough in-house inspection to determine authenticity, and third-party authenticators are used for select designer pieces.",
     shippingPolicy:
       "Orders are processed within 2–5 business days. Delivery times vary by destination and chosen shipping service. A confirmation email with tracking details is sent once your order is dispatched.",
     returnPolicy:
@@ -407,7 +407,7 @@ export const stores = [
     discountCode: "VIAXSCARZ",
     perk: "VYA customers get free shipping — use code VIAXSCARZ at checkout",
     authenticityPolicy:
-      "All items are hand-selected and personally authenticated by Scarlett, with a focus on rare archival pieces from Chanel, Gucci, Prada, Versace, and other iconic houses. Every listing includes detailed condition notes — if an item doesn't match its description, contact within 7 days of receiving your order.",
+      "Each item is carefully inspected based on significant experience with luxury fashion. Detailed photos of tags and labels are provided in every listing to assist in your evaluation. While thorough checks are conducted, Scarz Vintage is not a certified authentication service.",
     shippingPolicy:
       "Orders are processed within 1–2 business days. UK Standard: £4 (2–4 days). EU International: £15 (2–11 days). Rest of World: £30 (3–17 days). Free shipping on orders over £500. International customers are responsible for customs duties and taxes.",
     returnPolicy:
@@ -499,7 +499,7 @@ export const stores = [
     affiliatePath: "001",
     collabsStoreId: "5662739",
     authenticityPolicy:
-      "Every item is authenticated and transparently presented before being listed. Founded with an archival and editorial eye, each piece is individually assessed for craftsmanship, condition, and rarity — what you see is exactly what you'll receive.",
+      "As collectors ourselves, we understand how essential authenticity is when building a wardrobe of investment vintage and pre-loved pieces. Every Object is carefully sourced and meticulously verified in-house and through a third party partner to ensure it meets our uncompromising standards of genuine luxury. Each purchase includes a signed Certificate of Authenticity confirming the item's verification and approval. All third-party authentication documentation is retained and available upon request at any time, free of charge. In the rare event of an authenticity concern, our team will conduct a full review in collaboration with our authentication partners, keeping you in the loop at all steps. If an item is confirmed inauthentic, a full refund will be issued without hesitation.",
     shippingPolicy:
       "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -592,7 +592,7 @@ export const stores = [
     affiliatePath: "VIAPARTNER",
     collabsStoreId: "227548",
     authenticityPolicy:
-      "Every item is personally sourced and inspected before listing. As specialists in vintage designer shoes and accessories, each piece is accurately described with any notable condition details clearly disclosed — you'll always know exactly what you're receiving.",
+      "Every vintage designer item undergoes a thorough authentication process. Each piece is either pre-authenticated or verified by accredited third-party specialists to ensure its authenticity and quality before listing.",
     shippingPolicy:
       "Orders are processed within 3–7 business days. Delivery takes an additional 3–7 business days depending on location. Shipping rates are calculated at checkout based on destination and package weight. US shipping only.",
     returnPolicy:
@@ -615,7 +615,7 @@ export const stores = [
     affiliatePath: "VYAPARTNER",
     collabsStoreId: "231641",
     authenticityPolicy:
-      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+      "Every piece goes through rigorous in-house inspection and independent third-party verification — only authenticated items make it through. Each purchase comes with a complimentary Certificate of Authenticity, so you can shop pre-owned luxury without worry.",
     shippingPolicy:
       "Shipping rates are calculated at checkout.",
     returnPolicy:

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '30 days'), 0)::float            AS gmv_30d,
         COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '60 days'
                                               AND timestamp <  NOW() - INTERVAL '30 days'), 0)::float          AS gmv_prev_30d
-      FROM conversions WHERE order_total > 0
+      FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
     // Clicks — all time, 7d, 30d
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '30 days')::int                 AS conversions_30d,
         COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '60 days'
                              AND timestamp <  NOW() - INTERVAL '30 days')::int               AS conversions_prev_30d
-      FROM conversions WHERE order_total > 0
+      FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
     // Insider conversion — approved pilot users vs actual members
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
         (COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL)
          + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                        AS buying_users
       FROM conversions
-      WHERE order_total > 0
+      WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
     // GMV by week — last 10 weeks for sparkline
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
         DATE_TRUNC('week', timestamp)::date::text  AS week,
         COALESCE(SUM(order_total), 0)::float       AS gmv
       FROM conversions
-      WHERE order_total > 0 AND timestamp >= NOW() - INTERVAL '10 weeks'
+      WHERE order_total > 0 AND (returned IS NULL OR returned = false) AND timestamp >= NOW() - INTERVAL '10 weeks'
       GROUP BY 1
       ORDER BY 1 ASC
     `,
@@ -160,14 +160,15 @@ export async function GET(request: NextRequest) {
     // Total waitlist signups (pilot_access)
     sql`SELECT COUNT(*)::int AS total FROM pilot_access`,
 
-    // Raw distinct user counts per activity table
+    // Activity counts — clicks and purchases count all events (incl. anonymous);
+    // saves require login so user_id is always present there.
     sql`
       SELECT
         (SELECT COUNT(*)::int FROM users)                                                                   AS registered,
-        (SELECT COUNT(DISTINCT user_id)::int FROM clicks WHERE user_id IS NOT NULL)                        AS clickers,
+        (SELECT COUNT(DISTINCT click_id)::int FROM clicks)                                                 AS clickers,
         (SELECT COUNT(DISTINCT user_id::text)::int FROM product_favorites WHERE user_id IS NOT NULL)       AS product_savers,
         (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites WHERE user_id IS NOT NULL)         AS store_savers,
-        (SELECT COUNT(DISTINCT user_id)::int FROM conversions WHERE user_id IS NOT NULL)                   AS buyers
+        (SELECT COUNT(*)::int FROM conversions)                                                            AS buyers
     `,
 
     // Returning users — users active on 2+ distinct calendar days (views, clicks, saves, conversions)

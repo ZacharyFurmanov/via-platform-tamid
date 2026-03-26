@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
       userName: r.user_name ?? null,
       matchedClickData: r.matched_click_data ?? null,
       items: r.items ?? [],
+      returned: r.returned ?? false,
+      returnedAt: r.returned_at ?? null,
     })),
   });
 }

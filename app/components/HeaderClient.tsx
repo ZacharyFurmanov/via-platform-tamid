@@ -27,6 +27,7 @@ const ANNOUNCEMENTS = [
   { text: "New Arrivals Added Weekly", short: "New Arrivals Weekly", href: "/new-arrivals" },
   { text: "NYC Pop Up March 29th! Click here for tickets", short: "NYC Pop Up March 29th →", href: "https://posh.vip/e/via-nyc-pop-up" },
   { text: "Want early access to each drop? Check out VYA Insider →", short: "Early Access: VYA Insider →", href: "/membership" },
+  { text: "All stores are trusted & verified by VYA →", short: "Trusted & Verified Stores →", href: "/verified" },
 ];
 
 function AnnouncementBar() {

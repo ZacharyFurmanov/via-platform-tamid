@@ -463,6 +463,8 @@ export async function GET(request: NextRequest) {
         userId: r.user_id as string | null,
         buyerEmail: r.buyer_email as string | null,
         buyerName: r.buyer_name as string | null,
+        returned: (r.returned as boolean) ?? false,
+        returnedAt: r.returned_at ? (r.returned_at instanceof Date ? r.returned_at.toISOString() : r.returned_at as string) : null,
       })),
       inventory,
     });
