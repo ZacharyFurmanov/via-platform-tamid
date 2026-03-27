@@ -18,7 +18,7 @@ export type SourcingOffer = {
   notes: string | null;
   expectedPriceMin: number | null;
   expectedPriceMax: number | null;
-  status: "pending" | "accepted" | "declined";
+  status: "pending" | "accepted" | "declined" | "rescinded";
   createdAt: string;
 };
 
@@ -123,6 +123,25 @@ export async function hasStoreSubmittedOffer(requestId: string, storeSlug: strin
     SELECT id FROM sourcing_offers
     WHERE request_id = ${requestId} AND store_slug = ${storeSlug}
     LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
+/**
+ * Rescind an offer (store withdraws before customer accepts).
+ * Only works while offer is still pending.
+ */
+export async function rescindSourcingOffer(
+  offerId: string,
+  storeSlug: string
+): Promise<boolean> {
+  const sql = neon(getDatabaseUrl());
+  await initOffersTable();
+  const rows = await sql`
+    UPDATE sourcing_offers
+    SET status = 'rescinded'
+    WHERE id = ${offerId} AND store_slug = ${storeSlug} AND status = 'pending'
+    RETURNING id
   `;
   return rows.length > 0;
 }

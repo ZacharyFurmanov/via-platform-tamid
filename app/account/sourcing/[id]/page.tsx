@@ -4,6 +4,7 @@ import { auth } from "@/app/lib/auth";
 import { getSourcingRequestById } from "@/app/lib/sourcing-db";
 import { getOffersByRequestId } from "@/app/lib/sourcing-offers-db";
 import AcceptOfferSection from "./AcceptOfferSection";
+import CancelRequestSection from "./CancelRequestSection";
 import EditRequestSection from "./EditRequestSection";
 import PayNowSection from "./PayNowSection";
 
@@ -147,6 +148,11 @@ export default async function SourcingRequestDetailPage({
           <div className="mt-6">
             <PayNowSection requestId={req.id} />
           </div>
+        )}
+
+        {/* Cancel — only while actively searching and within 21 days */}
+        {req.status === "paid" && (
+          <CancelRequestSection requestId={req.id} createdAt={req.createdAt} />
         )}
 
         {/* Offers — only show when request is active or matched */}

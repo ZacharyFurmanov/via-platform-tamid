@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
 
   const eventType = event.type as string;
 
-  // Only process completed payments
-  if (eventType !== "payment.completed") {
+  // Only process payment.updated and payment.created events
+  if (eventType !== "payment.updated" && eventType !== "payment.created") {
     return NextResponse.json({ received: true });
   }
 

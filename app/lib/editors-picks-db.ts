@@ -85,7 +85,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
     WHERE ep.collection_slug = ${collectionSlug}
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
     GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url, p.created_at
-    ORDER BY p.created_at DESC NULLS LAST, ep.position ASC
+    ORDER BY ep.added_at DESC, ep.id DESC
   `;
 
   return rows.map((r) => ({
@@ -130,7 +130,7 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
     LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
     WHERE (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
     GROUP BY ep.id, ep.collection_slug, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
-    ORDER BY ep.collection_slug, click_count DESC, ep.position ASC
+    ORDER BY ep.collection_slug, ep.added_at DESC, ep.id DESC
   `;
 
   const result: Record<string, PickWithProduct[]> = {};

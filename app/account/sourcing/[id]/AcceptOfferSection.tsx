@@ -114,7 +114,7 @@ export default function AcceptOfferSection({
           <div
             key={offer.id}
             className={`border p-5 ${
-              offer.status === "declined"
+              offer.status === "declined" || offer.status === "rescinded"
                 ? "border-[#5D0F17]/10 opacity-50"
                 : "border-[#5D0F17]/20"
             }`}
@@ -124,6 +124,11 @@ export default function AcceptOfferSection({
               {offer.status === "declined" && (
                 <span className="shrink-0 text-[9px] uppercase tracking-widest text-[#5D0F17]/40 px-2 py-1 border border-[#5D0F17]/10">
                   Not selected
+                </span>
+              )}
+              {offer.status === "rescinded" && (
+                <span className="shrink-0 text-[9px] uppercase tracking-widest text-[#5D0F17]/40 px-2 py-1 border border-[#5D0F17]/10">
+                  Withdrawn by store
                 </span>
               )}
             </div>

@@ -269,7 +269,8 @@ export default function ProductFilter({
   }
 
   return (
-    <div className="mb-8">
+    <>
+    <div className="sticky top-[104px] z-[45] bg-[#F7F3EA] py-3 mb-4">
       {/* Desktop Filters */}
       <div className="hidden md:block">
         <div className="flex flex-wrap items-center gap-4">
@@ -753,7 +754,9 @@ export default function ProductFilter({
             ))}
           </select>
         </div>
-
+      </div>
+    </div>
+    <div className="md:hidden">
         {/* Mobile Filter Panel — Accordion */}
         {mobileFiltersOpen && (
           <div className="mt-3 border border-[#5D0F17]/15 bg-[#D8CABD]/10">
@@ -948,7 +951,7 @@ export default function ProductFilter({
             {productCount} product{productCount !== 1 ? "s" : ""}
           </p>
         )}
-      </div>
     </div>
+    </>
   );
 }

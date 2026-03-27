@@ -17,7 +17,7 @@ export default function HomePage() {
 
       {/* ================= HERO — MOBILE ================= */}
       {/* Image with buttons overlaid, then text below — all same bg color */}
-      <div className="md:hidden" style={{ backgroundColor: "#D4C8BF" }}>
+      <div className="md:hidden" style={{ backgroundColor: "#D8C8BC" }}>
         <section className="relative overflow-hidden" style={{ height: "65vh" }}>
           <img
             src="/hero-v4.png"
@@ -34,7 +34,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/categories"
-              className="border border-[#5D0F17] text-[#5D0F17] bg-[#D4C8BF]/70 px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans"
+              className="border border-[#5D0F17] text-[#5D0F17] px-8 py-3.5 text-xs uppercase tracking-[0.12em] text-center font-sans" style={{ backgroundColor: "rgba(216,200,188,0.7)" }}
             >
               Shop Now
             </Link>
@@ -57,7 +57,7 @@ export default function HomePage() {
       {/* Text + buttons left, full-bleed image right */}
       <section
         className="hidden md:block relative overflow-x-hidden"
-        style={{ backgroundColor: "#D4C8BF" }}
+        style={{ backgroundColor: "#D8C8BC" }}
       >
         <div
           className="absolute inset-0"

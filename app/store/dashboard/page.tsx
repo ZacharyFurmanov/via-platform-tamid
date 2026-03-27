@@ -95,6 +95,7 @@ export default function StoreDashboardPage() {
   const [submittingOffer, setSubmittingOffer] = useState<string | null>(null);
   const [offerErrors, setOfferErrors] = useState<Record<string, string>>({});
   const [offerSuccess, setOfferSuccess] = useState<Record<string, boolean>>({});
+  const [rescindingOffer, setRescindingOffer] = useState<string | null>(null);
 
   const fetchAnalytics = useCallback(async (r: RangeOption) => {
     const res = await fetch(`/api/store/analytics?range=${r}`);
@@ -198,6 +199,22 @@ export default function StoreDashboardPage() {
       }));
     } finally {
       setSubmittingOffer(null);
+    }
+  }
+
+  async function handleRescindOffer(requestId: string, offerId: string) {
+    if (!confirm("Withdraw this offer? The customer will no longer be able to accept it.")) return;
+    setRescindingOffer(offerId);
+    try {
+      const res = await fetch(`/api/store/sourcing/${requestId}/offer/${offerId}/rescind`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const sourcingRes = await fetch("/api/store/sourcing");
+        if (sourcingRes.ok) setSourcing(await sourcingRes.json());
+      }
+    } finally {
+      setRescindingOffer(null);
     }
   }
 
@@ -814,7 +831,7 @@ export default function StoreDashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: "1px solid #F7F3EA" }}>
-                    {["Request", "Fee", "Timeline", "Status", "Submitted"].map((h) => (
+                    {["Request", "Fee", "Timeline", "Status", "Submitted", ""].map((h) => (
                       <th
                         key={h}
                         className="px-5 py-3 text-left text-xs uppercase tracking-wide font-normal"
@@ -855,6 +872,18 @@ export default function StoreDashboardPage() {
                       </td>
                       <td className="px-5 py-3 text-xs" style={{ color: "rgba(93,15,23,0.5)" }}>
                         {new Date(offer.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-3">
+                        {offer.status === "pending" && (
+                          <button
+                            onClick={() => handleRescindOffer(offer.requestId, offer.id)}
+                            disabled={rescindingOffer === offer.id}
+                            className="text-[10px] uppercase tracking-widest px-3 py-1.5 border transition disabled:opacity-40"
+                            style={{ borderColor: "rgba(93,15,23,0.2)", color: "rgba(93,15,23,0.6)" }}
+                          >
+                            {rescindingOffer === offer.id ? "Withdrawing…" : "Withdraw"}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
