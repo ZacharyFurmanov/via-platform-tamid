@@ -96,12 +96,22 @@ export async function POST(request: NextRequest) {
   const testEmail: string | undefined = body?.testEmail;
   const sendForReal: boolean = body?.send === true;
   const preview: boolean = body?.preview === true;
+  const backfill: boolean = body?.backfill === true;
 
-  if (!testEmail && !sendForReal && !preview) {
+  if (!testEmail && !sendForReal && !preview && !backfill) {
     return NextResponse.json(
-      { error: "Provide { testEmail }, { send: true }, or { preview: true }." },
+      { error: "Provide { testEmail }, { send: true }, { preview: true }, or { backfill: true }." },
       { status: 400 }
     );
+  }
+
+  // Backfill: mark all emails in the `users` table as already sent (they got the first batch)
+  if (backfill) {
+    const sql = neon(getDatabaseUrl());
+    const rows = await sql`SELECT LOWER(email) AS email FROM users WHERE email IS NOT NULL`;
+    const emails = rows.map((r) => r.email as string);
+    await markEmailsAsSent(CAMPAIGN, emails);
+    return NextResponse.json({ success: true, backfilled: emails.length, campaign: CAMPAIGN });
   }
 
   // Test send — not tracked so it won't block the real send later
