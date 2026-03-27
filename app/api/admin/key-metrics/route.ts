@@ -173,16 +173,18 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(*)::int FROM conversions)                                                            AS buyers
     `,
 
-    // Returning users — users active on 2+ distinct calendar days (views, clicks, saves, conversions)
+    // Returning users — approved users who browsed within the window AND had prior activity before it
     sql`
       SELECT
-        COUNT(DISTINCT user_id) FILTER (WHERE day_count_30d > 1)::int AS returning_30d,
-        COUNT(DISTINCT user_id) FILTER (WHERE day_count_7d > 1)::int  AS returning_7d
+        COUNT(DISTINCT user_id) FILTER (WHERE has_recent_30d AND has_prior_30d)::int AS returning_30d,
+        COUNT(DISTINCT user_id) FILTER (WHERE has_recent_7d  AND has_prior_7d)::int  AS returning_7d
       FROM (
         SELECT
-          user_id,
-          COUNT(DISTINCT DATE(ts)) FILTER (WHERE ts >= NOW() - INTERVAL '30 days') AS day_count_30d,
-          COUNT(DISTINCT DATE(ts)) FILTER (WHERE ts >= NOW() - INTERVAL '7 days')  AS day_count_7d
+          a.user_id,
+          bool_or(a.ts >= NOW() - INTERVAL '30 days') AS has_recent_30d,
+          bool_or(a.ts <  NOW() - INTERVAL '30 days') AS has_prior_30d,
+          bool_or(a.ts >= NOW() - INTERVAL '7 days')  AS has_recent_7d,
+          bool_or(a.ts <  NOW() - INTERVAL '7 days')  AS has_prior_7d
         FROM (
           SELECT user_id::text, timestamp  AS ts FROM product_views    WHERE user_id IS NOT NULL
           UNION ALL
@@ -193,8 +195,10 @@ export async function GET(request: NextRequest) {
           SELECT user_id::text, created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
           UNION ALL
           SELECT user_id::text, timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
-        ) activity
-        GROUP BY user_id
+        ) a
+        INNER JOIN users u        ON u.id::text = a.user_id
+        INNER JOIN pilot_access pa ON LOWER(pa.email) = LOWER(u.email) AND pa.status = 'approved'
+        GROUP BY a.user_id
       ) sub
     `,
   ]);
