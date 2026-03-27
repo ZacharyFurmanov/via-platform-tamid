@@ -32,10 +32,11 @@ function isAuthorized(request: NextRequest): boolean {
 
 async function getAllUserEmails(): Promise<string[]> {
   const sql = neon(getDatabaseUrl());
+  // Union users (logged-in accounts) + pilot_access (all signups/waitlist), deduplicated
   const rows = await sql`
-    SELECT LOWER(email) AS email FROM users
-    WHERE email IS NOT NULL
-    ORDER BY created_at DESC
+    SELECT LOWER(email) AS email FROM users WHERE email IS NOT NULL
+    UNION
+    SELECT LOWER(email) AS email FROM pilot_access WHERE email IS NOT NULL
   `;
   return rows.map((r) => r.email as string);
 }
