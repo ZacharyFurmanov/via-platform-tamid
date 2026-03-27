@@ -1076,3 +1076,60 @@ export async function sendTrendingItemEmail(
     html: viaShell("Trending", content),
   });
 }
+
+/**
+ * Send a popup event announcement email.
+ */
+export async function sendPopupAnnouncementEmail(
+  emails: string[]
+): Promise<{ sent: number; failed: number }> {
+  if (emails.length === 0) return { sent: 0, failed: 0 };
+
+  const resend = getResend();
+  const ticketUrl = "https://posh.vip/e/via-nyc-pop-up";
+
+  const content = `
+    <h1 style="font-size:28px;font-weight:400;color:#5D0F17;margin:0 0 24px;line-height:1.25;
+       font-family:Georgia,'Times New Roman',serif;">
+      In NYC this weekend?
+    </h1>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 12px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Stop by our popup in Flatiron this Sunday from 11–5.
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 12px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Come shop VYA in person with 10 partner stores &amp; meet the founder of VYA.
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 32px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Drinks provided.
+    </p>
+    <a href="${ticketUrl}"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:14px 36px;
+              text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+              font-family:Georgia,'Times New Roman',serif;">Get Tickets</a>
+  `;
+
+  const html = viaShell("VYA NYC Popup", content);
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const email of emails) {
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "VYA NYC Popup — This Sunday in Flatiron",
+        html,
+      });
+      sent++;
+      await new Promise((r) => setTimeout(r, 100));
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
