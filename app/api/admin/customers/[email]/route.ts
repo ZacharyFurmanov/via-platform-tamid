@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
+import { stores as storeList } from "@/app/lib/stores";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -79,11 +80,10 @@ export async function GET(
     ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
-      SELECT sf.store_slug, sf.created_at, s.name AS store_name
-      FROM store_favorites sf
-      LEFT JOIN stores s ON s.slug = sf.store_slug
-      WHERE sf.user_id = ${userId}
-      ORDER BY sf.created_at DESC
+      SELECT store_slug, created_at
+      FROM store_favorites
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
     ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
@@ -232,10 +232,14 @@ export async function GET(
       returned: !!o.returned,
       returnedAt: o.returned_at instanceof Date ? o.returned_at.toISOString() : (o.returned_at ?? null),
     })),
-    storeFavorites: storeFavs.map((s) => ({
-      storeSlug: s.store_slug,
-      storeName: s.store_name ?? s.store_slug,
-      createdAt: s.created_at instanceof Date ? s.created_at.toISOString() : s.created_at,
-    })),
+    storeFavorites: storeFavs.map((s) => {
+      const storeSlug = s.store_slug as string;
+      const storeName = storeList.find((st) => st.slug === storeSlug)?.name ?? storeSlug;
+      return {
+        storeSlug,
+        storeName,
+        createdAt: s.created_at instanceof Date ? s.created_at.toISOString() : s.created_at as string,
+      };
+    }),
   }, { headers: { "Cache-Control": "no-store" } });
 }
