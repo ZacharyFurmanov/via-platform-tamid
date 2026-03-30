@@ -173,22 +173,20 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(*)::int FROM conversions)                                                            AS buyers
     `,
 
-    // Returning users — approved users who browsed within the window AND had prior activity before it
+    // Returning users — approved users with 2+ distinct visit days (ever) who were active in the window.
+    // Using total distinct days (not "before the window") so 30d >= 7d is guaranteed.
     sql`
       SELECT
-        COUNT(DISTINCT user_id) FILTER (WHERE has_recent_30d AND has_prior_30d)::int AS returning_30d,
-        COUNT(DISTINCT user_id) FILTER (WHERE has_recent_7d  AND has_prior_7d)::int  AS returning_7d
+        COUNT(DISTINCT user_id) FILTER (WHERE was_active_30d AND visit_days >= 2)::int AS returning_30d,
+        COUNT(DISTINCT user_id) FILTER (WHERE was_active_7d  AND visit_days >= 2)::int AS returning_7d
       FROM (
         SELECT
           a.user_id,
-          bool_or(a.ts >= NOW() - INTERVAL '30 days') AS has_recent_30d,
-          bool_or(a.ts <  NOW() - INTERVAL '30 days') AS has_prior_30d,
-          bool_or(a.ts >= NOW() - INTERVAL '7 days')  AS has_recent_7d,
-          bool_or(a.ts <  NOW() - INTERVAL '7 days')  AS has_prior_7d
+          COUNT(DISTINCT DATE(a.ts))                  AS visit_days,
+          bool_or(a.ts >= NOW() - INTERVAL '30 days') AS was_active_30d,
+          bool_or(a.ts >= NOW() - INTERVAL '7 days')  AS was_active_7d
         FROM (
-          SELECT user_id::text, timestamp  AS ts FROM product_views    WHERE user_id IS NOT NULL
-          UNION ALL
-          SELECT user_id::text, timestamp  AS ts FROM clicks           WHERE user_id IS NOT NULL
+          SELECT user_id::text, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
           UNION ALL
           SELECT user_id::text, created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
           UNION ALL

@@ -281,7 +281,7 @@ export default function KeyMetricsPage() {
                   label="Returning Users (30d)"
                   value={fmtNum(data.returningUsers.last30d)}
                   sub={`${fmtNum(data.returningUsers.last7d)} returned this week`}
-                  note="Logged-in users who clicked through on 2+ different days"
+                  note="Approved users active in the period who have visited on 2+ different days"
                   href="/admin/customers"
                 />
               </div>
