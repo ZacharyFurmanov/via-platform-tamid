@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const next = searchParams.get("callbackUrl") || "/";
   const referralCode = searchParams.get("ref") || "";
+  const promoCode = searchParams.get("promo")?.toUpperCase() || "";
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,7 +31,7 @@ export default function RegisterPage() {
   const [myReferralCode, setMyReferralCode] = useState("");
   const [copied, setCopied] = useState(false);
   const isInApp = useIsInAppBrowser();
-  const [accessCode, setAccessCode] = useState("");
+  const [accessCode, setAccessCode] = useState(promoCode);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {

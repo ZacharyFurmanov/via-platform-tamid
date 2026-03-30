@@ -34,18 +34,8 @@ export default function LoginPage() {
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#5D0F17] flex flex-col items-center justify-center px-4">
-      {/* Boston Pop-up banner */}
-      <a
-        href="https://posh.vip/e/second-edition-pop-up"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed top-0 left-0 right-0 z-10 block w-full text-center bg-[#F7F3EA] text-[#5D0F17] text-[10px] uppercase tracking-[0.2em] py-2 hover:bg-[#F7F3EA]/90 transition"
-      >
-        Boston Pop-Up April 12th — Click Here for Tickets
-      </a>
-
       {/* Modal card */}
-      <div className="bg-white w-full max-w-[520px] px-10 py-12 sm:px-14 sm:py-14 mt-8">
+      <div className="bg-white w-full max-w-[520px] px-10 py-12 sm:px-14 sm:py-14">
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-1.5 mb-8">

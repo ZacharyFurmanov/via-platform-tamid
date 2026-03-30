@@ -22,6 +22,7 @@ const PUBLIC_ROUTES = [
   "/api/track",
   "/api/conversion",
   "/api/access-code",
+  "/api/promo-code",
   "/membership",
   "/api/webhooks/stripe",
   "/api/admin/collabs-product-ids",

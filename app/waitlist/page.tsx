@@ -200,12 +200,12 @@ function WaitlistContent() {
     <div className="min-h-full bg-[#F7F3EA] text-[#5D0F17]">
       {/* Pop Up Banner */}
       <a
-        href="https://posh.vip/e/via-nyc-pop-up"
+        href="https://posh.vip/e/second-edition-pop-up"
         target="_blank"
         rel="noopener noreferrer"
         className="block w-full bg-[#5D0F17] text-[#F7F3EA] text-center text-xs tracking-[0.15em] uppercase py-2.5 hover:bg-[#5D0F17]/90 transition"
       >
-        Discover VYA in person — NYC Pop Up March 29th. Click here for tickets.
+        Boston Pop Up April 12th — Click here for tickets.
       </a>
 
       {/* Header */}
