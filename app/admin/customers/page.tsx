@@ -17,6 +17,10 @@ type Customer = {
   loginMethod: string;
   emailSubscribe: boolean;
   activityScore: number;
+  clickCount: number;
+  favoriteCount: number;
+  cartCount: number;
+  orderCount: number;
 };
 
 type ActivityData = {
@@ -518,10 +522,25 @@ export default function CustomersPage() {
                   <tr key={c.email} onClick={() => router.push(`/admin/customers/${encodeURIComponent(c.email)}`)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                     <td style={{ padding: "12px 16px", color: "rgba(93,15,23,0.3)" }}>{i + 1}</td>
                     <td style={{ padding: "12px 16px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         <p style={{ fontWeight: 500, color: "#5D0F17", margin: 0 }}>{c.name || "—"}</p>
-                        {c.activityScore > 0 && (
-                          <span title={`Activity score: ${c.activityScore} (clicks + likes + cart + orders)`} style={{ fontSize: 10, background: "#5D0F17", color: "#F7F3EA", padding: "1px 6px", borderRadius: 10 }}>{c.activityScore} actions</span>
+                        {c.clickCount > 0 && (
+                          <span title={`${c.clickCount} clicks`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#5D0F17", background: "rgba(93,15,23,0.08)", padding: "1px 5px", borderRadius: 4 }}>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                            {c.clickCount}
+                          </span>
+                        )}
+                        {c.favoriteCount > 0 && (
+                          <span title={`${c.favoriteCount} saved`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#5D0F17", background: "rgba(93,15,23,0.08)", padding: "1px 5px", borderRadius: 4 }}>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            {c.favoriteCount}
+                          </span>
+                        )}
+                        {c.orderCount > 0 && (
+                          <span title={`${c.orderCount} orders`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#166534", background: "#dcfce7", padding: "1px 5px", borderRadius: 4, fontWeight: 600 }}>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                            {c.orderCount}
+                          </span>
                         )}
                       </div>
                       <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.email}</p>

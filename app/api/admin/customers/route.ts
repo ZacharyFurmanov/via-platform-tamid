@@ -80,7 +80,11 @@ export async function GET(request: NextRequest) {
         COALESCE(MAX(fav.cnt),  0) +
         COALESCE(MAX(cart.cnt), 0) +
         COALESCE(MAX(clk.cnt),  0) +
-        COALESCE(MAX(ord.cnt),  0) AS activity_score
+        COALESCE(MAX(ord.cnt),  0) AS activity_score,
+        COALESCE(MAX(clk.cnt),  0) AS click_count,
+        COALESCE(MAX(fav.cnt),  0) AS favorite_count,
+        COALESCE(MAX(cart.cnt), 0) AS cart_count,
+        COALESCE(MAX(ord.cnt),  0) AS order_count
       FROM all_customers ac
       LEFT JOIN users u         ON LOWER(u.email) = LOWER(ac.email)
       LEFT JOIN accounts a      ON a.user_id = u.id
@@ -119,6 +123,10 @@ export async function GET(request: NextRequest) {
         loginMethod,
         emailSubscribe: r.email_subscribe as boolean,
         activityScore: Number(r.activity_score ?? 0),
+        clickCount: Number(r.click_count ?? 0),
+        favoriteCount: Number(r.favorite_count ?? 0),
+        cartCount: Number(r.cart_count ?? 0),
+        orderCount: Number(r.order_count ?? 0),
       };
     });
 

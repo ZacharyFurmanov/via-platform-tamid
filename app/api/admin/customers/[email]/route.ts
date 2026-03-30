@@ -37,7 +37,7 @@ export async function GET(
 
   type Row = Record<string, unknown>;
 
-  const [clicks, favorites, cart, orders, storeFavs] = await Promise.all([
+  const [clicks, favorites, cart, orders, storeFavs, retention] = await Promise.all([
     userId ? sql`
       SELECT click_id, product_name, store, store_slug, timestamp
       FROM clicks
@@ -85,6 +85,22 @@ export async function GET(
       WHERE sf.user_id = ${userId}
       ORDER BY sf.created_at DESC
     ` : Promise.resolve([] as Row[]),
+
+    userId ? sql`
+      SELECT
+        MIN(ts)                           AS first_seen,
+        MAX(ts)                           AS last_seen,
+        COUNT(DISTINCT ts::date)::int     AS distinct_days
+      FROM (
+        SELECT timestamp AS ts FROM clicks            WHERE user_id = ${userId}
+        UNION ALL
+        SELECT created_at               FROM product_favorites WHERE user_id = ${userId}
+        UNION ALL
+        SELECT created_at               FROM store_favorites   WHERE user_id = ${userId}
+        UNION ALL
+        SELECT timestamp                FROM conversions       WHERE user_id = ${userId} AND order_total > 0
+      ) a
+    ` : Promise.resolve([{ first_seen: null, last_seen: null, distinct_days: 0 }] as Row[]),
   ]);
 
   // Group clicks into sessions (gap > 30 min = new session)
@@ -132,6 +148,12 @@ export async function GET(
   }
   const topStores = Object.values(storeCounts).sort((a, b) => b.count - a.count).slice(0, 5);
 
+  const ret = retention[0] ?? {};
+  const firstSeen = ret.first_seen ? (ret.first_seen instanceof Date ? ret.first_seen.toISOString() : String(ret.first_seen)) : null;
+  const lastSeen = ret.last_seen ? (ret.last_seen instanceof Date ? ret.last_seen.toISOString() : String(ret.last_seen)) : null;
+  const distinctDays = Number(ret.distinct_days ?? 0);
+  const daysSinceLastSeen = lastSeen ? Math.floor((Date.now() - new Date(lastSeen).getTime()) / (1000 * 60 * 60 * 24)) : null;
+
   const totalGmv = (orders as { order_total: number; returned?: boolean }[])
     .filter((o) => !o.returned)
     .reduce((sum, o) => sum + Number(o.order_total), 0);
@@ -159,6 +181,13 @@ export async function GET(
       totalGmv,
       totalSessions: sessions.length,
       totalBrowseMs: sessions.reduce((sum, s) => sum + s.durationMs, 0),
+    },
+    retention: {
+      firstSeen,
+      lastSeen,
+      distinctDays,
+      daysSinceLastSeen,
+      isReturning: distinctDays >= 2,
     },
     sessions: sessions.reverse().map((s) => ({
       start: s.start,

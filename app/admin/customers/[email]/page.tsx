@@ -75,9 +75,18 @@ type CartItem = {
 type TopStore = { store: string; storeSlug: string; count: number };
 type StoreFav = { storeSlug: string; storeName: string; createdAt: string };
 
+type Retention = {
+  firstSeen: string | null;
+  lastSeen: string | null;
+  distinctDays: number;
+  daysSinceLastSeen: number | null;
+  isReturning: boolean;
+};
+
 type Data = {
   profile: Profile;
   stats: Stats;
+  retention: Retention;
   sessions: Session[];
   topStores: TopStore[];
   favorites: Favorite[];
@@ -164,7 +173,7 @@ export default function CustomerProfilePage() {
         {loading && <div style={{ color: `${M}50`, fontSize: 13 }}>Loading...</div>}
 
         {!loading && !data && (
-          <div style={{ color: "#b91c1c", fontSize: 13 }}>Customer not found.</div>
+          <div style={{ color: "#b91c1c", fontSize: 13 }}>Failed to load customer — the page may still be deploying. Try refreshing.</div>
         )}
 
         {!loading && data && p && s && (
@@ -213,6 +222,43 @@ export default function CustomerProfilePage() {
               <StatBox label="Orders" value={s.totalOrders} />
               {s.totalGmv > 0 && <StatBox label="Total Spent" value={fmtMoney(s.totalGmv)} />}
             </div>
+
+            {/* Retention */}
+            {data.retention.firstSeen && (
+              <>
+                <SectionLabel>Retention</SectionLabel>
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 4, padding: "16px 20px", display: "flex", flexWrap: "wrap", gap: 24 }}>
+                  <div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em", color: `${M}50`, marginBottom: 3 }}>First seen</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: M }}>{fmtDate(data.retention.firstSeen)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em", color: `${M}50`, marginBottom: 3 }}>Last seen</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: M }}>{fmtDate(data.retention.lastSeen!)}</div>
+                    {data.retention.daysSinceLastSeen !== null && (
+                      <div style={{ fontSize: 11, color: data.retention.daysSinceLastSeen > 14 ? "#b91c1c" : `${M}50` }}>
+                        {data.retention.daysSinceLastSeen === 0 ? "Today" : `${data.retention.daysSinceLastSeen}d ago`}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.15em", color: `${M}50`, marginBottom: 3 }}>Active days</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: M }}>{data.retention.distinctDays}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    {data.retention.isReturning ? (
+                      <span style={{ fontSize: 11, background: "#dcfce7", color: "#166534", padding: "4px 12px", borderRadius: 4, fontWeight: 600 }}>
+                        Returning user
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, background: "#f3f4f6", color: "#6b7280", padding: "4px 12px", borderRadius: 4 }}>
+                        Visited once
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Top stores */}
             {data.topStores.length > 0 && (
