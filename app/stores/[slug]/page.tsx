@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { auth } from "@/app/lib/auth";
 import { stores } from "@/app/lib/stores";
 import { loadStoreProducts } from "@/app/lib/loadStoreProducts";
@@ -22,6 +23,34 @@ type StorePageProps = {
     slug: string;
   }>;
 };
+
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const store = stores.find((s) => s.slug === slug);
+  if (!store) return {};
+
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+  const imageUrl = store.image.startsWith("http") ? store.image : `${BASE_URL}${store.image}`;
+  const description = `Shop ${store.name} on VYA — ${store.location}. ${store.description.slice(0, 120)}...`;
+
+  return {
+    title: `${store.name} — VYA`,
+    description,
+    openGraph: {
+      title: store.name,
+      description,
+      url: `${BASE_URL}/stores/${slug}`,
+      images: [{ url: imageUrl, width: 1200, height: 1200, alt: store.name }],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: store.name,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 // Helper to parse price string to number
 function parsePrice(priceStr: string): number {

@@ -35,6 +35,8 @@ export async function GET(
   const user = userRows[0] ?? null;
   const userId = user?.id ? String(user.id) : null;
 
+  type Row = Record<string, unknown>;
+
   const [clicks, favorites, cart, orders, storeFavs] = await Promise.all([
     userId ? sql`
       SELECT click_id, product_name, store, store_slug, timestamp
@@ -42,7 +44,7 @@ export async function GET(
       WHERE user_id = ${userId}
       ORDER BY timestamp DESC
       LIMIT 500
-    ` : Promise.resolve([]),
+    ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
       SELECT
@@ -57,7 +59,7 @@ export async function GET(
       WHERE pf.user_id = ${userId}
       ORDER BY pf.created_at DESC
       LIMIT 200
-    ` : Promise.resolve([]),
+    ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
       SELECT product_id, product_title, product_image, store_name, price, currency, added_at
@@ -65,7 +67,7 @@ export async function GET(
       WHERE user_id = ${userId}
       ORDER BY added_at DESC
       LIMIT 50
-    ` : Promise.resolve([]),
+    ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
       SELECT conversion_id, order_id, order_total, currency, store_name, store_slug,
@@ -74,7 +76,7 @@ export async function GET(
       WHERE user_id = ${userId} AND order_total > 0
       ORDER BY timestamp DESC
       LIMIT 50
-    ` : Promise.resolve([]),
+    ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
       SELECT sf.store_slug, sf.created_at, s.name AS store_name
@@ -82,7 +84,7 @@ export async function GET(
       LEFT JOIN stores s ON s.slug = sf.store_slug
       WHERE sf.user_id = ${userId}
       ORDER BY sf.created_at DESC
-    ` : Promise.resolve([]),
+    ` : Promise.resolve([] as Row[]),
   ]);
 
   // Group clicks into sessions (gap > 30 min = new session)
