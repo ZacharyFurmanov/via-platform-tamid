@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNav from "@/app/components/AdminNav";
 
@@ -247,6 +247,7 @@ function fmt(date: string | null) {
 
 export default function CustomersPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -255,7 +256,6 @@ export default function CustomersPage() {
   const [approving, setApproving] = useState<string | null>(null);
   const [approvingAll, setApprovingAll] = useState(false);
   const [emailProgress, setEmailProgress] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [sendingNewArrivals, setSendingNewArrivals] = useState(false);
   const [newArrivalsResult, setNewArrivalsResult] = useState<string | null>(null);
 
@@ -515,7 +515,7 @@ export default function CustomersPage() {
               </thead>
               <tbody>
                 {filtered.map((c, i) => (
-                  <tr key={c.email} onClick={() => setSelectedCustomer(c)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                  <tr key={c.email} onClick={() => router.push(`/admin/customers/${encodeURIComponent(c.email)}`)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                     <td style={{ padding: "12px 16px", color: "rgba(93,15,23,0.3)" }}>{i + 1}</td>
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -603,9 +603,6 @@ export default function CustomersPage() {
         )}
       </div>
     </main>
-    {selectedCustomer && (
-      <ActivityPanel customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />
-    )}
     </>
   );
 }
