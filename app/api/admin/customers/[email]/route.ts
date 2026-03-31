@@ -199,6 +199,7 @@ export async function GET(
       start, end,
       durationMs: currentBatch[currentBatch.length - 1].ts - currentBatch[0].ts,
       clickCount: currentBatch.filter((e) => e.type === "click").length,
+      viewCount: currentBatch.filter((e) => e.type === "view").length,
       favoriteCount: currentBatch.filter((e) => e.type === "favorite").length,
       cartCount: currentBatch.filter((e) => e.type === "cart").length,
       clicks: currentBatch.map((e) => ({ label: e.label, store: e.store, storeSlug: e.storeSlug, timestamp: new Date(e.ts).toISOString(), type: e.type })),
