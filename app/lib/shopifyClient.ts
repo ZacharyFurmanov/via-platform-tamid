@@ -657,6 +657,115 @@ export async function fetchShopifyProductsPublic(
 }
 
 /**
+ * Fetches products from specific Shopify collections using the public collections.json endpoint.
+ * Deduplicates products that appear in multiple collections.
+ * No access token required.
+ */
+export async function fetchShopifyProductsByCollections(
+  storeDomain: string,
+  storeName: string,
+  collectionHandles: string[],
+  maxProducts: number = 5000
+): Promise<ShopifyFetchResult> {
+  const normalizedDomain = normalizeStoreDomain(storeDomain);
+  const seenIds = new Set<string>();
+  const products: ShopifyProduct[] = [];
+  let skippedCount = 0;
+  const limit = 250;
+
+  for (const handle of collectionHandles) {
+    let page = 1;
+    console.log(`[Shopify Collections] Fetching collection "${handle}" from ${normalizedDomain}`);
+
+    while (products.length < maxProducts) {
+      const url = `https://${normalizedDomain}/collections/${handle}/products.json?limit=${limit}&page=${page}`;
+
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+
+      if (!response.ok) {
+        console.error(`[Shopify Collections] Failed to fetch collection "${handle}": ${response.status}`);
+        break;
+      }
+
+      const data = await response.json();
+      if (!data.products || data.products.length === 0) break;
+
+      for (const product of data.products) {
+        if (products.length >= maxProducts) break;
+
+        const shopifyProductId = product.id ? String(product.id) : null;
+        if (shopifyProductId && seenIds.has(shopifyProductId)) continue;
+        if (shopifyProductId) seenIds.add(shopifyProductId);
+
+        const variants = product.variants || [];
+        let isSoldOut = false;
+        if (product.available === false) {
+          isSoldOut = true;
+        } else if (product.available === null || product.available === undefined) {
+          const hasVariants = variants.length > 0;
+          if (hasVariants && variants.every((v: { available?: boolean }) => v.available === false)) {
+            isSoldOut = true;
+          }
+        }
+        if (isSoldOut) { skippedCount++; continue; }
+
+        const variant = variants[0];
+        const price = variant?.price ? parseFloat(variant.price) : null;
+        const variantId = variant?.id ? String(variant.id) : null;
+        const compareAtRaw = variant?.compare_at_price ? parseFloat(variant.compare_at_price) : null;
+        const compareAtPrice = compareAtRaw && price && compareAtRaw > price ? compareAtRaw : null;
+
+        const productOptions: Array<{ name: string; values?: string[] }> = product.options || [];
+        const sizeOptionIndex = productOptions.findIndex((opt: { name: string }) => /size/i.test(opt.name));
+        let sizeFromVariant: string | null = null;
+        if (sizeOptionIndex >= 0 && variant) {
+          const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
+          const val = variant[optionKey];
+          if (val && val !== "Default Title" && SIZE_VALUE_REGEX.test(val.trim())) sizeFromVariant = val;
+        }
+        const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
+        const variantTitleIfSize = rawVariantTitle && SIZE_VALUE_REGEX.test(rawVariantTitle.trim()) ? rawVariantTitle : null;
+        const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
+        const sizeFromTitle = extractSizeFromTitle(product.title);
+        const sizeFromDescription = extractSizeFromDescription(product.body_html || null);
+        const specificSize = sizeFromDescription ?? sizeFromTitle;
+        const size = (sizeFromVariant && !isGenericOnly) ? sizeFromVariant : specificSize ?? variantTitleIfSize ?? (isGenericOnly ? sizeFromVariant : null);
+
+        const allImageUrls: string[] = (product.images || []).map((img: { src?: string }) => img.src).filter(Boolean) as string[];
+        const imageUrl = allImageUrls[0] || null;
+        const anyVariantAvailable = variants.some((v: { available?: boolean }) => v.available === true);
+        const isAvailable = product.available === true || anyVariantAvailable ||
+          (product.available !== false && !variants.every((v: { available?: boolean }) => v.available === false));
+
+        products.push({
+          title: product.title,
+          price: isNaN(price as number) ? null : price,
+          compareAtPrice,
+          currency: "USD",
+          image: imageUrl,
+          images: allImageUrls,
+          externalUrl: `https://${normalizedDomain}/products/${product.handle}`,
+          store: storeName,
+          vendor: product.vendor || null,
+          productType: product.product_type || null,
+          availableForSale: isAvailable,
+          description: product.body_html || null,
+          variantId,
+          shopifyProductId,
+          size,
+        });
+      }
+
+      if (data.products.length < limit) break;
+      page++;
+    }
+  }
+
+  console.log(`[Shopify Collections] ${storeName}: ${products.length} synced from ${collectionHandles.join(", ")}, ${skippedCount} skipped`);
+  return { products, skippedCount };
+}
+
+/**
  * Converts ShopifyProduct to the standard RSSProduct format
  * for compatibility with existing product storage
  */

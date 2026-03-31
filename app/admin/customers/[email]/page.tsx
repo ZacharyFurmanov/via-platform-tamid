@@ -23,6 +23,7 @@ type Profile = {
 };
 
 type Stats = {
+  totalViews: number;
   totalClicks: number;
   totalFavorites: number;
   totalCartItems: number;
@@ -32,12 +33,23 @@ type Stats = {
   totalBrowseMs: number;
 };
 
+type SessionEvent = {
+  type: "click" | "view" | "favorite" | "cart";
+  label: string;
+  store: string;
+  storeSlug: string;
+  timestamp: string;
+};
+
 type Session = {
   start: string;
   end: string;
   durationMs: number;
   clickCount: number;
-  clicks: { clickId: string; productName: string; store: string; storeSlug: string; timestamp: string }[];
+  viewCount: number;
+  favoriteCount: number;
+  cartCount: number;
+  events: SessionEvent[];
 };
 
 type Order = {
@@ -215,8 +227,9 @@ export default function CustomerProfilePage() {
             {/* Stats */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 8 }}>
               <StatBox label="Sessions" value={s.totalSessions} />
-              <StatBox label="Total Browse Time" value={fmtDuration(s.totalBrowseMs)} sub="estimated from click timing" />
-              <StatBox label="Clicks" value={s.totalClicks} />
+              <StatBox label="Total Browse Time" value={fmtDuration(s.totalBrowseMs)} sub="from all activity" />
+              <StatBox label="Product Views" value={s.totalViews} />
+              <StatBox label="Store Click-Throughs" value={s.totalClicks} />
               <StatBox label="Saved Items" value={s.totalFavorites} />
               <StatBox label="In Cart" value={s.totalCartItems} />
               <StatBox label="Orders" value={s.totalOrders} />
@@ -326,7 +339,10 @@ export default function CustomerProfilePage() {
                       >
                         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                           <span style={{ fontSize: 12, color: M, fontWeight: 500 }}>{fmtDateTime(sess.start)}</span>
-                          <span style={{ fontSize: 11, color: `${M}50` }}>{sess.clickCount} click{sess.clickCount !== 1 ? "s" : ""}</span>
+                          {sess.viewCount > 0 && <span style={{ fontSize: 11, color: `${M}50` }}>👁 {sess.viewCount}</span>}
+                          {sess.clickCount > 0 && <span style={{ fontSize: 11, color: `${M}50` }}>↗ {sess.clickCount}</span>}
+                          {sess.favoriteCount > 0 && <span style={{ fontSize: 11, color: `${M}50` }}>♥ {sess.favoriteCount}</span>}
+                          {sess.cartCount > 0 && <span style={{ fontSize: 11, color: `${M}50` }}>🛍 {sess.cartCount}</span>}
                           <span style={{ fontSize: 11, color: `${M}60`, background: "#F7F3EA", padding: "2px 8px", borderRadius: 2 }}>
                             {fmtDuration(sess.durationMs)}
                           </span>
@@ -336,16 +352,25 @@ export default function CustomerProfilePage() {
 
                       {expandedSessions.has(i) && (
                         <div style={{ borderTop: "1px solid #f0f0f0", padding: "0 16px 12px" }}>
-                          {sess.clicks.map((c, j) => (
-                            <div key={c.clickId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: j < sess.clicks.length - 1 ? "1px solid #f7f7f7" : "none" }}>
-                              <div>
-                                <p style={{ fontSize: 13, color: M, margin: 0 }}>{c.productName}</p>
-                                <p style={{ fontSize: 11, color: `${M}50`, margin: 0 }}>
-                                  <Link href={`/admin/stores/${c.storeSlug}`} style={{ color: `${M}50`, textDecoration: "none" }}>{c.store}</Link>
-                                </p>
+                          {sess.events.map((e, j) => (
+                            <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: j < sess.events.length - 1 ? "1px solid #f7f7f7" : "none" }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                                <span style={{ fontSize: 12, marginTop: 1, flexShrink: 0 }}>
+                                  {e.type === "click" ? "↗" : e.type === "view" ? "👁" : e.type === "favorite" ? "♥" : "🛍"}
+                                </span>
+                                <div>
+                                  <p style={{ fontSize: 13, color: M, margin: 0 }}>{e.label}</p>
+                                  {e.store && (
+                                    <p style={{ fontSize: 11, color: `${M}50`, margin: 0 }}>
+                                      {e.storeSlug ? (
+                                        <Link href={`/admin/stores/${e.storeSlug}`} style={{ color: `${M}50`, textDecoration: "none" }}>{e.store}</Link>
+                                      ) : e.store}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               <span style={{ fontSize: 11, color: `${M}35`, whiteSpace: "nowrap", marginLeft: 12 }}>
-                                {new Date(c.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                                {new Date(e.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                               </span>
                             </div>
                           ))}

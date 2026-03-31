@@ -59,10 +59,11 @@ export async function GET(request: NextRequest) {
         FROM waitlist w
         WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
       ),
-      fav_counts    AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM product_favorites GROUP BY user_id::text),
-      cart_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM user_cart_items   GROUP BY user_id::text),
-      click_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM clicks             GROUP BY user_id::text),
-      order_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt FROM conversions WHERE order_total > 0 GROUP BY user_id::text)
+      fav_counts    AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(created_at) AS last_at FROM product_favorites WHERE user_id IS NOT NULL GROUP BY user_id::text),
+      cart_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(added_at)   AS last_at FROM user_cart_items   WHERE user_id IS NOT NULL GROUP BY user_id::text),
+      click_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM clicks             WHERE user_id IS NOT NULL GROUP BY user_id::text),
+      view_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM product_views      WHERE user_id IS NOT NULL GROUP BY user_id::text),
+      order_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text)
       SELECT
         ac.email,
         ac.first_name,
@@ -80,24 +81,35 @@ export async function GET(request: NextRequest) {
         COALESCE(MAX(fav.cnt),  0) +
         COALESCE(MAX(cart.cnt), 0) +
         COALESCE(MAX(clk.cnt),  0) +
+        COALESCE(MAX(vw.cnt),   0) +
         COALESCE(MAX(ord.cnt),  0) AS activity_score,
         COALESCE(MAX(clk.cnt),  0) AS click_count,
+        COALESCE(MAX(vw.cnt),   0) AS view_count,
         COALESCE(MAX(fav.cnt),  0) AS favorite_count,
         COALESCE(MAX(cart.cnt), 0) AS cart_count,
-        COALESCE(MAX(ord.cnt),  0) AS order_count
+        COALESCE(MAX(ord.cnt),  0) AS order_count,
+        GREATEST(
+          MAX(clk.last_at),
+          MAX(vw.last_at),
+          MAX(fav.last_at),
+          MAX(cart.last_at),
+          MAX(ord.last_at)
+        ) AS last_active_at
       FROM all_customers ac
       LEFT JOIN users u         ON LOWER(u.email) = LOWER(ac.email)
       LEFT JOIN accounts a      ON a.user_id = u.id
-      LEFT JOIN fav_counts   fav ON fav.uid = u.id::text
-      LEFT JOIN cart_counts  cart ON cart.uid = u.id::text
-      LEFT JOIN click_counts clk  ON clk.uid = u.id::text
-      LEFT JOIN order_counts ord  ON ord.uid  = u.id::text
+      LEFT JOIN fav_counts   fav  ON fav.uid  = u.id::text
+      LEFT JOIN cart_counts  cart ON cart.uid  = u.id::text
+      LEFT JOIN click_counts clk  ON clk.uid   = u.id::text
+      LEFT JOIN view_counts  vw   ON vw.uid    = u.id::text
+      LEFT JOIN order_counts ord  ON ord.uid   = u.id::text
       GROUP BY
         ac.email, ac.first_name, ac.last_name, ac.phone,
         ac.status, ac.created_at, ac.approved_at,
         ac.referral_code, ac.referred_by, ac.email_subscribe,
         u.name, u.id
-      ORDER BY activity_score DESC, ac.created_at DESC
+
+      ORDER BY last_active_at DESC NULLS LAST, activity_score DESC, ac.created_at DESC
     `;
 
     const customers = rows.map((r) => {
@@ -124,9 +136,11 @@ export async function GET(request: NextRequest) {
         emailSubscribe: r.email_subscribe as boolean,
         activityScore: Number(r.activity_score ?? 0),
         clickCount: Number(r.click_count ?? 0),
+        viewCount: Number(r.view_count ?? 0),
         favoriteCount: Number(r.favorite_count ?? 0),
         cartCount: Number(r.cart_count ?? 0),
         orderCount: Number(r.order_count ?? 0),
+        lastActiveAt: (r.last_active_at as string | null) ?? null,
       };
     });
 

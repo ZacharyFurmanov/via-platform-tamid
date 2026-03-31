@@ -46,6 +46,29 @@ export const stores = [
       "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
   },
   {
+    slug: "chill-boutique",
+    dashboardToken: "cb-3f1a9d6e2c8b",
+    name: "Chill Boutique",
+    location: "Fountain Hills, AZ",
+    description:
+      "Chill Boutique is an upscale women's consignment boutique with a Western soul. Nestled in Fountain Hills, AZ, Chill offers a premier selection of designer, vintage, and desert-inspired fashion. We're on a mission to re-home pre-loved gems from Arizona's most stylish women. Whether you're hunting for a high-end label or a one-of-a-kind vintage piece, your next find is waiting here.",
+    website: "https://chillboutiqueconsignment.com",
+    dataSource: "chill-boutique",
+    image: "/stores/chill-boutique.jpg",
+    logo: "/stores/chill-boutique.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "191049",
+    authenticityPolicy:
+      "Every designer and vintage item at Chill Boutique is personally inspected and authenticated by their expert team before being listed for sale. Items are thoroughly reviewed for condition, authenticity, and accurate description so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from Fountain Hills, AZ. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing. Use the form below if you have any questions before buying.",
+  },
+  {
     slug: "club-fleur",
     dashboardToken: "cf-7a2d9e1b4c8f3",
     name: "Club Fleur Vintage",
@@ -137,6 +160,27 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "honey-bear-vintage",
+    dashboardToken: "hbv-4e2a8f1c9d7b",
+    name: "Honey Bear Vintage",
+    location: "New York, NY",
+    description:
+      "Honeybear Vintage comes to you from Morgan Muno and Liz Marino. Just like our friendship (started in Copenhagen, maintained long distance between Oregon and Madrid, and now based in NYC!), our items span decades and occasions, with an emphasis on size variety and quality materials that could live in your closet forever. It's our way of building a place where strangers can become friends in a few hours, where you can find the effortless kindness of bathroom line banter next to the perfect dress for your friend's wedding.",
+    website: "https://honeybearvintagenyc.com",
+    dataSource: "honey-bear-vintage",
+    image: "/stores/honey-bear-vintage.jpg",
+    logo: "/stores/honey-bear-vintage.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "square-manual" as const,
+    authenticityPolicy:
+      "Every piece at Honey Bear Vintage is personally sourced and hand-selected by Morgan and Liz for its quality, character, and longevity. Each item is carefully inspected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "house-on-a-chain",
     dashboardToken: "hoac-2f7e1b9d4c3a",
     name: "House on a Chain",
@@ -156,6 +200,29 @@ export const stores = [
       "Every piece at House on a Chain is sourced from trusted vintage dealers, collectors, and archival resale markets — then authenticated and evaluated for condition before listing. The curation centres on rare 90s and early 2000s luxury — Galliano-era Dior, Prada, Chanel, La Perla — chosen for femininity, craftsmanship, and elevation.",
     shippingPolicy:
       "Orders ship from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
+    slug: "jade-vintage",
+    dashboardToken: "jv-6c2e8a4f1b9d",
+    name: "Jade Vintage",
+    location: "Toronto, Canada",
+    description:
+      "Jade Vintage is a curated e-commerce business based in Toronto, Canada specializing in small-batch collections of rare, authenticated pre-loved designer pieces, including Balenciaga City bags, Chanel Classic Flaps, and other timeless vintage styles. Beyond sourcing, we prioritize building strong client relationships through education—guiding our customers on how to shop smarter, invest in quality, and make more conscious purchasing decisions. Rooted in expertise, transparency, and considered curation, Jade Vintage makes luxury more accessible while championing a slower, more intentional approach to fashion—where each piece is chosen with purpose and worn with meaning.",
+    website: "https://jadevintage.ca",
+    dataSource: "jade-vintage",
+    image: "/stores/jade-vintage.jpg",
+    logo: "/stores/jade-vintage.jpg",
+    logoBg: "#ffffff",
+    currency: "CAD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "233878",
+    authenticityPolicy:
+      "Every piece at Jade Vintage is personally authenticated and carefully inspected before listing. Specializing in rare designer pieces — Balenciaga City bags, Chanel Classic Flaps, and archival luxury — each item is sourced with expertise and described with full transparency so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from Toronto, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
@@ -255,29 +322,6 @@ export const stores = [
       "All sales are final — no returns or refunds. If you experience any issues with your order, email missiarchives@gmail.com and the team will do their best to help.",
   },
   {
-    slug: "moonstruck-vintage",
-    dashboardToken: "mv-7e2a9c4b1d8f",
-    name: "Moonstruck Vintage",
-    location: "New York, NY",
-    description:
-      "Moonstruck Vintage is dedicated to curating unique accessories for everyone. We aim to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. We focus on bags, but also love a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
-    website: "https://moonstruckvintagenyc.com",
-    dataSource: "moonstruck-vintage",
-    image: "/stores/moonstruck-vintage.jpg",
-    logo: "/stores/placeholder.svg",
-    logoBg: "#ffffff",
-    currency: "USD",
-    commissionType: "shopify-collabs" as const,
-    affiliatePath: "VYA",
-    collabsStoreId: "230452",
-    authenticityPolicy:
-      "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind — with a focus on bags and shoes, each selected to give it a second life. Sustainability is at the heart of the curation, and every item is personally chosen and accurately described before listing.",
-    shippingPolicy:
-      "Ships from New York, NY. Shipping rates are calculated at checkout.",
-    returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
-  },
-  {
     slug: "montrose-edit",
     dashboardToken: "me-4a7c2e9f1b8d",
     name: "Montrose Edit",
@@ -299,23 +343,23 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
-    slug: "porters-preloved",
-    dashboardToken: "pp-8e3f1a7c2d9b4",
-    name: "Porter's Preloved",
+    slug: "moonstruck-vintage",
+    dashboardToken: "mv-7e2a9c4b1d8f",
+    name: "Moonstruck Vintage",
     location: "New York, NY",
     description:
-      "Porter's Preloved is a New York–based vintage luxury boutique founded by Alexandra Porter, a Fashion Business student at the Fashion Institute of Technology. With a sharp eye for archival detail and market value, Alexandra curates rare early-2000s designer pieces, timeless handbags, and collectible ready-to-wear sourced both locally and internationally. The edit focuses on iconic silhouettes, elevated everyday essentials, and statement runway-era finds — from Balenciaga City bags to Galliano-era Dior heels.",
-    website: "https://porterspreloved.com",
-    dataSource: "porters-preloved",
-    image: "/stores/porters-preloved.jpg",
+      "Moonstruck Vintage is dedicated to curating unique accessories for everyone. We aim to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. We focus on bags, but also love a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
+    website: "https://moonstruckvintagenyc.com",
+    dataSource: "moonstruck-vintage",
+    image: "/stores/moonstruck-vintage.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
-    affiliatePath: "VIA",
-    collabsStoreId: "232515",
+    affiliatePath: "VYA",
+    collabsStoreId: "230452",
     authenticityPolicy:
-      "Every piece at Porter's Preloved is personally sourced and hand-selected by Alexandra for its archival detail, market value, and lasting appeal. Each item is accurately described with full condition details before listing.",
+      "Every piece at Moonstruck Vintage is handpicked with care, authenticity, and style in mind — with a focus on bags and shoes, each selected to give it a second life. Sustainability is at the heart of the curation, and every item is personally chosen and accurately described before listing.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -340,6 +384,29 @@ export const stores = [
       "Every piece at Petria Vintage is Entrupy Verified — authenticated using Entrupy's AI-powered technology before listing. You can shop with confidence knowing each item has passed independent authentication.",
     shippingPolicy:
       "Ships from Montreal, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
+    slug: "porters-preloved",
+    dashboardToken: "pp-8e3f1a7c2d9b4",
+    name: "Porter's Preloved",
+    location: "New York, NY",
+    description:
+      "Porter's Preloved is a New York–based vintage luxury boutique founded by Alexandra Porter, a Fashion Business student at the Fashion Institute of Technology. With a sharp eye for archival detail and market value, Alexandra curates rare early-2000s designer pieces, timeless handbags, and collectible ready-to-wear sourced both locally and internationally. The edit focuses on iconic silhouettes, elevated everyday essentials, and statement runway-era finds — from Balenciaga City bags to Galliano-era Dior heels.",
+    website: "https://porterspreloved.com",
+    dataSource: "porters-preloved",
+    image: "/stores/porters-preloved.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VIA",
+    collabsStoreId: "232515",
+    authenticityPolicy:
+      "Every piece at Porter's Preloved is personally sourced and hand-selected by Alexandra for its archival detail, market value, and lasting appeal. Each item is accurately described with full condition details before listing.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
@@ -386,7 +453,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Australia. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
-      "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, contact the store within 2 business days of delivery.",
+      "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, use the form below within 2 business days of delivery.",
   },
   {
     slug: "scarz-vintage",
@@ -434,7 +501,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
-      "All sales are final. Due to the delicate and one-of-a-kind nature of vintage items, returns are not accepted. If there is an issue with your order, contact the store and they will do everything possible to resolve it.",
+      "All sales are final. Due to the delicate and one-of-a-kind nature of vintage items, returns are not accepted. If there is an issue with your order, use the form below and the store will do everything possible to resolve it.",
   },
   {
     slug: "source-twenty-four",
@@ -503,7 +570,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Contact the store to initiate a return.",
+      "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Use the form below to initiate a return.",
   },
   {
     slug: "the-vntg-collective",

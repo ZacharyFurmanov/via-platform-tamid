@@ -149,9 +149,9 @@ export default function CollabsLinksPage() {
                   ...prev,
                   msg,
                   ...(data.debug ? [
+                    `  Missing in DB: ${data.debug.missingCount} | Found in Collabs: ${data.debug.foundInCollabs}`,
                     `  Collabs sample IDs: ${JSON.stringify(data.debug.collabsSampleIds)}`,
                     `  DB sample IDs: ${JSON.stringify(data.debug.dbSampleIds)}`,
-                    `  Missing in DB: ${data.debug.missingCount}`,
                   ] : []),
                 ]);
               } else if (data.type === "progress") {

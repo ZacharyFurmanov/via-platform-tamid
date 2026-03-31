@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   fetchShopifyProducts,
   fetchShopifyProductsPublic,
+  fetchShopifyProductsByCollections,
   testShopifyConnection,
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
@@ -11,7 +12,7 @@ import { convertToUSD } from "@/app/lib/stores";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { storeName, storeSlug: providedSlug, storeDomain, storefrontAccessToken, maxProducts } = body;
+    const { storeName, storeSlug: providedSlug, storeDomain, storefrontAccessToken, maxProducts, collectionHandles } = body;
 
     // Validate inputs
     if (!storeName || typeof storeName !== "string") {
@@ -34,8 +35,15 @@ export async function POST(request: NextRequest) {
     let fetchResult: { products: any[]; skippedCount: number };
     let shopName: string | undefined;
 
-    // If token provided, use Storefront API
-    if (storefrontAccessToken && typeof storefrontAccessToken === "string") {
+    // If collection handles provided, use collection-based fetch (no token required)
+    if (Array.isArray(collectionHandles) && collectionHandles.length > 0) {
+      fetchResult = await fetchShopifyProductsByCollections(
+        storeDomain,
+        storeName,
+        collectionHandles,
+        maxProducts || 5000
+      );
+    } else if (storefrontAccessToken && typeof storefrontAccessToken === "string") {
       // Test connection first
       const connectionTest = await testShopifyConnection(
         storeDomain,

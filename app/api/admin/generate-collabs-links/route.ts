@@ -127,12 +127,33 @@ export async function POST(request: NextRequest) {
 
         const collabsTotalCount = fetchResult.totalCount;
         const paginationMismatch = collabsTotalCount !== null && collabsProducts.length < collabsTotalCount;
+
+        // Build per-store debug info: how many of this store's missing products appear in Collabs
+        const storeMissingIds = new Set(
+          missingProducts
+            .filter((p) => p.store_slug === store.slug && p.shopify_product_id)
+            .map((p) => {
+              const dbId = p.shopify_product_id!;
+              return dbId.match(/(\d+)$/)?.[1] ?? dbId;
+            })
+        );
+        const collabsIdsForStore = collabsProducts
+          .map((p) => p.shopifyProductId?.match(/(\d+)$/)?.[1] ?? null)
+          .filter(Boolean) as string[];
+        const matchedCount = collabsIdsForStore.filter((id) => storeMissingIds.has(id)).length;
+
         send({
           type: "store_products",
           store: store.name,
           count: collabsProducts.length,
           totalCount: collabsTotalCount,
           paginationMismatch,
+          debug: storeMissingIds.size > 0 ? {
+            missingCount: storeMissingIds.size,
+            foundInCollabs: matchedCount,
+            collabsSampleIds: collabsIdsForStore.slice(0, 3),
+            dbSampleIds: Array.from(storeMissingIds).slice(0, 3),
+          } : undefined,
         });
 
         for (const product of collabsProducts) {

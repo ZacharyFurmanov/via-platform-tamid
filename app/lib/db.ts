@@ -249,7 +249,8 @@ export async function syncProducts(
         shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
         size = COALESCE(EXCLUDED.size, products.size),
         compare_at_price = EXCLUDED.compare_at_price,
-        synced_at = NOW()
+        synced_at = NOW(),
+        created_at = COALESCE(products.created_at, EXCLUDED.created_at)
     `;
   }
 

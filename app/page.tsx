@@ -22,6 +22,7 @@ export default function HomePage() {
           <img
             src="/hero-v4.png"
             alt=""
+            fetchPriority="high"
             className="absolute inset-0 w-full h-full object-cover"
             style={{ objectPosition: "right top" }}
           />

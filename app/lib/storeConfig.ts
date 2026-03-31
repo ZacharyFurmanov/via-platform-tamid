@@ -14,6 +14,8 @@ export type ShopifyStore = {
   storefrontAccessToken?: string;
   /** Product titles to exclude from sync (exact match, case-insensitive) */
   excludeTitles?: string[];
+  /** If set, only sync products from these Shopify collection handles (e.g. ["designer", "vintage"]) */
+  collectionHandles?: string[];
 };
 
 export type BigCartelStore = {
@@ -208,13 +210,33 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "for-the-globe",
     storeDomain: "shopfortheglobe.com",
   },
+  {
+    type: "shopify",
+    name: "Chill Boutique",
+    slug: "chill-boutique",
+    storeDomain: "chillboutiqueconsignment.com",
+    collectionHandles: ["designer", "vintage"],
+  },
+  {
+    type: "shopify",
+    name: "Jade Vintage",
+    slug: "jade-vintage",
+    storeDomain: "jadevintage.ca",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
 export const BIGCARTEL_STORES: BigCartelStore[] = [];
 
 // Square stores (webhook-based order tracking, no product catalog sync yet)
-export const SQUARE_STORES: SquareStore[] = [];
+export const SQUARE_STORES: SquareStore[] = [
+  {
+    type: "square",
+    name: "Honey Bear Vintage",
+    slug: "honey-bear-vintage",
+    locationId: "LJ886JKR82R0H",
+  },
+];
 
 export const ALL_STORES: Store[] = [
   ...SQUARESPACE_STORES,

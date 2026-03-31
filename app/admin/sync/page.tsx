@@ -65,6 +65,7 @@ export default function SyncAdminPage() {
             storeSlug: store.slug,
             storeDomain: store.storeDomain,
             storefrontAccessToken: store.storefrontAccessToken,
+            collectionHandles: store.collectionHandles,
           }),
         });
       } else {

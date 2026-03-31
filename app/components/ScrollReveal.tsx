@@ -19,6 +19,17 @@ export default function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
+    // If already in viewport on mount, show immediately without animation
+    const rect = el.getBoundingClientRect();
+    const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
+    if (inViewport) {
+      el.classList.add("scroll-reveal", "visible");
+      return;
+    }
+
+    // Below fold — set up animated reveal
+    el.classList.add("scroll-reveal");
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -26,7 +37,7 @@ export default function ScrollReveal({
           observer.unobserve(el);
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
 
     observer.observe(el);
@@ -37,7 +48,7 @@ export default function ScrollReveal({
   return (
     <div
       ref={ref}
-      className={`scroll-reveal ${className}`}
+      className={className}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}

@@ -3,6 +3,7 @@ import { ALL_STORES } from "@/app/lib/storeConfig";
 import {
   fetchShopifyProducts,
   fetchShopifyProductsPublic,
+  fetchShopifyProductsByCollections,
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
@@ -42,7 +43,14 @@ export async function GET(request: Request) {
       if (store.type === "shopify") {
         let fetchResult: { products: any[]; skippedCount: number };
 
-        if (store.storefrontAccessToken) {
+        if (store.collectionHandles && store.collectionHandles.length > 0) {
+          fetchResult = await fetchShopifyProductsByCollections(
+            store.storeDomain,
+            store.name,
+            store.collectionHandles,
+            5000
+          );
+        } else if (store.storefrontAccessToken) {
           fetchResult = await fetchShopifyProducts(
             store.storeDomain,
             store.storefrontAccessToken,

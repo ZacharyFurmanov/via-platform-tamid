@@ -38,13 +38,23 @@ export async function GET(
 
   type Row = Record<string, unknown>;
 
-  const [clicks, favorites, cart, orders, storeFavs, retention] = await Promise.all([
+  const [clicks, views, favorites, cart, orders, storeFavs, retention] = await Promise.all([
     userId ? sql`
       SELECT click_id, product_name, store, store_slug, timestamp
       FROM clicks
       WHERE user_id = ${userId}
       ORDER BY timestamp DESC
       LIMIT 500
+    ` : Promise.resolve([] as Row[]),
+
+    userId ? sql`
+      SELECT pv.product_id, pv.timestamp,
+             p.title AS product_name, p.store_name AS store, p.store_slug
+      FROM product_views pv
+      LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+      WHERE pv.user_id = ${userId}
+      ORDER BY pv.timestamp DESC
+      LIMIT 1000
     ` : Promise.resolve([] as Row[]),
 
     userId ? sql`
@@ -94,6 +104,8 @@ export async function GET(
       FROM (
         SELECT timestamp AS ts FROM clicks            WHERE user_id = ${userId}
         UNION ALL
+        SELECT timestamp                FROM product_views     WHERE user_id = ${userId}
+        UNION ALL
         SELECT created_at               FROM product_favorites WHERE user_id = ${userId}
         UNION ALL
         SELECT created_at               FROM store_favorites   WHERE user_id = ${userId}
@@ -103,40 +115,94 @@ export async function GET(
     ` : Promise.resolve([{ first_seen: null, last_seen: null, distinct_days: 0 }] as Row[]),
   ]);
 
-  // Group clicks into sessions (gap > 30 min = new session)
+  // Build sessions from ALL activity: store clicks + favorites + cart adds
   const SESSION_GAP_MS = 30 * 60 * 1000;
-  const clicksSorted = [...clicks].sort(
-    (a, b) => new Date(a.timestamp as string).getTime() - new Date(b.timestamp as string).getTime()
-  );
+
+  type ActivityEvent = {
+    ts: number;
+    type: "click" | "view" | "favorite" | "cart";
+    label: string;
+    store: string;
+    storeSlug: string;
+  };
+
+  const allEvents: ActivityEvent[] = [
+    ...clicks.map((c) => ({
+      ts: new Date(c.timestamp as string).getTime(),
+      type: "click" as const,
+      label: c.product_name as string,
+      store: c.store as string,
+      storeSlug: c.store_slug as string,
+    })),
+    ...views.map((v) => ({
+      ts: new Date(v.timestamp as string).getTime(),
+      type: "view" as const,
+      label: (v.product_name as string | null) ?? "Unknown product",
+      store: (v.store as string | null) ?? "",
+      storeSlug: (v.store_slug as string | null) ?? "",
+    })),
+    ...favorites.map((f) => ({
+      ts: new Date(f.created_at as string).getTime(),
+      type: "favorite" as const,
+      label: (f.title as string | null) ?? "Unknown item",
+      store: (f.store_name as string | null) ?? "",
+      storeSlug: "",
+    })),
+    ...cart.map((c) => ({
+      ts: new Date(c.added_at as string).getTime(),
+      type: "cart" as const,
+      label: c.product_title as string,
+      store: c.store_name as string,
+      storeSlug: "",
+    })),
+  ].sort((a, b) => a.ts - b.ts);
 
   const sessions: {
     start: string;
     end: string;
     durationMs: number;
-    clicks: typeof clicks;
+    clickCount: number;
+    viewCount: number;
+    favoriteCount: number;
+    cartCount: number;
+    clicks: { label: string; store: string; storeSlug: string; timestamp: string; type: string }[];
   }[] = [];
 
-  let currentSession: typeof clicks = [];
-  for (const click of clicksSorted) {
-    if (currentSession.length === 0) {
-      currentSession.push(click);
+  let currentBatch: ActivityEvent[] = [];
+  for (const event of allEvents) {
+    if (currentBatch.length === 0) {
+      currentBatch.push(event);
     } else {
-      const lastTs = new Date(currentSession[currentSession.length - 1].timestamp as string).getTime();
-      const thisTs = new Date(click.timestamp as string).getTime();
-      if (thisTs - lastTs > SESSION_GAP_MS) {
-        const start = currentSession[0].timestamp as string;
-        const end = currentSession[currentSession.length - 1].timestamp as string;
-        sessions.push({ start, end, durationMs: new Date(end).getTime() - new Date(start).getTime(), clicks: currentSession });
-        currentSession = [click];
+      const lastTs = currentBatch[currentBatch.length - 1].ts;
+      if (event.ts - lastTs > SESSION_GAP_MS) {
+        const start = new Date(currentBatch[0].ts).toISOString();
+        const end = new Date(currentBatch[currentBatch.length - 1].ts).toISOString();
+        sessions.push({
+          start, end,
+          durationMs: currentBatch[currentBatch.length - 1].ts - currentBatch[0].ts,
+          clickCount: currentBatch.filter((e) => e.type === "click").length,
+          viewCount: currentBatch.filter((e) => e.type === "view").length,
+          favoriteCount: currentBatch.filter((e) => e.type === "favorite").length,
+          cartCount: currentBatch.filter((e) => e.type === "cart").length,
+          clicks: currentBatch.map((e) => ({ label: e.label, store: e.store, storeSlug: e.storeSlug, timestamp: new Date(e.ts).toISOString(), type: e.type })),
+        });
+        currentBatch = [event];
       } else {
-        currentSession.push(click);
+        currentBatch.push(event);
       }
     }
   }
-  if (currentSession.length > 0) {
-    const start = currentSession[0].timestamp as string;
-    const end = currentSession[currentSession.length - 1].timestamp as string;
-    sessions.push({ start, end, durationMs: new Date(end).getTime() - new Date(start).getTime(), clicks: currentSession });
+  if (currentBatch.length > 0) {
+    const start = new Date(currentBatch[0].ts).toISOString();
+    const end = new Date(currentBatch[currentBatch.length - 1].ts).toISOString();
+    sessions.push({
+      start, end,
+      durationMs: currentBatch[currentBatch.length - 1].ts - currentBatch[0].ts,
+      clickCount: currentBatch.filter((e) => e.type === "click").length,
+      favoriteCount: currentBatch.filter((e) => e.type === "favorite").length,
+      cartCount: currentBatch.filter((e) => e.type === "cart").length,
+      clicks: currentBatch.map((e) => ({ label: e.label, store: e.store, storeSlug: e.storeSlug, timestamp: new Date(e.ts).toISOString(), type: e.type })),
+    });
   }
 
   // Most viewed stores from clicks
@@ -174,6 +240,7 @@ export async function GET(
       hasAccount: !!userId,
     },
     stats: {
+      totalViews: views.length,
       totalClicks: clicks.length,
       totalFavorites: favorites.length,
       totalCartItems: cart.length,
@@ -193,13 +260,16 @@ export async function GET(
       start: s.start,
       end: s.end,
       durationMs: s.durationMs,
-      clickCount: s.clicks.length,
-      clicks: s.clicks.map((c) => ({
-        clickId: c.click_id,
-        productName: c.product_name,
+      clickCount: s.clickCount,
+      viewCount: s.viewCount,
+      favoriteCount: s.favoriteCount,
+      cartCount: s.cartCount,
+      events: s.clicks.map((c) => ({
+        type: c.type,
+        label: c.label,
         store: c.store,
-        storeSlug: c.store_slug,
-        timestamp: c.timestamp instanceof Date ? c.timestamp.toISOString() : c.timestamp,
+        storeSlug: c.storeSlug,
+        timestamp: c.timestamp,
       })),
     })),
     topStores,

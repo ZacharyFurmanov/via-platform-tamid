@@ -8,6 +8,11 @@ import { brands as brandDefs } from "./brandData";
 // BEFORE material/fabric keywords (denim, jeans) so that e.g. a "Denim Skirt"
 // is classified as a skirt, not jeans. Accessories is checked last.
 const categoryKeywords: [CategorySlug, string[]][] = [
+  // Compound overrides — checked first to prevent single-word false positives.
+  // e.g. "Beaded Dress Pants" should be pants, not dresses.
+  ["pants", ["dress pants", "dress pant", "slacks"]],
+  ["skirts", ["skirt suit", "mini skirt", "midi skirt", "maxi skirt"]],
+  ["jumpsuits", ["shirt dress jumpsuit", "dress jumpsuit"]],
   // Jewelry checked first — an earring/necklace/ring title should never be
   // misclassified as bags or clothing even if it shares a designer keyword.
   ["accessories", [
@@ -58,7 +63,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "sweatshirt", "turtleneck", "crewneck",
   ]],
   ["pants", [
-    "pants", "trousers", "chino", "jogger",
+    "pants", "trousers", "chino", "jogger", "slacks",
     "sweatpant", "wide-leg", "flare", "legging", "culottes",
   ]],
   ["tops", [
