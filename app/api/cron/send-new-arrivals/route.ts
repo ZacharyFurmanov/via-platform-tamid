@@ -20,14 +20,32 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const testEmail = searchParams.get("testEmail");
 
-    // Prevent duplicate sends — only one real email per 6 days
+    // Read last-sent time first (used for the since window below)
     const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
-    if (!testEmail && lastSentRaw) {
-      const hoursSince = (Date.now() - new Date(lastSentRaw).getTime()) / (1000 * 60 * 60);
-      if (hoursSince < 144) {
+
+    if (!testEmail) {
+      // Atomically claim the send slot — prevents double-sends from concurrent
+      // Vercel cron invocations. Only the first caller wins the UPDATE; any
+      // concurrent duplicate sees 0 rows returned and skips immediately.
+      const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+      if (!dbUrl) return NextResponse.json({ error: "No database URL" }, { status: 500 });
+      const sql = neon(dbUrl);
+      await sql`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW())`;
+      const claimed = await sql`
+        INSERT INTO app_settings (key, value, updated_at)
+        VALUES ('new_arrivals_last_sent_at', NOW()::text, NOW())
+        ON CONFLICT (key) DO UPDATE
+          SET value = NOW()::text, updated_at = NOW()
+          WHERE app_settings.value::timestamptz < NOW() - INTERVAL '144 hours'
+        RETURNING key
+      `;
+      if (claimed.length === 0) {
+        const hoursSince = lastSentRaw
+          ? Math.round((Date.now() - new Date(lastSentRaw).getTime()) / (1000 * 60 * 60))
+          : 0;
         return NextResponse.json({
           ok: true,
-          message: `New arrivals email already sent ${Math.round(hoursSince)}h ago — skipping.`,
+          message: `New arrivals email already sent ${hoursSince}h ago — skipping.`,
           skipped: true,
         });
       }
@@ -61,8 +79,7 @@ export async function GET(request: Request) {
     const products = rows as DBProduct[];
 
     if (products.length === 0) {
-      // Still update the timestamp so next week's window starts from now
-      await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
+      // Timestamp already claimed above — window resets from now
       return NextResponse.json({ ok: true, message: "No new arrivals this week.", sent: 0 });
     }
 
@@ -74,10 +91,7 @@ export async function GET(request: Request) {
 
     const { sent, failed } = await sendNewArrivalsEmail(emails, products);
 
-    // Don't update the timestamp for test sends
-    if (!testEmail) {
-      await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
-    }
+    // Timestamp already set atomically before sending (except for test sends which never claim)
 
     return NextResponse.json({ ok: true, since: sinceIso, products: products.length, sent, failed, test: !!testEmail });
   } catch (err) {
