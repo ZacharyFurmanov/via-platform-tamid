@@ -324,11 +324,8 @@ const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
   }
 };
 
-export const getAllProducts = unstable_cache(
-  _getAllProductsUncached,
-  ["all-products"],
-  { revalidate: 1800 } // 30 minutes
-);
+// Not cached — result exceeds Next.js 2MB unstable_cache limit
+export const getAllProducts = _getAllProductsUncached;
 
 /**
  * Get recommended products, excluding a specific product by ID.
