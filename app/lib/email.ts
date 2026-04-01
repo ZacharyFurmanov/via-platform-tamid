@@ -1114,8 +1114,11 @@ export async function sendPopupThankYouEmail(
        font-family:Georgia,'Times New Roman',serif;">
       And if you didn't get the chance to shop everything (or just want more), you can browse all of our partner stores online at:
     </p>
-    <div style="background:#F7F3EA;padding:14px 20px;font-size:13px;color:#5D0F17;margin:0 0 16px;border:1px solid rgba(93,15,23,0.15);">
-      <a href="https://vyaplatform.com" style="color:#5D0F17;text-decoration:none;">vyaplatform.com</a>
+    <div style="margin:0 0 16px;">
+      <a href="https://vyaplatform.com"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 36px;
+                text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Shop VYA</a>
     </div>
     <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 28px;
        font-family:Georgia,'Times New Roman',serif;">
