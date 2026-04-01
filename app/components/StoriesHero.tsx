@@ -39,20 +39,24 @@ export default function StoriesHero({ stories }: { stories: Story[] }) {
       <div className="flex flex-col md:grid md:grid-cols-2 md:min-h-[560px]">
         {/* Image — on top for mobile, right side for desktop */}
         <div className="relative aspect-[16/9] md:aspect-auto md:order-2">
-          {stories.map((s, i) => (
-            <div
-              key={s.slug}
-              className="absolute inset-0 transition-opacity duration-1000"
-              style={{ opacity: i === current ? 1 : 0 }}
-            >
-              <Image
-                src={s.image}
-                alt={s.store}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ))}
+          {stories.map((s, i) => {
+            const next = (current + 1) % stories.length;
+            if (i !== current && i !== next) return null;
+            return (
+              <div
+                key={s.slug}
+                className="absolute inset-0 transition-opacity duration-1000"
+                style={{ opacity: i === current ? 1 : 0 }}
+              >
+                <Image
+                  src={s.image}
+                  alt={s.store}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Logo + text panel — below image on mobile, left side for desktop */}
