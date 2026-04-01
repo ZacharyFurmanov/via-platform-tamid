@@ -20,12 +20,14 @@ export default function HomePage() {
       {/* Image with buttons overlaid, then text below — all same bg color */}
       <div className="md:hidden" style={{ backgroundColor: "#D8C8BC" }}>
         <section className="relative overflow-hidden" style={{ height: "65vh" }}>
-          <img
+          <Image
             src="/hero-v4.png"
             alt=""
-            fetchPriority="high"
-            className="absolute inset-0 w-full h-full object-cover"
+            fill
+            priority
+            className="object-cover"
             style={{ objectPosition: "right top" }}
+            sizes="100vw"
           />
           <div className="absolute bottom-8 left-6 flex flex-col gap-3 z-10">
             <Link
