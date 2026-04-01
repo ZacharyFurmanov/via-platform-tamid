@@ -1,10 +1,147 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { sendPopupAnnouncementEmail } from "@/app/lib/email";
+import { sendPopupThankYouEmail } from "@/app/lib/email";
 
 export const maxDuration = 300;
 
-const CAMPAIGN = "nyc-popup-2026-03-29";
+const CAMPAIGN = "nyc-popup-thankyou-2026-03-29";
+
+// Deduplicated list of NYC pop-up attendees
+const POPUP_ATTENDEE_EMAILS = [
+  "hannahcao8897@gmail.com",
+  "giannaraucher@gmail.com",
+  "claudiamatthews80@gmail.com",
+  "ana2dance@gmail.com",
+  "jgherardi1919@gmail.com",
+  "lisanschechter@gmail.com",
+  "sophierosebecker@gmail.com",
+  "sophiemannes@gmail.com",
+  "isabelle.hekmat@outlook.com",
+  "daiwong@ucdavis.edu",
+  "cleo.rebecklynn@gmail.com",
+  "sheanicolebrennan@gmail.com",
+  "amydouglassings@gmail.com",
+  "ekmarino26@gmail.com",
+  "gianna@thenyarchive.com",
+  "ellie.livingstone18@gmail.com",
+  "miamolina91@icloud.com",
+  "madisonpoll3@gmail.com",
+  "tamara.teplow1@gmail.com",
+  "meghancarey15@gmail.com",
+  "sashaporter0613@gmail.com",
+  "isabelamber@optonline.net",
+  "fareen0428@gmail.com",
+  "katie32smyth@gmail.com",
+  "iamkaraelaine@gmail.com",
+  "chiara.capasso12@gmail.com",
+  "nicole.mikhailov@gmail.com",
+  "kianahui@gmail.com",
+  "kaiwasser@gmail.com",
+  "smansbach@icloud.com",
+  "layteezy@gmail.com",
+  "natenzvi@gmail.com",
+  "haileyquiej@gmail.com",
+  "lizinnewyorkcity@gmail.com",
+  "y.choi0217@gmail.com",
+  "akhila2003@icloud.com",
+  "sydneytyu@gmail.com",
+  "hayley81603@me.com",
+  "shari.schwartz12@gmail.com",
+  "olivia.soracco@gmail.com",
+  "katieseidl16@gmail.com",
+  "reedhtorre@gmail.com",
+  "dylmorris929@gmail.com",
+  "jmansbach1@gmail.com",
+  "jessmedwin@gmail.com",
+  "mqscarrone@gmail.com",
+  "ngranader@tulane.edu",
+  "camrynadk12@gmail.com",
+  "amandamatluck@gmail.com",
+  "katelynnemugler@gmail.com",
+  "brookehreg@gmail.com",
+  "ojacobs@bu.edu",
+  "atryggva@gmail.com",
+  "katesette@gmail.com",
+  "bunmigjenfa@gmail.com",
+  "matty.siegel@hotmail.com",
+  "calli.novak@gmail.com",
+  "wyllie.boughton@trincoll.edu",
+  "nic_martinez11@aol.com",
+  "leahmei999@gmail.com",
+  "ivyzizhong@gmail.com",
+  "harth.stephanie@gmail.com",
+  "derinkaraman@icloud.com",
+  "dudaakkari18@gmail.com",
+  "sophiezaloom@gmail.com",
+  "noafederr@gmail.com",
+  "mharel2012@gmail.com",
+  "lauryndonnelly10@gmail.com",
+  "chestergabriella123@gmail.com",
+  "kelly28869@gmail.com",
+  "qgordinier17@gmail.com",
+  "coditoppin@hotmail.com",
+  "lovefloriedaine@gmail.com",
+  "nikki.chwatt@futurnet.com",
+  "mazowg@bc.edu",
+  "sewonprk@gmail.com",
+  "izzymarks12@gmail.com",
+  "nick.yoko.808@gmail.com",
+  "ayueh2022@gmail.com",
+  "shira.minsk@yale.edu",
+  "juliarginsberg@gmail.com",
+  "elldobs@udel.edu",
+  "melinamelissinos@gmail.com",
+  "jnorris0305@gmail.com",
+  "ccscarrone@gmail.com",
+  "briana.a.charles@gmail.com",
+  "jennakurz3@gmail.com",
+  "hutchsam6@gmail.com",
+  "erica.wilson.660@gmail.com",
+  "la8tbug@icloud.com",
+  "amdiazbusiness@gmail.com",
+  "willowkroger@gmail.com",
+  "charlize.deluca@aol.com",
+  "kate@99angelsnyc.com",
+  "hannah41699@gmail.com",
+  "ginalmarini@gmail.com",
+  "sofiaisabel11@icloud.com",
+  "loud_bevy9@icloud.com",
+  "nbucjleyb@gmail.com",
+  "ariosmanaj@gmail.com",
+  "marinahou@hotmail.com",
+  "sophie.marston7@gmail.com",
+  "jojo.yu0627@outlook.com",
+  "telster@me.com",
+  "yasmeen.alwani@moodys.com",
+  "laraberns@gmail.com",
+  "gmarraccini@icloud.com",
+  "caroline.ammarell@gmail.com",
+  "nemy84@aol.com",
+  "adrianamarraccini1@gmail.com",
+  "sammy.macedo8@gmail.com",
+  "miapoley@yahoo.com",
+  "anna@vintage-girlfriend.com",
+  "jordyn.gaitman@icloud.com",
+  "reese.mastellon@gmail.com",
+  "anikagupta11@yahoo.com",
+  "jimeneza089@gmail.com",
+  "lily.friedland@icloud.com",
+  "roxanna@bagherzadeh.org",
+  "kally_sanchez@fitnyc.edu",
+  "rockssamandy@gmail.com",
+  "jgrubman@innovativephilanthropy.net",
+  "chloe1428@yahoo.com",
+  "miarose@bu.edu",
+  "lgjika37@gmail.com",
+  "skylardoss31@gmail.com",
+  "isabeldavidson23@gmail.com",
+  "mlake171@gmail.com",
+  "sanjanadas07@gmail.com",
+  "charlottejcasdin@gmail.com",
+  "mzhong2216@gmail.com",
+  "seemapisciotta318@gmail.com",
+  "lamyar7@gmail.com",
+];
 
 function getDatabaseUrl() {
   const url = process.env.DATABASE_URL;
@@ -67,15 +204,8 @@ async function markEmailsAsSent(campaign: string, emails: string[]) {
 }
 
 async function getUnsentEmails(campaign: string): Promise<string[]> {
-  const sql = neon(getDatabaseUrl());
-  const rows = await sql`
-    SELECT LOWER(email) AS email FROM users WHERE email IS NOT NULL
-    UNION
-    SELECT LOWER(email) AS email FROM pilot_access WHERE email IS NOT NULL
-  `;
-  const all = rows.map((r) => r.email as string);
   const alreadySent = await getAlreadySentEmails(campaign);
-  return all.filter((e) => !alreadySent.has(e));
+  return POPUP_ATTENDEE_EMAILS.filter((e) => !alreadySent.has(e.toLowerCase()));
 }
 
 /**
@@ -98,25 +228,16 @@ export async function POST(request: NextRequest) {
   const preview: boolean = body?.preview === true;
   const backfill: boolean = body?.backfill === true;
 
-  if (!testEmail && !sendForReal && !preview && !backfill) {
+  if (!testEmail && !sendForReal && !preview) {
     return NextResponse.json(
-      { error: "Provide { testEmail }, { send: true }, { preview: true }, or { backfill: true }." },
+      { error: "Provide { testEmail }, { send: true }, or { preview: true }." },
       { status: 400 }
     );
   }
 
-  // Backfill: mark all emails in the `users` table as already sent (they got the first batch)
-  if (backfill) {
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`SELECT LOWER(email) AS email FROM users WHERE email IS NOT NULL`;
-    const emails = rows.map((r) => r.email as string);
-    await markEmailsAsSent(CAMPAIGN, emails);
-    return NextResponse.json({ success: true, backfilled: emails.length, campaign: CAMPAIGN });
-  }
-
   // Test send — not tracked so it won't block the real send later
   if (testEmail) {
-    const { sent, failed } = await sendPopupAnnouncementEmail([testEmail]);
+    const { sent, failed } = await sendPopupThankYouEmail([testEmail]);
     return NextResponse.json({ success: true, test: true, testEmail, sent, failed });
   }
 
@@ -137,7 +258,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Everyone has already been sent this email.", sent: 0 });
   }
 
-  const { sent, failed } = await sendPopupAnnouncementEmail(unsent);
+  const { sent, failed } = await sendPopupThankYouEmail(unsent);
 
   // Mark successfully sent emails (approximate — mark all unsent since we don't get per-email status back)
   await markEmailsAsSent(CAMPAIGN, unsent);

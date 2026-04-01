@@ -1080,6 +1080,83 @@ export async function sendTrendingItemEmail(
 }
 
 /**
+ * Send a post-popup thank-you email to NYC pop-up attendees.
+ */
+export async function sendPopupThankYouEmail(
+  emails: string[]
+): Promise<{ sent: number; failed: number }> {
+  if (emails.length === 0) return { sent: 0, failed: 0 };
+
+  const resend = getResend();
+
+  const content = `
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 16px;
+       font-family:Georgia,'Times New Roman',serif;">Hi,</p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 16px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Thank you so much for coming to the VYA NYC pop-up this past weekend. It honestly meant the world to see so many of you show up, support, and experience VYA in real life.
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 24px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Being able to connect with you in person, hear your thoughts, and watch you discover pieces from our partner stores was incredibly special.
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 12px;
+       font-family:Georgia,'Times New Roman',serif;">
+      If you have a moment, I'd really love your feedback as we continue building — you can share it here:
+    </p>
+    <div style="margin:0 0 28px;">
+      <a href="https://form.typeform.com/to/Vgzmmp5a"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 36px;
+                text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Share Feedback</a>
+    </div>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 12px;
+       font-family:Georgia,'Times New Roman',serif;">
+      And if you didn't get the chance to shop everything (or just want more), you can browse all of our partner stores online at:
+    </p>
+    <div style="background:#F7F3EA;padding:14px 20px;font-size:13px;color:#5D0F17;margin:0 0 16px;border:1px solid rgba(93,15,23,0.15);">
+      <a href="https://vyaplatform.com" style="color:#5D0F17;text-decoration:none;">vyaplatform.com</a>
+    </div>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 28px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Use code <strong>NYC</strong> to skip the waitlist!
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 4px;
+       font-family:Georgia,'Times New Roman',serif;">
+      Thank you again for being part of this — it is just the beginning.
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:24px 0 0;
+       font-family:Georgia,'Times New Roman',serif;">
+      xoxo,<br/>
+      <strong>Hana</strong><br/>
+      <span style="opacity:0.65;font-size:13px;">Founder of VYA</span>
+    </p>
+  `;
+
+  const html = viaShell("Thank You for Coming to the VYA NYC Pop-Up 🤍", content);
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const email of emails) {
+    try {
+      await resend.emails.send({
+        from: "Hana @ VYA <hana@theviaplatform.com>",
+        to: email,
+        subject: "Thank You for Coming to the VYA NYC Pop-Up 🤍",
+        html,
+      });
+      sent++;
+      await new Promise((r) => setTimeout(r, 100));
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
+
+/**
  * Send a popup event announcement email.
  */
 export async function sendPopupAnnouncementEmail(
