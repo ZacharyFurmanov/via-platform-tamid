@@ -4,7 +4,6 @@ import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
 import ScrollReveal from "./components/ScrollReveal";
-import SmoothScroll from "./components/SmoothScroll";
 import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
@@ -16,7 +15,6 @@ export default function HomePage() {
   return (
     <main className="w-full">
       <PageTracker pageType="homepage" />
-      <SmoothScroll />
 
       {/* ================= HERO — MOBILE ================= */}
       {/* Image with buttons overlaid, then text below — all same bg color */}
