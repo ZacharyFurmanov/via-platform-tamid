@@ -3,7 +3,6 @@ export const revalidate = 1800; // re-render homepage in background every 30 min
 import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
-import ScrollReveal from "./components/ScrollReveal";
 import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
@@ -102,29 +101,25 @@ export default function HomePage() {
       </section>
 
       {/* ================= NEW ARRIVALS ================= */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
-          <NewArrivalsSection />
-        </Suspense>
-      </ScrollReveal>
+      <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
+        <NewArrivalsSection />
+      </Suspense>
 
       {/* ================= SHOP BY STORE ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal>
-            <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
-              </div>
-              <Link
-                href="/stores"
-                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-              >
-                Shop All Stores
-              </Link>
+          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
             </div>
-          </ScrollReveal>
+            <Link
+              href="/stores"
+              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+            >
+              Shop All Stores
+            </Link>
+          </div>
 
           <StoreCarousel />
         </div>
@@ -133,20 +128,18 @@ export default function HomePage() {
       {/* ================= SHOP BY CATEGORY ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal>
-            <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Category</h2>
-              </div>
-              <Link
-                href="/categories"
-                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-              >
-                Shop All Categories
-              </Link>
+          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Category</h2>
             </div>
-          </ScrollReveal>
+            <Link
+              href="/categories"
+              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+            >
+              Shop All Categories
+            </Link>
+          </div>
 
           <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
             <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
@@ -155,27 +148,26 @@ export default function HomePage() {
                 { label: "Bags", slug: "bags", image: "/categories/bags-v2.jpg", position: "object-bottom" },
                 { label: "Shoes", slug: "shoes", image: "/categories/shoes-v2.jpg", position: "object-center" },
                 { label: "Accessories", slug: "accessories", image: "/categories/accessories-v3.jpg", position: "object-center" },
-              ].map((category, i) => (
-                <ScrollReveal key={category.slug} delay={i * 150}>
-                  <Link
-                    href={`/categories/${category.slug}`}
-                    className="group block w-[72vw] flex-shrink-0 sm:w-auto"
-                  >
-                    <div className="aspect-[3/4] relative overflow-hidden mb-4 bg-[#D8CABD]/30">
-                      <Image
-                        src={category.image}
-                        alt={category.label}
-                        fill
-                        sizes="(min-width: 768px) 25vw, 72vw"
-                        className={`object-cover ${category.position} transition-transform duration-700 ease-out group-hover:scale-105`}
-                      />
-                    </div>
-                    <p className="text-xs text-[#5D0F17]/50 text-center mb-1 italic font-sans">Shop</p>
-                    <h3 className="text-xl sm:text-2xl font-serif text-[#5D0F17] text-center">
-                      {category.label}
-                    </h3>
-                  </Link>
-                </ScrollReveal>
+              ].map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/categories/${category.slug}`}
+                  className="group block w-[72vw] flex-shrink-0 sm:w-auto"
+                >
+                  <div className="aspect-[3/4] relative overflow-hidden mb-4 bg-[#D8CABD]/30">
+                    <Image
+                      src={category.image}
+                      alt={category.label}
+                      fill
+                      sizes="(min-width: 768px) 25vw, 72vw"
+                      className={`object-cover ${category.position} transition-transform duration-700 ease-out group-hover:scale-105`}
+                    />
+                  </div>
+                  <p className="text-xs text-[#5D0F17]/50 text-center mb-1 italic font-sans">Shop</p>
+                  <h3 className="text-xl sm:text-2xl font-serif text-[#5D0F17] text-center">
+                    {category.label}
+                  </h3>
+                </Link>
               ))}
             </div>
           </div>
@@ -183,32 +175,27 @@ export default function HomePage() {
       </section>
 
       {/* ================= SHOP BY DESIGNER ================= */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-48" />}>
-          <BrandsSection />
-        </Suspense>
-      </ScrollReveal>
+      <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-48" />}>
+        <BrandsSection />
+      </Suspense>
 
       {/* ================= STORIES ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
-              </div>
-              <Link
-                href="/stories"
-                className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-              >
-                View All Stories
-              </Link>
+          <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
             </div>
-          </ScrollReveal>
+            <Link
+              href="/stories"
+              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+            >
+              View All Stories
+            </Link>
+          </div>
 
-          <ScrollReveal delay={150}>
-            <StoriesHero
+          <StoriesHero
               stories={[
                 {
                   slug: "lei-vintage",
@@ -269,30 +256,26 @@ export default function HomePage() {
                 },
               ]}
             />
-          </ScrollReveal>
         </div>
       </section>
 
       {/* ================= FAQ ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-6xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="max-w-xl mb-12 sm:mb-16">
-              <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
-                Have questions?
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-[#5D0F17]">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
-                Everything you need to know about shopping, shipping,
-                and how VYA works.
-              </p>
-            </div>
-          </ScrollReveal>
+          <div className="max-w-xl mb-12 sm:mb-16">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
+              Have questions?
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-[#5D0F17]">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+              Everything you need to know about shopping, shipping,
+              and how VYA works.
+            </p>
+          </div>
 
-          <ScrollReveal delay={150}>
-            <FAQAccordion
+          <FAQAccordion
               faqs={[
                 {
                   q: "Is everything authentic?",
@@ -312,7 +295,6 @@ export default function HomePage() {
                 },
               ]}
             />
-          </ScrollReveal>
 
           <div className="mt-10 text-center">
             <Link
@@ -328,43 +310,41 @@ export default function HomePage() {
       {/* ================= VYA EXPERIENCE ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <ScrollReveal>
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
-              The VYA Experience
-            </p>
+          <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
+            The VYA Experience
+          </p>
 
-            <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-[#5D0F17]">
-              A better way to shop vintage
-            </h2>
+          <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-[#5D0F17]">
+            A better way to shop vintage
+          </h2>
 
-            <p className="max-w-2xl mx-auto mb-12 sm:mb-16 text-[#5D0F17]/60 text-sm sm:text-base font-sans">
-              VYA brings together the best independent vintage and secondhand stores
-              into one seamless browsing experience, while keeping checkout
-              with the store you love.
-            </p>
-          </ScrollReveal>
+          <p className="max-w-2xl mx-auto mb-12 sm:mb-16 text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+            VYA brings together the best independent vintage and secondhand stores
+            into one seamless browsing experience, while keeping checkout
+            with the store you love.
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
-            <ScrollReveal delay={0}>
+            <div>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Browse across stores</h3>
               <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
                 Explore curated inventory from multiple stores at once.
               </p>
-            </ScrollReveal>
+            </div>
 
-            <ScrollReveal delay={150}>
+            <div>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Discover rare pieces</h3>
               <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
                 Find one-of-a-kind items you won&apos;t see everywhere else.
               </p>
-            </ScrollReveal>
+            </div>
 
-            <ScrollReveal delay={300}>
+            <div>
               <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Checkout with confidence</h3>
               <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
                 Purchase directly from the original store, no middlemen.
               </p>
-            </ScrollReveal>
+            </div>
           </div>
         </div>
       </section>
