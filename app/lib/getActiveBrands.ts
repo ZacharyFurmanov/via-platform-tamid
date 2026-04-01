@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getInventory } from "@/app/lib/inventory";
 import { brandMap } from "@/app/lib/brandData";
 
@@ -7,7 +8,7 @@ type ActiveBrand = {
   productCount: number;
 };
 
-export async function getActiveBrands(): Promise<ActiveBrand[]> {
+async function _getActiveBrandsUncached(): Promise<ActiveBrand[]> {
   const items = await getInventory();
 
   const brandCounts = new Map<string, number>();
@@ -25,3 +26,10 @@ export async function getActiveBrands(): Promise<ActiveBrand[]> {
     }))
     .sort((a, b) => b.productCount - a.productCount);
 }
+
+// Cache the final brand list (small payload) rather than the raw product data
+export const getActiveBrands = unstable_cache(
+  _getActiveBrandsUncached,
+  ["active-brands"],
+  { revalidate: 1800 }
+);
