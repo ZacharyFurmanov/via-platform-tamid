@@ -161,6 +161,7 @@ export default function HomePage() {
                       fill
                       sizes="(min-width: 768px) 25vw, 72vw"
                       className={`object-cover ${category.position} transition-transform duration-700 ease-out group-hover:scale-105`}
+                      loading="lazy"
                     />
                   </div>
                   <p className="text-xs text-[#5D0F17]/50 text-center mb-1 italic font-sans">Shop</p>

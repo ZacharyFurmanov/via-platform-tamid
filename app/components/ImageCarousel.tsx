@@ -118,7 +118,7 @@ export default function ImageCarousel({
           className={`absolute inset-0 w-full h-full object-cover ${objectPosition} transition-opacity duration-150 ${
             idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
-          loading="eager"
+          loading="lazy"
           decoding="async"
           onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
         />
