@@ -1,3 +1,5 @@
+export const revalidate = 1800; // re-render homepage in background every 30 minutes
+
 import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
@@ -7,12 +9,13 @@ import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
 import BrandsSection from "./components/BrandsSection";
-import CollectionsSection from "./components/CollectionsSection";
+import PageTracker from "./components/PageTracker";
 import { Suspense } from "react";
 
 export default function HomePage() {
   return (
     <main className="w-full">
+      <PageTracker pageType="homepage" />
       <SmoothScroll />
 
       {/* ================= HERO — MOBILE ================= */}
@@ -60,14 +63,14 @@ export default function HomePage() {
         className="hidden md:block relative overflow-x-hidden"
         style={{ backgroundColor: "#D8C8BC" }}
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: "url('/hero-v4.png')",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right center",
-            backgroundSize: "cover",
-          }}
+        <Image
+          src="/hero-v4.png"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          style={{ objectPosition: "right center" }}
+          sizes="100vw"
         />
         <div className="relative z-10 w-full min-h-screen flex items-center">
           <div className="max-w-7xl mx-auto px-6 w-full">
@@ -98,10 +101,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= COLLECTIONS ================= */}
+      {/* ================= NEW ARRIVALS ================= */}
       <ScrollReveal>
         <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
-          <CollectionsSection />
+          <NewArrivalsSection />
         </Suspense>
       </ScrollReveal>
 
@@ -178,13 +181,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ================= NEW ARRIVALS ================= */}
-      <ScrollReveal>
-        <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
-          <NewArrivalsSection />
-        </Suspense>
-      </ScrollReveal>
 
       {/* ================= SHOP BY DESIGNER ================= */}
       <ScrollReveal>

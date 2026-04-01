@@ -30,6 +30,8 @@ function trendLabel(current: number, prev: number, fmtFn: (n: number) => string)
   if (prev === 0) return null;
   const delta = current - prev;
   const pct = ((current - prev) / prev) * 100;
+  // Cap at ±999% — larger swings mean the comparison window has bad/missing data
+  if (Math.abs(pct) > 999) return null;
   const sign = delta >= 0 ? "+" : "";
   return `${sign}${fmtFn(delta)} (${sign}${pct.toFixed(0)}%) vs prev period`;
 }
@@ -266,15 +268,15 @@ export default function KeyMetricsPage() {
                   label="Weekly Active Users"
                   value={fmtNum(data.wau.current)}
                   trend={<TrendBadge current={data.wau.current} prev={data.wau.prev} fmtFn={fmtNum} />}
-                  note="Users who signed up, clicked a product, saved something, or placed an order this week."
+                  note="Users who clicked a product, saved something, or placed an order this week."
                   href="/admin/analytics"
                 />
                 <MetricCard
                   label="Monthly Active Users"
                   value={fmtNum(data.mau.current)}
-                  sub={`${fmtNum(data.mau.totalEverActive)} total registered users ever`}
+                  sub={`${fmtNum(data.users.registered)} total registered users`}
                   trend={<TrendBadge current={data.mau.current} prev={data.mau.prev} fmtFn={fmtNum} />}
-                  note="Users who signed up, clicked a product, saved something, or placed an order this month."
+                  note="Users who clicked a product, saved something, or placed an order this month."
                   href="/admin/analytics"
                 />
                 <MetricCard

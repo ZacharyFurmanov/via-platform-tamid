@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { unstable_cache } from "next/cache";
 
 // Get the database URL from environment variable
 const getDatabaseUrl = () => {
@@ -249,8 +250,7 @@ export async function syncProducts(
         shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
         size = COALESCE(EXCLUDED.size, products.size),
         compare_at_price = EXCLUDED.compare_at_price,
-        synced_at = NOW(),
-        created_at = COALESCE(products.created_at, EXCLUDED.created_at)
+        synced_at = NOW()
     `;
   }
 
@@ -302,9 +302,8 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
 /**
  * Get all products from all stores.
  */
-export async function getAllProducts(): Promise<DBProduct[]> {
+const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
   const sql = neon(getDatabaseUrl());
-
   const query = async () => sql`
       SELECT * FROM products
       WHERE (
@@ -314,8 +313,6 @@ export async function getAllProducts(): Promise<DBProduct[]> {
         AND title NOT ILIKE '%gift card%'
       ORDER BY store_slug, id
     `;
-
-  // Retry once on fetch failure — handles Neon cold-start / auto-suspend wakeup
   try {
     return (await query()) as DBProduct[];
   } catch (err) {
@@ -325,7 +322,13 @@ export async function getAllProducts(): Promise<DBProduct[]> {
     }
     throw err;
   }
-}
+};
+
+export const getAllProducts = unstable_cache(
+  _getAllProductsUncached,
+  ["all-products"],
+  { revalidate: 1800 } // 30 minutes
+);
 
 /**
  * Get recommended products, excluding a specific product by ID.
@@ -353,31 +356,30 @@ export async function getRecommendedProducts(
 /**
  * Get recently added products (new arrivals).
  */
-export async function getNewArrivals(
-  limit: number = 12,
-  days: number = 7
-): Promise<DBProduct[]> {
+const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBProduct[]> => {
   const sql = neon(getDatabaseUrl());
-
   try {
     const result = await sql`
-        SELECT p.*, COUNT(c.id) AS click_count
-        FROM products p
-        LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
-        WHERE p.created_at IS NOT NULL
-          AND p.created_at >= NOW() - make_interval(days => ${days})
-          AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-          AND p.title NOT ILIKE '%gift card%'
-        GROUP BY p.id
-        ORDER BY click_count DESC, p.created_at DESC
+        SELECT *
+        FROM products
+        WHERE created_at IS NOT NULL
+          AND created_at >= NOW() - make_interval(days => ${days})
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND title NOT ILIKE '%gift card%'
+        ORDER BY created_at DESC
         LIMIT ${limit}
       `;
-
     return result as DBProduct[];
   } catch {
     return [];
   }
-}
+};
+
+export const getNewArrivals = unstable_cache(
+  _getNewArrivalsUncached,
+  ["new-arrivals"],
+  { revalidate: 600 } // 10 minutes
+);
 
 
 /**

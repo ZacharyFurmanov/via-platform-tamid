@@ -92,25 +92,28 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users u ON LOWER(u.email) = LOWER(pa.email)
     `,
 
-    // WAU / MAU — distinct users active across clicks, favorites, conversions, or new signups
+    // WAU / MAU — distinct users who took a real action (click, save, purchase)
+    // Signups excluded: a new account alone isn't "activity"
+    // mau_prev_week = users active in the 7–37d window, used as denominator for stickiness_prev
     sql`
       SELECT
-        COUNT(DISTINCT user_id)::int                                                                                    AS total_ever_active,
-        COUNT(DISTINCT user_id) FILTER (WHERE ts >= NOW() - INTERVAL '7 days')::int                                    AS wau,
-        COUNT(DISTINCT user_id) FILTER (WHERE ts >= NOW() - INTERVAL '14 days' AND ts < NOW() - INTERVAL '7 days')::int AS wau_prev,
-        COUNT(DISTINCT user_id) FILTER (WHERE ts >= NOW() - INTERVAL '30 days')::int                                   AS mau,
-        COUNT(DISTINCT user_id) FILTER (WHERE ts >= NOW() - INTERVAL '60 days' AND ts < NOW() - INTERVAL '30 days')::int AS mau_prev
+        COUNT(DISTINCT a.uid)::int                                                                                    AS total_ever_active,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '7 days')::int                                    AS wau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '14 days' AND a.ts < NOW() - INTERVAL '7 days')::int AS wau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '30 days')::int                                   AS mau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '60 days' AND a.ts < NOW() - INTERVAL '30 days')::int AS mau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '37 days' AND a.ts < NOW() - INTERVAL '7 days')::int  AS mau_for_prev_week
       FROM (
-        SELECT user_id::text,  timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
+        SELECT user_id::text AS uid, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
         UNION ALL
-        SELECT user_id::text,  created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
+        SELECT user_id::text,        timestamp  AS ts FROM product_views     WHERE user_id IS NOT NULL
         UNION ALL
-        SELECT user_id::text,  created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
+        SELECT user_id::text,        created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
         UNION ALL
-        SELECT user_id::text,  timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
+        SELECT user_id::text,        created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
         UNION ALL
-        SELECT id::text,       created_at AS ts FROM users             WHERE id IS NOT NULL
-      ) activity
+        SELECT user_id::text,        timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
+      ) a
     `,
 
     // Save-to-purchase: total unique users who have saved anything (products OR stores)
@@ -228,8 +231,12 @@ export async function GET(request: NextRequest) {
   const convRatePrev7d = cl.clicks_prev_7d > 0 ? co.conversions_prev_7d / cl.clicks_prev_7d : 0;
 
   // Stickiness = WAU / MAU
+  // stickinessPrev uses the 30-day window centered on the previous week (7–37d ago)
+  // so the denominator actually contains the week we're measuring
   const stickiness = wm.mau > 0 ? wm.wau / wm.mau : 0;
-  const stickinessPrev = wm.mau_prev > 0 ? wm.wau_prev / wm.mau_prev : 0;
+  const stickinessPrev = (wm.mau_for_prev_week as number) > 0
+    ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
+    : 0;
 
   // Insider conversion rate
   const insiderRate = ins.approved_pilots > 0 ? ins.insider_members / ins.approved_pilots : 0;

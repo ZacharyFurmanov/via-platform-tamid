@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import "./globals.css";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -60,7 +58,6 @@ export default function RootLayout({
     <html lang="en">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link rel="preload" href="/hero-v4.png" as="image" />
 
       {/* Pinterest Tag */}
       <Script id="pinterest-tag" strategy="afterInteractive">

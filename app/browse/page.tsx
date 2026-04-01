@@ -10,6 +10,7 @@ import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import PageTracker from "@/app/components/PageTracker";
 export default async function BrowsePage() {
   const inventory = await getInventory();
 
@@ -69,6 +70,7 @@ export default async function BrowsePage() {
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
+      <PageTracker pageType="browse" />
       {/* ================= HERO ================= */}
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">

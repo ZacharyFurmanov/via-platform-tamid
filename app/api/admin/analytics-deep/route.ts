@@ -64,6 +64,8 @@ export async function GET(request: NextRequest) {
       inventoryByStoreResult,
       collabsDataResult,
       topSearchesResult,
+      pageFunnelResult,
+      dropOffProductsResult,
     ] = await Promise.all([
       // totalClicks
       cutoffIso
@@ -388,6 +390,54 @@ export async function GET(request: NextRequest) {
       cutoffIso
         ? sql`SELECT query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoffIso} GROUP BY query ORDER BY count DESC LIMIT 25`.catch(() => [])
         : sql`SELECT query, COUNT(*)::int AS count FROM searches GROUP BY query ORDER BY count DESC LIMIT 25`.catch(() => []),
+
+      // pageFunnel — views by page type so we can see UX drop-off
+      cutoffIso
+        ? sql`
+            SELECT page_type, COUNT(*)::int AS views
+            FROM page_type_views
+            WHERE timestamp >= ${cutoffIso}
+            GROUP BY page_type
+          `.catch(() => [])
+        : sql`
+            SELECT page_type, COUNT(*)::int AS views
+            FROM page_type_views
+            GROUP BY page_type
+          `.catch(() => []),
+
+      // dropOffProducts — products with the most views relative to clicks (browsed but not bought)
+      cutoffIso
+        ? sql`
+            SELECT
+              pv.product_id AS "productId",
+              COALESCE(p.title, pv.product_id) AS name,
+              COALESCE(p.store_name, '') AS store,
+              COUNT(DISTINCT pv.id)::int AS views,
+              COUNT(DISTINCT c.click_id)::int AS clicks
+            FROM product_views pv
+            LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+            LEFT JOIN clicks c ON c.product_id = pv.product_id AND c.timestamp >= ${cutoffIso}
+            WHERE pv.timestamp >= ${cutoffIso}
+            GROUP BY pv.product_id, p.title, p.store_name
+            HAVING COUNT(DISTINCT pv.id) >= 2
+            ORDER BY (COUNT(DISTINCT pv.id) - COUNT(DISTINCT c.click_id)) DESC, views DESC
+            LIMIT 15
+          `.catch(() => [])
+        : sql`
+            SELECT
+              pv.product_id AS "productId",
+              COALESCE(p.title, pv.product_id) AS name,
+              COALESCE(p.store_name, '') AS store,
+              COUNT(DISTINCT pv.id)::int AS views,
+              COUNT(DISTINCT c.click_id)::int AS clicks
+            FROM product_views pv
+            LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+            LEFT JOIN clicks c ON c.product_id = pv.product_id
+            GROUP BY pv.product_id, p.title, p.store_name
+            HAVING COUNT(DISTINCT pv.id) >= 2
+            ORDER BY (COUNT(DISTINCT pv.id) - COUNT(DISTINCT c.click_id)) DESC, views DESC
+            LIMIT 15
+          `.catch(() => []),
     ]);
 
     // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
@@ -459,6 +509,17 @@ export async function GET(request: NextRequest) {
       topSearches: (topSearchesResult as { query: string; count: number }[]).map((r) => ({
         query: r.query,
         count: r.count,
+      })),
+      pageFunnel: (pageFunnelResult as { page_type: string; views: number }[]).map((r) => ({
+        pageType: r.page_type,
+        views: r.views,
+      })),
+      dropOffProducts: (dropOffProductsResult as { productId: string; name: string; store: string; views: number; clicks: number }[]).map((r) => ({
+        productId: r.productId,
+        name: r.name,
+        store: r.store,
+        views: r.views,
+        clicks: r.clicks,
       })),
       recentConversions: recentConversionsResult.map((r) => ({
         conversionId: r.conversion_id as string,

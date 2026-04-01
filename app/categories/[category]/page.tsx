@@ -7,6 +7,7 @@ import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categor
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { stores } from "@/app/lib/stores";
 import CategoryContent from "@/app/components/CategoryContent";
+import PageTracker from "@/app/components/PageTracker";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
@@ -141,8 +142,10 @@ export default async function CategoryPage({
     .sort((a, b) => b.count - a.count);
 
   return (
-    <CategoryContent
-      label={label}
+    <>
+      <PageTracker pageType="category" pageSlug={category} />
+      <CategoryContent
+        label={label}
       products={filteredProducts}
       stores={storeList}
       storeCounts={storeCounts}
@@ -151,8 +154,9 @@ export default async function CategoryPage({
       showCategoryFilter={isClothing}
       showSizeFilter={!isAccessories}
       showTypeFilter={isAccessories}
-      from={`/categories/${category}`}
-      emptyMessage="No products found in this category."
-    />
+        from={`/categories/${category}`}
+        emptyMessage="No products found in this category."
+      />
+    </>
   );
 }
