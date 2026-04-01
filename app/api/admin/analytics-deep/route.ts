@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       inventorySummaryResult,
       inventoryByStoreResult,
       collabsDataResult,
+      topSearchesResult,
     ] = await Promise.all([
       // totalClicks
       cutoffIso
@@ -382,6 +383,11 @@ export async function GET(request: NextRequest) {
 
       // collabsData from settings cache
       sql`SELECT value FROM app_settings WHERE key = 'collabs_data'`.catch(() => []),
+
+      // topSearches
+      cutoffIso
+        ? sql`SELECT query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoffIso} GROUP BY query ORDER BY count DESC LIMIT 25`.catch(() => [])
+        : sql`SELECT query, COUNT(*)::int AS count FROM searches GROUP BY query ORDER BY count DESC LIMIT 25`.catch(() => []),
     ]);
 
     // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
@@ -450,6 +456,10 @@ export async function GET(request: NextRequest) {
         referralCount: r.referralCount,
       })),
       recentActivity: recentActivityResult,
+      topSearches: (topSearchesResult as { query: string; count: number }[]).map((r) => ({
+        query: r.query,
+        count: r.count,
+      })),
       recentConversions: recentConversionsResult.map((r) => ({
         conversionId: r.conversion_id as string,
         timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : r.timestamp as string,

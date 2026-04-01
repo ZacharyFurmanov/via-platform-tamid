@@ -188,6 +188,8 @@ export async function GET(request: NextRequest) {
         FROM (
           SELECT user_id::text, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
           UNION ALL
+          SELECT user_id::text, timestamp  AS ts FROM product_views     WHERE user_id IS NOT NULL
+          UNION ALL
           SELECT user_id::text, created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
           UNION ALL
           SELECT user_id::text, created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL

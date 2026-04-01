@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getUserByStripeCustomerId,
-  setMemberActive,
-  setMemberCancelled,
-} from "@/app/lib/membership-db";
-import { sendMembershipConfirmation, sendSourcingConfirmationToUser, sendSourcingRequestToStores } from "@/app/lib/email";
+import { sendSourcingConfirmationToUser, sendSourcingRequestToStores } from "@/app/lib/email";
 import { markSourcingRequestPaid, getSourcingRequestBySession } from "@/app/lib/sourcing-db";
 import { getAllStoreEmails } from "@/app/lib/stores";
 
@@ -103,50 +98,6 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        if (session.mode !== "subscription") break;
-
-        const customerId = session.customer as string;
-        const subscriptionId = session.subscription as string;
-
-        const user = await getUserByStripeCustomerId(customerId);
-        if (!user) {
-          console.error("Webhook: no user found for Stripe customer", customerId);
-          break;
-        }
-
-        await setMemberActive(user.id, customerId, subscriptionId);
-        console.log(`Membership activated for user ${user.id}`);
-
-        // Send confirmation email
-        try {
-          await sendMembershipConfirmation(user.email);
-        } catch (emailErr) {
-          console.error("Failed to send membership confirmation email:", emailErr);
-        }
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object;
-        const customerId = subscription.customer as string;
-
-        const user = await getUserByStripeCustomerId(customerId);
-        if (!user) {
-          console.error("Webhook: no user found for Stripe customer", customerId);
-          break;
-        }
-
-        await setMemberCancelled(user.id);
-        console.log(`Membership cancelled for user ${user.id}`);
-        break;
-      }
-
-      case "invoice.payment_failed": {
-        // Do not cancel immediately — Stripe will retry the payment automatically
-        // (3–4 attempts over several days). Membership is only revoked when
-        // customer.subscription.deleted fires after all retries are exhausted.
-        const invoice = event.data.object;
-        console.log(`Payment failed for customer ${invoice.customer} — awaiting Stripe retry logic`);
         break;
       }
 

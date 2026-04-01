@@ -392,7 +392,7 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
     cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   }
 
-  const [clickCountRows, viewCountRows, topProductRows, recentClickRows, conversionRows] = await Promise.all([
+  const [clickCountRows, viewCountRows, topProductRows, recentClickRows, conversionRows, itemsSoldRows, topSearchRows] = await Promise.all([
     cutoff
       ? sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff}`
       : sql`SELECT COUNT(*)::int AS total FROM clicks WHERE store_slug = ${storeSlug}`,
@@ -408,6 +408,13 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
     cutoff
       ? sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
       : sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 ORDER BY timestamp DESC`,
+    cutoff
+      ? sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE store_slug = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`
+      : sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE store_slug = ${storeSlug} AND order_total > 0 GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`,
+    // Top searches are site-wide — useful context for stores regardless of range
+    cutoff
+      ? sql`SELECT query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoff} GROUP BY query ORDER BY count DESC LIMIT 20`.catch(() => [])
+      : sql`SELECT query, COUNT(*)::int AS count FROM searches GROUP BY query ORDER BY count DESC LIMIT 20`.catch(() => []),
   ]);
 
   const totalClicks = clickCountRows[0].total as number;
@@ -421,6 +428,14 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
   const totalConversions = conversions.length;
   const totalRevenue = conversions.reduce((sum, c) => sum + c.orderTotal, 0);
   const recentConversions = conversions.slice(0, 20);
+  const itemsSold = itemsSoldRows.map((r) => ({
+    name: r.product_name as string,
+    qty: r.total_qty as number,
+  }));
+  const topSearches = (topSearchRows as { query: string; count: number }[]).map((r) => ({
+    query: r.query,
+    count: r.count,
+  }));
 
   return {
     totalClicks,
@@ -430,6 +445,8 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
     topProducts,
     recentClicks,
     recentConversions,
+    itemsSold,
+    topSearches,
     range,
   };
 }

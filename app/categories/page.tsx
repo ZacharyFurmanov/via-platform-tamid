@@ -8,21 +8,13 @@ import FilteredProductGrid from "@/app/components/FilteredProductGrid";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
-import { auth } from "@/app/lib/auth";
-import { getUserMembershipStatus } from "@/app/lib/membership-db";
-
 // Map product subcategories to display categories for filtering
 function toDisplayCategory(slug: CategorySlug): string {
   return clothingSlugs.has(slug) ? "clothing" : slug;
 }
 
 export default async function CategoriesPage() {
-  const session = await auth();
-  const isMember = session?.user?.id
-    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
-    : false;
-
-  const inventory = await getInventory(isMember);
+  const inventory = await getInventory();
 
   const dbIdMap = new Map<string, number>();
   for (const item of inventory) {

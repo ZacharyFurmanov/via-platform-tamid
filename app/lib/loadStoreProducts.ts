@@ -216,9 +216,9 @@ function transformDBProduct(product: DBProduct): StoreProduct {
 /**
  * Load products for a specific store from the database
  */
-export async function loadStoreProducts(storeSlug: string, isMember: boolean = false): Promise<StoreProduct[]> {
+export async function loadStoreProducts(storeSlug: string): Promise<StoreProduct[]> {
   try {
-    const products = await getProductsByStore(storeSlug, isMember);
+    const products = await getProductsByStore(storeSlug);
     return products.map(transformDBProduct);
   } catch (error) {
     console.error(`Failed to load products for store ${storeSlug}:`, error);

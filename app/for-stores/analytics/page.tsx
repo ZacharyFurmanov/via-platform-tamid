@@ -25,6 +25,16 @@ type ConversionRecord = {
   matched: boolean;
 };
 
+type ItemSold = {
+  name: string;
+  qty: number;
+};
+
+type SearchEntry = {
+  query: string;
+  count: number;
+};
+
 type StoreAnalytics = {
   storeName: string;
   totalClicks: number;
@@ -33,6 +43,8 @@ type StoreAnalytics = {
   topProducts: TopProduct[];
   recentClicks: ClickRecord[];
   recentConversions: ConversionRecord[];
+  itemsSold: ItemSold[];
+  topSearches: SearchEntry[];
   range: string;
 };
 
@@ -47,7 +59,7 @@ function StoreDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState<DateRange>("all");
-  const [activeTab, setActiveTab] = useState<"clicks" | "conversions">("clicks");
+  const [activeTab, setActiveTab] = useState<"clicks" | "conversions" | "items" | "searches">("clicks");
 
   useEffect(() => {
     if (!storeSlug || !token) {
@@ -204,6 +216,22 @@ function StoreDashboard() {
               >
                 Orders
               </button>
+              <button
+                onClick={() => setActiveTab("items")}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeTab === "items" ? "bg-white shadow-sm" : "hover:bg-neutral-200"
+                }`}
+              >
+                Items Sold
+              </button>
+              <button
+                onClick={() => setActiveTab("searches")}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeTab === "searches" ? "bg-white shadow-sm" : "hover:bg-neutral-200"
+                }`}
+              >
+                Top Searches
+              </button>
             </div>
             <div className="flex gap-2">
               {(["7d", "30d", "all"] as DateRange[]).map((r) => (
@@ -335,6 +363,84 @@ function StoreDashboard() {
                           <div className="col-span-4 text-right font-medium tabular-nums">
                             {formatCurrency(conv.orderTotal)}
                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* Top Searches Tab */}
+      {!loading && data && activeTab === "searches" && (
+        <section className="py-12 sm:py-16">
+          <div className="max-w-5xl mx-auto px-6">
+            <h2 className="text-xl sm:text-2xl font-serif mb-2">Top Searches on VYA</h2>
+            <p className="text-sm text-neutral-500 mb-8">What shoppers across VYA are searching for right now — use this to source what&apos;s in demand.</p>
+            {data.topSearches.length === 0 ? (
+              <div className="border border-dashed border-neutral-300 p-8 text-center">
+                <p className="text-neutral-500">No search data yet for this period.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.topSearches.map((s, i) => (
+                  <div key={s.query} className="flex items-center gap-4">
+                    <span className="text-sm tabular-nums text-neutral-400 w-6 text-right shrink-0">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`truncate ${i === 0 ? "text-base font-semibold" : "text-sm"}`}>{s.query}</p>
+                      <div className="h-1.5 bg-neutral-100 mt-1.5">
+                        <div
+                          className="h-full bg-black transition-all duration-300"
+                          style={{ width: `${(s.count / data.topSearches[0].count) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-sm tabular-nums text-neutral-500 shrink-0">{s.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Items Sold Tab */}
+      {!loading && data && activeTab === "items" && (
+        <>
+          {data.itemsSold.length === 0 ? (
+            <div className="max-w-5xl mx-auto px-6 py-16">
+              <div className="border border-dashed border-neutral-300 p-8 text-center">
+                <p className="text-neutral-500 mb-2">No items sold yet for this period.</p>
+                <p className="text-sm text-neutral-400">
+                  Items will appear here once orders from VYA customers are recorded.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <section className="py-12 sm:py-16">
+              <div className="max-w-5xl mx-auto px-6">
+                <h2 className="text-xl sm:text-2xl font-serif mb-6 sm:mb-8">Items Sold via VYA</h2>
+                <div className="border border-neutral-200">
+                  <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-neutral-50 text-sm text-neutral-500 border-b border-neutral-200">
+                    <div className="col-span-10">Item</div>
+                    <div className="col-span-2 text-right">Qty</div>
+                  </div>
+                  <div className="max-h-[600px] overflow-y-auto">
+                    {data.itemsSold.map((item, i) => (
+                      <div
+                        key={i}
+                        className="px-6 py-3 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 text-sm"
+                      >
+                        <div className="sm:hidden flex items-center justify-between gap-4">
+                          <p className="truncate">{item.name}</p>
+                          <p className="text-neutral-500 tabular-nums shrink-0">×{item.qty}</p>
+                        </div>
+                        <div className="hidden sm:grid grid-cols-12 gap-4 items-center">
+                          <div className="col-span-10 truncate">{item.name}</div>
+                          <div className="col-span-2 text-right text-neutral-500 tabular-nums">×{item.qty}</div>
                         </div>
                       </div>
                     ))}

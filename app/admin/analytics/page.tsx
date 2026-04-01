@@ -93,6 +93,11 @@ type InventoryStats = {
   byStore: InventoryStoreRow[];
 };
 
+type SearchEntry = {
+  query: string;
+  count: number;
+};
+
 type AnalyticsData = {
   kpis: KPIs;
   topProductsByClicks: TopProduct[];
@@ -103,6 +108,7 @@ type AnalyticsData = {
   recentActivity: ActivityItem[];
   recentConversions: ConversionRow[];
   inventory: InventoryStats;
+  topSearches: SearchEntry[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -409,6 +415,33 @@ export default function DeepAnalyticsPage() {
                 />
               </div>
             </div>
+
+            {/* ── Top Searches ─────────────────────────────────────────────── */}
+            {data.topSearches.length > 0 && (
+              <div style={{ marginBottom: 36 }}>
+                <SectionTitle>Top Searches</SectionTitle>
+                {/* #1 highlight */}
+                <div style={{ backgroundColor: CREAM, borderRadius: 8, padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: MAROON, opacity: 0.4 }}>#1</span>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: MAROON }}>{data.topSearches[0].query}</span>
+                  <span style={{ fontSize: 12, color: MAROON, opacity: 0.5, marginLeft: "auto" }}>{data.topSearches[0].count} searches</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {data.topSearches.slice(1).map((s, i) => (
+                    <div key={s.query} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 11, color: MAROON, opacity: 0.35, width: 20, textAlign: "right", flexShrink: 0 }}>{i + 2}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: "0 0 3px", fontSize: 13, color: MAROON, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.query}</p>
+                        <div style={{ height: 4, backgroundColor: CREAM, borderRadius: 2 }}>
+                          <div style={{ height: "100%", backgroundColor: MAROON, borderRadius: 2, width: `${(s.count / data.topSearches[0].count) * 100}%`, opacity: 0.6 }} />
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, color: MAROON, opacity: 0.45, flexShrink: 0 }}>{s.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ── Top Stores ───────────────────────────────────────────────── */}
             <div style={{ marginBottom: 36 }}>

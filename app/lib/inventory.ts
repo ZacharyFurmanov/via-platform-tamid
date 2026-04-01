@@ -214,11 +214,10 @@ function transformDBProduct(product: DBProduct): InventoryItem {
 
 /**
  * Fetch all inventory from the database.
- * Pass isMember=true to include products added in the last 24 hours (Insider access).
  */
-export async function getInventory(isMember: boolean = false): Promise<InventoryItem[]> {
+export async function getInventory(): Promise<InventoryItem[]> {
   try {
-    const products = await getAllProducts(isMember);
+    const products = await getAllProducts();
     return products.map(transformDBProduct);
   } catch (error) {
     console.error("Failed to fetch inventory from database:", error);

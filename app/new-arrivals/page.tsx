@@ -5,16 +5,8 @@ import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { deriveSize } from "@/app/lib/inventory";
 import ProductCard from "@/app/components/ProductCard";
-import { auth } from "@/app/lib/auth";
-import { getUserMembershipStatus } from "@/app/lib/membership-db";
-
 export default async function NewArrivalsPage() {
-  const session = await auth();
-  const isMember = session?.user?.id
-    ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
-    : false;
-
-  const products = await getNewArrivals(500, 7, isMember, true);
+  const products = await getNewArrivals(500, 7);
 
   const gridProducts = products.map((p) => ({
     ...p,

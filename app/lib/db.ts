@@ -270,33 +270,20 @@ export async function syncProducts(
 
 /**
  * Get all products for a specific store.
- * Non-members only see products older than 24 hours (the Insider early-access window).
  */
-export async function getProductsByStore(storeSlug: string, isMember: boolean = false): Promise<DBProduct[]> {
+export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  const result = isMember
-    ? await sql`
-        SELECT * FROM products
-        WHERE store_slug = ${storeSlug}
-          AND (
-            shopify_product_id IS NULL
-            OR collabs_link IS NOT NULL
-          )
-          AND title NOT ILIKE '%gift card%'
-        ORDER BY id
-      `
-    : await sql`
-        SELECT * FROM products
-        WHERE store_slug = ${storeSlug}
-          AND (
-            shopify_product_id IS NULL
-            OR collabs_link IS NOT NULL
-          )
-          AND title NOT ILIKE '%gift card%'
-          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
-        ORDER BY id
-      `;
+  const result = await sql`
+      SELECT * FROM products
+      WHERE store_slug = ${storeSlug}
+        AND (
+          shopify_product_id IS NULL
+          OR collabs_link IS NOT NULL
+        )
+        AND title NOT ILIKE '%gift card%'
+      ORDER BY id
+    `;
   return result as DBProduct[];
 }
 
@@ -314,31 +301,19 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
 
 /**
  * Get all products from all stores.
- * Members see everything; non-members only see products older than 24 hours.
  */
-export async function getAllProducts(isMember: boolean = false): Promise<DBProduct[]> {
+export async function getAllProducts(): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
-  const query = async () => isMember
-    ? sql`
-        SELECT * FROM products
-        WHERE (
-          shopify_product_id IS NULL
-          OR collabs_link IS NOT NULL
-        )
-          AND title NOT ILIKE '%gift card%'
-        ORDER BY store_slug, id
-      `
-    : sql`
-        SELECT * FROM products
-        WHERE (
-          shopify_product_id IS NULL
-          OR collabs_link IS NOT NULL
-        )
-          AND title NOT ILIKE '%gift card%'
-          AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
-        ORDER BY store_slug, id
-      `;
+  const query = async () => sql`
+      SELECT * FROM products
+      WHERE (
+        shopify_product_id IS NULL
+        OR collabs_link IS NOT NULL
+      )
+        AND title NOT ILIKE '%gift card%'
+      ORDER BY store_slug, id
+    `;
 
   // Retry once on fetch failure — handles Neon cold-start / auto-suspend wakeup
   try {
@@ -370,7 +345,6 @@ export async function getRecommendedProducts(
         OR collabs_link IS NOT NULL
       )
       AND title NOT ILIKE '%gift card%'
-      AND (created_at IS NULL OR created_at <= NOW() - interval '24 hours')
     LIMIT ${limit}
   `;
   return result as DBProduct[];
@@ -378,118 +352,33 @@ export async function getRecommendedProducts(
 
 /**
  * Get recently added products (new arrivals).
- * Members see all products from the last `days` days.
- * Non-members only see products older than 24 hours (the early-access window).
  */
 export async function getNewArrivals(
   limit: number = 12,
-  days: number = 7,
-  isMember: boolean = false,
-  insiderNotifiedOnly: boolean = false
+  days: number = 7
 ): Promise<DBProduct[]> {
   const sql = neon(getDatabaseUrl());
 
   try {
-    // Both members and non-members see the same New Arrivals feed — items older than 24 hours.
-    // Items within the 24-hour window are exclusively in the VYA Insider section.
-    const result = insiderNotifiedOnly
-      ? await sql`
-          SELECT p.*, COUNT(c.id) AS click_count
-          FROM products p
-          LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
-          WHERE p.created_at IS NOT NULL
-            AND p.created_at >= NOW() - make_interval(days => ${days})
-            AND p.created_at <= NOW() - interval '24 hours'
-            AND p.insider_notified = TRUE
-            AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-            AND p.title NOT ILIKE '%gift card%'
-          GROUP BY p.id
-          ORDER BY click_count DESC, p.created_at DESC
-          LIMIT ${limit}
-        `
-      : await sql`
-          SELECT p.*, COUNT(c.id) AS click_count
-          FROM products p
-          LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
-          WHERE p.created_at IS NOT NULL
-            AND p.created_at >= NOW() - make_interval(days => ${days})
-            AND p.created_at <= NOW() - interval '24 hours'
-            AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-            AND p.title NOT ILIKE '%gift card%'
-          GROUP BY p.id
-          ORDER BY click_count DESC, p.created_at DESC
-          LIMIT ${limit}
-        `;
-
-    return result as DBProduct[];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get products added in the last 24 hours — the VYA Insider early-access window.
- * Only shown to active members.
- */
-export async function getInsiderProducts(): Promise<DBProduct[]> {
-  const sql = neon(getDatabaseUrl());
-
-  try {
     const result = await sql`
-      SELECT * FROM products
-      WHERE created_at IS NOT NULL
-        AND created_at >= NOW() - interval '24 hours'
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-        AND title NOT ILIKE '%gift card%'
-      ORDER BY created_at DESC
-    `;
+        SELECT p.*, COUNT(c.id) AS click_count
+        FROM products p
+        LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
+        WHERE p.created_at IS NOT NULL
+          AND p.created_at >= NOW() - make_interval(days => ${days})
+          AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+          AND p.title NOT ILIKE '%gift card%'
+        GROUP BY p.id
+        ORDER BY click_count DESC, p.created_at DESC
+        LIMIT ${limit}
+      `;
+
     return result as DBProduct[];
   } catch {
     return [];
   }
 }
 
-/**
- * Get new products that have not yet been emailed to Insiders.
- * Only products with a created_at (i.e. genuinely new, not pre-existing) qualify.
- */
-export async function getUnnotifiedInsiderProducts(limit: number = 50): Promise<DBProduct[]> {
-  const sql = neon(getDatabaseUrl());
-  try {
-    const result = await sql`
-      SELECT * FROM products
-      WHERE created_at IS NOT NULL
-        AND created_at >= NOW() - interval '14 days'
-        AND insider_notified = FALSE
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-        AND title NOT ILIKE '%gift card%'
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-    `;
-    return result as DBProduct[];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Mark a list of product IDs as having been included in an Insider new-arrivals email.
- * Also writes to insider_seen_products so that if these products are later deleted
- * and re-inserted by a sync, they won't appear as "new" on the Insider page again.
- */
-export async function markProductsAsInsiderNotified(ids: number[]): Promise<void> {
-  if (ids.length === 0) return;
-  const sql = neon(getDatabaseUrl());
-  await sql`
-    UPDATE products SET insider_notified = TRUE WHERE id = ANY(${ids})
-  `;
-  // Persist (store_slug, title) pairs so re-inserted products are recognised as "seen"
-  await sql`
-    INSERT INTO insider_seen_products (store_slug, title)
-    SELECT store_slug, title FROM products WHERE id = ANY(${ids})
-    ON CONFLICT DO NOTHING
-  `;
-}
 
 /**
  * Get list of all synced stores

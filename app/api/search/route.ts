@@ -3,8 +3,6 @@ import { neon } from "@neondatabase/serverless";
 import { stores } from "@/app/lib/stores";
 import { brands } from "@/app/lib/brandData";
 import { categoryMap } from "@/app/lib/categoryMap";
-import { auth } from "@/app/lib/auth";
-import { getUserMembershipStatus } from "@/app/lib/membership-db";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -134,16 +132,6 @@ export async function GET(request: Request) {
   try {
     const sql = neon(getDatabaseUrl());
 
-    // Check membership — members see products added in the last 24h (Insider access)
-    const session = await auth().catch(() => null);
-    const isMember = session?.user?.id
-      ? await getUserMembershipStatus(session.user.id).then((s) => s.isMember).catch(() => false)
-      : false;
-
-    // Insider filter: passes isMember as a boolean parameter.
-    // PostgreSQL evaluates (true OR ...) as always-true (no filter for members)
-    // and (false OR condition) as just the condition (24h filter for non-members).
-    const insiderFilter = sql`(${isMember} OR created_at IS NULL OR created_at <= NOW() - interval '24 hours')`;
 
     // ─── 1. Designer / brand matching ────────────────────────────────────────
     // Strip stop words and "&" for word-level brand matching
@@ -235,7 +223,7 @@ export async function GET(request: Request) {
             WHERE LOWER(title) ~* ${catRegex}
               AND LOWER(title) LIKE ALL(${modLike})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND ${insiderFilter}
+
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -247,7 +235,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND ${insiderFilter}
+  
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -261,7 +249,7 @@ export async function GET(request: Request) {
             FROM products
             WHERE LOWER(title) LIKE ALL(${likePatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND ${insiderFilter}
+
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -273,7 +261,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) LIKE ANY(${likePatterns})
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND ${insiderFilter}
+  
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -297,6 +285,18 @@ export async function GET(request: Request) {
         `;
       }
     }
+
+    // Fire-and-forget: record search term so admin can see top searches
+    sql`
+      CREATE TABLE IF NOT EXISTS searches (
+        id SERIAL PRIMARY KEY,
+        query TEXT NOT NULL,
+        results_count INT NOT NULL DEFAULT 0,
+        timestamp TIMESTAMPTZ DEFAULT NOW()
+      )
+    `.then(() =>
+      sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${products.length})`
+    ).catch(() => {});
 
     return NextResponse.json({
       designers: matchedDesigners,

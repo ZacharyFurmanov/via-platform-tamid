@@ -6,7 +6,6 @@ import type { DBProduct } from "@/app/lib/db";
 import { getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
 import { getUserPurchaseHistory, getUserClickHistory } from "@/app/lib/analytics-db";
 import { getUserSourcingRequests, type SourcingRequest } from "@/app/lib/sourcing-db";
-import { getUserMembershipStatus } from "@/app/lib/membership-db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
@@ -40,19 +39,16 @@ export default async function AccountPage() {
   let notificationsEnabled = true;
   let userPhone = "";
   let favCounts: Record<number, number> = {};
-  let isMember = false;
-  let memberSince: Date | null = null;
   let purchases: Awaited<ReturnType<typeof getUserPurchaseHistory>> = [];
   let recentClicks: Awaited<ReturnType<typeof getUserClickHistory>> = [];
   let sourcingRequests: SourcingRequest[] = [];
 
   if (userId) {
     try {
-      const [products, storeSlugs, settings, membershipStatus, userPurchases, userClicks, userSourcing] = await Promise.all([
+      const [products, storeSlugs, settings, userPurchases, userClicks, userSourcing] = await Promise.all([
         getUserFavoritedProducts(userId),
         getUserStoreFavoriteIds(userId),
         getUserSettings(userId),
-        getUserMembershipStatus(userId).catch(() => ({ isMember: false, memberSince: null })),
         getUserPurchaseHistory(userId).catch(() => []),
         getUserClickHistory(userId).catch(() => []),
         getUserSourcingRequests(userId).catch(() => []),
@@ -62,8 +58,6 @@ export default async function AccountPage() {
       favStoreSlugs = storeSlugs;
       notificationsEnabled = settings.notificationsEnabled;
       userPhone = settings.phone;
-      isMember = membershipStatus.isMember;
-      memberSince = membershipStatus.memberSince;
       purchases = userPurchases;
       recentClicks = userClicks;
       sourcingRequests = userSourcing;
@@ -101,46 +95,6 @@ export default async function AccountPage() {
       </section>
 
       <div className="max-w-5xl mx-auto px-6">
-        {/* ===== VYA Insider ===== */}
-        <section className="py-12 border-b border-[#5D0F17]/10">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-serif text-xl italic text-[#5D0F17]/80">VYA Insider</h2>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          {isMember ? (
-            <div className="flex flex-col gap-4">
-              <Link
-                href="/account/insider"
-                className="border border-[#5D0F17] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition group"
-              >
-                <div>
-                  <p className="font-serif text-xl mb-1">Early Access</p>
-                  <p className="text-sm text-[#5D0F17]/50 group-hover:text-[#F7F3EA]/60">
-                    View new arrivals added in the last 24 hours — before anyone else.
-                  </p>
-                </div>
-                <span className="shrink-0 text-sm uppercase tracking-[0.15em]">
-                  View →
-                </span>
-              </Link>
-                </div>
-          ) : (
-            <div className="border border-[#5D0F17]/15 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div>
-                <p className="text-sm text-[#5D0F17]/50 leading-relaxed">
-                  Get 24-hour early access to new arrivals from all VYA stores.
-                </p>
-              </div>
-              <a
-                href="/membership"
-                className="shrink-0 text-center text-sm uppercase tracking-[0.15em] px-6 py-3 bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85 transition"
-              >
-                Join VYA Insider — $10/month
-              </a>
-            </div>
-          )}
-        </section>
-
         {/* ===== Favorite Products ===== */}
         <section className="py-12 border-b border-[#5D0F17]/10">
           <div className="flex items-center gap-4 mb-8">
@@ -366,7 +320,7 @@ export default async function AccountPage() {
 
         {/* ===== Settings ===== */}
         <section className="py-12 mb-8">
-          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} isMember={isMember} memberSinceLabel={memberSince ? memberSince.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null} />
+          <AccountActions notificationsEnabled={notificationsEnabled} initialPhone={userPhone} />
         </section>
       </div>
     </main>

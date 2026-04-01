@@ -61,10 +61,12 @@ u + .body .email-inner { background-color: #F7F3EA !important; }
 [data-ogsc] .email-wrapper { background-color: #F7F3EA !important; }
 [data-ogsc] .email-inner { background-color: #F7F3EA !important; }
 [data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] h1, [data-ogsc] h2 { color: #5D0F17 !important; }
+[data-ogsc] a[style*="background:#5D0F17"] { color: #F7F3EA !important; }
 @media (prefers-color-scheme: dark) {
   body, .email-wrapper, .email-inner { background-color: #F7F3EA !important; }
   p, span, h1, h2 { color: #5D0F17 !important; }
   a { color: #5D0F17 !important; }
+  a[style*="background:#5D0F17"] { color: #F7F3EA !important; }
 }
 </style>
 </head>
@@ -340,7 +342,7 @@ export async function sendFavoriteActivityNotification(
       Once it&rsquo;s gone, it&rsquo;s gone forever.
     </p>
     <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
               text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">Shop Now</a>
   `;
@@ -433,18 +435,18 @@ export async function sendInsiderNewArrivalsEmail(
     </table>
     <div style="text-align:center;margin-top:8px;padding-top:28px;border-top:1px solid rgba(93,15,23,0.12);">
       <a href="${insiderUrl}"
-         style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
                 text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
                 font-family:Georgia,'Times New Roman',serif;">Shop VYA Insider</a>
     </div>
   `;
 
-  const html = viaShell("VYA Insider", content);
-
   let sent = 0;
   let failed = 0;
 
   for (const email of emails) {
+    const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const html = viaShell("VYA Insider", content, unsubUrl);
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -538,18 +540,18 @@ export async function sendNewArrivalsEmail(
     </table>
     <div style="text-align:center;margin-top:8px;padding-top:28px;border-top:1px solid rgba(93,15,23,0.12);">
       <a href="${newArrivalsUrl}"
-         style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
                 text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
                 font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
     </div>
   `;
 
-  const html = viaShell("New Arrivals", content, `${BASE_URL}/account`);
-
   let sent = 0;
   let failed = 0;
 
   for (const email of emails) {
+    const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const html = viaShell("New Arrivals", content, unsubUrl);
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
@@ -638,7 +640,7 @@ export async function sendSourcingRequestToStores(
       <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Deadline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.deadline}</td></tr>
     </table>
     <div style="text-align:center;margin:32px 0;">
-      <a href="${DASHBOARD_URL}" style="display:inline-block;background:#5D0F17;color:#F7F3EA;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 32px;">Submit Your Offer</a>
+      <a href="${DASHBOARD_URL}" style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 32px;">Submit Your Offer</a>
     </div>
     <p style="font-size:12px;color:rgba(93,15,23,0.4);text-align:center;">Customer contact details are only shared after they accept your offer.</p>
   `);
@@ -726,7 +728,7 @@ export async function sendSourcingOfferToCustomer(details: {
       ${notesRow}
     </table>
     <a href="${requestUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
               text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">View &amp; Accept Offer</a>
     <p style="font-size:12px;color:rgba(93,15,23,0.5);font-family:Georgia,'Times New Roman',serif;margin:20px 0 0;line-height:1.7;">
@@ -770,7 +772,7 @@ export async function sendSourcingOfferAcceptedToStore(details: {
       <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Timeline</td><td style="padding:8px 0;font-size:14px;color:#5D0F17;">${details.timeline}</td></tr>
     </table>
     <a href="mailto:${details.customerEmail}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
               text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">Email Customer</a>
   `;
@@ -831,7 +833,7 @@ export async function sendCollabsLinksStuckAlert(stuckProducts: DBProduct[]): Pr
       They may not be enrolled in the Collabs program for their store, or the Collabs credentials may need refreshing.
     </p>
     <a href="${BASE_URL}/admin/analytics"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;">
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;">
       Check Admin →
     </a>
   `;
@@ -891,8 +893,8 @@ export async function sendPilotApprovalEmail(
       You have exclusive access to shop the VYA pilot, our curated edit of independent vintage and secondhand stores, all in one place.
     </p>
     <a href="${magicLink}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:14px 32px;font-size:12px;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">
-      Start Shopping
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 32px;font-size:12px;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">
+      <span style="color:#F7F3EA !important;">Start Shopping</span>
     </a>
     <div style="margin-top:40px;padding-top:32px;border-top:1px solid rgba(93,15,23,0.1);">
       <p style="font-size:13px;color:#5D0F17;font-family:Georgia,serif;font-style:italic;margin:0 0 6px;">From the founder of VYA:</p>
@@ -949,7 +951,7 @@ export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
       New products added to Shopify won't appear on VYA until you refresh your credentials.
     </p>
     <a href="${BASE_URL}/admin/analytics"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;">
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:12px 24px;font-size:13px;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;">
       Update Credentials →
     </a>
   `;
@@ -1003,7 +1005,7 @@ export async function sendAbandonedCartEmail(
     </a>
     ${priceBlock}
     <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
               text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">Complete Your Purchase</a>
   `;
@@ -1064,7 +1066,7 @@ export async function sendTrendingItemEmail(
       Once it&rsquo;s gone, it&rsquo;s gone forever.
     </p>
     <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:13px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
               text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">Shop Now</a>
   `;
@@ -1106,7 +1108,7 @@ export async function sendPopupAnnouncementEmail(
       Drinks provided.
     </p>
     <a href="${ticketUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA;padding:14px 36px;
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 36px;
               text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
               font-family:Georgia,'Times New Roman',serif;">Get Tickets</a>
   `;

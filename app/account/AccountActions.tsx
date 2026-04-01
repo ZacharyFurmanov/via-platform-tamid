@@ -2,18 +2,12 @@
 
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import MembershipPortalButton from "./MembershipPortalButton";
-
 export default function AccountActions({
   notificationsEnabled: initialEnabled,
   initialPhone,
-  isMember,
-  memberSinceLabel,
 }: {
   notificationsEnabled: boolean;
   initialPhone: string;
-  isMember: boolean;
-  memberSinceLabel: string | null;
 }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [saving, setSaving] = useState(false);
@@ -120,19 +114,6 @@ export default function AccountActions({
             />
           </button>
         </div>
-
-        {/* Active Member */}
-        {isMember && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-neutral-100">
-            <div>
-              <h3 className="text-sm font-medium mb-1">Active Member</h3>
-              {memberSinceLabel && (
-                <p className="text-xs text-black/50">Since {memberSinceLabel}</p>
-              )}
-            </div>
-            <MembershipPortalButton />
-          </div>
-        )}
 
         {/* Sign Out & Delete */}
         <div className="flex items-center justify-between pt-2">
