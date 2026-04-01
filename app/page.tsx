@@ -20,7 +20,7 @@ export default function HomePage() {
       <div className="md:hidden" style={{ backgroundColor: "#D8C8BC" }}>
         <section className="relative overflow-hidden" style={{ height: "65vh" }}>
           <Image
-            src="/hero-v4.png"
+            src="/hero-v4.jpg"
             alt=""
             fill
             priority
@@ -63,7 +63,7 @@ export default function HomePage() {
         style={{ backgroundColor: "#D8C8BC" }}
       >
         <Image
-          src="/hero-v4.png"
+          src="/hero-v4.jpg"
           alt=""
           fill
           priority
