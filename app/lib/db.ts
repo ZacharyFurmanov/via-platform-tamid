@@ -380,6 +380,27 @@ export const getNewArrivals = unstable_cache(
 
 
 /**
+ * Get brand counts directly from the DB (fast aggregation, no full table scan in JS).
+ */
+export async function getBrandCounts(): Promise<Array<{ brand: string; count: number }>> {
+  const sql = neon(getDatabaseUrl());
+  try {
+    const result = await sql`
+      SELECT brand, COUNT(*)::int AS count
+      FROM products
+      WHERE brand IS NOT NULL
+        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        AND title NOT ILIKE '%gift card%'
+      GROUP BY brand
+      ORDER BY count DESC
+    `;
+    return result as Array<{ brand: string; count: number }>;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Get list of all synced stores
  */
 export async function getSyncedStores(): Promise<

@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { getInventory } from "@/app/lib/inventory";
+import { getBrandCounts } from "@/app/lib/db";
 import { brandMap } from "@/app/lib/brandData";
 
 type ActiveBrand = {
@@ -9,25 +9,16 @@ type ActiveBrand = {
 };
 
 async function _getActiveBrandsUncached(): Promise<ActiveBrand[]> {
-  const items = await getInventory();
+  const rows = await getBrandCounts();
 
-  const brandCounts = new Map<string, number>();
-  for (const item of items) {
-    if (item.brand) {
-      brandCounts.set(item.brand, (brandCounts.get(item.brand) ?? 0) + 1);
-    }
-  }
-
-  return Array.from(brandCounts.entries())
-    .map(([slug, count]) => ({
-      slug,
-      label: brandMap[slug] ?? slug,
-      productCount: count,
-    }))
-    .sort((a, b) => b.productCount - a.productCount);
+  return rows.map(({ brand, count }) => ({
+    slug: brand,
+    label: brandMap[brand] ?? brand,
+    productCount: count,
+  }));
 }
 
-// Cache the final brand list (small payload) rather than the raw product data
+// Cache the brand list for 30 minutes
 export const getActiveBrands = unstable_cache(
   _getActiveBrandsUncached,
   ["active-brands"],
