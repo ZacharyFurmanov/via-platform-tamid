@@ -194,7 +194,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-          AND ${insiderFilter}
+
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
@@ -277,7 +277,7 @@ export async function GET(request: Request) {
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-            AND ${insiderFilter}
+  
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST
