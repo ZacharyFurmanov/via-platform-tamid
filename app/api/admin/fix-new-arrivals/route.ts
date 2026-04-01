@@ -28,6 +28,25 @@ export async function POST(request: NextRequest) {
   }
 
   const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
+  const body = await request.json().catch(() => ({}));
+
+  // Seed mode: randomly distribute a sample of products across the last 7 days
+  if (body?.seed === true) {
+    const limit = typeof body.limit === "number" ? body.limit : 200;
+    const result = await sql`
+      UPDATE products
+      SET created_at = NOW() - (RANDOM() * INTERVAL '7 days')
+      WHERE id IN (
+        SELECT id FROM products ORDER BY RANDOM() LIMIT ${limit}
+      )
+      RETURNING id
+    `;
+    return NextResponse.json({
+      ok: true,
+      updated: result.length,
+      message: `Seeded ${result.length} products with created_at spread across the last 7 days.`,
+    });
+  }
 
   const result = await sql`
     UPDATE products
