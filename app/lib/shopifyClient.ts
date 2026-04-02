@@ -151,6 +151,26 @@ export function isValidSizeValue(val: string): boolean {
 }
 
 /**
+ * Normalizes compound size values from Shopify variant options.
+ * e.g. "EU: 37 / UK: 4" → "EU 37"
+ *      "EU 37 / UK 4"  → "EU 37"
+ *      "EU: 37"        → "EU 37"
+ *      "M"             → "M"
+ * Returns null if no recognizable size can be extracted.
+ */
+function normalizeCompoundSize(val: string): string | null {
+  if (!val || val === "Default Title") return null;
+  // Take the first component of compound sizes like "EU: 37 / UK: 4"
+  const firstPart = val.split(/\s*\/\s*/)[0].trim();
+  // Remove colon between size prefix and number: "EU: 37" → "EU 37"
+  const normalized = firstPart.replace(/^(EU|UK|US|IT|FR|DE)\s*:\s*/i, (_, prefix: string) => prefix.toUpperCase() + " ").trim();
+  if (SIZE_VALUE_REGEX.test(normalized)) return normalized;
+  if (SIZE_VALUE_REGEX.test(firstPart)) return firstPart;
+  if (SIZE_VALUE_REGEX.test(val.trim())) return val.trim();
+  return null;
+}
+
+/**
  * Extracts a size from a product title as a fallback when no variant size option exists.
  * Matches patterns like "Size M", "Size 38", "/ Size 9.5", "- Size US 8", "(Size L)"
  * Also matches bare trailing numbers common in vintage listings: "Dior Heels 35", "Gucci Slides 40.5"
@@ -227,12 +247,13 @@ export function extractSizeFromDescription(description: string | null): string |
 
   // 0. EU/IT/FR/DE prefixed size after label keyword — takes priority over parenthetical
   //    Handles "Label: EU 37 (UK 4)" → "EU 37", "Label: EU 39" → "EU 39"
+  //    Also handles "Size: EU: 37 / UK: 4" (colon between prefix and number)
   const euLabelRe = new RegExp(
-    `(?:${STRICT_LABEL_KW_LOCAL}|size)\\s*:?\\s*((?:EU|IT|FR|DE)\\s*\\d[\\d.]*)`,
+    `(?:${STRICT_LABEL_KW_LOCAL}|size)\\s*:?\\s*((?:EU|IT|FR|DE)\\s*:?\\s*\\d[\\d.]*)`,
     "i"
   );
   const euLabelMatch = euLabelRe.exec(text);
-  if (euLabelMatch) return euLabelMatch[1].trim();
+  if (euLabelMatch) return euLabelMatch[1].trim().replace(/:\s*/, " ").replace(/\s+/, " ");
 
   // 1. Parenthetical abbreviation after label keyword: "Label: Medium (M)" → "M"
   const parenRe = new RegExp(
@@ -394,7 +415,7 @@ export async function fetchShopifyProducts(
         (opt) => /size/i.test(opt.name)
       );
       const sizeOptionRaw = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
-      const sizeFromVariant = sizeOptionRaw && SIZE_VALUE_REGEX.test(sizeOptionRaw.trim()) ? sizeOptionRaw : null;
+      const sizeFromVariant = sizeOptionRaw ? normalizeCompoundSize(sizeOptionRaw) : null;
       const sizeFromTitle = extractSizeFromTitle(node.title);
       const sizeFromDescription = extractSizeFromDescription(node.descriptionHtml || null);
       // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), it may be wrong
@@ -598,12 +619,12 @@ export async function fetchShopifyProductsPublic(
         const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
         const val = variant[optionKey];
         // Validate value looks like an actual size (reject "ANIMAL", "Black", etc.)
-        if (val && val !== "Default Title" && SIZE_VALUE_REGEX.test(val.trim())) sizeFromVariant = val;
+        if (val && val !== "Default Title") sizeFromVariant = normalizeCompoundSize(val);
       }
       // Check variant.title as another source (e.g. "M", "US 8") before falling back to text extraction
       // Only accept variant.title as a size if it actually looks like a size (not a color like "Green")
       const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
-      const variantTitleIfSize = rawVariantTitle && SIZE_VALUE_REGEX.test(rawVariantTitle.trim()) ? rawVariantTitle : null;
+      const variantTitleIfSize = rawVariantTitle ? normalizeCompoundSize(rawVariantTitle) : null;
       // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), prefer a more specific
       // size from the title or description (e.g. "35" from "Dior Heels 35" beats "M").
       const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
@@ -721,10 +742,10 @@ export async function fetchShopifyProductsByCollections(
         if (sizeOptionIndex >= 0 && variant) {
           const optionKey = `option${sizeOptionIndex + 1}` as "option1" | "option2" | "option3";
           const val = variant[optionKey];
-          if (val && val !== "Default Title" && SIZE_VALUE_REGEX.test(val.trim())) sizeFromVariant = val;
+          if (val && val !== "Default Title") sizeFromVariant = normalizeCompoundSize(val);
         }
         const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
-        const variantTitleIfSize = rawVariantTitle && SIZE_VALUE_REGEX.test(rawVariantTitle.trim()) ? rawVariantTitle : null;
+        const variantTitleIfSize = rawVariantTitle ? normalizeCompoundSize(rawVariantTitle) : null;
         const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
         const sizeFromTitle = extractSizeFromTitle(product.title);
         const sizeFromDescription = extractSizeFromDescription(product.body_html || null);

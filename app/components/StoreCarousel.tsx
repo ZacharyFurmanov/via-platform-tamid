@@ -7,8 +7,8 @@ import TrackedStoreLink from "./TrackedStoreLink";
 export default function StoreCarousel() {
   return (
     <div className="px-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-12">
-        {stores.slice(0, 12).map((store) => (
+      <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-6 sm:gap-y-12">
+        {stores.map((store) => (
           <TrackedStoreLink
             key={store.slug}
             href={`/stores/${store.slug}`}

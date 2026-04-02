@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users u ON LOWER(u.email) = LOWER(pa.email)
     `,
 
-    // WAU / MAU — distinct users who took a real action (click, save, purchase)
-    // Signups excluded: a new account alone isn't "activity"
+    // WAU / MAU — distinct users who visited any page, clicked, saved, or purchased
+    // page_type_views counts any site visit (homepage, store, category, browse)
     // mau_prev_week = users active in the 7–37d window, used as denominator for stickiness_prev
     sql`
       SELECT
@@ -113,6 +113,8 @@ export async function GET(request: NextRequest) {
         SELECT user_id::text,        created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
         UNION ALL
         SELECT user_id::text,        timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
+        UNION ALL
+        SELECT user_id::text,        timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
       ) a
     `,
 
@@ -198,6 +200,8 @@ export async function GET(request: NextRequest) {
           SELECT user_id::text, created_at AS ts FROM store_favorites   WHERE user_id IS NOT NULL
           UNION ALL
           SELECT user_id::text, timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT user_id::text, timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
         ) a
         INNER JOIN users u        ON u.id::text = a.user_id
         INNER JOIN pilot_access pa ON LOWER(pa.email) = LOWER(u.email) AND pa.status = 'approved'

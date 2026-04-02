@@ -105,26 +105,6 @@ export default function HomePage() {
         <NewArrivalsSection />
       </Suspense>
 
-      {/* ================= SHOP BY STORE ================= */}
-      <section className="bg-[#F7F3EA] py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto">
-          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
-            </div>
-            <Link
-              href="/stores"
-              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-            >
-              Shop All Stores
-            </Link>
-          </div>
-
-          <StoreCarousel />
-        </div>
-      </section>
-
       {/* ================= SHOP BY CATEGORY ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto">
@@ -175,10 +155,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= SHOP BY DESIGNER ================= */}
-      <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-48" />}>
-        <BrandsSection />
-      </Suspense>
+      {/* ================= SHOP BY STORE ================= */}
+      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
+            </div>
+            <Link
+              href="/stores"
+              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+            >
+              Shop All Stores
+            </Link>
+          </div>
+
+          <StoreCarousel />
+        </div>
+      </section>
+
+      {/* ================= FAQ ================= */}
+      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="max-w-xl mb-12 sm:mb-16">
+            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
+              Have questions?
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-[#5D0F17]">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+              Everything you need to know about shopping, shipping,
+              and how VYA works.
+            </p>
+          </div>
+
+          <FAQAccordion
+              faqs={[
+                {
+                  q: "Is everything authentic?",
+                  a: "Yes — we partner only with vetted stores known for authenticity and quality.",
+                },
+                {
+                  q: "Who handles shipping?",
+                  a: "Each store fulfills orders directly using their own shipping policies.",
+                },
+                {
+                  q: "What about returns?",
+                  a: "Return policies are set by each individual store and listed on their product pages.",
+                },
+                {
+                  q: "Where do you ship?",
+                  a: "Stores decide where they ship, but most stores ship worldwide.",
+                },
+              ]}
+            />
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/faqs"
+              className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-10 py-3.5 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition font-sans"
+            >
+              Explore FAQs
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ================= STORIES ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
@@ -257,54 +300,6 @@ export default function HomePage() {
                 },
               ]}
             />
-        </div>
-      </section>
-
-      {/* ================= FAQ ================= */}
-      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="max-w-xl mb-12 sm:mb-16">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
-              Have questions?
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-serif mb-4 text-[#5D0F17]">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
-              Everything you need to know about shopping, shipping,
-              and how VYA works.
-            </p>
-          </div>
-
-          <FAQAccordion
-              faqs={[
-                {
-                  q: "Is everything authentic?",
-                  a: "Yes — we partner only with vetted stores known for authenticity and quality.",
-                },
-                {
-                  q: "Who handles shipping?",
-                  a: "Each store fulfills orders directly using their own shipping policies.",
-                },
-                {
-                  q: "What about returns?",
-                  a: "Return policies are set by each individual store and listed on their product pages.",
-                },
-                {
-                  q: "Where do you ship?",
-                  a: "Stores decide where they ship, but most stores ship worldwide.",
-                },
-              ]}
-            />
-
-          <div className="mt-10 text-center">
-            <Link
-              href="/faqs"
-              className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-10 py-3.5 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition font-sans"
-            >
-              Explore FAQs
-            </Link>
-          </div>
         </div>
       </section>
 

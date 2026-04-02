@@ -9,7 +9,6 @@ import {
   fetchCollabsProducts,
   createAffiliateLink,
 } from "@/app/lib/collabs";
-import { sendCollabsCredentialsExpiredAlert, sendCollabsLinksStuckAlert } from "@/app/lib/email";
 
 // Allow up to 5 minutes for bulk generation
 export const maxDuration = 300;
@@ -65,7 +64,6 @@ export async function GET(request: Request) {
   let totalCreated = 0;
   let totalFailed = 0;
   let rateLimited = false;
-  let credentialsAlertSent = false;
   const storeResults: Array<{
     store: string;
     slug: string;
@@ -87,12 +85,8 @@ export async function GET(request: Request) {
     if (fetchError) {
       console.error(`[Generate Collabs Links] Fetch error for ${store.name}:`, fetchError);
       storeResults.push({ store: store.name, slug: store.slug, saved: 0, created: 0, failed: 0, error: fetchError });
-      if (fetchError.includes("401") && !credentialsAlertSent) {
-        credentialsAlertSent = true;
-        console.error("[Generate Collabs Links] 401 detected — sending credentials expired alert");
-        await sendCollabsCredentialsExpiredAlert().catch((e) =>
-          console.error("[Generate Collabs Links] Failed to send alert email:", e)
-        );
+      if (fetchError.includes("401")) {
+        console.error("[Generate Collabs Links] 401 detected — Collabs credentials may be expired");
       }
       continue;
     }
@@ -172,14 +166,6 @@ export async function GET(request: Request) {
     console.warn(
       `[Generate Collabs Links] ${stuckProducts.length} products stuck without links for 3+ days`
     );
-    // Only send the daily alert on the 1am UTC standalone run to avoid noise
-    // (sync-stores triggers this cron at midnight and noon; standalone runs at 1am and 1pm)
-    const utcHour = new Date().getUTCHours();
-    if (utcHour === 1) {
-      await sendCollabsLinksStuckAlert(stuckProducts).catch((e) =>
-        console.error("[Generate Collabs Links] Failed to send stuck alert:", e)
-      );
-    }
   }
 
   const summary = {

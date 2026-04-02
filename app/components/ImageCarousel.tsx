@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { resizeImage } from "@/app/lib/imageUtils";
 
 type ImageCarouselProps = {
@@ -8,6 +8,7 @@ type ImageCarouselProps = {
   alt: string;
   variant: "card" | "detail";
   isEditorsPick?: boolean;
+  onAllImagesFailed?: () => void;
 };
 
 export default function ImageCarousel({
@@ -15,14 +16,30 @@ export default function ImageCarousel({
   alt,
   variant,
   isEditorsPick,
+  onAllImagesFailed,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const mouseStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
 
   const validImages = images.filter((src) => !!src);
   const safeImages = validImages.length > 0 ? validImages : ["/placeholder.jpg"];
+
+  // If no valid images at all, report immediately
+  useEffect(() => {
+    if (validImages.length === 0) onAllImagesFailed?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Report when every image URL has failed to load
+  useEffect(() => {
+    if (validImages.length > 0 && failedCount >= validImages.length) {
+      onAllImagesFailed?.();
+    }
+  }, [failedCount, validImages.length, onAllImagesFailed]);
   const hasMultiple = safeImages.length > 1;
 
   const goTo = useCallback(
@@ -53,16 +70,20 @@ export default function ImageCarousel({
   // Touch handlers
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   }, []);
 
   const onTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (touchStartX.current === null) return;
-      const diff = touchStartX.current - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 30) {
-        goTo(current + (diff > 0 ? 1 : -1));
-      }
+      if (touchStartX.current === null || touchStartY.current === null) return;
+      const diffX = touchStartX.current - e.changedTouches[0].clientX;
+      const diffY = touchStartY.current - e.changedTouches[0].clientY;
       touchStartX.current = null;
+      touchStartY.current = null;
+      // Only swipe if horizontal movement dominates (not a vertical scroll)
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+        goTo(current + (diffX > 0 ? 1 : -1));
+      }
     },
     [current, goTo]
   );
@@ -120,7 +141,10 @@ export default function ImageCarousel({
           }`}
           loading="lazy"
           decoding="async"
-          onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/placeholder.jpg";
+            setFailedCount((c) => c + 1);
+          }}
         />
       );
     });

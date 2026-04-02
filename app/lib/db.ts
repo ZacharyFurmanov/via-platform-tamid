@@ -282,6 +282,7 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
           OR collabs_link IS NOT NULL
         )
         AND title NOT ILIKE '%gift card%'
+        AND image IS NOT NULL AND image != ''
       ORDER BY id
     `;
   return result as DBProduct[];
@@ -311,6 +312,7 @@ const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
         OR collabs_link IS NOT NULL
       )
         AND title NOT ILIKE '%gift card%'
+        AND image IS NOT NULL AND image != ''
       ORDER BY store_slug, id
     `;
   try {
@@ -345,6 +347,7 @@ export async function getRecommendedProducts(
         OR collabs_link IS NOT NULL
       )
       AND title NOT ILIKE '%gift card%'
+      AND image IS NOT NULL AND image != ''
     LIMIT ${limit}
   `;
   return result as DBProduct[];
@@ -363,6 +366,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBP
           AND created_at >= NOW() - make_interval(days => ${days})
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           AND title NOT ILIKE '%gift card%'
+          AND image IS NOT NULL AND image != ''
         ORDER BY created_at DESC
         LIMIT ${limit}
       `;

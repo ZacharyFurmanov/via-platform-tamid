@@ -261,7 +261,7 @@ export default function HeaderClient({
 
           <div className="flex items-center gap-3 md:gap-8">
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]" style={{ fontFamily: "'PP Eiko', Georgia, serif" }}>
+            <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]" style={{ fontFamily: "'Almarai', system-ui, sans-serif" }}>
               {/* STORES DROPDOWN */}
               <div className="relative" ref={storesDropdownRef}>
                 <button
@@ -501,7 +501,7 @@ export default function HeaderClient({
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-[#F7F3EA] overflow-y-auto" style={{ fontFamily: "'PP Eiko', Georgia, serif" }}>
+          <nav className="absolute top-[104px] left-0 right-0 bottom-0 bg-[#F7F3EA] overflow-y-auto" style={{ fontFamily: "'Almarai', system-ui, sans-serif" }}>
             <div className="px-6 py-8">
               <ul className="space-y-1">
                 {/* Mobile Stores Accordion */}

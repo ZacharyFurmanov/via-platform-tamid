@@ -108,7 +108,7 @@ function sortProducts(
       const engaged = sorted.filter((p) => (p.engagementScore ?? 0) > 0);
       const unengaged = sorted.filter((p) => (p.engagementScore ?? 0) === 0);
       engaged.sort((a, b) => (b.popularityScore ?? 0) - (a.popularityScore ?? 0));
-      unengaged.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      unengaged.sort((a, b) => (b.dbId ?? b.createdAt ?? 0) - (a.dbId ?? a.createdAt ?? 0));
       return diversityInterleave([...engaged, ...unengaged], (p) => p.storeSlug, 2);
     }
     case "price-asc":
@@ -118,10 +118,12 @@ function sortProducts(
     case "newest":
     default:
       return sorted.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return b.createdAt - a.createdAt;
-        }
-        return b.id.localeCompare(a.id);
+        // Primary: DB id descending — higher id = more recently added to VYA,
+        // avoids mixing millisecond timestamps with integer fallbacks.
+        if (a.dbId != null && b.dbId != null) return b.dbId - a.dbId;
+        // Fallback for products without dbId (e.g. favorites page)
+        if (a.createdAt && b.createdAt) return b.createdAt - a.createdAt;
+        return (b.dbId ?? 0) - (a.dbId ?? 0);
       });
   }
 }
@@ -422,6 +424,12 @@ export default function FilteredProductGrid({
     return Array.from(seen).sort();
   }, [products]);
 
+  // Track products whose images all failed to load — remove them from the grid
+  const [deadImageIds, setDeadImageIds] = useState<Set<string>>(new Set());
+  const handleImageFail = useCallback((id: string) => {
+    setDeadImageIds((prev) => new Set([...prev, id]));
+  }, []);
+
   // Fetch favorite counts for all products
   const [favCounts, setFavCounts] = useState<Record<number, number>>({});
 
@@ -498,7 +506,9 @@ export default function FilteredProductGrid({
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          {filteredProducts.map((product, i) => (
+          {filteredProducts
+            .filter((product) => product.image && !deadImageIds.has(product.id))
+            .map((product, i) => (
             <div
               key={product.id}
               className={`group ${i % 5 === 0 ? "col-span-2 md:col-span-1" : "col-span-1"}`}
@@ -519,6 +529,7 @@ export default function FilteredProductGrid({
                 isEditorsPick={product.isEditorsPick}
                 soldOut={product.soldOut}
                 from={from}
+                onImageFail={() => handleImageFail(product.id)}
                 favoriteCount={
                   favCounts[
                     product.dbId ??

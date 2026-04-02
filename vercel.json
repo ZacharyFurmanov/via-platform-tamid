@@ -21,10 +21,6 @@
       "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/cron/generate-collabs-links",
-      "schedule": "0 13 * * *"
-    },
-    {
       "path": "/api/cron/sync-collabs-revenue",
       "schedule": "0 6 * * *"
     },

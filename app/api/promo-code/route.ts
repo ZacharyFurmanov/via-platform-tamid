@@ -4,6 +4,7 @@ import { neon } from "@neondatabase/serverless";
 // Valid promo codes and their source labels
 const PROMO_CODES: Record<string, string> = {
   NYC: "nyc-popup-2026-03-29",
+  CLAIRE: "claire-referral",
 };
 
 function isValidEmail(email: string) {

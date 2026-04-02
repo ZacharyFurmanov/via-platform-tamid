@@ -66,6 +66,7 @@ type ProductCardProps = {
   size?: string | null;
   isEditorsPick?: boolean;
   soldOut?: boolean;
+  onImageFail?: () => void;
 };
 
 export default function ProductCard({
@@ -84,6 +85,7 @@ export default function ProductCard({
   size,
   isEditorsPick,
   soldOut,
+  onImageFail,
 }: ProductCardProps) {
   const pathname = usePathname();
   const carouselImages =
@@ -135,7 +137,7 @@ export default function ProductCard({
           );
         }}
       >
-        <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} />
+        <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} onAllImagesFailed={onImageFail} />
 
         {/* Product info */}
         <div className="pt-3 pb-1 sm:pb-2">
