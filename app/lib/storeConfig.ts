@@ -56,6 +56,12 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
 export const SHOPIFY_STORES: ShopifyStore[] = [
   {
     type: "shopify",
+    name: "Velvet Archive",
+    slug: "velvet-archive",
+    storeDomain: "velvet-archive.com",
+  },
+  {
+    type: "shopify",
     name: "Vintage Archives LA",
     slug: "vintage-archives-la",
     storeDomain: "vintagearchivesla.com",
@@ -222,12 +228,6 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Jade Vintage",
     slug: "jade-vintage",
     storeDomain: "jadevintage.ca",
-  },
-  {
-    type: "shopify",
-    name: "Velvet Archive",
-    slug: "velvet-archive",
-    storeDomain: "velvet-archive.com",
   },
 ];
 

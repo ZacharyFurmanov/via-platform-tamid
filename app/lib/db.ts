@@ -355,21 +355,38 @@ export async function getRecommendedProducts(
 
 /**
  * Get recently added products (new arrivals).
+ * Caps at 2 products per store to ensure diversity, ranked by click count then recency.
  */
 const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBProduct[]> => {
   const sql = neon(getDatabaseUrl());
   try {
     const result = await sql`
-        SELECT *
-        FROM products
-        WHERE created_at IS NOT NULL
-          AND created_at >= NOW() - make_interval(days => ${days})
-          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-          AND title NOT ILIKE '%gift card%'
-          AND image IS NOT NULL AND image != ''
-        ORDER BY created_at DESC
-        LIMIT ${limit}
-      `;
+      WITH click_counts AS (
+        SELECT store_slug, product_name, COUNT(*)::int AS click_count
+        FROM clicks
+        GROUP BY store_slug, product_name
+      ),
+      pool AS (
+        SELECT p.*,
+          COALESCE(cc.click_count, 0) AS click_count,
+          ROW_NUMBER() OVER (
+            PARTITION BY p.store_slug
+            ORDER BY COALESCE(cc.click_count, 0) DESC, p.created_at DESC
+          ) AS store_rank
+        FROM products p
+        LEFT JOIN click_counts cc
+          ON cc.store_slug = p.store_slug AND cc.product_name = p.title
+        WHERE p.created_at IS NOT NULL
+          AND p.created_at >= NOW() - make_interval(days => ${days})
+          AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+          AND p.title NOT ILIKE '%gift card%'
+          AND p.image IS NOT NULL AND p.image != ''
+      )
+      SELECT * FROM pool
+      WHERE store_rank <= 2
+      ORDER BY click_count DESC, created_at DESC
+      LIMIT ${limit}
+    `;
     return result as DBProduct[];
   } catch {
     return [];
