@@ -58,8 +58,8 @@ const SECTION_HEADER_RE = /^([A-Z][A-Z\s&/]{2,}):?\s*$/;
 function isMeasurementLine(text: string): boolean {
   const t = text.toLowerCase().trim();
   if (!t) return false;
-  // Size labels: "Size: M", "Labeled size: 10", "Tagged size S"
-  if (/(?:tagged|labeled|marked)?\s*size\s*[:\s]/.test(t)) return true;
+  // Size labels: "Size: M", "Labeled size: 10", "Tagged size S", "Size & fit: ..."
+  if (/(?:tagged|labeled|marked)?\s*size\s*[:\s&]/.test(t)) return true;
   // Measurement with optional ~ and inches/cm value: "Bust: ~16"", "Waist: 14 cm"
   if (/:\s*~?\s*\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b)/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
@@ -68,6 +68,10 @@ function isMeasurementLine(text: string): boolean {
   if (/~?\d+(?:[.,]\d+)?\s*["″''"]\s*(?:flat|laid flat)?/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
   }
+  // "flat measurements: bust 20 in pit to pit, waist 19.5 in, ..." — "measurements" keyword + numeric value with unit
+  if (/\bmeasurements?\b/.test(t) && /\d[\d.]*\s*(?:in\b|cm\b)/.test(t)) return true;
+  // Multiple inline measurements on one line: "bust 20 in, waist 19.5 in, hips 21 in"
+  if (((t.match(/\d[\d.]*\s*(?:in|cm)\b/g)) || []).length >= 2) return true;
   return false;
 }
 
@@ -107,9 +111,20 @@ function splitDescriptionBySizing(html: string | null): {
   }
 
   // --- Strategy 2: <p>-based descriptions, with section-header awareness ---
+  // First expand any <br>-separated content within <p> tags into individual virtual paragraphs
+  const expandedHtml = html.replace(
+    /<p([^>]*)>([\s\S]*?)<\/p>/gi,
+    (_, attrs, inner) => {
+      // Split on <br> variants and emit each non-empty chunk as its own <p>
+      const lines = inner.split(/<br\s*\/?>/i).map((l: string) => l.trim()).filter(Boolean);
+      if (lines.length <= 1) return `<p${attrs}>${inner}</p>`;
+      return lines.map((l: string) => `<p${attrs}>${l}</p>`).join("");
+    }
+  );
+
   const pPattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
   const paragraphs: { inner: string; plain: string }[] = [];
-  while ((match = pPattern.exec(html)) !== null) {
+  while ((match = pPattern.exec(expandedHtml)) !== null) {
     const inner = match[1];
     const plain = inner.replace(/<[^>]+>/g, "").replace(/&(?:[a-z]+|#\d+);/gi, " ").trim();
     paragraphs.push({ inner, plain });

@@ -27,6 +27,7 @@ type Analytics = {
   totalConversions: number;
   totalRevenue: number;
   topProducts: { name: string; count: number }[];
+  topSearches?: { query: string; count: number }[];
   range: string;
 };
 
@@ -592,6 +593,41 @@ export default function StoreDashboardPage() {
                             style={{ color: "rgba(93,15,23,0.5)" }}
                           >
                             {product.count} click{product.count !== 1 ? "s" : ""}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {analytics.topSearches && analytics.topSearches.length > 0 && (
+                <div className="bg-white shadow-sm">
+                  <div
+                    className="px-5 py-3 border-b text-xs uppercase tracking-wide"
+                    style={{ color: "rgba(93,15,23,0.5)", borderColor: "#F7F3EA" }}
+                  >
+                    Top Searches on VYA
+                  </div>
+                  <p className="px-5 pt-3 pb-1 text-xs" style={{ color: "rgba(93,15,23,0.4)" }}>
+                    What shoppers are searching for across all of VYA — useful for sourcing decisions.
+                  </p>
+                  <table className="w-full">
+                    <tbody>
+                      {analytics.topSearches.map((search, i) => (
+                        <tr
+                          key={i}
+                          className="border-b last:border-0"
+                          style={{ borderColor: "#F7F3EA" }}
+                        >
+                          <td className="px-5 py-3 text-sm" style={{ color: "#5D0F17" }}>
+                            {search.query}
+                          </td>
+                          <td
+                            className="px-5 py-3 text-sm text-right"
+                            style={{ color: "rgba(93,15,23,0.5)" }}
+                          >
+                            {search.count} search{search.count !== 1 ? "es" : ""}
                           </td>
                         </tr>
                       ))}

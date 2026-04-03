@@ -284,6 +284,12 @@ export function extractSizeFromDescription(description: string | null): string |
   const match = re.exec(text);
   if (match) return match[1].trim();
 
+  // 3b. "Size 39." / "Size 38.5" — bare "size" + space + numeric (no colon).
+  // Colon not required for pure numeric sizes; low false-positive risk.
+  const bareNumericRe = /\bsize\s+((?:US|UK|EU|IT)?\s*\d[\d.]*)\.?(?:\s|$)/i;
+  const bareNumericMatch = bareNumericRe.exec(text);
+  if (bareNumericMatch) return bareNumericMatch[1].trim();
+
   // 4. Standalone EU/IT/FR/DE size anywhere in description (e.g. "• EU 39" as a bullet point)
   const euStandaloneRe = /\b((?:EU|IT|FR|DE)\s*\d[\d.]*)\b/i;
   const euStandaloneMatch = euStandaloneRe.exec(text);

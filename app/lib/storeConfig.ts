@@ -223,6 +223,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "jade-vintage",
     storeDomain: "jadevintage.ca",
   },
+  {
+    type: "shopify",
+    name: "Velvet Archive",
+    slug: "velvet-archive",
+    storeDomain: "velvet-archive.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

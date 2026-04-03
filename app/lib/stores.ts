@@ -89,7 +89,7 @@ export const stores = [
     shippingPolicy:
       "Ships from Washington, DC. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. As a curated designer vintage boutique specializing in rare shoes and accessories, all pieces are one-of-a-kind. Please review all item details and photos carefully before purchasing. Use the form below for any pre-purchase questions.",
   },
   {
     slug: "dayton-jane",
@@ -107,11 +107,11 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "231648",
     authenticityPolicy:
-      "Every piece at Dayton Jane is personally sourced and inspected before listing. Items are accurately described with full condition details.",
+      "Every piece at Dayton Jane is personally sourced and curated, drawing on an eye for the intersection of New York City sophistication and New England timelessness. From pre-loved fashion to thoughtfully selected home décor, each item is inspected and described with full condition details before listing.",
     shippingPolicy:
       "Ships from Connecticut. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. If your item arrives significantly different from its description, contact jacquelyne.rankin@gmail.com within 48 hours of delivery with photos.",
   },
   {
     slug: "for-the-globe",
@@ -130,11 +130,11 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "232048",
     authenticityPolicy:
-      "Every piece at For The Globe is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+      "Every piece at For The Globe is hand-selected by Abbey from vintage markets and sources around the globe — curated with a commitment to quality, sustainability, and conscious style. Each item is carefully inspected and accurately described before listing, with any notable condition details disclosed.",
     shippingPolicy:
       "Ships from Richmond, VA. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. If your item arrives significantly different from its description or arrives damaged, use the form below within 48 hours of delivery.",
   },
   {
     slug: "front-page-finds",
@@ -174,11 +174,11 @@ export const stores = [
     currency: "USD",
     commissionType: "square-manual" as const,
     authenticityPolicy:
-      "Every piece at Honey Bear Vintage is personally sourced and hand-selected by Morgan and Liz for its quality, character, and longevity. Each item is carefully inspected and accurately described before listing.",
+      "Every piece at Honey Bear Vintage is personally sourced by Morgan and Liz with an emphasis on size variety and quality materials built to last. Each item is carefully inspected and accurately described before listing — so you can find something effortless that lives in your closet forever.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. If there's an issue with your order, reach out to honeybearvintagenyc@gmail.com and the team will do their best to help.",
   },
   {
     slug: "house-on-a-chain",
@@ -336,11 +336,11 @@ export const stores = [
     currency: "USD",
     commissionType: "squarespace-manual" as const,
     authenticityPolicy:
-      "Every piece at Montrose Edit is personally sourced and hand-selected for its quality, character, and elevated aesthetic. Specializing in pre-loved designer pieces, each item is carefully inspected and accurately described before listing.",
+      "Every piece at Montrose Edit is personally sourced and hand-selected for its quality, character, and elevated aesthetic. Specializing in pre-loved luxury and designer pieces, each item is carefully inspected and described with full condition details — reflecting the Montrose girl's effortless, intentional approach to style.",
     shippingPolicy:
       "Ships from Houston, TX. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. As a curated luxury resale boutique, all pieces are one-of-a-kind pre-loved items. Please review all details carefully before purchasing. Use the form below with any questions.",
   },
   {
     slug: "moonstruck-vintage",
@@ -363,7 +363,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. Moonstruck is committed to accurate descriptions and the thrill of the find — please review all item details and photos carefully before purchasing. Use the form below for any pre-purchase questions.",
   },
   {
     slug: "petria-vintage",
@@ -404,11 +404,11 @@ export const stores = [
     affiliatePath: "VIA",
     collabsStoreId: "232515",
     authenticityPolicy:
-      "Every piece at Porter's Preloved is personally sourced and hand-selected by Alexandra for its archival detail, market value, and lasting appeal. Each item is accurately described with full condition details before listing.",
+      "Every piece at Porter's Preloved is personally sourced and hand-selected by Alexandra — a Fashion Business student at FIT with a sharp eye for archival detail and market value. From Balenciaga City bags to Galliano-era Dior heels, each item is authenticated, inspected, and described with full condition details before listing.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. Each item is hand-selected and described in full detail. If your item arrives significantly different from its description, use the form below within 48 hours of delivery.",
   },
   {
     slug: "promised-vintage",
@@ -426,11 +426,11 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "231785",
     authenticityPolicy:
-      "Every piece is hand-selected and personally curated before listing. Items are accurately described with full condition details.",
+      "Every piece at Promised Vintage is hand-selected by Kellan — personally sourced from across Europe, where rare, discontinued, and one-of-one designer finds just don't exist in the US market. Each item is inspected and described with honest condition details so you know exactly what you're getting.",
     shippingPolicy:
       "Ships from Boston, MA. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. These pieces are often one-of-one finds sourced internationally — returns aren't possible. If there's a significant discrepancy from the listing description, contact kellanmccormick@gmail.com within 48 hours of delivery.",
   },
   {
     slug: "rareality-archive",
@@ -589,11 +589,11 @@ export const stores = [
     affiliatePath: "1234",
     collabsStoreId: "231753",
     authenticityPolicy:
-      "Every piece at The VNTG Collective is hand-selected and personally curated — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and accurately described, with sustainability and individuality at the core of every selection.",
+      "Every piece at The VNTG Collective is hand-selected and inspected by the team — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and described with full condition details, with sustainability and individuality at the core of every selection.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
+      "All sales are final. If there is an issue with your order, contact thevntgcollective@gmail.com and the team will do their best to help.",
   },
   {
     slug: "to-us-vintage",
@@ -616,7 +616,7 @@ export const stores = [
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. No returns or exchanges.",
+      "All sales are final. Each piece is hand-selected and personally inspected by Kathleen. If your item arrives significantly different from its description, email KScarrone@gmail.com within 48 hours of delivery with photos.",
   },
   {
     slug: "vangie",
@@ -684,7 +684,7 @@ export const stores = [
     authenticityPolicy:
       "Every piece goes through rigorous in-house inspection and independent third-party verification — only authenticated items make it through. Each purchase comes with a complimentary Certificate of Authenticity, so you can shop pre-owned luxury without worry.",
     shippingPolicy:
-      "Shipping rates are calculated at checkout.",
+      "Ships from Menlo Park, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
@@ -710,6 +710,28 @@ export const stores = [
       "Ships from Dallas, Texas. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
+  },
+  {
+    slug: "velvet-archive",
+    dashboardToken: "va-6e2d9c4f1b7a",
+    name: "Velvet Archive",
+    location: "Amsterdam, Netherlands",
+    description: "Velvet Archive is a curated collection of designer vintage and second-hand, based in The Netherlands, sourcing pieces with provenance and a point of view. Each garment is chosen for craft and narrative, encouraging conscious consumption by keeping fashion in circulation. The selection spans over 30 years, showcasing pieces from iconic runway collections from the 1990s to today.",
+    website: "https://velvet-archive.com",
+    dataSource: "velvet-archive",
+    image: "/stores/velvet-archive.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "EUR",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "234299",
+    authenticityPolicy:
+      "Every piece at Velvet Archive is personally sourced and authenticated — chosen for its provenance, craft, and point of view. The selection spans over 30 years of iconic runway collections from the 1990s to today, with each item carefully inspected and described with full condition details before listing.",
+    shippingPolicy:
+      "Ships from Amsterdam, Netherlands. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. As a curated archive of one-of-a-kind vintage and designer pieces, returns are not accepted. If your item arrives significantly different from its description, contact velvetarchive.ltd@gmail.com within 48 hours of delivery.",
   },
 ];
 
@@ -756,6 +778,10 @@ export const storeContactEmails: Record<string, string> = {
   "maison-optimism-vintage": "maisonoptimism@gmail.com",
   "montrose-edit": "themontroseedit@gmail.com",
   "vintari-vault": "admin@vintarivault.com",
+  "velvet-archive": "velvetarchive.ltd@gmail.com",
+  "chill-boutique": "info@chillboutiqueconsignment.com",
+  "honey-bear-vintage": "honeybearvintagenyc@gmail.com",
+  "jade-vintage": "hello@jadevintage.ca",
   "blodas-choice": "annabloda@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
