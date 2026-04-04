@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
 import { saveClick, saveProductView } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
-import { getCollabsLink, getAnyCollabsLinkForStore } from "@/app/lib/db";
+import { getCollabsLink } from "@/app/lib/db";
 import { auth } from "@/app/lib/auth";
 
 /** POST /api/track — record a product page view (fire-and-forget from client) */
@@ -43,29 +43,6 @@ function getDiscountConfig(storeSlug: string): {
   }
 }
 
-/**
- * Follow a collabs.shop link and extract the dt_id tracking parameter
- * from the redirect URL. Returns null if it can't be extracted.
- */
-async function extractDtId(collabsLink: string): Promise<string | null> {
-  try {
-    const res = await fetch(collabsLink, { redirect: "manual" });
-    const location = res.headers.get("location");
-    if (!location) {
-      console.error(`[track] extractDtId: no location header (status ${res.status}) for ${collabsLink}`);
-      return null;
-    }
-    const url = new URL(location);
-    const dtId = url.searchParams.get("dt_id");
-    if (!dtId) {
-      console.error(`[track] extractDtId: location has no dt_id param. location=${location}`);
-    }
-    return dtId;
-  } catch (e) {
-    console.error(`[track] extractDtId fetch error for ${collabsLink}:`, e);
-    return null;
-  }
-}
 
 /**
  * Check if a URL is a Shopify cart URL (e.g. /cart/VARIANT:1,VARIANT:1)
@@ -123,65 +100,25 @@ export async function GET(request: NextRequest) {
     userId,
   }).catch(console.error);
 
-  // ---- Cart URLs (single and multi-item Shopify checkout) ----
-  //
-  // Attribution strategy:
-  //
-  // Single item: always redirect through the product's collabs.shop link.
-  //   collabs.shop → store product page (Collabs cookie set on store domain)
-  //   → user adds to cart → checks out via any method (Shop Pay included).
-  //   Cookie is set before Shop Pay can intercept, so attribution is reliable.
-  //   UX tradeoff: user lands on product page and must click "Add to Cart" once.
-  //
-  // Multi-item cart: can't use a single collabs.shop link, so fall back to
-  //   appending dt_id to the cart URL. Shop Pay preserves dt_id (we've seen
-  //   it in shop.app URLs), and Shopify should attribute it at order creation.
-  //
+  // ---- Cart URLs: only route through product's own collabs.shop link ----
+  // If a product has no collabs_link it should not be on VYA at all.
+  // No fallbacks — a missing collabs link means no commission, so we refuse
+  // to send the customer through without proper attribution.
   if (isCartUrl(parsedUrl) && storeSlug) {
-    // Look up the product-specific collabs link (single-item path)
-    let productCollabsLink: string | null = null;
     if (productId) {
       const match = productId.match(/(\d+)$/);
       const numericId = match ? parseInt(match[1], 10) : NaN;
       if (!isNaN(numericId)) {
-        productCollabsLink = await getCollabsLink(numericId).catch(() => null);
+        const productCollabsLink = await getCollabsLink(numericId).catch(() => null);
+        if (productCollabsLink && !parsedUrl.pathname.includes(",")) {
+          return NextResponse.redirect(productCollabsLink, 302);
+        }
       }
     }
 
-    // ── Single item: go through collabs.shop for reliable cookie attribution ──
-    // Skip this path for multi-item carts (comma in pathname = multiple variants)
-    const isMultiItemCart = parsedUrl.pathname.includes(",");
-    if (productCollabsLink && !isMultiItemCart) {
-      return NextResponse.redirect(productCollabsLink, 302);
-    }
-
-    // ── Multi-item cart: append dt_id to the cart URL ─────────────────────────
-    const storeCollabsLink = await getAnyCollabsLinkForStore(storeSlug).catch(() => null);
-    if (storeCollabsLink) {
-      const dtId = await extractDtId(storeCollabsLink);
-      if (dtId) {
-        parsedUrl.searchParams.set("dt_id", dtId);
-        return NextResponse.redirect(parsedUrl.toString(), 302);
-      } else {
-        console.error(
-          `[track] extractDtId failed for multi-item cart, store "${storeSlug}". Commission may not be tracked. Link: ${storeCollabsLink}`
-        );
-      }
-    } else {
-      console.error(
-        `[track] No collabs link for store "${storeSlug}" — commission cannot be tracked.`
-      );
-    }
-
-    // Fallback: discount code redirect (only for stores that actually have one)
-    const discount = getDiscountConfig(storeSlug);
-    if (discount) {
-      const cartPath = parsedUrl.pathname + parsedUrl.search;
-      const discountUrl = new URL(`/discount/${discount.discountCode}`, discount.origin);
-      discountUrl.searchParams.set("redirect", cartPath);
-      return NextResponse.redirect(discountUrl.toString(), 302);
-    }
-
+    // No product-specific collabs link — fall through to direct redirect.
+    // This should not happen: the DB filter blocks products without collabs_link.
+    console.error(`[track] No collabs link for product "${productId}" (store: "${storeSlug}") — this product should not be on VYA.`);
     parsedUrl.searchParams.set("via_click_id", clickId);
     return NextResponse.redirect(parsedUrl.toString(), 302);
   }

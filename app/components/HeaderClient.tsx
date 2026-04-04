@@ -517,8 +517,8 @@ export default function HeaderClient({
                     />
                   </button>
                   <div
-                    className={`transition-all duration-300 ease-out ${
-                      mobileStoresExpanded ? 'max-h-[60vh] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 overflow-hidden'
+                    className={`overflow-hidden transition-all duration-300 ease-out ${
+                      mobileStoresExpanded ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
                     <div className="pb-4 pl-4 space-y-1">

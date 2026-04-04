@@ -12,6 +12,7 @@ import { FriendsProvider } from "./components/FriendsProvider";
 import { CartProvider } from "./components/CartProvider";
 import ScrollToTop from "./components/ScrollToTop";
 import FeedbackModal from "./components/FeedbackModal";
+import GlobalPageTracker from "./components/GlobalPageTracker";
 import { Analytics } from "@vercel/analytics/next";
 import FirebaseAnalyticsProvider from "./components/FirebaseAnalyticsProvider";
 
@@ -86,6 +87,7 @@ export default function RootLayout({
             <CartProvider>
               <SignUpProvider>
               {/* <GiveawayProvider> */}
+                <GlobalPageTracker />
                 <ScrollToTop />
                 <FeedbackModal />
                 <AdminHide><Header /></AdminHide>

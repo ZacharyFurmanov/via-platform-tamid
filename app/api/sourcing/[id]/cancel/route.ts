@@ -45,6 +45,13 @@ export async function POST(
   const req = await getSourcingRequestById(id, session.user.id);
   if (!req) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Draft (unpaid) — just delete, no refund needed
+  if (req.status === "pending_payment") {
+    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
+    await sql`DELETE FROM sourcing_requests WHERE id = ${id} AND user_id = ${session.user.id} AND status = 'pending_payment'`;
+    return NextResponse.json({ ok: true, deleted: true });
+  }
+
   if (req.status !== "paid") {
     return NextResponse.json({ error: "Only active requests can be cancelled." }, { status: 400 });
   }

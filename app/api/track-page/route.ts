@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
       )
     `;
     await sql`CREATE INDEX IF NOT EXISTS idx_ptv_type_ts ON page_type_views(page_type, timestamp)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_ptv_user_ts ON page_type_views(user_id, timestamp) WHERE user_id IS NOT NULL`;
 
     await sql`
       INSERT INTO page_type_views (page_type, page_slug, user_id)

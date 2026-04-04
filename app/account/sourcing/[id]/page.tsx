@@ -5,6 +5,7 @@ import { getSourcingRequestById } from "@/app/lib/sourcing-db";
 import { getOffersByRequestId } from "@/app/lib/sourcing-offers-db";
 import AcceptOfferSection from "./AcceptOfferSection";
 import CancelRequestSection from "./CancelRequestSection";
+import DeleteDraftSection from "./DeleteDraftSection";
 import EditRequestSection from "./EditRequestSection";
 import PayNowSection from "./PayNowSection";
 
@@ -148,6 +149,11 @@ export default async function SourcingRequestDetailPage({
           <div className="mt-6">
             <PayNowSection requestId={req.id} />
           </div>
+        )}
+
+        {/* Delete draft — only for unpaid requests */}
+        {req.status === "pending_payment" && (
+          <DeleteDraftSection requestId={req.id} />
         )}
 
         {/* Cancel — only while actively searching and within 21 days */}

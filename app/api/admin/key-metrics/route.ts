@@ -178,8 +178,7 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(*)::int FROM conversions)                                                            AS buyers
     `,
 
-    // Returning users — approved users with 2+ distinct visit days (ever) who were active in the window.
-    // Using total distinct days (not "before the window") so 30d >= 7d is guaranteed.
+    // Returning users — any registered user with 2+ distinct visit days who was active in the window.
     sql`
       SELECT
         COUNT(DISTINCT user_id) FILTER (WHERE was_active_30d AND visit_days >= 2)::int AS returning_30d,
@@ -203,8 +202,7 @@ export async function GET(request: NextRequest) {
           UNION ALL
           SELECT user_id::text, timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
         ) a
-        INNER JOIN users u        ON u.id::text = a.user_id
-        INNER JOIN pilot_access pa ON LOWER(pa.email) = LOWER(u.email) AND pa.status = 'approved'
+        INNER JOIN users u ON u.id::text = a.user_id
         GROUP BY a.user_id
       ) sub
     `,

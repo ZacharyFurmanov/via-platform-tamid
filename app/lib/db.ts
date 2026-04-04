@@ -295,7 +295,10 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
   const sql = neon(getDatabaseUrl());
 
   const result = await sql`
-    SELECT * FROM products WHERE id = ${id} LIMIT 1
+    SELECT * FROM products
+    WHERE id = ${id}
+      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+    LIMIT 1
   `;
   return (result[0] as DBProduct) ?? null;
 }

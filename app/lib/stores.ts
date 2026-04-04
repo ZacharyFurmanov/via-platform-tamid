@@ -59,7 +59,7 @@ export const stores = [
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
-    affiliatePath: "VYA",
+    affiliatePath: "VIYAPLATFORM",
     collabsStoreId: "191049",
     authenticityPolicy:
       "Every designer and vintage item at Chill Boutique is personally inspected and authenticated by their expert team before being listed for sale. Items are thoroughly reviewed for condition, authenticity, and accurate description so you can shop with confidence.",
