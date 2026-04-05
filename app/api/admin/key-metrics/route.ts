@@ -115,6 +115,8 @@ export async function GET(request: NextRequest) {
         SELECT user_id::text,        timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
         UNION ALL
         SELECT user_id::text,        timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
+        UNION ALL
+        SELECT id::text,             created_at AS ts FROM users             WHERE id IS NOT NULL
       ) a
     `,
 
@@ -201,6 +203,8 @@ export async function GET(request: NextRequest) {
           SELECT user_id::text, timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
           UNION ALL
           SELECT user_id::text, timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
+          UNION ALL
+          SELECT id::text,      created_at AS ts FROM users             WHERE id IS NOT NULL
         ) a
         INNER JOIN users u ON u.id::text = a.user_id
         GROUP BY a.user_id

@@ -268,7 +268,7 @@ export default function KeyMetricsPage() {
                   label="Weekly Active Users"
                   value={fmtNum(data.wau.current)}
                   trend={<TrendBadge current={data.wau.current} prev={data.wau.prev} fmtFn={fmtNum} />}
-                  note="Users who clicked a product, saved something, or placed an order this week."
+                  note="Users who signed up, clicked a product, saved something, or placed an order this week."
                   href="/admin/analytics"
                 />
                 <MetricCard
@@ -276,7 +276,7 @@ export default function KeyMetricsPage() {
                   value={fmtNum(data.mau.current)}
                   sub={`${fmtNum(data.users.registered)} total registered users`}
                   trend={<TrendBadge current={data.mau.current} prev={data.mau.prev} fmtFn={fmtNum} />}
-                  note="Users who clicked a product, saved something, or placed an order this month."
+                  note="Users who signed up, clicked a product, saved something, or placed an order this month."
                   href="/admin/analytics"
                 />
                 <MetricCard
