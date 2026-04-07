@@ -645,11 +645,11 @@ export async function sendNewArrivalsEmail(
 
   const content = `
     <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
-      New pieces just arrived on VYA.
+      These pieces won&rsquo;t be here for long.
     </p>
     <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
        line-height:1.75;margin:0 0 40px;">
-      Fresh finds from our network of stores &mdash; vintage is one-of-a-kind, so shop before it&rsquo;s gone.
+      Every piece on VYA is one-of-a-kind &mdash; once it&rsquo;s gone, it&rsquo;s gone forever. No restocks, no second chances.
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
       ${rows.join("")}

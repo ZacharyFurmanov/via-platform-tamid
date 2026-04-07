@@ -69,7 +69,6 @@ export async function GET(request: Request) {
       WHERE created_at IS NOT NULL
         AND created_at >= ${sinceIso}
         AND created_at <= NOW() - interval '24 hours'
-        AND insider_notified = TRUE
         AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
         AND title NOT ILIKE '%gift card%'
       ORDER BY created_at DESC
