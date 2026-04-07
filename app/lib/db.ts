@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 
 // Stores temporarily removed from VYA. Products from these slugs are hidden site-wide.
 // To re-enable a store: remove its slug from this array and uncomment it in stores.ts.
-const DISABLED_STORE_SLUGS: string[] = [
+export const DISABLED_STORE_SLUGS: string[] = [
   "velvet-archive",
 ];
 

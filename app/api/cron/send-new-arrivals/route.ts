@@ -4,6 +4,7 @@ import { getApprovedPilotEmails } from "@/app/lib/pilot-db";
 import { sendNewArrivalsEmail } from "@/app/lib/email";
 import { getSetting, saveSetting } from "@/app/lib/settings-db";
 import type { DBProduct } from "@/app/lib/db";
+import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
 
 // Allow up to 5 minutes for bulk sending
 export const maxDuration = 300;
@@ -71,6 +72,8 @@ export async function GET(request: Request) {
         AND created_at <= NOW() - interval '24 hours'
         AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
         AND title NOT ILIKE '%gift card%'
+        AND image IS NOT NULL AND image != ''
+        AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
       ORDER BY created_at DESC
       LIMIT 50
     `;
