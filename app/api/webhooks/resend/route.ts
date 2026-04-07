@@ -56,9 +56,12 @@ export async function POST(request: NextRequest) {
   const subject: string = data.subject ?? "";
   const category = deriveCategory(subject);
 
+  // Normalise email.open → email.opened (Resend uses both spellings)
+  const normalizedEventType = eventType === "email.open" ? "email.opened" : eventType;
+
   // Only store events we care about for analytics
   const tracked = ["email.sent", "email.delivered", "email.opened", "email.clicked", "email.bounced", "email.complained"];
-  if (!tracked.includes(eventType)) {
+  if (!tracked.includes(normalizedEventType)) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
@@ -83,7 +86,7 @@ export async function POST(request: NextRequest) {
 
   await sql`
     INSERT INTO email_events (resend_email_id, event_type, category, recipient, subject)
-    VALUES (${resendEmailId}, ${eventType}, ${category}, ${recipient || null}, ${subject || null})
+    VALUES (${resendEmailId}, ${normalizedEventType}, ${category}, ${recipient || null}, ${subject || null})
     ON CONFLICT DO NOTHING
   `;
 
