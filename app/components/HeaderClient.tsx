@@ -25,7 +25,6 @@ type SearchResult =
 
 const ANNOUNCEMENTS = [
   { text: "New Arrivals Added Weekly", short: "New Arrivals Weekly", href: "/new-arrivals" },
-  { text: "Boston Pop Up April 12th! Click here for tickets", short: "Boston Pop Up April 12th →", href: "https://posh.vip/e/second-edition-pop-up" },
   { text: "All stores are trusted & verified by VYA", short: "Trusted & Verified Stores", href: "/verified" },
 ];
 
