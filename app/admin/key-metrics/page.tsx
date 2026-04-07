@@ -148,8 +148,30 @@ type Metrics = {
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
 };
 
+type EmailCategory = {
+  category: string;
+  label: string;
+  sent: number;
+  delivered: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  uniqueRecipients: number;
+  deliveryRate: number;
+  openRate: number;
+  clickRate: number;
+  bounceRate: number;
+};
+
+type EmailMetrics = {
+  categories: EmailCategory[];
+  totals: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; complained: number };
+};
+
 export default function KeyMetricsPage() {
   const [data, setData] = useState<Metrics | null>(null);
+  const [emailData, setEmailData] = useState<EmailMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -161,7 +183,12 @@ export default function KeyMetricsPage() {
       })
       .then((d) => { setData(d); setLoading(false); })
       .catch((e) => { setError(e.message); setLoading(false); });
-  }, []);
+
+    fetch("/api/admin/email-metrics")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setEmailData(d); })
+      .catch(() => {});
+  }, [];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
@@ -386,6 +413,61 @@ export default function KeyMetricsPage() {
                 </div>
               </div>
             </section>
+
+            {/* ── Email Performance ───────────────────────────────── */}
+            {emailData && (
+              <section>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Email Performance</h2>
+
+                {/* Totals row */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 16 }}>
+                  {[
+                    { label: "Total Sent", value: fmtNum(emailData.totals.sent) },
+                    { label: "Delivered", value: emailData.totals.sent > 0 ? fmtPct(emailData.totals.delivered / emailData.totals.sent) : "—", sub: fmtNum(emailData.totals.delivered) + " emails" },
+                    { label: "Opened", value: emailData.totals.delivered > 0 ? fmtPct(emailData.totals.opened / emailData.totals.delivered) : "—", sub: fmtNum(emailData.totals.opened) + " opens" },
+                    { label: "Clicked", value: emailData.totals.delivered > 0 ? fmtPct(emailData.totals.clicked / emailData.totals.delivered) : "—", sub: fmtNum(emailData.totals.clicked) + " clicks" },
+                  ].map((item) => (
+                    <div key={item.label} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+                      <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>
+                      <p style={{ fontSize: 32, fontWeight: 700, color: MAROON, margin: "0 0 2px", lineHeight: 1 }}>{item.value}</p>
+                      {item.sub && <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{item.sub}</p>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Per-category table */}
+                {emailData.categories.length > 0 ? (
+                  <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+                          {["Email Type", "Recipients", "Sent", "Delivery %", "Open %", "Click %", "Bounce %"].map((h) => (
+                            <th key={h} style={{ padding: "12px 16px", textAlign: h === "Email Type" ? "left" : "right", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED, fontWeight: 600 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {emailData.categories.map((c, i) => (
+                          <tr key={c.category} style={{ borderBottom: i < emailData.categories.length - 1 ? "1px solid #f9fafb" : "none" }}>
+                            <td style={{ padding: "12px 16px", fontWeight: 500, color: MAROON }}>{c.label}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{fmtNum(c.uniqueRecipients)}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{fmtNum(c.sent)}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.deliveryRate < 0.9 ? "#b91c1c" : "#15803d", fontWeight: 600 }}>{c.sent > 0 ? fmtPct(c.deliveryRate) : "—"}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{c.delivered > 0 ? fmtPct(c.openRate) : "—"}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.clickRate > 0.05 ? "#15803d" : "#374151", fontWeight: c.clickRate > 0.05 ? 600 : 400 }}>{c.delivered > 0 ? fmtPct(c.clickRate) : "—"}</td>
+                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.bounceRate > 0.02 ? "#b91c1c" : "#374151" }}>{c.sent > 0 ? fmtPct(c.bounceRate) : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "32px", textAlign: "center", color: "#9ca3af", fontSize: 13 }}>
+                    No email events yet. Set up the Resend webhook to start tracking.
+                  </div>
+                )}
+              </section>
+            )}
 
           </div>
         )}
