@@ -468,36 +468,94 @@ export async function sendInsiderNewArrivalsEmail(
  * Send a new arrivals email to all approved VYA platform users.
  * Different from Insider — goes to everyone approved on the platform.
  */
-/** Extract the designer brand from a product title.
- *  Checks known multi-word brands first, then falls back to the first word. */
-function extractBrand(title: string): string {
-  const t = title.trim();
-  const multiWord = [
-    "Louis Vuitton", "Van Cleef", "Dolce & Gabbana", "Dolce and Gabbana",
-    "Maison Margiela", "Alexander McQueen", "Alexander Wang", "Marc Jacobs",
-    "Saint Laurent", "Yves Saint Laurent", "Giorgio Armani", "Emporio Armani",
-    "Vivienne Westwood", "Jean Paul Gaultier", "Comme des Garçons",
-    "Comme des Garcons", "Christian Dior", "Christian Louboutin",
-    "Stella McCartney", "Victoria Beckham", "Ralph Lauren", "Calvin Klein",
-    "Tommy Hilfiger", "Michael Kors", "Kate Spade", "Tory Burch",
-    "Jimmy Choo", "Manolo Blahnik", "Roger Vivier", "Sergio Rossi",
-    "Bottega Veneta", "Salvatore Ferragamo", "Gianvito Rossi",
-    "Ann Demeulemeester", "Dries Van Noten", "Jil Sander",
-    "Issey Miyake", "Van Cleef & Arpels",
-  ];
-  for (const brand of multiWord) {
-    if (t.toLowerCase().startsWith(brand.toLowerCase())) return brand;
+/**
+ * Known designer brands — checked against the full title (not just the first word)
+ * so "Vintage Chanel Bag" and "Beige Burberry Coat" both resolve correctly.
+ * Multi-word brands listed before single-word ones so longer matches win.
+ */
+const KNOWN_BRANDS: string[] = [
+  // Multi-word first (order matters — longer match wins)
+  "Alexander McQueen", "Alexander Wang",
+  "Ann Demeulemeester",
+  "Betsey Johnson",
+  "Bob Mackie",
+  "Bottega Veneta",
+  "Calvin Klein",
+  "Christian Dior", "Christian Louboutin",
+  "Comme des Garçons", "Comme des Garcons",
+  "David Yurman",
+  "Dolce & Gabbana", "Dolce and Gabbana",
+  "Dries Van Noten",
+  "Emporio Armani",
+  "Gianfranco Ferre", "Gianfranco Ferré",
+  "Gianvito Rossi",
+  "Giorgio Armani",
+  "Helmut Lang",
+  "Issey Miyake",
+  "Jean Paul Gaultier",
+  "Jil Sander",
+  "Jimmy Choo",
+  "Kate Spade",
+  "Louis Vuitton",
+  "Maison Margiela",
+  "Manolo Blahnik",
+  "Marc Jacobs",
+  "Michael Kors",
+  "Moschino Cheap and Chic",
+  "Plein Sud",
+  "Rachel Zoe",
+  "Ralph Lauren",
+  "Roberto Cavalli",
+  "Roger Vivier",
+  "Saint Laurent",
+  "Salvatore Ferragamo",
+  "Sergio Rossi",
+  "Stella McCartney",
+  "Thierry Mugler",
+  "Tommy Hilfiger",
+  "Tory Burch",
+  "Van Cleef & Arpels", "Van Cleef",
+  "Victoria Beckham",
+  "Vivienne Westwood",
+  "Yves Saint Laurent",
+  // Single-word
+  "Balenciaga", "Balmain", "Bulgari",
+  "Cartier", "Celine", "Céline", "Chanel", "Chloe", "Chloé", "Courrèges", "Courreges",
+  "Dior",
+  "Fendi", "Ferragamo",
+  "Givenchy", "Gucci",
+  "Hermès", "Hermes",
+  "Kenzo",
+  "Lacroix", "Lanvin", "Lancome",
+  "Marni", "Moschino", "Mugler",
+  "Prada", "Pucci",
+  "Schiaparelli",
+  "Tod's", "Tods",
+  "Ungaro",
+  "Valentino", "Versace",
+  "Zara",
+  // Additional brands seen in VYA inventory
+  "AllSaints", "Burberry",
+];
+
+/** Search the product title for any known designer brand.
+ *  Returns the canonical brand name, or null if none found. */
+function extractBrand(title: string): string | null {
+  const t = title.toLowerCase();
+  for (const brand of KNOWN_BRANDS) {
+    if (t.includes(brand.toLowerCase())) return brand;
   }
-  return t.split(/\s+/)[0];
+  return null;
 }
 
 /** Sort products by brand frequency (most items first), then alphabetically within same count.
+ *  Only known designer brands count — unrecognised titles sort to the end.
  *  Returns sorted products + the top brand names in order. */
 function sortByBrand(products: DBProduct[]): { sorted: DBProduct[]; topBrands: string[] } {
   const brandCount = new Map<string, number>();
   for (const p of products) {
     const b = extractBrand(p.title);
-    brandCount.set(b, (brandCount.get(b) ?? 0) + 1);
+    if (b) brandCount.set(b, (brandCount.get(b) ?? 0) + 1);
   }
 
   // Brand order: most items first, then alphabetical for ties
@@ -506,8 +564,10 @@ function sortByBrand(products: DBProduct[]): { sorted: DBProduct[]; topBrands: s
     .map(([brand]) => brand);
 
   const sorted = [...products].sort((a, b) => {
-    const ai = brandOrder.indexOf(extractBrand(a.title));
-    const bi = brandOrder.indexOf(extractBrand(b.title));
+    const ab = extractBrand(a.title);
+    const bb = extractBrand(b.title);
+    const ai = ab ? brandOrder.indexOf(ab) : 9999;
+    const bi = bb ? brandOrder.indexOf(bb) : 9999;
     return ai - bi;
   });
 
