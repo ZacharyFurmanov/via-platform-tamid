@@ -468,6 +468,59 @@ export async function sendInsiderNewArrivalsEmail(
  * Send a new arrivals email to all approved VYA platform users.
  * Different from Insider — goes to everyone approved on the platform.
  */
+/** Extract the designer brand from a product title.
+ *  Checks known multi-word brands first, then falls back to the first word. */
+function extractBrand(title: string): string {
+  const t = title.trim();
+  const multiWord = [
+    "Louis Vuitton", "Van Cleef", "Dolce & Gabbana", "Dolce and Gabbana",
+    "Maison Margiela", "Alexander McQueen", "Alexander Wang", "Marc Jacobs",
+    "Saint Laurent", "Yves Saint Laurent", "Giorgio Armani", "Emporio Armani",
+    "Vivienne Westwood", "Jean Paul Gaultier", "Comme des Garçons",
+    "Comme des Garcons", "Christian Dior", "Christian Louboutin",
+    "Stella McCartney", "Victoria Beckham", "Ralph Lauren", "Calvin Klein",
+    "Tommy Hilfiger", "Michael Kors", "Kate Spade", "Tory Burch",
+    "Jimmy Choo", "Manolo Blahnik", "Roger Vivier", "Sergio Rossi",
+    "Bottega Veneta", "Salvatore Ferragamo", "Gianvito Rossi",
+    "Ann Demeulemeester", "Dries Van Noten", "Jil Sander",
+    "Issey Miyake", "Van Cleef & Arpels",
+  ];
+  for (const brand of multiWord) {
+    if (t.toLowerCase().startsWith(brand.toLowerCase())) return brand;
+  }
+  return t.split(/\s+/)[0];
+}
+
+/** Sort products by brand frequency (most items first), then alphabetically within same count.
+ *  Returns sorted products + the top brand names in order. */
+function sortByBrand(products: DBProduct[]): { sorted: DBProduct[]; topBrands: string[] } {
+  const brandCount = new Map<string, number>();
+  for (const p of products) {
+    const b = extractBrand(p.title);
+    brandCount.set(b, (brandCount.get(b) ?? 0) + 1);
+  }
+
+  // Brand order: most items first, then alphabetical for ties
+  const brandOrder = [...brandCount.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([brand]) => brand);
+
+  const sorted = [...products].sort((a, b) => {
+    const ai = brandOrder.indexOf(extractBrand(a.title));
+    const bi = brandOrder.indexOf(extractBrand(b.title));
+    return ai - bi;
+  });
+
+  return { sorted, topBrands: brandOrder };
+}
+
+/** Build a subject line like "New this week from Gucci, Chanel, and more!" */
+function buildArrivalsSubject(topBrands: string[]): string {
+  if (topBrands.length === 0) return "New Arrivals Just Dropped on VYA";
+  if (topBrands.length === 1) return `New this week from ${topBrands[0]}`;
+  return `New this week from ${topBrands[0]}, ${topBrands[1]}, and more!`;
+}
+
 export async function sendNewArrivalsEmail(
   emails: string[],
   products: DBProduct[]
@@ -476,6 +529,9 @@ export async function sendNewArrivalsEmail(
 
   const resend = getResend();
   const newArrivalsUrl = `${BASE_URL}/new-arrivals`;
+
+  const { sorted: sortedProducts, topBrands } = sortByBrand(products);
+  const subject = buildArrivalsSubject(topBrands);
 
   function productCell(p: DBProduct): string {
     const url = productViaUrl(p);
@@ -512,9 +568,9 @@ export async function sendNewArrivalsEmail(
   }
 
   const rows: string[] = [];
-  for (let i = 0; i < products.length; i += 2) {
-    const left = products[i];
-    const right = products[i + 1] || null;
+  for (let i = 0; i < sortedProducts.length; i += 2) {
+    const left = sortedProducts[i];
+    const right = sortedProducts[i + 1] || null;
     rows.push(`
       <tr>
         <td width="50%" valign="top" style="padding:0 14px 40px 0;">
@@ -556,7 +612,7 @@ export async function sendNewArrivalsEmail(
       await resend.emails.send({
         from: FROM_EMAIL,
         to: email,
-        subject: "New Arrivals Just Dropped on VYA",
+        subject,
         html,
       });
       sent++;
