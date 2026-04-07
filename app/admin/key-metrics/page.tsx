@@ -188,7 +188,7 @@ export default function KeyMetricsPage() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setEmailData(d); })
       .catch(() => {});
-  }, [];
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>

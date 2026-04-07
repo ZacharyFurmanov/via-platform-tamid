@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Webhooks } from "resend";
+import { Webhook } from "svix";
 import { neon } from "@neondatabase/serverless";
 
 export const runtime = "nodejs";
@@ -35,8 +35,12 @@ export async function POST(request: NextRequest) {
 
   // Verify signature
   try {
-    const wh = new Webhooks();
-    wh.verify({ payload: bodyText, headers: request.headers, webhookSecret });
+    const wh = new Webhook(webhookSecret);
+    wh.verify(bodyText, {
+      "svix-id": request.headers.get("svix-id") ?? "",
+      "svix-timestamp": request.headers.get("svix-timestamp") ?? "",
+      "svix-signature": request.headers.get("svix-signature") ?? "",
+    });
   } catch (err) {
     console.error("[resend-webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
