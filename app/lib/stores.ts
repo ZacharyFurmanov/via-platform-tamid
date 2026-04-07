@@ -641,28 +641,29 @@ export const stores = [
     returnPolicy:
       "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items, personalized items, and gift cards are final sale. Refunds are issued to the original payment method. Contact hello@vangie.co to initiate a return.",
   },
-  {
-    slug: "velvet-archive",
-    dashboardToken: "va-6e2d9c4f1b7a",
-    name: "Velvet Archive",
-    location: "Amsterdam, Netherlands",
-    description: "Velvet Archive is a curated collection of designer vintage and second-hand, based in The Netherlands, sourcing pieces with provenance and a point of view. Each garment is chosen for craft and narrative, encouraging conscious consumption by keeping fashion in circulation. The selection spans over 30 years, showcasing pieces from iconic runway collections from the 1990s to today.",
-    website: "https://velvet-archive.com",
-    dataSource: "velvet-archive",
-    image: "/stores/velvet-archive.jpg",
-    logo: "/stores/placeholder.svg",
-    logoBg: "#ffffff",
-    currency: "EUR",
-    commissionType: "shopify-collabs" as const,
-    affiliatePath: "VYA",
-    collabsStoreId: "234299",
-    authenticityPolicy:
-      "Every piece at Velvet Archive is personally sourced and authenticated — chosen for its provenance, craft, and point of view. The selection spans over 30 years of iconic runway collections from the 1990s to today, with each item carefully inspected and described with full condition details before listing.",
-    shippingPolicy:
-      "Ships from Amsterdam, Netherlands. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
-    returnPolicy:
-      "All sales are final. As a curated archive of one-of-a-kind vintage and designer pieces, returns are not accepted. If your item arrives significantly different from its description, contact velvetarchive.ltd@gmail.com within 48 hours of delivery.",
-  },
+  // VELVET ARCHIVE — temporarily removed. Uncomment to re-add.
+  // {
+  //   slug: "velvet-archive",
+  //   dashboardToken: "va-6e2d9c4f1b7a",
+  //   name: "Velvet Archive",
+  //   location: "Amsterdam, Netherlands",
+  //   description: "Velvet Archive is a curated collection of designer vintage and second-hand, based in The Netherlands, sourcing pieces with provenance and a point of view. Each garment is chosen for craft and narrative, encouraging conscious consumption by keeping fashion in circulation. The selection spans over 30 years, showcasing pieces from iconic runway collections from the 1990s to today.",
+  //   website: "https://velvet-archive.com",
+  //   dataSource: "velvet-archive",
+  //   image: "/stores/velvet-archive.jpg",
+  //   logo: "/stores/placeholder.svg",
+  //   logoBg: "#ffffff",
+  //   currency: "EUR",
+  //   commissionType: "shopify-collabs" as const,
+  //   affiliatePath: "VYA",
+  //   collabsStoreId: "234299",
+  //   authenticityPolicy:
+  //     "Every piece at Velvet Archive is personally sourced and authenticated — chosen for its provenance, craft, and point of view. The selection spans over 30 years of iconic runway collections from the 1990s to today, with each item carefully inspected and described with full condition details before listing.",
+  //   shippingPolicy:
+  //     "Ships from Amsterdam, Netherlands. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+  //   returnPolicy:
+  //     "All sales are final. As a curated archive of one-of-a-kind vintage and designer pieces, returns are not accepted. If your item arrives significantly different from its description, contact velvetarchive.ltd@gmail.com within 48 hours of delivery.",
+  // },
   {
     slug: "vintage-archives-la",
     dashboardToken: "vala-4b8e1c9a7d2f",
@@ -778,7 +779,7 @@ export const storeContactEmails: Record<string, string> = {
   "maison-optimism-vintage": "maisonoptimism@gmail.com",
   "montrose-edit": "themontroseedit@gmail.com",
   "vintari-vault": "admin@vintarivault.com",
-  "velvet-archive": "velvetarchive.ltd@gmail.com",
+  // "velvet-archive": "velvetarchive.ltd@gmail.com", // temporarily removed
   "chill-boutique": "info@chillboutiqueconsignment.com",
   "honey-bear-vintage": "honeybearvintagenyc@gmail.com",
   "jade-vintage": "hello@jadevintage.ca",

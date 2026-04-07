@@ -1,6 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 import { unstable_cache } from "next/cache";
 
+// Stores temporarily removed from VYA. Products from these slugs are hidden site-wide.
+// To re-enable a store: remove its slug from this array and uncomment it in stores.ts.
+const DISABLED_STORE_SLUGS: string[] = [
+  "velvet-archive",
+];
+
 // Get the database URL from environment variable
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -298,6 +304,7 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
     SELECT * FROM products
     WHERE id = ${id}
       AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
     LIMIT 1
   `;
   return (result[0] as DBProduct) ?? null;
@@ -316,6 +323,7 @@ const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
       )
         AND title NOT ILIKE '%gift card%'
         AND image IS NOT NULL AND image != ''
+        AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
       ORDER BY store_slug, id
     `;
   try {
@@ -384,6 +392,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBP
           AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
           AND p.title NOT ILIKE '%gift card%'
           AND p.image IS NOT NULL AND p.image != ''
+          AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
       )
       SELECT * FROM pool
       WHERE store_rank <= 2
