@@ -135,9 +135,10 @@ export async function GET(request: NextRequest) {
       FROM conversions c
       WHERE c.user_id IS NOT NULL
         AND c.order_total > 0
-        AND EXISTS (
-          SELECT 1 FROM product_favorites pf
-          WHERE pf.user_id::text = c.user_id
+        AND (c.returned IS NULL OR c.returned = false)
+        AND (
+          EXISTS (SELECT 1 FROM product_favorites pf WHERE pf.user_id::text = c.user_id)
+          OR EXISTS (SELECT 1 FROM store_favorites sf WHERE sf.user_id::text = c.user_id)
         )
     `,
 
@@ -173,11 +174,11 @@ export async function GET(request: NextRequest) {
     // saves require login so user_id is always present there.
     sql`
       SELECT
-        (SELECT COUNT(*)::int FROM users)                                                                   AS registered,
-        (SELECT COUNT(DISTINCT click_id)::int FROM clicks)                                                 AS clickers,
-        (SELECT COUNT(DISTINCT user_id::text)::int FROM product_favorites WHERE user_id IS NOT NULL)       AS product_savers,
-        (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites WHERE user_id IS NOT NULL)         AS store_savers,
-        (SELECT COUNT(*)::int FROM conversions)                                                            AS buyers
+        (SELECT COUNT(*)::int FROM users)                                                                                             AS registered,
+        (SELECT COUNT(DISTINCT click_id)::int FROM clicks)                                                                         AS clickers,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM product_favorites WHERE user_id IS NOT NULL)                               AS product_savers,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites WHERE user_id IS NOT NULL)                                 AS store_savers,
+        (SELECT COUNT(*)::int FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false))                   AS buyers
     `,
 
     // Returning users — any registered user with 2+ distinct visit days who was active in the window.
