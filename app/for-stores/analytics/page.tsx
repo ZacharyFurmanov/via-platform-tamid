@@ -121,8 +121,8 @@ function StoreDashboard() {
           <p className="text-neutral-600 mb-6">
             To access your store analytics, use the link VYA sent you. If you
             don&apos;t have it, email{" "}
-            <a href="mailto:partnerships@theviaplatform.com" className="underline">
-              partnerships@theviaplatform.com
+            <a href="mailto:partnerships@vyaplatform.com" className="underline">
+              partnerships@vyaplatform.com
             </a>
             .
           </p>
@@ -142,8 +142,8 @@ function StoreDashboard() {
           <p className="text-neutral-600 mb-6">
             This link doesn&apos;t match any store on VYA. Please use the exact link
             sent to you, or email{" "}
-            <a href="mailto:partnerships@theviaplatform.com" className="underline">
-              partnerships@theviaplatform.com
+            <a href="mailto:partnerships@vyaplatform.com" className="underline">
+              partnerships@vyaplatform.com
             </a>{" "}
             for a new one.
           </p>
@@ -457,8 +457,8 @@ function StoreDashboard() {
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-xs text-neutral-400">
             Questions? Email{" "}
-            <a href="mailto:partnerships@theviaplatform.com" className="underline hover:text-black transition-colors">
-              partnerships@theviaplatform.com
+            <a href="mailto:partnerships@vyaplatform.com" className="underline hover:text-black transition-colors">
+              partnerships@vyaplatform.com
             </a>
           </p>
         </div>

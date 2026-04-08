@@ -48,8 +48,8 @@ function verifyOtpCookie(cookieValue: string): string | null {
 async function sendOtpEmail(otp: string) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
-    from: "VYA Admin <hana@theviaplatform.com>",
-    to: "hana@theviaplatform.com",
+    from: "VYA Admin <hana@vyaplatform.com>",
+    to: "hana@vyaplatform.com",
     subject: `${otp} — VYA Admin Sign-In Code`,
     html: `<!DOCTYPE html>
 <html lang="en">

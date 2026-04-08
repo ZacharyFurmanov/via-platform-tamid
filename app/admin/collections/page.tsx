@@ -94,7 +94,7 @@ export default function CollectionsAdminPage() {
   const pickedIds = new Set(picks.map((p) => p.product.id));
 
   const handleToggle = async (product: Product) => {
-    if (toggling !== null) return;
+    if (toggling === product.id) return;
     setToggling(product.id);
     try {
       if (pickedIds.has(product.id)) {

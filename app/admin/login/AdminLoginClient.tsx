@@ -68,7 +68,7 @@ export default function AdminLoginClient() {
             <p className="text-sm" style={{ color: "rgba(93,15,23,0.6)" }}>
               {step === "password"
                 ? "Enter password to continue"
-                : "Check hana@theviaplatform.com for your code"}
+                : "Check hana@vyaplatform.com for your code"}
             </p>
           </div>
 

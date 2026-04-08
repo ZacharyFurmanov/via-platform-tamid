@@ -73,8 +73,10 @@ function AnnouncementBar() {
 
 export default function HeaderClient({
   categories,
+  activeCollectionSlugs,
 }: {
   categories: { slug: string; label: string }[];
+  activeCollectionSlugs: Set<string>;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -401,7 +403,7 @@ export default function HeaderClient({
                 >
                   <div className="bg-[#F7F3EA] text-[#5D0F17] min-w-[200px] shadow-xl border border-[#5D0F17]/10" style={{ fontFamily: "'Almarai', sans-serif" }}>
                     <div className="py-2">
-                      {COLLECTIONS.map((col) => (
+                      {COLLECTIONS.filter((col) => activeCollectionSlugs.has(col.slug)).map((col) => (
                         <Link
                           key={col.slug}
                           href={col.href ?? `/collections/${col.slug}`}
@@ -615,7 +617,7 @@ export default function HeaderClient({
                   </button>
                   {mobileCollectionsExpanded && (
                     <div className="pb-2 pl-4">
-                      {COLLECTIONS.map((col) => (
+                      {COLLECTIONS.filter((col) => activeCollectionSlugs.has(col.slug)).map((col) => (
                         <Link
                           key={col.slug}
                           href={col.href ?? `/collections/${col.slug}`}

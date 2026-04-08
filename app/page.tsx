@@ -6,7 +6,7 @@ import Image from "next/image";
 import StoreCarousel from "./components/StoreCarousel";
 import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
-import BrandsSection from "./components/BrandsSection";
+import EditorsPicksSection from "./components/EditorsPicksSection";
 import PageTracker from "./components/PageTracker";
 import { Suspense } from "react";
 
@@ -100,10 +100,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ================= EDITOR'S PICKS ================= */}
+      <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
+        <EditorsPicksSection />
+      </Suspense>
+
       {/* ================= NEW ARRIVALS ================= */}
       <Suspense fallback={<div className="bg-[#F7F3EA] py-16 sm:py-24 h-64" />}>
         <NewArrivalsSection />
       </Suspense>
+
+      {/* ================= SHOP BY STORE ================= */}
+      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
+            </div>
+            <Link
+              href="/stores"
+              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
+            >
+              Shop All Stores
+            </Link>
+          </div>
+
+          <StoreCarousel />
+        </div>
+      </section>
 
       {/* ================= SHOP BY CATEGORY ================= */}
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
@@ -152,26 +177,6 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ================= SHOP BY STORE ================= */}
-      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="px-6 mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
-            </div>
-            <Link
-              href="/stores"
-              className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
-            >
-              Shop All Stores
-            </Link>
-          </div>
-
-          <StoreCarousel />
         </div>
       </section>
 

@@ -106,7 +106,8 @@ export default function Footer() {
             <ul className="space-y-4">
               {[
                 { href: "/stories", label: "Stories" },
-                { href: "/for-stores", label: "Partner With Us" },
+                { href: "/partner-with-vya", label: "Partner With Us" },
+                { href: "/for-stores", label: "Already a Partner?" },
                 { href: "/faqs", label: "FAQs" },
                 { href: "/terms", label: "Terms & Conditions" },
                 { href: "/privacy", label: "Privacy Policy" },

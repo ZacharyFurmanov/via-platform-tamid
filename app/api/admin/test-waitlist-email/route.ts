@@ -15,6 +15,6 @@ export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  await sendWaitlistConfirmationEmail("hana@theviaplatform.com", "Hana");
-  return NextResponse.json({ ok: true, sent: "hana@theviaplatform.com" });
+  await sendWaitlistConfirmationEmail("hana@vyaplatform.com", "Hana");
+  return NextResponse.json({ ok: true, sent: "hana@vyaplatform.com" });
 }

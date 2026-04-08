@@ -240,10 +240,10 @@ export default function PrivacyPage() {
             <p className="mt-4">
               To exercise any of these rights, please contact us at{" "}
               <a
-                href="mailto:hana@theviaplatform.com"
+                href="mailto:hana@vyaplatform.com"
                 className="text-black underline hover:no-underline"
               >
-                hana@theviaplatform.com
+                hana@vyaplatform.com
               </a>
               .
             </p>
@@ -283,10 +283,10 @@ export default function PrivacyPage() {
               If you have any questions about this Privacy Policy, please
               contact us at{" "}
               <a
-                href="mailto:hana@theviaplatform.com"
+                href="mailto:hana@vyaplatform.com"
                 className="text-black underline hover:no-underline"
               >
-                hana@theviaplatform.com
+                hana@vyaplatform.com
               </a>
               .
             </p>

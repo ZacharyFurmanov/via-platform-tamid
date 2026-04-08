@@ -36,14 +36,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     Resend({
-      from: "VYA <hana@theviaplatform.com>",
+      from: "VYA <hana@vyaplatform.com>",
       apiKey: process.env.RESEND_API_KEY,
       async sendVerificationRequest({ identifier: email, url }) {
         const { Resend: ResendClient } = await import("resend");
         const resend = new ResendClient(process.env.RESEND_API_KEY!);
 
         await resend.emails.send({
-          from: "VYA <hana@theviaplatform.com>",
+          from: "VYA <hana@vyaplatform.com>",
           to: email,
           subject: "Sign in to VYA",
           html: `<!DOCTYPE html>

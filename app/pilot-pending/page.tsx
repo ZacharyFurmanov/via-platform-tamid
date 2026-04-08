@@ -93,8 +93,8 @@ export default function PilotPendingPage() {
 
           <p className="text-xs text-[#5D0F17]/30">
             Questions?{" "}
-            <a href="mailto:partnerships@theviaplatform.com" className="underline">
-              partnerships@theviaplatform.com
+            <a href="mailto:partnerships@vyaplatform.com" className="underline">
+              partnerships@vyaplatform.com
             </a>
           </p>
         </div>

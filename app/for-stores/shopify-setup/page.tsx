@@ -104,7 +104,7 @@ export default function ShopifySetupPage() {
                     <li>Enter VYA&apos;s email:</li>
                   </ol>
                   <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm select-all">
-                    partnerships@theviaplatform.com
+                    partnerships@vyaplatform.com
                   </div>
                   <p className="text-sm">Attach your program offer to the invite and click <strong>Send Invite</strong>. We&apos;ll accept within 24 hours.</p>
                 </div>
@@ -294,8 +294,8 @@ export default function ShopifySetupPage() {
           <div className="border-t border-[#5D0F17]/10 pt-8">
             <p className="text-[#5D0F17]/60 text-sm">
               Need help? Email us at{" "}
-              <a href="mailto:partnerships@theviaplatform.com" className="text-[#5D0F17] underline">
-                partnerships@theviaplatform.com
+              <a href="mailto:partnerships@vyaplatform.com" className="text-[#5D0F17] underline">
+                partnerships@vyaplatform.com
               </a>
             </p>
           </div>

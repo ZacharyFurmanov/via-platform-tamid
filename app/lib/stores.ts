@@ -796,7 +796,7 @@ export const storeContactEmails: Record<string, string> = {
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
   // VYA admin test account — sees all requests
-  "via-admin": "hana@theviaplatform.com",
+  "via-admin": "hana@vyaplatform.com",
 };
 
 /** Returns all non-empty store contact emails */

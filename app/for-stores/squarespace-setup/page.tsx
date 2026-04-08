@@ -307,8 +307,8 @@ export default function SquarespaceSetupPage() {
           <div className="border-t border-[#5D0F17]/10 pt-8">
             <p className="text-[#5D0F17]/60 text-sm">
               Stuck or have questions? Email us at{" "}
-              <a href="mailto:partnerships@theviaplatform.com" className="text-[#5D0F17] underline">
-                partnerships@theviaplatform.com
+              <a href="mailto:partnerships@vyaplatform.com" className="text-[#5D0F17] underline">
+                partnerships@vyaplatform.com
               </a>
               {" "}and we&apos;ll walk you through it.
             </p>

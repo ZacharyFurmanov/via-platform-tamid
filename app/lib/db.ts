@@ -359,6 +359,7 @@ export async function getRecommendedProducts(
       )
       AND title NOT ILIKE '%gift card%'
       AND image IS NOT NULL AND image != ''
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
     LIMIT ${limit}
   `;
   return result as DBProduct[];

@@ -76,7 +76,7 @@ export default function FAQsPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:hana@theviaplatform.com"
+                href="mailto:hana@vyaplatform.com"
                 className="bg-[#5D0F17] text-[#F7F3EA] px-8 py-3 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition"
               >
                 Contact Us

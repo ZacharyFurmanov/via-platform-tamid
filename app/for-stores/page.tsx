@@ -4,29 +4,20 @@ export default function ForStoresPage() {
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
 
-      {/* HEADER */}
-      <section className="bg-[#F7F3EA] py-20 sm:py-32 border-b border-[#5D0F17]/10">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif mb-4 sm:mb-6">
-            Partner with VYA
-          </h1>
-          <p className="text-base sm:text-lg text-[#5D0F17]/70 max-w-2xl mx-auto">
-            We work with independent vintage & secondhand stores to help them reach
-            customers worldwide — without changing how they run their business.
+      {/* Header */}
+      <section className="border-b border-[#5D0F17]/10">
+        <div className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">Already a Partner?</h1>
+          <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
+            Follow the guide for your platform to connect your store to VYA.
           </p>
         </div>
       </section>
 
       {/* Setup Guides */}
-      <section className="border-b border-[#5D0F17]/10 py-12 sm:py-16">
-        <div className="max-w-xl mx-auto px-6">
-          <h2 className="text-xl sm:text-2xl font-serif mb-3 text-center">
-            Already a partner? Set up your store.
-          </h2>
-          <p className="text-[#5D0F17]/50 text-sm text-center mb-8">
-            Follow the guide for your platform to connect your store to VYA.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
+      <section className="py-12 sm:py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex flex-col sm:flex-row gap-4 max-w-xl">
             <Link
               href="/for-stores/shopify-setup"
               className="flex-1 border border-[#5D0F17] py-4 text-sm uppercase tracking-wide text-center hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition min-h-[52px] flex items-center justify-center"
@@ -40,114 +31,19 @@ export default function ForStoresPage() {
               Squarespace Setup Guide
             </Link>
           </div>
-        </div>
-      </section>
 
-      {/* FORM */}
-      <section className="py-16 sm:py-32">
-        <div className="max-w-xl mx-auto px-6">
-
-          <form
-            action="https://formspree.io/f/mpqqzgeb"
-            method="POST"
-            className="space-y-8 sm:space-y-12"
-          >
-
-            {/* Store Name */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Store Name
-              </label>
-              <input
-                type="text"
-                name="store_name"
-                required
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
-              />
-            </div>
-
-            {/* Website */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Website / Instagram
-              </label>
-              <input
-                type="text"
-                name="website"
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
-              />
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Store Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                required
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px] placeholder:text-[#5D0F17]/30"
-              />
-            </div>
-
-            {/* Inventory Size */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Approximate Inventory Size
-              </label>
-              <select
-                name="inventory_size"
-                required
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
-              >
-                <option value="">Select one</option>
-                <option value="under-500">Under 500 items</option>
-                <option value="500-2000">500 – 2,000 items</option>
-                <option value="2000+">2,000+ items</option>
-              </select>
-            </div>
-
-            {/* Ecommerce */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Do you currently sell online?
-              </label>
-              <select
-                name="sells_online"
-                required
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none min-h-[48px]"
-              >
-                <option value="">Select one</option>
-                <option value="yes-own-site">Yes — my own site</option>
-                <option value="yes-marketplace">Yes — marketplace only</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-
-            {/* Additional Notes */}
-            <div>
-              <label className="block text-sm uppercase tracking-wide mb-2 sm:mb-3">
-                Anything else you'd like us to know?
-              </label>
-              <textarea
-                name="notes"
-                rows={4}
-                className="w-full border-b border-[#5D0F17] bg-transparent py-3 text-base focus:outline-none resize-none"
-              />
-            </div>
-
-            {/* Submit */}
-            <div className="pt-8 sm:pt-12">
-              <button
-                type="submit"
-                className="w-full border border-[#5D0F17] py-4 min-h-[52px] text-sm uppercase tracking-wide hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
-              >
-                Submit Application
-              </button>
-            </div>
-
-          </form>
+          <div className="mt-20 border-t border-[#5D0F17]/10 pt-16">
+            <h3 className="text-2xl font-serif mb-3">Not a partner yet?</h3>
+            <p className="text-sm text-[#5D0F17]/60 max-w-xl mb-8">
+              Apply to list your store on VYA and reach vintage shoppers worldwide.
+            </p>
+            <Link
+              href="/partner-with-vya"
+              className="inline-block border border-[#5D0F17] text-[#5D0F17] px-8 py-3 text-sm uppercase tracking-[0.15em] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition"
+            >
+              Partner With VYA
+            </Link>
+          </div>
         </div>
       </section>
 

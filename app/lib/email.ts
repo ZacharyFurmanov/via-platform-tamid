@@ -14,7 +14,7 @@ const getResend = () => {
 
 const _rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "vyaplatform.com";
 const BASE_URL = _rawBaseUrl.startsWith("http") ? _rawBaseUrl : `https://${_rawBaseUrl}`;
-const FROM_EMAIL = "VYA <hana@theviaplatform.com>";
+const FROM_EMAIL = "VYA <hana@vyaplatform.com>";
 
 function baseStyles() {
   return `
@@ -88,7 +88,7 @@ u + .body .email-inner { background-color: #F7F3EA !important; }
     <!-- Footer -->
     <div style="text-align:center;margin-top:72px;">
       <p style="margin:0;font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:2;">
-        <a href="${BASE_URL}" style="color:#5D0F17;text-decoration:none;">theviaplatform.com</a><br />
+        <a href="${BASE_URL}" style="color:#5D0F17;text-decoration:none;">vyaplatform.com</a><br />
         IG: <a href="https://www.instagram.com/vyaplatform" style="color:#5D0F17;text-decoration:none;">@vyaplatform</a>
       </p>
       <p style="margin:18px 0 0;font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">
@@ -733,7 +733,7 @@ export async function sendSourcingRequestToStores(
   details: SourcingEmailDetails
 ): Promise<void> {
   const resend = getResend();
-  const VIA_EMAIL = "hana@theviaplatform.com";
+  const VIA_EMAIL = "hana@vyaplatform.com";
   const DASHBOARD_URL = "https://vyaplatform.com/store/dashboard";
 
   const imageBlock = details.imageUrl
@@ -956,7 +956,7 @@ export async function sendCollabsLinksStuckAlert(stuckProducts: DBProduct[]): Pr
 
   await resend.emails.send({
     from: FROM_EMAIL,
-    to: "hana@theviaplatform.com",
+    to: "hana@vyaplatform.com",
     subject: `${stuckProducts.length} product${stuckProducts.length !== 1 ? "s" : ""} missing Collabs links — action needed`,
     html: viaShell("Collabs Coverage Alert", content),
   });
@@ -1073,7 +1073,7 @@ export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
   `;
   await resend.emails.send({
     from: FROM_EMAIL,
-    to: "hana@theviaplatform.com",
+    to: "hana@vyaplatform.com",
     subject: "Action needed — Shopify Collabs credentials expired",
     html: viaShell("Collabs Credentials Expired", content),
   });
@@ -1260,7 +1260,7 @@ export async function sendPopupThankYouEmail(
   for (const email of emails) {
     try {
       await resend.emails.send({
-        from: "Hana @ VYA <hana@theviaplatform.com>",
+        from: "Hana @ VYA <hana@vyaplatform.com>",
         to: email,
         subject: "Thank You for Coming to the VYA NYC Pop-Up 🤍",
         html,

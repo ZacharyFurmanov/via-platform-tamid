@@ -232,10 +232,10 @@ export default function TermsPage() {
             <p>
               If you have any questions about these Terms, please contact us at{" "}
               <a
-                href="mailto:hana@theviaplatform.com"
+                href="mailto:hana@vyaplatform.com"
                 className="text-black underline hover:no-underline"
               >
-                hana@theviaplatform.com
+                hana@vyaplatform.com
               </a>
               .
             </p>

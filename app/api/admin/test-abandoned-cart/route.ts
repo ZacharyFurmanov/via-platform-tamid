@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
   await sendAbandonedCartEmail(
-    "hana@theviaplatform.com",
+    "hana@vyaplatform.com",
     p.title,
     p.image,
     p.store_name,
@@ -48,5 +48,5 @@ export async function GET(request: NextRequest) {
     Number(p.price),
     "USD",
   );
-  return NextResponse.json({ ok: true, sent: "hana@theviaplatform.com", product: p.title });
+  return NextResponse.json({ ok: true, sent: "hana@vyaplatform.com", product: p.title });
 }

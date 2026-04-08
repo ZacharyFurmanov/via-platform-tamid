@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { COLLECTIONS } from "./collections-config";
+import { DISABLED_STORE_SLUGS } from "./db";
 export { COLLECTIONS } from "./collections-config";
 export type { CollectionSlug } from "./collections-config";
 
@@ -159,6 +160,19 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
   return result;
 }
 
+/** Returns the set of collection slugs that have at least one product. */
+export async function getActiveCollectionSlugs(): Promise<Set<string>> {
+  const sql = neon(getDatabaseUrl());
+  await initEditorsPicks();
+  const rows = await sql`
+    SELECT DISTINCT ep.collection_slug
+    FROM editors_picks ep
+    JOIN products p ON p.id = ep.product_id
+    WHERE (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+  `;
+  return new Set(rows.map((r) => r.collection_slug as string));
+}
+
 export async function addEditorsPick(productId: number, collectionSlug: string = "editors-picks"): Promise<void> {
   const sql = neon(getDatabaseUrl());
   await initEditorsPicks();
@@ -212,6 +226,8 @@ export async function getAllProducts(limit = 300): Promise<ProductResult[]> {
     SELECT id, store_slug, store_name, title, price, image
     FROM products
     WHERE image IS NOT NULL
+      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
     ORDER BY created_at DESC NULLS LAST
     LIMIT ${limit}
   `;
@@ -224,6 +240,8 @@ export async function getProductsByStore(storeSlug: string, limit = 300): Promis
     SELECT id, store_slug, store_name, title, price, image
     FROM products
     WHERE store_slug = ${storeSlug}
+      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
     ORDER BY title
     LIMIT ${limit}
   `;
@@ -239,6 +257,8 @@ export async function searchProducts(q: string, storeSlug?: string): Promise<Pro
         FROM products
         WHERE title ILIKE ${"%" + q + "%"}
           AND store_slug = ${storeSlug}
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
         ORDER BY title
         LIMIT 50
       `
@@ -246,6 +266,8 @@ export async function searchProducts(q: string, storeSlug?: string): Promise<Pro
         SELECT id, store_slug, store_name, title, price, image
         FROM products
         WHERE title ILIKE ${"%" + q + "%"}
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
         ORDER BY title
         LIMIT 50
       `;

@@ -9,8 +9,8 @@ function getResend() {
   return new Resend(apiKey);
 }
 
-const FROM_EMAIL = "VYA <hana@theviaplatform.com>";
-const TO_EMAIL = "hana@theviaplatform.com";
+const FROM_EMAIL = "VYA <hana@vyaplatform.com>";
+const TO_EMAIL = "hana@vyaplatform.com";
 
 function baseStyles() {
   return `

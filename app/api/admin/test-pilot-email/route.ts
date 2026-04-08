@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { searchParams } = new URL(request.url);
-  const email = searchParams.get("email") || "hana@theviaplatform.com";
+  const email = searchParams.get("email") || "hana@vyaplatform.com";
   const name = searchParams.get("name") || undefined;
   await sendPilotApprovalEmail(email, name);
   return NextResponse.json({ ok: true, sentTo: email });
