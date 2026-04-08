@@ -734,6 +734,29 @@ export const stores = [
     returnPolicy:
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
+  {
+    slug: "west-village-vintage",
+    dashboardToken: "wvv-4a8c2e1d7f9b",
+    name: "West Village Vintage",
+    location: "New York, NY",
+    description:
+      "Rooted in the Old Money aesthetic of its namesake Manhattan neighborhood, West Village Vintage specializes in one of a kind designer garments and archival accessories that prioritize timeless silhouettes over fleeting trends. By treating the closet as a personal archive rather than a revolving door, WVV offers a meticulously curated wardrobe of elevated, chic staples that remain as relevant today as they were decades ago. It is a destination defined by sophisticated style and effortless luxury, operating on the belief that true fashion isn't about what's next; it's about what lasts.",
+    website: "https://westvillagevintage.com",
+    dataSource: "west-village-vintage",
+    image: "/stores/west-village-vintage.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "214283",
+    authenticityPolicy:
+      "Every piece at West Village Vintage is personally sourced and hand-selected for its authenticity, quality, and timeless appeal. Each item is thoroughly inspected and accurately described so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**
@@ -795,6 +818,7 @@ export const storeContactEmails: Record<string, string> = {
   "front-page-finds": "charlee@frontpagefinds.com",
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
+  "west-village-vintage": "",
   // VYA admin test account — sees all requests
   "via-admin": "hana@vyaplatform.com",
 };
