@@ -17,6 +17,7 @@ const PUBLIC_ROUTES = [
   "/api/giveaway",
   "/api/cron",
   "/for-stores",
+  "/partner-with-vya",
   "/api/auth",
   "/api/newsletter",
   "/api/track",
