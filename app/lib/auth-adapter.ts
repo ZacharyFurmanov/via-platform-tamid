@@ -30,6 +30,7 @@ export async function initAuthTables() {
   // Add phone column to existing users table (CREATE TABLE IF NOT EXISTS won't add new columns)
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`;
   await sql`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS saved_sizes TEXT DEFAULT NULL`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS accounts (

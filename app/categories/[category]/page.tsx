@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // Cache for 5 minutes; revalidates in background
 
 import { notFound } from "next/navigation";
 import { getInventory } from "@/app/lib/inventory";

@@ -14,6 +14,8 @@ export type ShopifyStore = {
   storefrontAccessToken?: string;
   /** Product titles to exclude from sync (exact match, case-insensitive) */
   excludeTitles?: string[];
+  /** Product title keywords to exclude from sync (partial match, case-insensitive) */
+  excludeKeywords?: string[];
   /** If set, only sync products from these Shopify collection handles (e.g. ["designer", "vintage"]) */
   collectionHandles?: string[];
 };
@@ -95,6 +97,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Lover Girl Vintage",
     slug: "lover-girl-vintage",
     storeDomain: "lovergirlvintage.com",
+    excludeKeywords: ["trucker hat"],
   },
   {
     type: "shopify",
@@ -228,6 +231,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Jade Vintage",
     slug: "jade-vintage",
     storeDomain: "jadevintage.ca",
+  },
+  {
+    type: "shopify",
+    name: "West Village Vintage",
+    slug: "west-village-vintage",
+    storeDomain: "westvillagevintage.com",
   },
 ];
 

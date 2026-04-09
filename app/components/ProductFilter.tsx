@@ -1,7 +1,29 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Search, ChevronDown, X } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { Search, ChevronDown, X, SlidersHorizontal } from "lucide-react";
+
+const SIZE_PICKER_GROUPS: { label: string; items: { value: string; display: string }[] }[] = [
+  {
+    label: "Clothing",
+    items: ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"].map((v) => ({ value: v, display: v })),
+  },
+  {
+    label: "Shoes — US",
+    items: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12"].map((v) => ({
+      value: v,
+      display: `US ${v}`,
+    })),
+  },
+  {
+    label: "Shoes — EU",
+    items: ["EU 35", "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42"].map((v) => ({
+      value: v,
+      display: v,
+    })),
+  },
+];
 
 export type PriceRange = "all" | "under100" | "100to250" | "250to500" | "over500";
 export type SortOption = "popular" | "newest" | "price-asc" | "price-desc";
@@ -66,6 +88,14 @@ export default function ProductFilter({
   showTypeFilter = false,
   showColorFilter = false,
 }: ProductFilterProps) {
+  const { data: session } = useSession();
+
+  // Saved sizes — null = not yet loaded
+  const [savedSizes, setSavedSizes] = useState<string[] | null>(null);
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [pickerSizes, setPickerSizes] = useState<string[]>([]);
+  const [savingMySizes, setSavingMySizes] = useState(false);
+
   const [filters, setFilters] = useState<FilterState>({
     search: initialFilters?.search ?? "",
     selectedPrices: initialFilters?.selectedPrices ?? [],
@@ -79,15 +109,8 @@ export default function ProductFilter({
   });
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [openMobileSections, setOpenMobileSections] = useState<Set<string>>(new Set());
-  const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
-  const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
-  const [sizeDropdownOpen, setSizeDropdownOpen] = useState(false);
-  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
-  const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [openMobileSections, setOpenMobileSections] = useState<Set<string>>(new Set());
 
   const toggleMobileSection = useCallback((section: string) => {
     setOpenMobileSections((prev) => {
@@ -98,16 +121,21 @@ export default function ProductFilter({
     });
   }, []);
 
-  const closeAllDropdowns = useCallback(() => {
-    setPriceDropdownOpen(false);
-    setCategoryDropdownOpen(false);
-    setBrandDropdownOpen(false);
-    setStoreDropdownOpen(false);
-    setSizeDropdownOpen(false);
-    setTypeDropdownOpen(false);
-    setColorDropdownOpen(false);
-    setSortDropdownOpen(false);
-  }, []);
+  // Load saved sizes when user session is available
+  useEffect(() => {
+    if (!session?.user?.id) { setSavedSizes([]); return; }
+    fetch("/api/user/sizes")
+      .then((r) => r.ok ? r.json() : { sizes: [] })
+      .then((d) => setSavedSizes(d.sizes ?? []))
+      .catch(() => setSavedSizes([]));
+  }, [session?.user?.id]);
+
+  // "My Sizes" is active when selected sizes exactly match saved sizes
+  const mySizesActive =
+    savedSizes !== null &&
+    savedSizes.length > 0 &&
+    filters.selectedSizes.length === savedSizes.length &&
+    savedSizes.every((s) => filters.selectedSizes.includes(s));
 
   const updateFilters = useCallback(
     (update: Partial<FilterState>) => {
@@ -117,6 +145,25 @@ export default function ProductFilter({
     },
     [filters, onFilterChange]
   );
+
+  const handleSaveMySizes = useCallback(async () => {
+    setSavingMySizes(true);
+    try {
+      await fetch("/api/user/sizes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sizes: pickerSizes }),
+      });
+      setSavedSizes(pickerSizes);
+      // Apply them immediately as the active size filter
+      updateFilters({ selectedSizes: pickerSizes });
+      setShowSizePicker(false);
+    } catch {
+      // silent fail
+    } finally {
+      setSavingMySizes(false);
+    }
+  }, [pickerSizes, updateFilters]);
 
   const toggleStore = useCallback(
     (storeSlug: string) => {
@@ -271,496 +318,43 @@ export default function ProductFilter({
   return (
     <>
     <div className="sticky top-[104px] z-[45] bg-[#F7F3EA] py-3 mb-4">
-      {/* Desktop Filters */}
-      <div className="hidden md:block">
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Search Input */}
-          <div className="relative flex-1 max-w-sm">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40"
-            />
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => updateFilters({ search: e.target.value })}
-              placeholder="Search products or stores..."
-              className="w-full pl-10 pr-4 py-2.5 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-transparent transition"
-            />
-            {filters.search && (
-              <button
-                onClick={() => updateFilters({ search: "" })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40 hover:text-[#5D0F17]"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          {/* Price Range Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                const wasOpen = priceDropdownOpen;
-                closeAllDropdowns();
-                setPriceDropdownOpen(!wasOpen);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                filters.selectedPrices.length > 0
-                  ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                  : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-              }`}
-            >
-              {filters.selectedPrices.length > 0
-                ? `Price (${filters.selectedPrices.length})`
-                : "Price"}
-              <ChevronDown size={16} />
-            </button>
-            {priceDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setPriceDropdownOpen(false)}
-                />
-                <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] animate-fade-in">
-                  {(["under100", "100to250", "250to500", "over500"] as PriceRange[]).map(
-                    (range) => (
-                      <button
-                        key={range}
-                        onClick={() => togglePrice(range)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedPrices.includes(range)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {priceRangeLabels[range]}
-                        {filters.selectedPrices.includes(range) && (
-                          <span className="w-3.5 h-3.5 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-[10px]">✓</span>
-                        )}
-                      </button>
-                    )
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Category Dropdown */}
-          {showCategoryFilter && categories.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = categoryDropdownOpen;
-                  closeAllDropdowns();
-                  setCategoryDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedCategories.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedCategories.length > 0
-                  ? `Category (${filters.selectedCategories.length})`
-                  : "Category"}
-                <ChevronDown size={16} />
-              </button>
-              {categoryDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setCategoryDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[180px] animate-fade-in">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.slug}
-                        onClick={() => toggleCategory(cat.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedCategories.includes(cat.slug)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {cat.label}
-                        {filters.selectedCategories.includes(cat.slug) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Brand Dropdown */}
-          {showBrandFilter && brands.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = brandDropdownOpen;
-                  closeAllDropdowns();
-                  setBrandDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedBrands.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedBrands.length > 0
-                  ? `Brand (${filters.selectedBrands.length})`
-                  : "Brand"}
-                <ChevronDown size={16} />
-              </button>
-              {brandDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setBrandDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto animate-fade-in">
-                    {brands.map((brand) => (
-                      <button
-                        key={brand.slug}
-                        onClick={() => toggleBrand(brand.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedBrands.includes(brand.slug)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {brand.label}
-                        {filters.selectedBrands.includes(brand.slug) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Color Dropdown */}
-          {showColorFilter && colors.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = colorDropdownOpen;
-                  closeAllDropdowns();
-                  setColorDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedColors.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedColors.length > 0
-                  ? `Color (${filters.selectedColors.length})`
-                  : "Color"}
-                <ChevronDown size={16} />
-              </button>
-              {colorDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setColorDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => toggleColor(color)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedColors.includes(color)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {color}
-                        {filters.selectedColors.includes(color) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Store Dropdown */}
-          {stores.length > 1 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = storeDropdownOpen;
-                  closeAllDropdowns();
-                  setStoreDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedStores.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedStores.length > 0
-                  ? `Store (${filters.selectedStores.length})`
-                  : "Store"}
-                <ChevronDown size={16} />
-              </button>
-              {storeDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setStoreDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[200px] animate-fade-in">
-                    {stores.map((store) => (
-                      <button
-                        key={store.slug}
-                        onClick={() => toggleStore(store.slug)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedStores.includes(store.slug)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {store.name}
-                        {filters.selectedStores.includes(store.slug) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Size Dropdown */}
-          {showSizeFilter && sizes.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = sizeDropdownOpen;
-                  closeAllDropdowns();
-                  setSizeDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedSizes.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedSizes.length > 0
-                  ? `Size (${filters.selectedSizes.length})`
-                  : "Size"}
-                <ChevronDown size={16} />
-              </button>
-              {sizeDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setSizeDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
-                    {sizes.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => toggleSize(size)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedSizes.includes(size)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {size}
-                        {filters.selectedSizes.includes(size) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Type Dropdown */}
-          {showTypeFilter && types.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => {
-                  const wasOpen = typeDropdownOpen;
-                  closeAllDropdowns();
-                  setTypeDropdownOpen(!wasOpen);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 border text-sm transition-all duration-200 ${
-                  filters.selectedTypes.length > 0
-                    ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                    : "border-[#5D0F17]/20 hover:border-[#5D0F17]"
-                }`}
-              >
-                {filters.selectedTypes.length > 0
-                  ? `Type (${filters.selectedTypes.length})`
-                  : "Type"}
-                <ChevronDown size={16} />
-              </button>
-              {typeDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setTypeDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[160px] max-h-[300px] overflow-y-auto animate-fade-in">
-                    {types.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => toggleType(type)}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
-                          filters.selectedTypes.includes(type)
-                            ? "bg-[#D8CABD]/30 font-medium"
-                            : ""
-                        }`}
-                      >
-                        {type}
-                        {filters.selectedTypes.includes(type) && (
-                          <span className="text-[#5D0F17]">&#10003;</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Sort Dropdown */}
-          <div className="relative ml-auto">
-            <button
-              onClick={() => {
-                const wasOpen = sortDropdownOpen;
-                closeAllDropdowns();
-                setSortDropdownOpen(!wasOpen);
-              }}
-              className="flex items-center gap-2 px-4 py-2.5 border border-[#5D0F17]/20 text-sm hover:border-[#5D0F17] transition-all duration-200"
-            >
-              Sort: {sortLabels[filters.sort]}
-              <ChevronDown size={16} />
-            </button>
-            {sortDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setSortDropdownOpen(false)}
-                />
-                <div className="absolute top-full right-0 mt-1 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 min-w-[180px] animate-fade-in">
-                  {(Object.keys(sortLabels) as SortOption[]).map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => {
-                        updateFilters({ sort: option });
-                        setSortDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition ${
-                        filters.sort === option
-                          ? "bg-[#D8CABD]/30 font-medium"
-                          : ""
-                      }`}
-                    >
-                      {sortLabels[option]}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Active Filters & Clear */}
-        {hasActiveFilters && (
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#5D0F17]/10">
-            <span className="text-xs uppercase tracking-wide text-[#5D0F17]/50">
-              {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}{" "}
-              active
-            </span>
-            <button
-              onClick={clearFilters}
-              className="text-xs uppercase tracking-wide underline hover:no-underline"
-            >
-              Clear all
-            </button>
-            {productCount !== undefined && (
-              <span className="ml-auto text-sm text-[#5D0F17]/60">
-                {productCount} product{productCount !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Filters */}
-      <div className="md:hidden">
-        {/* Mobile Search */}
-        <div className="relative mb-3">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40"
-          />
+      <div className="inline-flex flex-col gap-2">
+        {/* Search — same width as the buttons row below */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40" />
           <input
             type="text"
             value={filters.search}
             onChange={(e) => updateFilters({ search: e.target.value })}
             placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-3 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-transparent transition"
+            className="w-full pl-9 pr-8 py-2.5 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-transparent transition"
           />
+          {filters.search && (
+            <button onClick={() => updateFilters({ search: "" })} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5D0F17]/40 hover:text-[#5D0F17]">
+              <X size={14} />
+            </button>
+          )}
         </div>
 
-        {/* Mobile Filter Toggle + Sort */}
-        <div className="flex items-center gap-3">
+        {/* Filters + Sort row */}
+        <div className="flex items-center gap-4">
+        {/* Filters dropdown */}
+        <div className="relative">
           <button
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 border text-sm transition ${
-              hasActiveFilters
-                ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                : "border-[#5D0F17]/20"
+            className={`flex items-center gap-1.5 text-sm transition-all duration-200 ${
+              activeFilterCount > 0 ? "text-[#5D0F17] font-medium" : "text-[#5D0F17]/60 hover:text-[#5D0F17]"
             }`}
           >
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="bg-[#F7F3EA] text-[#5D0F17] px-1.5 py-0.5 text-xs">
-                {activeFilterCount}
-              </span>
-            )}
+            <SlidersHorizontal size={15} />
+            Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
 
-          {/* Mobile Sort */}
-          <select
-            value={filters.sort}
-            onChange={(e) =>
-              updateFilters({ sort: e.target.value as SortOption })
-            }
-            className="flex-1 py-3 px-4 border border-[#5D0F17]/20 text-sm focus:border-[#5D0F17] focus:outline-none bg-[#F7F3EA]"
-          >
-            {(Object.keys(sortLabels) as SortOption[]).map((option) => (
-              <option key={option} value={option}>
-                {sortLabels[option]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
-    <div className="md:hidden">
-        {/* Mobile Filter Panel — Accordion */}
-        {mobileFiltersOpen && (
-          <div className="mt-3 border border-[#5D0F17]/15 bg-[#D8CABD]/10">
-            <div className="px-4">
+          {mobileFiltersOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMobileFiltersOpen(false)} />
+              <div className="absolute top-full left-0 mt-1 z-50 w-72 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg max-h-[70vh] overflow-y-auto">
+                <div className="px-4">
               {/* Price Range */}
               <MobileSection
                 id="price"
@@ -862,6 +456,38 @@ export default function ProductFilter({
                   label="Size"
                   activeCount={filters.selectedSizes.length}
                 >
+                  {/* My Sizes row */}
+                  {session?.user && savedSizes !== null && (
+                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#5D0F17]/10">
+                      {savedSizes.length === 0 ? (
+                        <button
+                          onClick={() => { setPickerSizes([]); setShowSizePicker(true); }}
+                          className="text-sm text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
+                        >
+                          Save your sizes →
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => updateFilters({ selectedSizes: mySizesActive ? [] : savedSizes })}
+                            className={`flex items-center gap-2 text-sm transition font-medium ${mySizesActive ? "text-[#5D0F17]" : "text-[#5D0F17]/50"}`}
+                          >
+                            {mySizesActive
+                              ? <span className="w-4 h-4 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-[10px]">✓</span>
+                              : <span className="w-4 h-4 border border-[#5D0F17]/20 inline-block" />
+                            }
+                            My Sizes
+                          </button>
+                          <button
+                            onClick={() => { setPickerSizes([...savedSizes]); setShowSizePicker(true); }}
+                            className="text-xs uppercase tracking-wide text-[#5D0F17]/40 hover:text-[#5D0F17] transition"
+                          >
+                            Edit
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {sizes.map((size) => (
                       <label key={size} className="flex items-center gap-3 cursor-pointer">
@@ -943,15 +569,122 @@ export default function ProductFilter({
               </button>
             </div>
           </div>
-        )}
+        </>
+      )}
+        </div>
 
-        {/* Results Count (Mobile) */}
-        {productCount !== undefined && (
-          <p className="mt-3 text-sm text-[#5D0F17]/60">
-            {productCount} product{productCount !== 1 ? "s" : ""}
-          </p>
-        )}
+        {/* Sort By */}
+        <div className="relative">
+          <button
+            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+            className="flex items-center gap-1 text-sm text-[#5D0F17]/60 hover:text-[#5D0F17] transition"
+          >
+            Sort By
+            <span className="mx-1 text-[#5D0F17]/30">•</span>
+            <span className="text-[#5D0F17]">{sortLabels[filters.sort]}</span>
+            <ChevronDown size={13} className={`ml-0.5 transition-transform duration-200 ${sortDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+          {sortDropdownOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setSortDropdownOpen(false)} />
+              <div className="absolute top-full left-0 mt-1 z-50 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg min-w-[170px]">
+                {(Object.keys(sortLabels) as SortOption[]).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => { updateFilters({ sort: option }); setSortDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#D8CABD]/20 transition flex items-center justify-between ${
+                      filters.sort === option ? "font-medium" : ""
+                    }`}
+                  >
+                    {sortLabels[option]}
+                    {filters.sort === option && <span className="text-[#5D0F17] text-xs">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        </div>{/* end flex row */}
+      </div>{/* end inline-flex col */}
     </div>
+
+    {/* Results count — shown when no active filters (otherwise shown in the active filters bar) */}
+    {!hasActiveFilters && productCount !== undefined && (
+      <p className="mb-4 text-sm text-[#5D0F17]/60">
+        {productCount} product{productCount !== 1 ? "s" : ""}
+      </p>
+    )}
+
+    {/* ── Pick Your Sizes Modal ─────────────────────────────────── */}
+    {showSizePicker && (
+      <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 bg-black/40" onClick={() => setShowSizePicker(false)} />
+        <div className="relative bg-[#F7F3EA] w-full sm:max-w-lg sm:mx-4 max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-start justify-between px-6 py-5 border-b border-[#5D0F17]/10">
+            <div>
+              <h2 className="text-lg font-serif text-[#5D0F17]">
+                {savedSizes?.length === 0 ? "Pick Your Sizes" : "My Sizes"}
+              </h2>
+              <p className="text-xs text-[#5D0F17]/50 mt-0.5">
+                Select all sizes you typically wear — clothing and shoes
+              </p>
+            </div>
+            <button onClick={() => setShowSizePicker(false)} className="text-[#5D0F17]/40 hover:text-[#5D0F17] p-1 mt-0.5">
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Size groups */}
+          <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+            {SIZE_PICKER_GROUPS.map((group) => (
+              <div key={group.label}>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#5D0F17]/40 mb-3">{group.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map(({ value, display }) => {
+                    const selected = pickerSizes.includes(value);
+                    return (
+                      <button
+                        key={value}
+                        onClick={() =>
+                          setPickerSizes((prev) =>
+                            prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
+                          )
+                        }
+                        className={`px-3 py-2 text-sm border transition-all ${
+                          selected
+                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                            : "border-[#5D0F17]/20 text-[#5D0F17] hover:border-[#5D0F17]"
+                        }`}
+                      >
+                        {display}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="flex gap-3 px-6 py-4 border-t border-[#5D0F17]/10">
+            <button
+              onClick={() => setShowSizePicker(false)}
+              className="flex-1 py-3 text-sm border border-[#5D0F17]/20 hover:border-[#5D0F17] transition text-[#5D0F17]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveMySizes}
+              disabled={savingMySizes}
+              className="flex-1 py-3 text-sm bg-[#5D0F17] text-[#F7F3EA] disabled:opacity-50 transition"
+            >
+              {savingMySizes ? "Saving…" : pickerSizes.length > 0 ? `Save (${pickerSizes.length})` : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }

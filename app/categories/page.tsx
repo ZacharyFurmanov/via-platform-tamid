@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // Cache for 5 minutes; revalidates in background
 
 import { getInventory } from "@/app/lib/inventory";
 import { stores } from "@/app/lib/stores";
@@ -82,6 +82,7 @@ export default async function CategoriesPage() {
             categories={categoryList}
             showCategoryFilter={true}
             showBrandFilter={true}
+            showSizeFilter={true}
             emptyMessage="No products found. Check back soon for new arrivals."
           />
         </div>

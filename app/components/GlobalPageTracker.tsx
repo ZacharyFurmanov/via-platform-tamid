@@ -28,6 +28,9 @@ export default function GlobalPageTracker() {
     const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
     if (!userId) return;
 
+    // Don't track admin activity — it would inflate WAU/MAU metrics
+    if (pathname.startsWith("/admin")) return;
+
     const pageType = inferPageType(pathname);
     const segments = pathname.split("/");
     const pageSlug = segments[2] ?? null;

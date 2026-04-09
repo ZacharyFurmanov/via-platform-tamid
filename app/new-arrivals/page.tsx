@@ -6,7 +6,7 @@ import { categoryMap } from "@/app/lib/categoryMap";
 import { deriveSize } from "@/app/lib/inventory";
 import ProductCard from "@/app/components/ProductCard";
 export default async function NewArrivalsPage() {
-  const products = await getNewArrivals(500, 7);
+  const products = await getNewArrivals(2000, 7, 500);
 
   const gridProducts = products.map((p) => ({
     ...p,

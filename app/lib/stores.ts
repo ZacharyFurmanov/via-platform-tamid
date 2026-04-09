@@ -520,7 +520,7 @@ export const stores = [
     affiliatePath: "VIAPLATFORM",
     collabsStoreId: "229322",
     authenticityPolicy:
-      "Every piece at Source Twenty Four is authenticated and hand-selected before listing. Specializing in pre-owned luxury from Chanel, Celine, Dior, and Bottega Veneta, each item undergoes careful inspection to verify quality and authenticity prior to sale.",
+      "Every piece at Source Twenty Four is authenticated and hand-selected before listing. Specializing in pre-owned luxury from Chanel, Celine, Dior, and Bottega Veneta, each item undergoes careful inspection to verify quality and authenticity prior to sale. Select items include a Certificate of Authenticity.",
     shippingPolicy:
       "Free shipping on all items. Orders ship from the United States.",
     returnPolicy:
@@ -705,7 +705,7 @@ export const stores = [
     affiliatePath: "VYAPARTNER",
     collabsStoreId: "231641",
     authenticityPolicy:
-      "Every piece goes through rigorous in-house inspection and independent third-party verification — only authenticated items make it through. Each purchase comes with a complimentary Certificate of Authenticity, so you can shop pre-owned luxury without worry.",
+      "Every piece goes through rigorous in-house inspection and independent third-party verification using services including Entrupy, Zeko's, LegitGrails, and Real Authentication — only authenticated items make it through. Each purchase comes with a complimentary Certificate of Authenticity, so you can shop pre-owned luxury without worry.",
     shippingPolicy:
       "Ships from Menlo Park, CA. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -744,14 +744,14 @@ export const stores = [
     website: "https://westvillagevintage.com",
     dataSource: "west-village-vintage",
     image: "/stores/west-village-vintage.jpg",
-    logo: "/stores/placeholder.svg",
+    logo: "/stores/west-village-vintage-logo.jpg",
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "VYA",
     collabsStoreId: "214283",
     authenticityPolicy:
-      "Every piece at West Village Vintage is personally sourced and hand-selected for its authenticity, quality, and timeless appeal. Each item is thoroughly inspected and accurately described so you can shop with confidence.",
+      "Authenticity Guaranteed. Every piece at West Village Vintage is personally sourced and held to a simple standard: if we wouldn't personally wear it in its current condition, we won't sell it. Each item is thoroughly inspected and accurately described so you can shop with confidence.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
@@ -818,7 +818,7 @@ export const storeContactEmails: Record<string, string> = {
   "front-page-finds": "charlee@frontpagefinds.com",
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
-  "west-village-vintage": "",
+  "west-village-vintage": "info@westvillagevintage.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@vyaplatform.com",
 };

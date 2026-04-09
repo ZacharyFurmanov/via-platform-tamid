@@ -24,16 +24,77 @@ export async function GET(request: NextRequest) {
 
   const sql = neon(dbUrl);
 
-  // Ensure user_id column exists on product_views before querying it
   await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`.catch(() => {});
   await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned BOOLEAN DEFAULT FALSE`.catch(() => {});
   await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned_at TIMESTAMPTZ`.catch(() => {});
+
+  // VYA launch date — March 19, 2026
+  const LAUNCH = new Date(Date.UTC(2026, 2, 19)); // 2026-03-19 00:00 UTC
+
+  const monthParam = request.nextUrl.searchParams.get("month");
+  const allTimeParam = request.nextUrl.searchParams.get("alltime") === "true";
+  const now = new Date();
+
+  let pStart: Date, pEnd: Date, prevPStart: Date, prevPEnd: Date;
+  let shortStart: Date, shortEnd: Date, shortPrevStart: Date, shortPrevEnd: Date;
+  let mauForPrevWeekStart: Date, mauForPrevWeekEnd: Date;
+  let periodLabel: string;
+  let isMonth = false;
+
+  if (allTimeParam) {
+    // All Time — from launch to now; WAU = rolling last 7 days
+    pStart = LAUNCH;
+    pEnd = now;
+    prevPStart = LAUNCH; prevPEnd = LAUNCH; // no meaningful prev
+    periodLabel = "All Time";
+    shortEnd = now;
+    shortStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    shortPrevEnd = shortStart;
+    shortPrevStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    mauForPrevWeekStart = new Date(now.getTime() - 37 * 24 * 60 * 60 * 1000);
+    mauForPrevWeekEnd = shortStart;
+  } else if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+    isMonth = true;
+    const [y, m] = monthParam.split("-").map(Number);
+    // March 2026 starts from launch date, not the 1st
+    const calStart = new Date(Date.UTC(y, m - 1, 1));
+    pStart = calStart < LAUNCH ? LAUNCH : calStart;
+    pEnd = new Date(Date.UTC(y, m, 1));
+    // Previous period: prior calendar month (or nothing if before launch)
+    const calPrevStart = new Date(Date.UTC(y, m - 2, 1));
+    prevPStart = calPrevStart < LAUNCH ? LAUNCH : calPrevStart;
+    prevPEnd = pStart;
+    periodLabel = calStart.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+    // WAU = last 7 days of the month, capped at now
+    const effectivePEnd = pEnd > now ? now : pEnd;
+    shortEnd = effectivePEnd;
+    shortStart = new Date(effectivePEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+    if (shortStart < pStart) shortStart = pStart;
+    shortPrevEnd = shortStart;
+    shortPrevStart = new Date(effectivePEnd.getTime() - 14 * 24 * 60 * 60 * 1000);
+    if (shortPrevStart < LAUNCH) shortPrevStart = LAUNCH;
+    mauForPrevWeekStart = new Date(effectivePEnd.getTime() - 37 * 24 * 60 * 60 * 1000);
+    if (mauForPrevWeekStart < LAUNCH) mauForPrevWeekStart = LAUNCH;
+    mauForPrevWeekEnd = shortStart;
+  } else {
+    // Rolling windows (default)
+    periodLabel = "Last 30 days";
+    pEnd = now;
+    pStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    prevPEnd = pStart;
+    prevPStart = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    shortEnd = now;
+    shortStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    shortPrevEnd = shortStart;
+    shortPrevStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    mauForPrevWeekStart = new Date(now.getTime() - 37 * 24 * 60 * 60 * 1000);
+    mauForPrevWeekEnd = shortStart;
+  }
 
   const [
     gmvRows,
     clickRows,
     conversionRows,
-    insiderRows,
     wauMauRows,
     saverRows,
     saverBuyerRows,
@@ -44,65 +105,48 @@ export async function GET(request: NextRequest) {
     activityBreakdownRows,
     returningUsersRows,
   ] = await Promise.all([
-    // GMV — total, this 7d, prev 7d, this 30d, prev 30d
+    // GMV — all time + period windows
     sql`
       SELECT
-        COALESCE(SUM(order_total), 0)::float                                                                   AS total_gmv,
-        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '7 days'), 0)::float             AS gmv_7d,
-        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '14 days'
-                                              AND timestamp <  NOW() - INTERVAL '7 days'), 0)::float           AS gmv_prev_7d,
-        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '30 days'), 0)::float            AS gmv_30d,
-        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= NOW() - INTERVAL '60 days'
-                                              AND timestamp <  NOW() - INTERVAL '30 days'), 0)::float          AS gmv_prev_30d
+        COALESCE(SUM(order_total), 0)::float                                                                                AS total_gmv,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${shortStart}    AND timestamp < ${shortEnd}),    0)::float   AS gmv_7d,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${shortPrevStart} AND timestamp < ${shortPrevEnd}), 0)::float AS gmv_prev_7d,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${pStart}        AND timestamp < ${pEnd}),        0)::float   AS gmv_30d,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${prevPStart}    AND timestamp < ${prevPEnd}),    0)::float   AS gmv_prev_30d
       FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
-    // Clicks — all time, 7d, 30d
+    // Clicks
     sql`
       SELECT
-        COUNT(*)::int                                                                         AS total_clicks,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '7 days')::int                  AS clicks_7d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '14 days'
-                             AND timestamp <  NOW() - INTERVAL '7 days')::int                AS clicks_prev_7d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '30 days')::int                 AS clicks_30d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '60 days'
-                             AND timestamp <  NOW() - INTERVAL '30 days')::int               AS clicks_prev_30d
+        COUNT(*)::int                                                                                                   AS total_clicks,
+        COUNT(*) FILTER (WHERE timestamp >= ${shortStart}     AND timestamp < ${shortEnd})::int                        AS clicks_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${shortPrevStart} AND timestamp < ${shortPrevEnd})::int                    AS clicks_prev_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${pStart}         AND timestamp < ${pEnd})::int                            AS clicks_30d,
+        COUNT(*) FILTER (WHERE timestamp >= ${prevPStart}     AND timestamp < ${prevPEnd})::int                        AS clicks_prev_30d
       FROM clicks
     `,
 
-    // Conversions (matched = purchases we can attribute)
+    // Conversions
     sql`
       SELECT
-        COUNT(*)::int                                                                         AS total_conversions,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '7 days')::int                  AS conversions_7d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '14 days'
-                             AND timestamp <  NOW() - INTERVAL '7 days')::int                AS conversions_prev_7d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '30 days')::int                 AS conversions_30d,
-        COUNT(*) FILTER (WHERE timestamp >= NOW() - INTERVAL '60 days'
-                             AND timestamp <  NOW() - INTERVAL '30 days')::int               AS conversions_prev_30d
+        COUNT(*)::int                                                                                                   AS total_conversions,
+        COUNT(*) FILTER (WHERE timestamp >= ${shortStart}     AND timestamp < ${shortEnd})::int                        AS conversions_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${shortPrevStart} AND timestamp < ${shortPrevEnd})::int                    AS conversions_prev_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${pStart}         AND timestamp < ${pEnd})::int                            AS conversions_30d,
+        COUNT(*) FILTER (WHERE timestamp >= ${prevPStart}     AND timestamp < ${prevPEnd})::int                        AS conversions_prev_30d
       FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
-    // Insider conversion — approved pilot users vs actual members
+    // WAU / MAU
     sql`
       SELECT
-        COUNT(*) FILTER (WHERE pa.status = 'approved')::int           AS approved_pilots,
-        COUNT(u.id) FILTER (WHERE u.is_member = true)::int            AS insider_members
-      FROM pilot_access pa
-      LEFT JOIN users u ON LOWER(u.email) = LOWER(pa.email)
-    `,
-
-    // WAU / MAU — distinct users who visited any page, clicked, saved, or purchased
-    // page_type_views counts any site visit (homepage, store, category, browse)
-    // mau_prev_week = users active in the 7–37d window, used as denominator for stickiness_prev
-    sql`
-      SELECT
-        COUNT(DISTINCT a.uid)::int                                                                                    AS total_ever_active,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '7 days')::int                                    AS wau,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '14 days' AND a.ts < NOW() - INTERVAL '7 days')::int AS wau_prev,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '30 days')::int                                   AS mau,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '60 days' AND a.ts < NOW() - INTERVAL '30 days')::int AS mau_prev,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= NOW() - INTERVAL '37 days' AND a.ts < NOW() - INTERVAL '7 days')::int  AS mau_for_prev_week
+        COUNT(DISTINCT a.uid)::int                                                                                                    AS total_ever_active,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortStart}     AND a.ts < ${shortEnd})::int                                   AS wau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortPrevStart} AND a.ts < ${shortPrevEnd})::int                               AS wau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${pStart}         AND a.ts < ${pEnd})::int                                       AS mau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${prevPStart}     AND a.ts < ${prevPEnd})::int                                   AS mau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${mauForPrevWeekStart} AND a.ts < ${mauForPrevWeekEnd})::int                     AS mau_for_prev_week
       FROM (
         SELECT user_id::text AS uid, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
         UNION ALL
@@ -114,13 +158,11 @@ export async function GET(request: NextRequest) {
         UNION ALL
         SELECT user_id::text,        timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
         UNION ALL
-        SELECT user_id::text,        timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
-        UNION ALL
-        SELECT id::text,             created_at AS ts FROM users             WHERE id IS NOT NULL
+        SELECT user_id::text,        timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL AND page_type != 'other'
       ) a
     `,
 
-    // Save-to-purchase: total unique users who have saved anything (products OR stores)
+    // Save-to-purchase — all time
     sql`
       SELECT COUNT(DISTINCT user_id::text)::int AS total_savers FROM (
         SELECT user_id FROM product_favorites WHERE user_id IS NOT NULL
@@ -129,7 +171,6 @@ export async function GET(request: NextRequest) {
       ) all_savers
     `,
 
-    // Save-to-purchase: savers who also have a conversion
     sql`
       SELECT COUNT(DISTINCT c.user_id)::int AS savers_who_bought
       FROM conversions c
@@ -142,8 +183,7 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — total GMV ÷ total distinct buyers
-    // Matched orders: count distinct user_ids. Unmatched: each counts as +1 unknown buyer.
+    // Revenue per buying user — all time
     sql`
       SELECT
         COALESCE(SUM(order_total), 0)::float                                                    AS total_gmv,
@@ -153,7 +193,7 @@ export async function GET(request: NextRequest) {
       WHERE order_total > 0 AND (returned IS NULL OR returned = false)
     `,
 
-    // GMV by week — last 10 weeks for sparkline
+    // GMV by week sparkline — always last 10 weeks for context
     sql`
       SELECT
         DATE_TRUNC('week', timestamp)::date::text  AS week,
@@ -164,34 +204,29 @@ export async function GET(request: NextRequest) {
       ORDER BY 1 ASC
     `,
 
-    // Total registered users
     sql`SELECT COUNT(*)::int AS total FROM users`,
-
-    // Total waitlist signups (pilot_access)
     sql`SELECT COUNT(*)::int AS total FROM pilot_access`,
 
-    // Activity counts — clicks and purchases count all events (incl. anonymous);
-    // saves require login so user_id is always present there.
+    // Activity breakdown — for the selected period
     sql`
       SELECT
-        (SELECT COUNT(*)::int FROM users)                                                                                             AS registered,
-        (SELECT COUNT(DISTINCT click_id)::int FROM clicks)                                                                         AS clickers,
-        (SELECT COUNT(DISTINCT user_id::text)::int FROM product_favorites WHERE user_id IS NOT NULL)                               AS product_savers,
-        (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites WHERE user_id IS NOT NULL)                                 AS store_savers,
-        (SELECT COUNT(*)::int FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false))                   AS buyers
+        (SELECT COUNT(*)::int FROM users)                                                                                                                   AS registered,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM clicks WHERE user_id IS NOT NULL AND timestamp >= ${pStart} AND timestamp < ${pEnd})              AS clickers,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM product_favorites WHERE user_id IS NOT NULL AND created_at >= ${pStart} AND created_at < ${pEnd}) AS product_savers,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM store_favorites   WHERE user_id IS NOT NULL AND created_at >= ${pStart} AND created_at < ${pEnd}) AS store_savers,
+        (SELECT COUNT(DISTINCT user_id::text)::int FROM conversions WHERE user_id IS NOT NULL AND order_total > 0 AND (returned IS NULL OR returned = false) AND timestamp >= ${pStart} AND timestamp < ${pEnd}) AS buyers
     `,
 
-    // Returning users — any registered user with 2+ distinct visit days who was active in the window.
+    // Returning users — scoped to the selected period
     sql`
       SELECT
-        COUNT(DISTINCT user_id) FILTER (WHERE was_active_30d AND visit_days >= 2)::int AS returning_30d,
-        COUNT(DISTINCT user_id) FILTER (WHERE was_active_7d  AND visit_days >= 2)::int AS returning_7d
+        COUNT(DISTINCT user_id) FILTER (WHERE visit_days_period >= 2)::int AS returning_30d,
+        COUNT(DISTINCT user_id) FILTER (WHERE visit_days_short  >= 2)::int AS returning_7d
       FROM (
         SELECT
           a.user_id,
-          COUNT(DISTINCT DATE(a.ts))                  AS visit_days,
-          bool_or(a.ts >= NOW() - INTERVAL '30 days') AS was_active_30d,
-          bool_or(a.ts >= NOW() - INTERVAL '7 days')  AS was_active_7d
+          COUNT(DISTINCT DATE(a.ts)) FILTER (WHERE a.ts >= ${pStart}     AND a.ts < ${pEnd})     AS visit_days_period,
+          COUNT(DISTINCT DATE(a.ts)) FILTER (WHERE a.ts >= ${shortStart} AND a.ts < ${shortEnd}) AS visit_days_short
         FROM (
           SELECT user_id::text, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
           UNION ALL
@@ -203,9 +238,7 @@ export async function GET(request: NextRequest) {
           UNION ALL
           SELECT user_id::text, timestamp  AS ts FROM conversions       WHERE user_id IS NOT NULL
           UNION ALL
-          SELECT user_id::text, timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL
-          UNION ALL
-          SELECT id::text,      created_at AS ts FROM users             WHERE id IS NOT NULL
+          SELECT user_id::text, timestamp  AS ts FROM page_type_views   WHERE user_id IS NOT NULL AND page_type != 'other'
         ) a
         INNER JOIN users u ON u.id::text = a.user_id
         GROUP BY a.user_id
@@ -216,7 +249,6 @@ export async function GET(request: NextRequest) {
   const g = gmvRows[0];
   const cl = clickRows[0];
   const co = conversionRows[0];
-  const ins = insiderRows[0];
   const wm = wauMauRows[0];
   const rev = revenuePerUserRows[0];
 
@@ -232,21 +264,14 @@ export async function GET(request: NextRequest) {
   const totalSavers = saverRows[0]?.total_savers ?? 0;
   const saversBought = saverBuyerRows[0]?.savers_who_bought ?? 0;
 
-  // Conversion rate = total conversions / total clicks (all time)
   const convRate = cl.total_clicks > 0 ? co.total_conversions / cl.total_clicks : 0;
   const convRate7d = cl.clicks_7d > 0 ? co.conversions_7d / cl.clicks_7d : 0;
   const convRatePrev7d = cl.clicks_prev_7d > 0 ? co.conversions_prev_7d / cl.clicks_prev_7d : 0;
 
-  // Stickiness = WAU / MAU
-  // stickinessPrev uses the 30-day window centered on the previous week (7–37d ago)
-  // so the denominator actually contains the week we're measuring
   const stickiness = wm.mau > 0 ? wm.wau / wm.mau : 0;
   const stickinessPrev = (wm.mau_for_prev_week as number) > 0
     ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
     : 0;
-
-  // Insider conversion rate
-  const insiderRate = ins.approved_pilots > 0 ? ins.insider_members / ins.approved_pilots : 0;
 
   return NextResponse.json({
     gmv: {
@@ -262,25 +287,13 @@ export async function GET(request: NextRequest) {
       prev7d: convRatePrev7d,
       totalClicks: cl.total_clicks,
       totalConversions: co.total_conversions,
+      periodClicks: cl.clicks_30d,
+      periodConversions: co.conversions_30d,
+      periodRate: (cl.clicks_30d as number) > 0 ? (co.conversions_30d as number) / (cl.clicks_30d as number) : 0,
     },
-    insiderConversion: {
-      rate: insiderRate,
-      approvedPilots: ins.approved_pilots,
-      insiderMembers: ins.insider_members,
-    },
-    wau: {
-      current: wm.wau,
-      prev: wm.wau_prev,
-    },
-    mau: {
-      current: wm.mau,
-      prev: wm.mau_prev,
-      totalEverActive: wm.total_ever_active,
-    },
-    stickiness: {
-      current: stickiness,
-      prev: stickinessPrev,
-    },
+    wau: { current: wm.wau, prev: wm.wau_prev },
+    mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active },
+    stickiness: { current: stickiness, prev: stickinessPrev },
     saveToPurchase: {
       rate: totalSavers > 0 ? saversBought / totalSavers : 0,
       totalSavers,
@@ -291,14 +304,18 @@ export async function GET(request: NextRequest) {
       buyingUsers: rev.buying_users,
     },
     gmvByWeek: gmvByWeekRows,
-    users: {
-      registered: totalRegisteredUsers,
-      waitlist: totalWaitlist,
-    },
+    users: { registered: totalRegisteredUsers, waitlist: totalWaitlist },
     activityBreakdown,
     returningUsers: {
       last7d: (returningUsersRows[0]?.returning_7d as number) ?? 0,
       last30d: (returningUsersRows[0]?.returning_30d as number) ?? 0,
+    },
+    period: {
+      start: pStart.toISOString(),
+      end: (pEnd > now ? now : pEnd).toISOString(),
+      isMonth,
+      isAllTime: allTimeParam,
+      label: periodLabel,
     },
   });
 }

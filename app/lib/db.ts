@@ -367,9 +367,9 @@ export async function getRecommendedProducts(
 
 /**
  * Get recently added products (new arrivals).
- * Caps at 2 products per store to ensure diversity, ranked by click count then recency.
+ * maxPerStore caps results per store for diversity (use 2 for homepage carousel, large number for full page).
  */
-const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBProduct[]> => {
+const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore = 2): Promise<DBProduct[]> => {
   const sql = neon(getDatabaseUrl());
   try {
     const result = await sql`
@@ -396,7 +396,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number): Promise<DBP
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
       )
       SELECT * FROM pool
-      WHERE store_rank <= 2
+      WHERE store_rank <= ${maxPerStore}
       ORDER BY click_count DESC, created_at DESC
       LIMIT ${limit}
     `;

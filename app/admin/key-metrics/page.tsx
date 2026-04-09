@@ -135,8 +135,7 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
 
 type Metrics = {
   gmv: { total: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
-  conversionRate: { allTime: number; last7d: number; prev7d: number; totalClicks: number; totalConversions: number };
-  insiderConversion: { rate: number; approvedPilots: number; insiderMembers: number };
+  conversionRate: { allTime: number; last7d: number; prev7d: number; totalClicks: number; totalConversions: number; periodClicks: number; periodConversions: number; periodRate: number };
   wau: { current: number; prev: number };
   mau: { current: number; prev: number; totalEverActive: number };
   stickiness: { current: number; prev: number };
@@ -146,57 +145,85 @@ type Metrics = {
   gmvByWeek: { week: string; gmv: number }[];
   users: { registered: number; waitlist: number };
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
+  period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
 };
 
-type EmailCategory = {
-  category: string;
-  label: string;
-  sent: number;
-  delivered: number;
-  opened: number;
-  clicked: number;
-  bounced: number;
-  complained: number;
-  uniqueRecipients: number;
-  deliveryRate: number;
-  openRate: number;
-  clickRate: number;
-  bounceRate: number;
-};
+// Launch date: March 19, 2026
+const LAUNCH_YEAR = 2026;
+const LAUNCH_MONTH = 3; // March (1-indexed)
 
-type EmailMetrics = {
-  categories: EmailCategory[];
-  totals: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; complained: number };
-};
+function getMonthOptions() {
+  const now = new Date();
+  const options: { label: string; value: string }[] = [
+    { label: "All Time", value: "alltime" },
+  ];
+  // Generate months from current back to March 2026
+  let y = now.getUTCFullYear();
+  let m = now.getUTCMonth() + 1; // 1-indexed
+  while (y > LAUNCH_YEAR || (y === LAUNCH_YEAR && m >= LAUNCH_MONTH)) {
+    const value = `${y}-${String(m).padStart(2, "0")}`;
+    const label = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+    options.push({ label, value });
+    m--;
+    if (m === 0) { m = 12; y--; }
+  }
+  options.push({ label: "Rolling (30d)", value: "" });
+  return options;
+}
 
 export default function KeyMetricsPage() {
   const [data, setData] = useState<Metrics | null>(null);
-  const [emailData, setEmailData] = useState<EmailMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const monthOptions = getMonthOptions();
 
   useEffect(() => {
-    fetch("/api/admin/key-metrics")
+    setLoading(true);
+    setData(null);
+    const url = selectedMonth === "alltime"
+      ? "/api/admin/key-metrics?alltime=true"
+      : selectedMonth
+        ? `/api/admin/key-metrics?month=${selectedMonth}`
+        : "/api/admin/key-metrics";
+    fetch(url)
       .then((r) => {
         if (r.status === 401) { window.location.href = "/admin/login"; throw new Error("Unauthorized"); }
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
       .catch((e) => { setError(e.message); setLoading(false); });
-
-    fetch("/api/admin/email-metrics")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setEmailData(d); })
-      .catch(() => {});
-  }, []);
+  }, [selectedMonth]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
       <AdminNav />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: MAROON, margin: 0 }}>Key Metrics</h1>
-          <p style={{ fontSize: 14, color: MUTED, margin: "6px 0 0" }}>Platform health at a glance. Trends compare to the previous equivalent period.</p>
+          <p style={{ fontSize: 14, color: MUTED, margin: "6px 0 16px" }}>Platform health at a glance. Trends compare to the previous equivalent period.</p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {monthOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSelectedMonth(opt.value)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 20,
+                  border: "1px solid",
+                  borderColor: selectedMonth === opt.value ? MAROON : "#e5e7eb",
+                  background: selectedMonth === opt.value ? MAROON : "#fff",
+                  color: selectedMonth === opt.value ? "#fff" : "#6b7280",
+                  fontSize: 12,
+                  fontWeight: selectedMonth === opt.value ? 600 : 400,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading && (
@@ -215,25 +242,29 @@ export default function KeyMetricsPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
                 <Link href="/admin/analytics" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px", gridColumn: "span 1", textDecoration: "none", display: "block", transition: "box-shadow 0.15s" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)")} onMouseLeave={e => (e.currentTarget.style.boxShadow = "")}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>All-Time GMV</p>
+                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>
+                      {data.period?.isAllTime ? "All-Time GMV" : data.period?.isMonth ? `GMV — ${data.period.label}` : "All-Time GMV"}
+                    </p>
                     <span style={{ fontSize: 11, color: MUTED, opacity: 0.6 }}>→</span>
                   </div>
-                  <p style={{ fontSize: 40, fontWeight: 700, color: MAROON, margin: "0 0 12px", lineHeight: 1 }}>{fmt$(data.gmv.total)}</p>
+                  <p style={{ fontSize: 40, fontWeight: 700, color: MAROON, margin: "0 0 12px", lineHeight: 1 }}>
+                    {data.period?.isMonth ? fmt$(data.gmv.last30d) : fmt$(data.gmv.total)}
+                  </p>
                   <MiniSparkline data={data.gmvByWeek} />
                   <p style={{ fontSize: 11, color: "#9ca3af", margin: "10px 0 0" }}>Weekly GMV — last 10 weeks</p>
                 </Link>
                 <MetricCard
-                  label="GMV — Last 7 Days"
+                  label={data.period?.isMonth ? `Last Week of ${data.period.label}` : data.period?.isAllTime ? "GMV — Last 7 Days" : "GMV — Last 7 Days"}
                   value={fmt$(data.gmv.last7d)}
                   trend={<TrendBadge current={data.gmv.last7d} prev={data.gmv.prev7d} fmtFn={fmt$} />}
-                  note={`Previous 7 days: ${fmt$(data.gmv.prev7d)}`}
+                  note={`Previous period: ${fmt$(data.gmv.prev7d)}`}
                   href="/admin/analytics"
                 />
                 <MetricCard
-                  label="GMV — Last 30 Days"
-                  value={fmt$(data.gmv.last30d)}
-                  trend={<TrendBadge current={data.gmv.last30d} prev={data.gmv.prev30d} fmtFn={fmt$} />}
-                  note={`Previous 30 days: ${fmt$(data.gmv.prev30d)}`}
+                  label={data.period?.isMonth ? `vs Previous Month` : data.period?.isAllTime ? "Since Launch" : "GMV — Last 30 Days"}
+                  value={data.period?.isMonth ? fmt$(data.gmv.prev30d) : fmt$(data.gmv.last30d)}
+                  trend={data.period?.isMonth ? undefined : <TrendBadge current={data.gmv.last30d} prev={data.gmv.prev30d} fmtFn={fmt$} />}
+                  note={data.period?.isMonth ? `${data.period.label} total: ${fmt$(data.gmv.last30d)}` : `Previous 30 days: ${fmt$(data.gmv.prev30d)}`}
                   href="/admin/analytics"
                 />
               </div>
@@ -244,25 +275,31 @@ export default function KeyMetricsPage() {
               <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Conversion & Revenue</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
                 <MetricCard
-                  label="Conversion Rate (7d)"
-                  value={fmtPct(data.conversionRate.last7d)}
-                  sub={`${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalClicks)} clicks (all time)`}
-                  trend={<TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
+                  label={data.period?.isMonth || data.period?.isAllTime ? `Conversion Rate — ${data.period.label}` : "Conversion Rate (7d)"}
+                  value={data.period?.isMonth || data.period?.isAllTime ? fmtPct(data.conversionRate.periodRate) : fmtPct(data.conversionRate.last7d)}
+                  sub={data.period?.isMonth || data.period?.isAllTime
+                    ? `${fmtNum(data.conversionRate.periodConversions)} orders from ${fmtNum(data.conversionRate.periodClicks)} clicks in ${data.period?.label}`
+                    : `${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalClicks)} clicks (all time)`}
+                  trend={data.period?.isMonth ? <TrendBadge current={data.conversionRate.periodRate} prev={data.conversionRate.prev7d} fmtFn={fmtPct} /> : <TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
                   note="Clicks that resulted in an attributed purchase"
                   href="/admin/conversions"
                 />
                 <MetricCard
                   label="Revenue per Buying User"
-                  value={fmt$(data.revenuePerUser.value)}
-                  sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} users who've purchased`}
-                  note="Total GMV ÷ distinct users with at least one order"
+                  value={data.period?.isMonth && data.activityBreakdown?.buyers
+                    ? fmt$((data.activityBreakdown.buyers > 0 ? data.gmv.last30d / data.activityBreakdown.buyers : 0))
+                    : fmt$(data.revenuePerUser.value)}
+                  sub={data.period?.isMonth && data.activityBreakdown?.buyers
+                    ? `Across ${fmtNum(data.activityBreakdown.buyers)} buyers in ${data.period.label}`
+                    : `Across ${fmtNum(data.revenuePerUser.buyingUsers)} users who've purchased`}
+                  note="Period GMV ÷ distinct buyers in the period"
                   href="/admin/customers"
                 />
                 <MetricCard
                   label="Save-to-Purchase Rate"
                   value={fmtPct(data.saveToPurchase.rate)}
                   sub={`${fmtNum(data.saveToPurchase.saversBought)} of ${fmtNum(data.saveToPurchase.totalSavers)} users who saved also bought`}
-                  note="Users who favorited anything and later placed an order"
+                  note="All-time: users who favorited anything and later placed an order"
                   href="/admin/customers"
                 />
               </div>
@@ -295,15 +332,15 @@ export default function KeyMetricsPage() {
                   label="Weekly Active Users"
                   value={fmtNum(data.wau.current)}
                   trend={<TrendBadge current={data.wau.current} prev={data.wau.prev} fmtFn={fmtNum} />}
-                  note="Users who signed up, clicked a product, saved something, or placed an order this week."
+                  note={`Registered users who clicked a product, saved something, viewed a page, or placed an order ${data.period?.isMonth ? `in the last 7 days of ${data.period.label}` : "this week"}.`}
                   href="/admin/analytics"
                 />
                 <MetricCard
-                  label="Monthly Active Users"
+                  label={data.period?.isAllTime ? "Total Active Users" : "Monthly Active Users"}
                   value={fmtNum(data.mau.current)}
                   sub={`${fmtNum(data.users.registered)} total registered users`}
-                  trend={<TrendBadge current={data.mau.current} prev={data.mau.prev} fmtFn={fmtNum} />}
-                  note="Users who signed up, clicked a product, saved something, or placed an order this month."
+                  trend={data.period?.isAllTime ? undefined : <TrendBadge current={data.mau.current} prev={data.mau.prev} fmtFn={fmtNum} />}
+                  note={`Registered users who clicked a product, saved something, viewed a page, or placed an order ${data.period?.isAllTime ? "since launch" : data.period?.isMonth ? `in ${data.period.label}` : "this month"}.`}
                   href="/admin/analytics"
                 />
                 <MetricCard
@@ -338,17 +375,19 @@ export default function KeyMetricsPage() {
             {/* ── Activity breakdown ──────────────────────────────── */}
             {data.activityBreakdown && (
               <section>
-                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Active User Breakdown</h2>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>
+                  Active User Breakdown — {data.period?.label ?? "Last 30 Days"}
+                </h2>
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 28px" }}>
                   <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 16px" }}>
-                    Clicks = distinct click_ids (includes anonymous). Purchases = total conversions (includes anonymous). Saves = distinct logged-in users. WAU/MAU de-duplicates across all.
+                    Distinct logged-in users who took each action during this period. A user can appear in multiple categories. "Clicked a product link" = tapped through to a store; "Favorited" = saved to their wishlist.
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                     {[
-                      { label: "Clicked a product", value: data.activityBreakdown.clickers, href: "/admin/analytics" },
-                      { label: "Saved a product", value: data.activityBreakdown.productSavers, href: "/admin/customers" },
-                      { label: "Saved a store", value: data.activityBreakdown.storeSavers, href: "/admin/customers" },
-                      { label: "Made a purchase", value: data.activityBreakdown.buyers, href: "/admin/conversions" },
+                      { label: "Clicked a product link", value: data.activityBreakdown.clickers, href: "/admin/analytics" },
+                      { label: "Favorited a product", value: data.activityBreakdown.productSavers, href: "/admin/customers" },
+                      { label: "Favorited a store", value: data.activityBreakdown.storeSavers, href: "/admin/customers" },
+                      { label: "Placed an order", value: data.activityBreakdown.buyers, href: "/admin/conversions" },
                     ].map((s) => (
                       <Link key={s.label} href={s.href} style={{ textDecoration: "none", display: "block", padding: "8px", borderRadius: 8, transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                         <p style={{ fontSize: 28, fontWeight: 700, color: MAROON, lineHeight: 1, margin: "0 0 4px" }}>{fmtNum(s.value)}</p>
@@ -360,114 +399,6 @@ export default function KeyMetricsPage() {
               </section>
             )}
 
-            {/* ── Insider Funnel ──────────────────────────────────── */}
-            <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>VYA Insider Funnel</h2>
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "28px 32px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0 }}>
-                  {[
-                    { label: "Approved Pilots", value: fmtNum(data.insiderConversion.approvedPilots), note: "Users with platform access", href: "/admin/customers" },
-                    { label: "→", value: "", note: "", href: null },
-                    { label: "Insider Members", value: fmtNum(data.insiderConversion.insiderMembers), note: "Paying subscribers", href: "/admin/customers" },
-                    {
-                      label: "Conversion Rate",
-                      value: fmtPct(data.insiderConversion.rate),
-                      note: "Pilots who became Insiders",
-                      href: "/admin/customers",
-                    },
-                  ].map((item, i) =>
-                    item.label === "→" ? (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#d1d5db" }}>→</div>
-                    ) : item.href ? (
-                      <Link key={i} href={item.href} style={{ padding: "0 8px", textDecoration: "none", borderRadius: 8, display: "block", transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>
-                        <p style={{ fontSize: 32, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{item.value}</p>
-                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{item.note} →</p>
-                      </Link>
-                    ) : (
-                      <div key={i} style={{ padding: "0 8px" }}>
-                        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>
-                        <p style={{ fontSize: 32, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{item.value}</p>
-                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{item.note}</p>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Funnel bar */}
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ background: "#f3f4f6", borderRadius: 8, height: 10, overflow: "hidden" }}>
-                    <div
-                      style={{
-                        height: "100%",
-                        borderRadius: 8,
-                        background: `linear-gradient(90deg, ${MAROON}, rgba(93,15,23,0.5))`,
-                        width: `${Math.min(data.insiderConversion.rate * 100, 100)}%`,
-                        transition: "width 0.6s ease",
-                      }}
-                    />
-                  </div>
-                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
-                    Target: 20%+ conversion from pilot → Insider
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* ── Email Performance ───────────────────────────────── */}
-            {emailData && (
-              <section>
-                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Email Performance</h2>
-
-                {/* Totals row */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 16 }}>
-                  {[
-                    { label: "Total Sent", value: fmtNum(emailData.totals.sent) },
-                    { label: "Delivered", value: emailData.totals.sent > 0 ? fmtPct(emailData.totals.delivered / emailData.totals.sent) : "—", sub: fmtNum(emailData.totals.delivered) + " emails" },
-                    { label: "Opened", value: emailData.totals.delivered > 0 ? fmtPct(emailData.totals.opened / emailData.totals.delivered) : "—", sub: fmtNum(emailData.totals.opened) + " opens" },
-                    { label: "Clicked", value: emailData.totals.delivered > 0 ? fmtPct(emailData.totals.clicked / emailData.totals.delivered) : "—", sub: fmtNum(emailData.totals.clicked) + " clicks" },
-                  ].map((item) => (
-                    <div key={item.label} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
-                      <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{item.label}</p>
-                      <p style={{ fontSize: 32, fontWeight: 700, color: MAROON, margin: "0 0 2px", lineHeight: 1 }}>{item.value}</p>
-                      {item.sub && <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{item.sub}</p>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Per-category table */}
-                {emailData.categories.length > 0 ? (
-                  <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                          {["Email Type", "Recipients", "Sent", "Delivery %", "Open %", "Click %", "Bounce %"].map((h) => (
-                            <th key={h} style={{ padding: "12px 16px", textAlign: h === "Email Type" ? "left" : "right", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED, fontWeight: 600 }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {emailData.categories.map((c, i) => (
-                          <tr key={c.category} style={{ borderBottom: i < emailData.categories.length - 1 ? "1px solid #f9fafb" : "none" }}>
-                            <td style={{ padding: "12px 16px", fontWeight: 500, color: MAROON }}>{c.label}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{fmtNum(c.uniqueRecipients)}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{fmtNum(c.sent)}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.deliveryRate < 0.9 ? "#b91c1c" : "#15803d", fontWeight: 600 }}>{c.sent > 0 ? fmtPct(c.deliveryRate) : "—"}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#374151" }}>{c.delivered > 0 ? fmtPct(c.openRate) : "—"}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.clickRate > 0.05 ? "#15803d" : "#374151", fontWeight: c.clickRate > 0.05 ? 600 : 400 }}>{c.delivered > 0 ? fmtPct(c.clickRate) : "—"}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: c.bounceRate > 0.02 ? "#b91c1c" : "#374151" }}>{c.sent > 0 ? fmtPct(c.bounceRate) : "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "32px", textAlign: "center", color: "#9ca3af", fontSize: 13 }}>
-                    No email events yet. Set up the Resend webhook to start tracking.
-                  </div>
-                )}
-              </section>
-            )}
 
           </div>
         )}

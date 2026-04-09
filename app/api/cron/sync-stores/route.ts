@@ -69,10 +69,12 @@ export async function GET(request: Request) {
         const excludedTitles = new Set(
           (store.excludeTitles ?? []).map((t) => t.toLowerCase())
         );
+        const excludedKeywords = (store.excludeKeywords ?? []).map((k) => k.toLowerCase());
         const products = fetchResult.products
           .map(toRSSProductFormat)
           .filter((p) => p.price !== null)
           .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
+          .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
           .map((p) => ({
             title: p.title,
             price: convertToUSD(p.price as number, storeSlug),

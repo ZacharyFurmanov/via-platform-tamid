@@ -86,6 +86,14 @@ function splitDescriptionBySizing(html: string | null): {
 } {
   if (!html) return { detailsHtml: null, sizingItems: [] };
 
+  // Normalize <div> tags to <p> so stores that use <div> per bullet
+  // (e.g. West Village Vintage) are handled the same as <p>-based descriptions.
+  // Strip empty spacer tags (<h6>, <h5>, etc.) used as line breaks.
+  html = html
+    .replace(/<div([^>]*)>/gi, "<p$1>")
+    .replace(/<\/div>/gi, "</p>")
+    .replace(/<h[1-6][^>]*>\s*(?:<br\s*\/?>)?\s*<\/h[1-6]>/gi, "");
+
   const detailItems: string[] = [];
   const sizingItems: string[] = [];
 
@@ -357,7 +365,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                         ))}
                       </ul>
                     ) : (
-                      <p>Details not available for this item. Visit {store.name} for more information.</p>
+                      <p>{product.title}</p>
                     ),
                   },
                   {
