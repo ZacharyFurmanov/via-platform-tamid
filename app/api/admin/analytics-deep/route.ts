@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
       collabsDataResult,
       topSearchesResult,
       pageFunnelResult,
+      trafficSourcesResult,
       dropOffProductsResult,
     ] = await Promise.all([
       // totalClicks
@@ -405,6 +406,34 @@ export async function GET(request: NextRequest) {
             GROUP BY page_type
           `.catch(() => []),
 
+      // trafficSources — UTM visits grouped by source + medium + campaign
+      cutoffIso
+        ? sql`
+            SELECT
+              utm_source,
+              utm_medium,
+              utm_campaign,
+              COUNT(*)::int AS visits,
+              COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL)::int AS known_users
+            FROM utm_visits
+            WHERE timestamp >= ${cutoffIso}
+            GROUP BY utm_source, utm_medium, utm_campaign
+            ORDER BY visits DESC
+            LIMIT 50
+          `.catch(() => [])
+        : sql`
+            SELECT
+              utm_source,
+              utm_medium,
+              utm_campaign,
+              COUNT(*)::int AS visits,
+              COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL)::int AS known_users
+            FROM utm_visits
+            GROUP BY utm_source, utm_medium, utm_campaign
+            ORDER BY visits DESC
+            LIMIT 50
+          `.catch(() => []),
+
       // dropOffProducts — products with the most views relative to clicks (browsed but not bought)
       cutoffIso
         ? sql`
@@ -513,6 +542,13 @@ export async function GET(request: NextRequest) {
       pageFunnel: (pageFunnelResult as { page_type: string; views: number }[]).map((r) => ({
         pageType: r.page_type,
         views: r.views,
+      })),
+      trafficSources: (trafficSourcesResult as { utm_source: string; utm_medium: string | null; utm_campaign: string | null; visits: number; known_users: number }[]).map((r) => ({
+        source: r.utm_source,
+        medium: r.utm_medium,
+        campaign: r.utm_campaign,
+        visits: r.visits,
+        knownUsers: r.known_users,
       })),
       dropOffProducts: (dropOffProductsResult as { productId: string; name: string; store: string; views: number; clicks: number }[]).map((r) => ({
         productId: r.productId,

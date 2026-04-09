@@ -98,6 +98,13 @@ type SearchEntry = {
   count: number;
 };
 
+type TrafficSource = {
+  source: string;
+  medium: string | null;
+  campaign: string | null;
+  visits: number;
+  knownUsers: number;
+};
 
 type AnalyticsData = {
   kpis: KPIs;
@@ -110,6 +117,7 @@ type AnalyticsData = {
   recentConversions: ConversionRow[];
   inventory: InventoryStats;
   topSearches: SearchEntry[];
+  trafficSources: TrafficSource[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -371,20 +379,40 @@ export default function DeepAnalyticsPage() {
               />
             </div>
 
-            {/* ── Signups Over Time ────────────────────────────────────────── */}
-            <div style={{ marginBottom: 36 }}>
-              <SectionTitle>Signups Over Time</SectionTitle>
-              {data.signupsByDay.length === 0 ? (
-                <p style={{ fontSize: 13, opacity: 0.5 }}>No signup data for this period.</p>
-              ) : (
-                <>
-                  <SignupBarChart days={data.signupsByDay} />
-                  <p style={{ fontSize: 12, color: MAROON, opacity: 0.6, marginTop: 8 }}>
-                    {data.signupsByDay.reduce((acc, d) => acc + d.count, 0).toLocaleString()} total signups in period
-                  </p>
-                </>
-              )}
-            </div>
+
+            {/* ── Traffic Sources ──────────────────────────────────────────── */}
+            {data.trafficSources && data.trafficSources.length > 0 && (
+              <div style={{ marginBottom: 36 }}>
+                <SectionTitle>Traffic Sources</SectionTitle>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${CREAM}` }}>
+                    {["Source", "Medium", "Campaign", "Visits", "Known Users"].map((h) => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: MAROON, opacity: 0.45 }}>{h}</span>
+                    ))}
+                  </div>
+                  {data.trafficSources.map((row, i) => {
+                    const maxVisits = data.trafficSources[0].visits;
+                    return (
+                      <div
+                        key={i}
+                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? CREAM : "transparent", borderRadius: 6, alignItems: "center" }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: MAROON, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.source}</span>
+                          <div style={{ flex: 1, height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
+                            <div style={{ height: "100%", backgroundColor: MAROON, borderRadius: 2, width: `${(row.visits / maxVisits) * 100}%`, opacity: 0.6 }} />
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.7 }}>{row.medium ?? "—"}</span>
+                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.campaign ?? "—"}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: MAROON }}>{row.visits.toLocaleString()}</span>
+                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.6 }}>{row.knownUsers > 0 ? row.knownUsers.toLocaleString() : "—"}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ── Top Products grid ────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 36 }}>
@@ -497,61 +525,6 @@ export default function DeepAnalyticsPage() {
               <ConversionsTable rows={data.recentConversions} onRefresh={() => fetchData(range, true)} />
             </div>
 
-            {/* ── Referral Leaderboard ─────────────────────────────────────── */}
-            {data.referralLeaderboard.length > 0 && (
-              <div style={{ marginBottom: 36 }}>
-                <SectionTitle>Referral Leaderboard</SectionTitle>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {data.referralLeaderboard.map((entry, i) => (
-                    <Link
-                      key={entry.code}
-                      href={`/admin/customers?search=${encodeURIComponent(entry.email)}`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 14px",
-                        backgroundColor: i === 0 ? CREAM : "white",
-                        border: `1px solid ${CREAM}`,
-                        borderRadius: 6,
-                        textDecoration: "none",
-                        transition: "opacity 0.15s",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 700, color: MAROON, opacity: 0.4, width: 20, textAlign: "right" }}>
-                        {i + 1}
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: MAROON, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {entry.name}
-                        </p>
-                        <p style={{ margin: 0, fontSize: 11, color: MAROON, opacity: 0.55 }}>
-                          {entry.email}
-                        </p>
-                      </div>
-                      <code style={{ fontSize: 11, backgroundColor: CREAM, padding: "2px 6px", borderRadius: 4, color: MAROON }}>
-                        {entry.code}
-                      </code>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: "white",
-                          backgroundColor: MAROON,
-                          borderRadius: 999,
-                          padding: "2px 9px",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {entry.referralCount} referral{entry.referralCount === 1 ? "" : "s"}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* ── Recent Activity ──────────────────────────────────────────── */}
             <div style={{ marginBottom: 36 }}>
@@ -929,55 +902,71 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
 // ── SignupBarChart ────────────────────────────────────────────────────────────
 
 function SignupBarChart({ days }: { days: SignupDay[] }) {
-  const max = Math.max(...days.map((d) => d.count), 1);
-  // Show at most ~60 bars; if more, take last 60
-  const visible = days.length > 60 ? days.slice(days.length - 60) : days;
+  // Aggregate into weeks when there are more than 21 data points
+  type Bar = { label: string; count: number };
+  let bars: Bar[];
+
+  if (days.length > 21) {
+    // Group by week (chunks of 7 days)
+    const weeks: Bar[] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      const chunk = days.slice(i, i + 7);
+      const total = chunk.reduce((s, d) => s + d.count, 0);
+      weeks.push({ label: dayLabel(chunk[0].date), count: total });
+    }
+    bars = weeks;
+  } else {
+    bars = days.map((d) => ({ label: dayLabel(d.date), count: d.count }));
+  }
+
+  const max = Math.max(...bars.map((b) => b.count), 1);
+  const CHART_HEIGHT = 160;
 
   return (
     <div style={{ overflowX: "auto" }}>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 120, minWidth: visible.length * 18 }}>
-        {visible.map((d) => {
-          const pct = (d.count / max) * 100;
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: CHART_HEIGHT, minWidth: bars.length * 28 }}>
+        {bars.map((b, i) => {
+          const pct = (b.count / max) * 100;
+          const barH = Math.max(pct / 100 * CHART_HEIGHT, b.count > 0 ? 6 : 0);
           return (
             <div
-              key={d.date}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "0 0 auto", width: 14 }}
-              title={`${d.date}: ${d.count}`}
+              key={i}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", flex: "0 0 auto", width: 22, height: "100%" }}
+              title={`${b.label}: ${b.count} signup${b.count === 1 ? "" : "s"}`}
             >
+              {b.count > 0 && barH > 20 && (
+                <span style={{ fontSize: 9, color: MAROON, opacity: 0.6, marginBottom: 2 }}>{b.count}</span>
+              )}
               <div
                 style={{
                   width: "100%",
-                  height: `${pct}%`,
-                  minHeight: d.count > 0 ? 3 : 0,
+                  height: barH,
                   backgroundColor: MAROON,
                   borderRadius: "2px 2px 0 0",
-                  transition: "height 0.2s",
+                  opacity: 0.85,
                 }}
               />
             </div>
           );
         })}
       </div>
-      {/* Date labels — show every ~7th */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 3, minWidth: visible.length * 18, marginTop: 4 }}>
-        {visible.map((d, i) => (
-          <div key={d.date} style={{ flex: "0 0 auto", width: 14, overflow: "hidden" }}>
-            {i % 7 === 0 && (
-              <span
-                style={{
-                  fontSize: 9,
-                  color: MAROON,
-                  opacity: 0.5,
-                  whiteSpace: "nowrap",
-                  display: "block",
-                  transform: "rotate(-45deg)",
-                  transformOrigin: "top left",
-                  marginTop: 2,
-                }}
-              >
-                {dayLabel(d.date)}
-              </span>
-            )}
+      {/* Labels */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 4, minWidth: bars.length * 28, marginTop: 4, borderTop: `1px solid ${CREAM}`, paddingTop: 6 }}>
+        {bars.map((b, i) => (
+          <div key={i} style={{ flex: "0 0 auto", width: 22, overflow: "visible" }}>
+            <span
+              style={{
+                fontSize: 9,
+                color: MAROON,
+                opacity: 0.5,
+                whiteSpace: "nowrap",
+                display: "block",
+                transform: "rotate(-40deg)",
+                transformOrigin: "top left",
+              }}
+            >
+              {b.label}
+            </span>
           </div>
         ))}
       </div>

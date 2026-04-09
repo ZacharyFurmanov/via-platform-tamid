@@ -383,7 +383,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
           COALESCE(cc.click_count, 0) AS click_count,
           ROW_NUMBER() OVER (
             PARTITION BY p.store_slug
-            ORDER BY COALESCE(cc.click_count, 0) DESC, p.created_at DESC
+            ORDER BY p.created_at DESC, p.id DESC
           ) AS store_rank
         FROM products p
         LEFT JOIN click_counts cc
@@ -397,7 +397,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
       )
       SELECT * FROM pool
       WHERE store_rank <= ${maxPerStore}
-      ORDER BY click_count DESC, created_at DESC
+      ORDER BY created_at DESC, id DESC
       LIMIT ${limit}
     `;
     return result as DBProduct[];

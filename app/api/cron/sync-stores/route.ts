@@ -9,6 +9,8 @@ import {
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
+import { fetchSquareProducts } from "@/app/lib/squareClient";
+import { stores } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertToUSD } from "@/app/lib/stores";
 
@@ -112,8 +114,29 @@ export async function GET(request: Request) {
         const productCount = await syncProducts(store.slug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
       } else if (store.type === "square") {
-        // Square stores: product sync not yet implemented
-        results.push({ store: store.name, success: false, error: "Square product sync not yet implemented" });
+        const storeInfo = stores.find((s) => s.slug === store.slug);
+        const websiteUrl = storeInfo?.website ?? "https://vyaplatform.com";
+        const { products: rawProducts, skippedCount } = await fetchSquareProducts(
+          store.locationId,
+          store.name,
+          websiteUrl,
+        );
+        const mappedProducts = rawProducts
+          .filter((p) => p.price > 0)
+          .map((p) => ({
+            title: p.title,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice ?? undefined,
+            image: p.image ?? undefined,
+            images: p.images,
+            externalUrl: p.externalUrl,
+            description: p.description ?? undefined,
+            size: p.size ?? undefined,
+            variantId: p.variantId ?? undefined,
+          }));
+        const productCount = await syncProducts(store.slug, store.name, mappedProducts);
+        console.log(`[Sync Stores] Square: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
+        results.push({ store: store.name, success: true, productCount });
       } else {
         // Squarespace
         let rawProducts;

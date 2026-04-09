@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertToUSD } from "@/app/lib/stores";
+import { ALL_STORES } from "@/app/lib/storeConfig";
 
 export async function POST(request: NextRequest) {
   try {
@@ -96,10 +97,23 @@ export async function POST(request: NextRequest) {
       ? providedSlug
       : storeName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-    // Convert to standard format for storage, filtering out null prices
+    // Look up store config to apply keyword/title exclusions
+    const storeConfig = ALL_STORES.find(
+      (s) => s.slug === storeSlug || s.name.toLowerCase() === storeName.toLowerCase()
+    );
+    const excludedTitles = new Set(
+      ((storeConfig as any)?.excludeTitles ?? []).map((t: string) => t.toLowerCase())
+    );
+    const excludedKeywords: string[] = ((storeConfig as any)?.excludeKeywords ?? []).map(
+      (k: string) => k.toLowerCase()
+    );
+
+    // Convert to standard format for storage, filtering out null prices and excluded titles/keywords
     const rawProducts = fetchResult.products.map(toRSSProductFormat);
     const products = rawProducts
       .filter((p) => p.price !== null)
+      .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
+      .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
       .map((p) => ({
         title: p.title,
         price: convertToUSD(p.price as number, storeSlug),

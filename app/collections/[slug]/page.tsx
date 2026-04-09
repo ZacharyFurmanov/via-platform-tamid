@@ -1,13 +1,35 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getAllEditorsPicks, COLLECTIONS } from "@/app/lib/editors-picks-db";
-import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
-import { categoryMap } from "@/app/lib/categoryMap";
-import MixedProductGrid from "@/app/components/MixedProductGrid";
+import { stores } from "@/app/lib/stores";
+import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
+import FilteredProductGrid from "@/app/components/FilteredProductGrid";
+import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { inferBrandFromTitle, inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import { brandMap } from "@/app/lib/brandData";
+import { deriveSize } from "@/app/lib/inventory";
 
 type Props = { params: Promise<{ slug: string }> };
+
+function toDisplayCategory(slug: CategorySlug): string {
+  return clothingSlugs.has(slug) ? "clothing" : slug;
+}
+
+function parseImages(raw: string | null, fallback: string | null): string[] {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return fallback ? [fallback] : [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -48,25 +70,82 @@ export default async function CollectionPage({ params }: Props) {
 
   const picks = await getAllEditorsPicks(slug);
 
-  const gridProducts = picks.map((pick) => ({
-    id: pick.product.id,
-    store_slug: pick.product.storeSlug,
-    store_name: pick.product.storeName,
-    title: pick.product.title,
-    price: pick.product.price,
-    image: pick.product.image,
-    images: pick.product.images,
-    size: pick.product.size,
-    categoryLabel: categoryMap[inferCategoryFromTitle(pick.product.title)],
-  }));
+  const dbIdMap = new Map<string, number>();
+  for (const pick of picks) {
+    const id = `${pick.product.storeSlug}-${pick.product.id}`;
+    dbIdMap.set(id, pick.product.id);
+  }
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
+  const products: FilterableProduct[] = picks.map((pick) => {
+    const { product } = pick;
+    const id = `${product.storeSlug}-${product.id}`;
+    const dbId = product.id;
+    const engagementScore = popularityScores[dbId] ?? 0;
+    const images = parseImages(product.images, product.image);
+    const categorySlug = inferCategoryFromTitle(product.title) as CategorySlug;
+    const displaySlug = toDisplayCategory(categorySlug);
+    const displayLabel = displayCategories.find((c) => c.slug === displaySlug)?.label
+      ?? categoryMap[categorySlug];
+    const brandSlug = inferBrandFromTitle(product.title);
+
+    // Build a minimal DBProduct-compatible shape for deriveSize
+    const dbProduct = {
+      title: product.title,
+      size: product.size,
+      description: null,
+      images: product.images,
+      image: product.image,
+    } as Parameters<typeof deriveSize>[0];
+
+    return {
+      id,
+      dbId,
+      title: product.title,
+      price: product.price,
+      compareAtPrice: undefined,
+      category: displaySlug,
+      categoryLabel: displayLabel,
+      brand: brandSlug,
+      brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
+      store: product.storeName,
+      storeSlug: product.storeSlug,
+      externalUrl: product.externalUrl ?? undefined,
+      image: product.image ?? "",
+      images,
+      size: deriveSize(dbProduct),
+      engagementScore,
+      createdAt: dbId,
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt: new Date().toISOString(),
+        imageCount: images.length,
+        brandSlug: brandSlug ?? null,
+        price: product.price,
+        title: product.title,
+      }),
+    };
+  });
+
+  const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
+  const categoryList = displayCategories.map((c) => ({ slug: c.slug, label: c.label }));
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-2 font-sans">
-            {collection.curatedBy ? `Curated by ${collection.curatedBy}` : "Curated"}
-          </p>
+          <Link
+            href="/collections"
+            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
+          >
+            &larr; All Collections
+          </Link>
+          {collection.curatedBy && (
+            <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-2 font-sans">
+              Curated by {collection.curatedBy}
+            </p>
+          )}
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">{collection.name}</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             {collection.description}
@@ -74,13 +153,18 @@ export default async function CollectionPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="py-12 sm:py-24">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          {gridProducts.length === 0 ? (
-            <p className="text-[#5D0F17]/50 text-sm">No picks yet — check back soon.</p>
-          ) : (
-            <MixedProductGrid products={gridProducts} from={`/collections/${slug}`} />
-          )}
+          <FilteredProductGrid
+            products={products}
+            stores={storeList}
+            categories={categoryList}
+            showCategoryFilter={true}
+            showBrandFilter={true}
+            showSizeFilter={true}
+            from={`/collections/${slug}`}
+            emptyMessage="No picks yet — check back soon."
+          />
         </div>
       </section>
     </main>

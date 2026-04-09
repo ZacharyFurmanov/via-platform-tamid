@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     let skipped = 0;
 
     for (const item of items) {
-      const productUrl = `${BASE_URL}/products/${item.store_slug}-${item.product_id}`;
+      const productUrl = `${BASE_URL}/products/${item.store_slug}-${item.product_id}?utm_source=email&utm_medium=email&utm_campaign=abandoned_cart`;
 
       try {
         await sendAbandonedCartEmail(

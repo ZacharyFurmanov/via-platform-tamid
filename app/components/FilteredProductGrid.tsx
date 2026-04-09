@@ -75,6 +75,7 @@ type FilteredProductGridProps = {
   showTypeFilter?: boolean;
   emptyMessage?: string;
   from?: string;
+  initialFilters?: Partial<FilterState>;
 };
 
 function matchesPriceRange(price: number, range: PriceRange): boolean {
@@ -163,9 +164,13 @@ export default function FilteredProductGrid({
   showTypeFilter = false,
   emptyMessage = "No products found.",
   from,
+  initialFilters,
 }: FilteredProductGridProps) {
   const pathname = usePathname();
-  const [filters, setFilters] = useState<FilterState>(loadSavedFilters);
+  const [filters, setFilters] = useState<FilterState>(() => {
+    const saved = loadSavedFilters();
+    return initialFilters ? { ...saved, ...initialFilters } : saved;
+  });
   const hasTrackedFilterChange = useRef(false);
 
   // Scroll restoration: save position when leaving, restore when returning

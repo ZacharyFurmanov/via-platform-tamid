@@ -4,8 +4,8 @@ import HeaderClient from "@/app/components/HeaderClient";
 
 export default async function Header() {
   const [categories, activeCollectionSlugs] = await Promise.all([
-    getActiveCategories(),
-    getActiveCollectionSlugs(),
+    getActiveCategories().catch(() => []),
+    getActiveCollectionSlugs().catch(() => new Set<string>()),
   ]);
   return <HeaderClient categories={categories} activeCollectionSlugs={activeCollectionSlugs} />;
 }

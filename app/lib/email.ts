@@ -157,15 +157,21 @@ function formatEmailPrice(price: number | string, currency: string): string {
   return `${symbol}${p % 1 === 0 ? p.toFixed(0) : p.toFixed(2)}`;
 }
 
-function productViaUrl(p: DBProduct): string {
-  // Link directly to the VYA product page — /api/track overrides the url param
-  // and redirects to the external store, so we bypass it for email links.
-  return `${BASE_URL}/products/${p.store_slug}-${p.id}`;
+/** Append UTM parameters to any VYA URL. */
+function withUtm(url: string, campaign: string, content?: string): string {
+  const sep = url.includes("?") ? "&" : "?";
+  const base = `${url}${sep}utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
+  return content ? `${base}&utm_content=${encodeURIComponent(content)}` : base;
+}
+
+function productViaUrl(p: DBProduct, campaign: string): string {
+  const base = `${BASE_URL}/products/${p.store_slug}-${p.id}`;
+  return withUtm(base, campaign);
 }
 
 export async function sendGiveawayConfirmation(email: string, referralCode: string) {
   const resend = getResend();
-  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
+  const referralLink = withUtm(`${BASE_URL}/waitlist?ref=${referralCode}`, "giveaway", "referral_link");
 
   await resend.emails.send({
     from: FROM_EMAIL,
@@ -188,7 +194,7 @@ export async function sendFriendEnteredEmail(
   friendNumber: 1 | 2
 ) {
   const resend = getResend();
-  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
+  const referralLink = withUtm(`${BASE_URL}/waitlist?ref=${referralCode}`, "giveaway", "referral_link");
   const isComplete = friendNumber === 2;
 
   const subject = isComplete
@@ -200,7 +206,7 @@ export async function sendFriendEnteredEmail(
   const body = isComplete
     ? `<p>Both of your friends have entered the giveaway. You're now officially in the running to win a $1,000 shopping spree on VYA!</p>
        <p class="muted">We'll be in touch when we pick a winner. In the meantime, start browsing.</p>
-       <a href="${BASE_URL}" class="btn">Start Shopping</a>`
+       <a href="${withUtm(BASE_URL, "giveaway", "start_shopping")}" class="btn">Start Shopping</a>`
     : `<p>One of your friends just entered the giveaway using your link. One more to go and you'll be officially entered to win.</p>
        <p><strong>Your referral link:</strong></p>
        <div class="link-box">${referralLink}</div>
@@ -221,7 +227,7 @@ export async function sendGiveawayReminder(
   category: ReminderCategory
 ) {
   const resend = getResend();
-  const referralLink = `${BASE_URL}/waitlist?ref=${referralCode}`;
+  const referralLink = withUtm(`${BASE_URL}/waitlist?ref=${referralCode}`, "giveaway_reminder", "referral_link");
 
   let subject: string;
   let heading: string;
@@ -272,7 +278,7 @@ export async function sendGiveawayReminder(
 
 export async function sendMembershipConfirmation(email: string) {
   const resend = getResend();
-  const insiderUrl = `${BASE_URL}/account/insider`;
+  const insiderUrl = withUtm(`${BASE_URL}/account/insider`, "membership_confirmation");
 
   await resend.emails.send({
     from: FROM_EMAIL,
@@ -368,7 +374,7 @@ export async function sendInsiderNewArrivalsEmail(
   const resend = getResend();
 
   function productCell(p: DBProduct): string {
-    const url = productViaUrl(p);
+    const url = productViaUrl(p, "insider_new_arrivals");
     // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
     const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
     const imgBlock = safeImgSrc
@@ -419,7 +425,7 @@ export async function sendInsiderNewArrivalsEmail(
     `);
   }
 
-  const insiderUrl = `${BASE_URL}/account/insider`;
+  const insiderUrl = withUtm(`${BASE_URL}/account/insider`, "insider_new_arrivals");
 
   const content = `
     <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
@@ -588,13 +594,13 @@ export async function sendNewArrivalsEmail(
   if (emails.length === 0 || products.length === 0) return { sent: 0, failed: 0 };
 
   const resend = getResend();
-  const newArrivalsUrl = `${BASE_URL}/new-arrivals`;
+  const newArrivalsUrl = withUtm(`${BASE_URL}/new-arrivals`, "new_arrivals_email", "view_all");
 
   const { sorted: sortedProducts, topBrands } = sortByBrand(products);
   const subject = buildArrivalsSubject(topBrands);
 
   function productCell(p: DBProduct): string {
-    const url = productViaUrl(p);
+    const url = productViaUrl(p, "new_arrivals_email");
     // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
     const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
     const imgBlock = safeImgSrc
@@ -823,7 +829,7 @@ export async function sendSourcingOfferToCustomer(details: {
   requestId: string;
 }) {
   const resend = getResend();
-  const requestUrl = `${BASE_URL}/account/sourcing/${details.requestId}`;
+  const requestUrl = withUtm(`${BASE_URL}/account/sourcing/${details.requestId}`, "sourcing_offer");
   const notesRow = details.notes
     ? `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(93,15,23,0.5);">Notes</td><td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.1);font-size:14px;color:#5D0F17;">${details.notes}</td></tr>`
     : "";

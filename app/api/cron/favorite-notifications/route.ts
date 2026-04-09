@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         continue;
       }
 
-      const productUrl = `${BASE_URL}/products/${candidate.store_slug}-${candidate.product_id}`;
+      const productUrl = `${BASE_URL}/products/${candidate.store_slug}-${candidate.product_id}?utm_source=email&utm_medium=email&utm_campaign=favorite_notification`;
 
       try {
         await sendFavoriteActivityNotification(

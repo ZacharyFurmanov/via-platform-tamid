@@ -1,19 +1,93 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { getNewArrivals } from "@/app/lib/db";
-import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
-import { categoryMap } from "@/app/lib/categoryMap";
+import { stores } from "@/app/lib/stores";
+import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
+import FilteredProductGrid from "@/app/components/FilteredProductGrid";
+import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
+import { brandMap } from "@/app/lib/brandData";
 import { deriveSize } from "@/app/lib/inventory";
-import ProductCard from "@/app/components/ProductCard";
-export default async function NewArrivalsPage() {
-  const products = await getNewArrivals(2000, 7, 500);
 
-  const gridProducts = products.map((p) => ({
-    ...p,
-    categoryLabel: categoryMap[inferCategoryFromTitle(p.title)],
-    size: deriveSize(p),
-    images: p.images ? JSON.parse(p.images) as string[] : [],
-  }));
+function toDisplayCategory(slug: CategorySlug): string {
+  return clothingSlugs.has(slug) ? "clothing" : slug;
+}
+
+function parseImages(raw: string | null, fallback: string | null): string[] {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return fallback ? [fallback] : [];
+}
+
+export default async function NewArrivalsPage() {
+  const dbProducts = await getNewArrivals(2000, 7, 500);
+
+  const dbIdMap = new Map<string, number>();
+  for (const item of dbProducts) {
+    dbIdMap.set(`${item.store_slug}-${item.id}`, item.id);
+  }
+  const dbIds = Array.from(dbIdMap.values());
+  const popularityScores = await getProductPopularityScores(dbIds);
+
+  const { inferCategoryFromTitle } = await import("@/app/lib/loadStoreProducts");
+
+  const products: FilterableProduct[] = dbProducts.map((item) => {
+    const id = `${item.store_slug}-${item.id}`;
+    const dbId = item.id;
+    const engagementScore = popularityScores[dbId] ?? 0;
+    const syncedAt = item.synced_at instanceof Date
+      ? item.synced_at.toISOString()
+      : String(item.synced_at);
+    const categorySlug = inferCategoryFromTitle(item.title) as CategorySlug;
+    const displaySlug = toDisplayCategory(categorySlug);
+    const displayLabel = displayCategories.find((c) => c.slug === displaySlug)?.label
+      ?? categoryMap[categorySlug];
+    const brandSlug = inferBrandFromTitle(item.title);
+    const images = parseImages(item.images, item.image);
+
+    return {
+      id,
+      dbId,
+      title: item.title,
+      price: Number(item.price),
+      compareAtPrice: item.compare_at_price != null ? Number(item.compare_at_price) : undefined,
+      category: displaySlug,
+      categoryLabel: displayLabel,
+      brand: brandSlug,
+      brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
+      store: item.store_name,
+      storeSlug: item.store_slug,
+      externalUrl: item.external_url ?? undefined,
+      image: item.image ?? "",
+      images,
+      size: deriveSize(item),
+      engagementScore,
+      createdAt: item.created_at instanceof Date
+        ? item.created_at.getTime()
+        : item.created_at ? new Date(item.created_at).getTime() : dbId,
+      popularityScore: computeProductScore({
+        engagementScore,
+        syncedAt,
+        imageCount: images.length,
+        brandSlug: brandSlug ?? null,
+        price: Number(item.price),
+        title: item.title,
+      }),
+    };
+  });
+
+  // Pre-sort server-side so the initial SSR render is already newest-first
+  products.sort((a, b) => (b.dbId ?? 0) - (a.dbId ?? 0));
+
+  const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
+  const categoryList = displayCategories.map((c) => ({ slug: c.slug, label: c.label }));
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
@@ -26,32 +100,18 @@ export default async function NewArrivalsPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-24">
+      <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          {gridProducts.length === 0 ? (
-            <p className="text-[#5D0F17]/50 text-sm">
-              No new arrivals right now. Check back soon.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-              {gridProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={`${product.store_slug}-${product.id}`}
-                  dbId={product.id}
-                  name={product.title}
-                  price={`$${Math.round(Number(product.price))}`}
-                  category={product.categoryLabel}
-                  storeName={product.store_name}
-                  storeSlug={product.store_slug}
-                  image={product.image || ""}
-                  images={product.images}
-                  size={product.size}
-                  from="new-arrivals"
-                />
-              ))}
-            </div>
-          )}
+          <FilteredProductGrid
+            products={products}
+            stores={storeList}
+            categories={categoryList}
+            showCategoryFilter={true}
+            showBrandFilter={true}
+            showSizeFilter={true}
+            initialFilters={{ sort: "newest" }}
+            emptyMessage="No new arrivals right now. Check back soon."
+          />
         </div>
       </section>
     </main>

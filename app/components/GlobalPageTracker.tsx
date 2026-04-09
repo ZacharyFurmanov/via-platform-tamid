@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -21,6 +21,54 @@ function inferPageType(pathname: string): string {
 export default function GlobalPageTracker() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const utmTracked = useRef(false);
+
+  // Capture UTM params once per session on first load
+  useEffect(() => {
+    if (utmTracked.current) return;
+    if (typeof window === "undefined") return;
+
+    // Check sessionStorage so we only fire once per browser session
+    try {
+      if (sessionStorage.getItem("via_utm_tracked")) return;
+    } catch {}
+
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source");
+    if (!utmSource) return;
+
+    utmTracked.current = true;
+    try {
+      sessionStorage.setItem("via_utm_tracked", "1");
+    } catch {}
+
+    const userId = status === "authenticated"
+      ? ((session?.user as { id?: string } | undefined)?.id ?? null)
+      : null;
+
+    const payload = JSON.stringify({
+      utm_source: utmSource,
+      utm_medium: params.get("utm_medium") ?? undefined,
+      utm_campaign: params.get("utm_campaign") ?? undefined,
+      utm_content: params.get("utm_content") ?? undefined,
+      utm_term: params.get("utm_term") ?? undefined,
+      landing_path: window.location.pathname,
+      user_id: userId,
+    });
+
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon("/api/track-utm", new Blob([payload], { type: "application/json" }));
+    } else {
+      fetch("/api/track-utm", {
+        method: "POST",
+        body: payload,
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+      }).catch(() => {});
+    }
+  // Run once on mount — intentionally no dependencies so it fires exactly once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Wait until session has resolved — never fire with a null user_id

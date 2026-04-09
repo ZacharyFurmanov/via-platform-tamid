@@ -162,15 +162,19 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
 
 /** Returns the set of collection slugs that have at least one product. */
 export async function getActiveCollectionSlugs(): Promise<Set<string>> {
-  const sql = neon(getDatabaseUrl());
-  await initEditorsPicks();
-  const rows = await sql`
-    SELECT DISTINCT ep.collection_slug
-    FROM editors_picks ep
-    JOIN products p ON p.id = ep.product_id
-    WHERE (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-  `;
-  return new Set(rows.map((r) => r.collection_slug as string));
+  try {
+    const sql = neon(getDatabaseUrl());
+    await initEditorsPicks();
+    const rows = await sql`
+      SELECT DISTINCT ep.collection_slug
+      FROM editors_picks ep
+      JOIN products p ON p.id = ep.product_id
+      WHERE (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+    `;
+    return new Set(rows.map((r) => r.collection_slug as string));
+  } catch {
+    return new Set();
+  }
 }
 
 export async function addEditorsPick(productId: number, collectionSlug: string = "editors-picks"): Promise<void> {

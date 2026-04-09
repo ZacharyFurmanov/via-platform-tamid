@@ -166,7 +166,7 @@ export const stores = [
     location: "New York, NY",
     description:
       "Honeybear Vintage comes to you from Morgan Muno and Liz Marino. Just like our friendship (started in Copenhagen, maintained long distance between Oregon and Madrid, and now based in NYC!), our items span decades and occasions, with an emphasis on size variety and quality materials that could live in your closet forever. It's our way of building a place where strangers can become friends in a few hours, where you can find the effortless kindness of bathroom line banter next to the perfect dress for your friend's wedding.",
-    website: "https://honeybearvintagenyc.com",
+    website: "https://honeybearvintagenyc.square.site/",
     dataSource: "honey-bear-vintage",
     image: "/stores/honey-bear-vintage.jpg",
     logo: "/stores/honey-bear-vintage.jpg",

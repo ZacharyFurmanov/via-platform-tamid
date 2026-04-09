@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     let skipped = 0;
 
     for (const candidate of candidates) {
-      const productUrl = `${BASE_URL}/products/${candidate.store_slug}-${candidate.product_id}`;
+      const productUrl = `${BASE_URL}/products/${candidate.store_slug}-${candidate.product_id}?utm_source=email&utm_medium=email&utm_campaign=trending_item`;
 
       try {
         await sendTrendingItemEmail(
