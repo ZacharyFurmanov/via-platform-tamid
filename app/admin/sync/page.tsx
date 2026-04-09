@@ -5,6 +5,7 @@ import {
   SQUARESPACE_STORES,
   SHOPIFY_STORES,
   BIGCARTEL_STORES,
+  SQUARE_STORES,
   ALL_STORES,
   type Store,
 } from "@/app/lib/storeConfig";
@@ -68,8 +69,13 @@ export default function SyncAdminPage() {
             collectionHandles: store.collectionHandles,
           }),
         });
+      } else if (store.type === "square") {
+        response = await fetch("/api/sync-square", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storeSlug: store.slug, locationId: store.locationId }),
+        });
       } else {
-        // Square stores don't have a product sync yet
         return;
       }
 
@@ -226,6 +232,54 @@ export default function SyncAdminPage() {
                             <span style={{ display: "block", color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.details}</span>
                           )}
                         </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Square Stores */}
+        {SQUARE_STORES.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 className="font-serif" style={{ fontSize: 18, color: "#5D0F17", marginBottom: 16 }}>Square Stores</h2>
+            {SQUARE_STORES.map((store) => {
+              const status = statuses[store.slug];
+              const isLoading = status?.loading;
+              const result = status?.result;
+              return (
+                <div key={store.slug} style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <h3 className="font-serif" style={{ fontSize: 17, color: "#5D0F17" }}>{store.name}</h3>
+                        <span style={{ fontSize: 10, padding: "2px 8px", background: "#fef9c3", color: "#854d0e" }}>Square</span>
+                      </div>
+                      {store.locationId && (
+                        <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)" }}>Location: {store.locationId}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleSync(store)}
+                      disabled={isLoading}
+                      style={{ padding: "8px 20px", background: "#5D0F17", color: "#F7F3EA", border: "none", cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 13, whiteSpace: "nowrap" }}
+                    >
+                      {isLoading ? "Syncing..." : "Sync"}
+                    </button>
+                  </div>
+                  {result && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                      {result.success ? (
+                        <div style={{ fontSize: 13 }}>
+                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                            <p style={{ color: "rgba(93,15,23,0.5)", marginTop: 4 }}>{result.skippedCount} skipped</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ color: "#b91c1c", fontSize: 13 }}>{result.error}</p>
                       )}
                     </div>
                   )}
