@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       locationId ?? storeConfig.locationId,
       storeConfig.name,
       websiteUrl,
+      storeConfig.accessTokenEnvVar,
     );
 
     const mapped = rawProducts

@@ -34,6 +34,8 @@ export type SquareStore = {
   slug: string;
   /** Square Location ID (LXXXXXXXXXXXXXXXXX) — used for product catalog sync */
   locationId?: string;
+  /** Name of the env var holding this store's Square access token e.g. SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE */
+  accessTokenEnvVar?: string;
 };
 
 export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore;
@@ -250,6 +252,7 @@ export const SQUARE_STORES: SquareStore[] = [
     name: "Honey Bear Vintage",
     slug: "honey-bear-vintage",
     locationId: "LJ886JKR82R0H",
+    accessTokenEnvVar: "SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE",
   },
 ];
 

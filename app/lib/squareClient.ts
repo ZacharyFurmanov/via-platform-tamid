@@ -19,9 +19,11 @@ export async function fetchSquareProducts(
   locationId: string | undefined,
   storeName: string,
   storeWebsiteUrl: string,
+  accessTokenEnvVar?: string,
 ): Promise<SquareResult> {
-  const accessToken = process.env.SQUARE_ACCESS_TOKEN;
-  if (!accessToken) throw new Error("SQUARE_ACCESS_TOKEN env var not set");
+  const envVar = accessTokenEnvVar ?? "SQUARE_ACCESS_TOKEN";
+  const accessToken = process.env[envVar];
+  if (!accessToken) throw new Error(`${envVar} env var not set`);
 
   const products: SquareProduct[] = [];
   let skippedCount = 0;

@@ -120,6 +120,7 @@ export async function GET(request: Request) {
           store.locationId,
           store.name,
           websiteUrl,
+          store.accessTokenEnvVar,
         );
         const mappedProducts = rawProducts
           .filter((p) => p.price > 0)
