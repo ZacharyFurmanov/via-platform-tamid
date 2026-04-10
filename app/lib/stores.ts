@@ -162,7 +162,7 @@ export const stores = [
   {
     slug: "honey-bear-vintage",
     dashboardToken: "hbv-4e2a8f1c9d7b",
-    name: "Honey Bear Vintage",
+    name: "Honeybear Vintage",
     location: "New York, NY",
     description:
       "Honeybear Vintage comes to you from Morgan Muno and Liz Marino. Just like our friendship (started in Copenhagen, maintained long distance between Oregon and Madrid, and now based in NYC!), our items span decades and occasions, with an emphasis on size variety and quality materials that could live in your closet forever. It's our way of building a place where strangers can become friends in a few hours, where you can find the effortless kindness of bathroom line banter next to the perfect dress for your friend's wedding.",
@@ -174,7 +174,7 @@ export const stores = [
     currency: "USD",
     commissionType: "square-manual" as const,
     authenticityPolicy:
-      "Every piece at Honey Bear Vintage is personally sourced by Morgan and Liz with an emphasis on size variety and quality materials built to last. Each item is carefully inspected and accurately described before listing — so you can find something effortless that lives in your closet forever.",
+      "Every piece at Honeybear Vintage is personally sourced by Morgan and Liz with an emphasis on size variety and quality materials built to last. Each item is carefully inspected and accurately described before listing — so you can find something effortless that lives in your closet forever.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:

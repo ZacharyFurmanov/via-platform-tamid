@@ -249,7 +249,7 @@ export const BIGCARTEL_STORES: BigCartelStore[] = [];
 export const SQUARE_STORES: SquareStore[] = [
   {
     type: "square",
-    name: "Honey Bear Vintage",
+    name: "Honeybear Vintage",
     slug: "honey-bear-vintage",
     locationId: "LJ886JKR82R0H",
     accessTokenEnvVar: "SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE",

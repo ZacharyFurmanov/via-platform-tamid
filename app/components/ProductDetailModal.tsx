@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
+import AddToCollectionButton from "./AddToCollectionButton";
 
 type ProductDetailModalProps = {
   isOpen: boolean;
   onClose: () => void;
   product: {
     id: string;
+    dbId?: number;
     title: string;
     price: number;
     compareAtPrice?: number | null;
@@ -172,6 +174,19 @@ export default function ProductDetailModal({
             You&apos;ll be redirected to {product.store} to complete your
             purchase.
           </p>
+
+          {product.dbId && (
+            <AddToCollectionButton
+              productId={product.dbId}
+              snapshot={{
+                title: product.title,
+                price: product.price,
+                image: product.image,
+                store: product.store,
+                storeSlug: product.storeSlug,
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

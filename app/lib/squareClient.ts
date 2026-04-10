@@ -103,8 +103,13 @@ export async function fetchSquareProducts(
         // Size from variant name
         const size = variantName && variantName.toLowerCase() !== "regular" ? variantName : null;
 
-        // External URL: link to store website (Square doesn't give per-product URLs easily)
-        const externalUrl = storeWebsiteUrl;
+        // Construct Square Online URL: {store}/product/{name-slug}/{item-id}
+        const nameSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        const baseUrl = storeWebsiteUrl.replace(/\/$/, "");
+        const constructedUrl = `${baseUrl}/product/${nameSlug}/${item.id}`;
+        // Only use ecom_uri if it's a real product URL (contains /product/), not a homepage redirect
+        const ecomUri = itemData.ecom_uri;
+        const externalUrl = (ecomUri && ecomUri.includes("/product/")) ? ecomUri : constructedUrl;
 
         products.push({
           title: fullTitle,
@@ -134,6 +139,7 @@ type SquareCatalogObject = {
     description?: string;
     image_ids?: string[];
     variations?: SquareCatalogObject[];
+    ecom_uri?: string;
   };
   item_variation_data?: {
     name?: string;

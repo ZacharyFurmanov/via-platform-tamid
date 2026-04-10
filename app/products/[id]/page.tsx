@@ -18,6 +18,7 @@ import ProductQuestion from "@/app/components/ProductQuestion";
 import ProductAccordion from "@/app/components/ProductAccordion";
 import TrackProductView from "@/app/components/TrackProductView";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
+import AddToCollectionButton from "@/app/components/AddToCollectionButton";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -475,6 +476,17 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 Coming Soon
               </button>
             )}
+
+            <AddToCollectionButton
+              productId={dbId}
+              snapshot={{
+                title: product.title,
+                price: Number(product.price),
+                image: productImages[0] || "",
+                store: store.name,
+                storeSlug: store.slug,
+              }}
+            />
           </div>
         </div>
       </div>

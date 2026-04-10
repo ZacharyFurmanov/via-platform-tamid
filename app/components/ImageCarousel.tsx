@@ -154,6 +154,7 @@ export default function ImageCarousel({
     return (
       <div
         className="relative aspect-[3/4] w-full overflow-hidden group/carousel cursor-grab active:cursor-grabbing"
+        style={{ touchAction: "pan-y" }}
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}
@@ -220,6 +221,7 @@ export default function ImageCarousel({
     <div>
       <div
         className="relative aspect-[2/3] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+        style={{ touchAction: "pan-y" }}
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}

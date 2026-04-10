@@ -195,22 +195,16 @@ export default function FriendsPage() {
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
-      <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
-          <a
-            href="/account"
-            className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
-          >
-            &larr; Account
-          </a>
-          <div className="flex items-center gap-4 mb-1">
-            <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70">My</p>
-            <div className="flex-1 h-px bg-[#5D0F17]/15" />
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-serif text-[#5D0F17]/10 leading-none -mt-2">Friends</h1>
-        </div>
-      </section>
-      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+      <div className="max-w-3xl mx-auto px-6 pt-8 pb-0 border-b border-[#5D0F17]/10">
+        <a
+          href="/account"
+          className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
+        >
+          &larr; Account
+        </a>
+        <h1 className="text-3xl font-serif text-[#5D0F17] mb-6">Friends</h1>
+      </div>
+      <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Find Friends */}
         <section className="mb-12">
           <h2 className="font-serif text-xl mb-4">Find Friends</h2>

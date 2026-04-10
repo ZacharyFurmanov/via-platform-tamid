@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { stores } from "@/app/lib/stores";
 import { brands } from "@/app/lib/brandData";
 import { categoryMap } from "@/app/lib/categoryMap";
+import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -194,7 +195,7 @@ export async function GET(request: Request) {
         FROM products
         WHERE LOWER(title) ~* ${catRegex}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-
+          AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
         ORDER BY created_at DESC NULLS LAST
         LIMIT 50
       `;
@@ -223,7 +224,7 @@ export async function GET(request: Request) {
             WHERE LOWER(title) ~* ${catRegex}
               AND LOWER(title) LIKE ALL(${modLike})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-
+              AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -235,7 +236,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) ~* ${catRegex}
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-  
+                AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -249,7 +250,7 @@ export async function GET(request: Request) {
             FROM products
             WHERE LOWER(title) LIKE ALL(${likePatterns})
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-
+              AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
             ORDER BY created_at DESC NULLS LAST
             LIMIT 50
           `;
@@ -261,7 +262,7 @@ export async function GET(request: Request) {
               FROM products
               WHERE LOWER(title) LIKE ANY(${likePatterns})
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-  
+                AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
               ORDER BY created_at DESC NULLS LAST
               LIMIT 50
             `;
@@ -277,7 +278,7 @@ export async function GET(request: Request) {
           FROM products
           WHERE LOWER(title) LIKE ${pattern}
             AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-  
+            AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST
