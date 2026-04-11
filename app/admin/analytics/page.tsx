@@ -22,6 +22,8 @@ type KPIs = {
   newSignupsThisWeek: number;
   collabsTotalOrders?: number;
   collabsEstimatedRevenue?: number;
+  collabsTotalCommission?: number;
+  totalCommission?: number;
 };
 
 type ConversionRow = {
@@ -376,6 +378,12 @@ export default function DeepAnalyticsPage() {
                 value={formatRevenue(data.kpis.totalRevenue)}
                 sub={data.kpis.collabsEstimatedRevenue ? `~${formatRevenue(data.kpis.collabsEstimatedRevenue)} est. from Collabs` : undefined}
                 href="/admin/key-metrics"
+              />
+              <StatCard
+                label="Total Commission"
+                value={data.kpis.totalCommission ? formatRevenue(data.kpis.totalCommission) : "—"}
+                sub="across all stores (7/5/3% tiers)"
+                href="/admin/conversions"
               />
             </div>
 

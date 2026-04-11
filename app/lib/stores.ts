@@ -288,7 +288,7 @@ export const stores = [
     affiliatePath: "VIA2026",
     collabsStoreId: "230654",
     authenticityPolicy:
-      "All bags are 100% authentic. Each purchase includes a Certificate of Authenticity, and every item is hand-picked and personally curated before listing.",
+      "All items are 100% authentic. Each purchase includes a Certificate of Authenticity, and every item is hand-picked and personally curated before listing.",
     shippingPolicy:
       "Ships from Houston, TX. Shipping rates are calculated at checkout.",
     returnPolicy:

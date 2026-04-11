@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       kpiRevenueResult,
       kpiCustomersResult,
       kpiSignupsResult,
+      kpiCommissionResult,
       topClicksResult,
       topViewsResult,
       topStoresResult,
@@ -113,6 +114,11 @@ export async function GET(request: NextRequest) {
               SELECT email FROM waitlist
             ) AS combined
           `,
+
+      // totalCommission — tiered commission on all conversions
+      cutoffIso
+        ? sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0 AND timestamp >= ${cutoffIso}`
+        : sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0`,
 
       // topProductsByClicks
       cutoffIso
@@ -472,6 +478,7 @@ export async function GET(request: NextRequest) {
     // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
     let collabsTotalOrders = 0;
     let collabsEstimatedRevenue = 0;
+    let collabsTotalCommission = 0;
     try {
       const rawCollabs = collabsDataResult[0]?.value as string | undefined;
       if (rawCollabs) {
@@ -483,6 +490,7 @@ export async function GET(request: NextRequest) {
           collabsTotalOrders += p.totalOrders ?? 0;
           const commissionNum = parseFloat((p.totalCommissionEarned ?? "").replace(/[^0-9.]/g, ""));
           if (!isNaN(commissionNum) && commissionNum > 0) {
+            collabsTotalCommission += commissionNum;
             collabsEstimatedRevenue += commissionNum / 0.07;
           }
         }
@@ -504,6 +512,8 @@ export async function GET(request: NextRequest) {
       newSignupsThisWeek: (kpiSignupsResult[0]?.total as number) ?? 0,
       collabsTotalOrders,
       collabsEstimatedRevenue: Math.round(collabsEstimatedRevenue * 100) / 100,
+      collabsTotalCommission: Math.round(collabsTotalCommission * 100) / 100,
+      totalCommission: Math.round(((kpiCommissionResult[0]?.commission as number) ?? 0) * 100) / 100,
     };
 
     const invS = inventorySummaryResult[0];

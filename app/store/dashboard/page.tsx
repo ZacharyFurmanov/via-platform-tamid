@@ -528,7 +528,8 @@ export default function StoreDashboardPage() {
 
           {analytics ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              <div className="flex gap-6 items-start mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
                 <div className="bg-white p-6 shadow-sm text-center">
                   <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
                     {(analytics.totalViews ?? 0).toLocaleString()}
@@ -569,6 +570,24 @@ export default function StoreDashboardPage() {
                 </div>
               </div>
 
+              {/* Top Searches — sits to the right of the stats grid */}
+              {analytics.topSearches && analytics.topSearches.length > 0 && (
+                <div className="bg-white shadow-sm shrink-0">
+                  <div className="px-4 py-2 border-b" style={{ borderColor: "#F7F3EA" }}>
+                    <span className="text-xs uppercase tracking-wide" style={{ color: "rgba(93,15,23,0.5)" }}>Top Searches on VYA</span>
+                  </div>
+                  <div className="px-4 py-2 flex flex-col gap-1.5">
+                    {analytics.topSearches.map((search, i) => (
+                      <div key={i} className="flex items-center justify-between gap-8">
+                        <span className="text-sm" style={{ color: "#5D0F17" }}>{search.query}</span>
+                        <span className="text-sm" style={{ color: "rgba(93,15,23,0.4)" }}>{search.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>{/* end flex row */}
+
               {analytics.topProducts.length > 0 && (
                 <div className="bg-white shadow-sm">
                   <div
@@ -601,40 +620,6 @@ export default function StoreDashboardPage() {
                 </div>
               )}
 
-              {analytics.topSearches && analytics.topSearches.length > 0 && (
-                <div className="bg-white shadow-sm">
-                  <div
-                    className="px-5 py-3 border-b text-xs uppercase tracking-wide"
-                    style={{ color: "rgba(93,15,23,0.5)", borderColor: "#F7F3EA" }}
-                  >
-                    Top Searches on VYA
-                  </div>
-                  <p className="px-5 pt-3 pb-1 text-xs" style={{ color: "rgba(93,15,23,0.4)" }}>
-                    What shoppers are searching for across all of VYA — useful for sourcing decisions.
-                  </p>
-                  <table className="w-full">
-                    <tbody>
-                      {analytics.topSearches.map((search, i) => (
-                        <tr
-                          key={i}
-                          className="border-b last:border-0"
-                          style={{ borderColor: "#F7F3EA" }}
-                        >
-                          <td className="px-5 py-3 text-sm" style={{ color: "#5D0F17" }}>
-                            {search.query}
-                          </td>
-                          <td
-                            className="px-5 py-3 text-sm text-right"
-                            style={{ color: "rgba(93,15,23,0.5)" }}
-                          >
-                            {search.count} search{search.count !== 1 ? "es" : ""}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </>
           ) : (
             <p className="text-sm" style={{ color: "rgba(93,15,23,0.5)" }}>

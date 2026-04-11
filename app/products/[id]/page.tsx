@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getProductById, getRecommendedProducts } from "@/app/lib/db";
+import { getProductById, getRecommendedProducts, getProductsByTitleKeyword } from "@/app/lib/db";
 import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
 import BackButton from "@/app/components/BackButton";
 import { deriveSize } from "@/app/lib/inventory";
-import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
+import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, inferBrandFromTitle, inferBrandKeywordFromTitle, inferItemTypeKeyword } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
 import AddToCartButton from "@/app/components/AddToCartButton";
@@ -76,20 +76,34 @@ function isMeasurementLine(text: string): boolean {
   return false;
 }
 
+// Labels that signal a condition line
+const CONDITION_LABEL_RE = /^(overall|condition|upper|lower|interior|exterior|hardware|sole|heel|lining|strap|clasp|zipper|buckle|toe|cap|front|back|handles?|base|corners?|bottom|sides?|edges?)\s*:/i;
+// Keywords anywhere in the line that signal condition content
+const CONDITION_KEYWORD_RE = /\b(condition|preowned|pre-?owned|pre-?loved|wear|worn|scuff|scratch|fad(ing)?|missing|intact|snag|fray|crack|patina|stain|mark|repair|restor|damag|chip|tear|peel|rub|soil|discolor|yellowing|tarnish|oxidiz|light use|gently used|like new|mint|NWT|NWOT|EUC|VGUC|GUC)\b/i;
+// Section headers that signal a condition block
+const CONDITION_HEADERS = /^condition[:\s]*$/i;
+
+/** Returns true if a plain-text line is primarily about item condition */
+function isConditionLine(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (CONDITION_LABEL_RE.test(t)) return true;
+  if (t.startsWith("*")) return true; // asterisk notes are typically condition caveats
+  if (CONDITION_KEYWORD_RE.test(t)) return true;
+  return false;
+}
+
 /**
- * Splits description HTML into product details and sizing/measurements.
- * Handles both <li>-based and <p>-based descriptions, including section-header
- * style descriptions (e.g. "MEASUREMENTS:\n\nBust: ~16" flat\n\n...").
+ * Splits description HTML into product details, sizing/measurements, and condition.
+ * Each bucket is mutually exclusive — a line goes into exactly one.
  */
-function splitDescriptionBySizing(html: string | null): {
+function splitDescription(html: string | null): {
   detailsHtml: string | null;
   sizingItems: string[];
+  conditionItems: string[];
 } {
-  if (!html) return { detailsHtml: null, sizingItems: [] };
+  if (!html) return { detailsHtml: null, sizingItems: [], conditionItems: [] };
 
-  // Normalize <div> tags to <p> so stores that use <div> per bullet
-  // (e.g. West Village Vintage) are handled the same as <p>-based descriptions.
-  // Strip empty spacer tags (<h6>, <h5>, etc.) used as line breaks.
   html = html
     .replace(/<div([^>]*)>/gi, "<p$1>")
     .replace(/<\/div>/gi, "</p>")
@@ -97,6 +111,7 @@ function splitDescriptionBySizing(html: string | null): {
 
   const detailItems: string[] = [];
   const sizingItems: string[] = [];
+  const conditionItems: string[] = [];
 
   // --- Strategy 1: <li>-based descriptions ---
   const liPattern = /<li[^>]*>([\s\S]*?)<\/li>/gi;
@@ -109,6 +124,8 @@ function splitDescriptionBySizing(html: string | null): {
     const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
     if (isMeasurementLine(plain)) {
       sizingItems.push(plain);
+    } else if (isConditionLine(plain)) {
+      conditionItems.push(plain);
     } else {
       detailItems.push(`<li>${inner}</li>`);
     }
@@ -116,15 +133,13 @@ function splitDescriptionBySizing(html: string | null): {
 
   if (hasLiTags) {
     const detailsHtml = detailItems.length > 0 ? `<ul>${detailItems.join("")}</ul>` : null;
-    return { detailsHtml, sizingItems };
+    return { detailsHtml, sizingItems, conditionItems };
   }
 
-  // --- Strategy 2: <p>-based descriptions, with section-header awareness ---
-  // First expand any <br>-separated content within <p> tags into individual virtual paragraphs
+  // --- Strategy 2: <p>-based descriptions ---
   const expandedHtml = html.replace(
     /<p([^>]*)>([\s\S]*?)<\/p>/gi,
     (_, attrs, inner) => {
-      // Split on <br> variants and emit each non-empty chunk as its own <p>
       const lines = inner.split(/<br\s*\/?>/i).map((l: string) => l.trim()).filter(Boolean);
       if (lines.length <= 1) return `<p${attrs}>${inner}</p>`;
       return lines.map((l: string) => `<p${attrs}>${l}</p>`).join("");
@@ -139,40 +154,34 @@ function splitDescriptionBySizing(html: string | null): {
     paragraphs.push({ inner, plain });
   }
 
-  if (paragraphs.length === 0) return { detailsHtml: html, sizingItems: [] };
+  if (paragraphs.length === 0) return { detailsHtml: html, sizingItems: [], conditionItems: [] };
 
-  // Two-pass: first detect if there's an explicit MEASUREMENTS: section header
   let inMeasurementsSection = false;
+  let inConditionSection = false;
   const remaining: string[] = [];
 
   for (const { inner, plain } of paragraphs) {
-    if (MEASUREMENT_HEADERS.test(plain)) {
-      // This paragraph IS the "MEASUREMENTS:" header — skip it, enter section mode
-      inMeasurementsSection = true;
-      continue;
-    }
+    if (MEASUREMENT_HEADERS.test(plain)) { inMeasurementsSection = true; inConditionSection = false; continue; }
+    if (CONDITION_HEADERS.test(plain)) { inConditionSection = true; inMeasurementsSection = false; continue; }
 
     if (inMeasurementsSection) {
-      // A new all-caps section header ends the measurements block
-      if (SECTION_HEADER_RE.test(plain)) {
-        inMeasurementsSection = false;
-        remaining.push(`<p>${inner}</p>`);
-      } else if (plain) {
-        sizingItems.push(plain);
-      }
+      if (SECTION_HEADER_RE.test(plain)) { inMeasurementsSection = false; remaining.push(`<p>${inner}</p>`); }
+      else if (plain) sizingItems.push(plain);
+      continue;
+    }
+    if (inConditionSection) {
+      if (SECTION_HEADER_RE.test(plain)) { inConditionSection = false; remaining.push(`<p>${inner}</p>`); }
+      else if (plain) conditionItems.push(plain);
       continue;
     }
 
-    // Not in a measurements section — check line-by-line
-    if (isMeasurementLine(plain)) {
-      sizingItems.push(plain);
-    } else {
-      remaining.push(`<p>${inner}</p>`);
-    }
+    if (isMeasurementLine(plain)) sizingItems.push(plain);
+    else if (isConditionLine(plain)) conditionItems.push(plain);
+    else remaining.push(`<p>${inner}</p>`);
   }
 
   const detailsHtml = remaining.length > 0 ? remaining.join("") : null;
-  return { detailsHtml, sizingItems };
+  return { detailsHtml, sizingItems, conditionItems };
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
@@ -195,7 +204,6 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: product.title,
       description,
-      images: image ? [{ url: image, width: 1200, height: 1200, alt: product.title }] : [],
       url: `${BASE_URL}/products/${compositeId}`,
       type: "website",
     },
@@ -203,7 +211,6 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       card: "summary_large_image",
       title: product.title,
       description,
-      images: image ? [image] : [],
     },
   };
 }
@@ -220,14 +227,70 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const dbId = parseInt(match[2], 10);
   if (isNaN(dbId)) return notFound();
 
-  // Run all three DB queries in parallel to minimize load time
-  const [product, favoriteCount, cartCount, allCandidates] = await Promise.all([
-    getProductById(dbId),
+  // Fetch product first so we can build a smarter recommendation pool
+  const product = await getProductById(dbId);
+  if (!product) return notFound();
+
+  const currentBrand = inferBrandFromTitle(product.title);
+  const currentBrandKeyword = inferBrandKeywordFromTitle(product.title);
+  const currentItemType = inferItemTypeFromTitle(product.title);
+  const currentItemTypeKeyword = inferItemTypeKeyword(product.title);
+  const currentColor = inferColorFromTitle(product.title);
+  const currentCategorySlug = inferCategoryFromTitle(product.title);
+
+  // Build recommendation pool from three sources:
+  // 1. Brand-keyword pool — fetches items whose title contains the brand name (e.g. "dolce & gabbana")
+  // 2. Item-type pool — fetches items whose title contains the item type word (e.g. "top", "ballet flat")
+  // 3. Random fallback for variety
+  const [favoriteCount, cartCount, brandCandidates, itemTypeCandidates, randomCandidates] = await Promise.all([
     getProductFavoriteCount(dbId).catch(() => 0),
     getProductCartCount(dbId).catch(() => 0),
-    getRecommendedProducts(dbId, 50).catch(() => []),
+    currentBrandKeyword
+      ? getProductsByTitleKeyword(currentBrandKeyword, dbId, 40).catch(() => [])
+      : Promise.resolve([]),
+    currentItemTypeKeyword
+      ? getProductsByTitleKeyword(currentItemTypeKeyword, dbId, 40).catch(() => [])
+      : Promise.resolve([]),
+    getRecommendedProducts(dbId, 60).catch(() => []),
   ]);
-  if (!product) return notFound();
+
+  // Merge all pools, dedup by id
+  const seen = new Set<number>();
+  const allCandidates = [...brandCandidates, ...itemTypeCandidates, ...randomCandidates].filter((p) => {
+    if (p.id === dbId || seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+
+  // Score each candidate:
+  //   same category + same brand + same item type = 10 pts (perfect match)
+  //   same category + same brand                 = 8 pts
+  //   same category + same item type             = 7 pts
+  //   same brand + same item type                = 5 pts
+  //   same category only                         = 5 pts
+  //   same brand only                            = 3 pts
+  //   same item type only                        = 2 pts
+  //   same color                                 = 1 pt tiebreaker
+  const scored = allCandidates.map((p) => {
+    const pCategory = inferCategoryFromTitle(p.title);
+    const pBrand = inferBrandFromTitle(p.title);
+    const pItemType = inferItemTypeFromTitle(p.title);
+    const pColor = inferColorFromTitle(p.title);
+    let score = 0;
+    if (pCategory === currentCategorySlug) score += 5;
+    if (currentBrand && pBrand === currentBrand) score += 3;
+    if (currentItemType && pItemType === currentItemType) score += 2;
+    if (currentColor && pColor === currentColor) score += 1;
+    return { product: p, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  // If there are at least 4 same-category candidates, only show same-category results.
+  // This prevents a bag or earrings from appearing when viewing a top or dress.
+  const sameCategoryScored = scored.filter((s) => inferCategoryFromTitle(s.product.title) === currentCategorySlug);
+  const finalPool = sameCategoryScored.length >= 4 ? sameCategoryScored : scored;
+  const recommendations = finalPool.slice(0, 4).map((s) => s.product);
 
   const storeConfig = stores.find((s) => s.slug === storeSlug);
   const store = storeConfig ?? {
@@ -236,7 +299,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     location: "",
   };
 
-  const categorySlug = inferCategoryFromTitle(product.title);
+  const categorySlug = currentCategorySlug;
   const categoryLabel = categoryMap[categorySlug];
   const price = `$${Math.round(Number(product.price))}`;
 
@@ -265,22 +328,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1`;
     } catch {}
   }
-  const { detailsHtml, sizingItems } = splitDescriptionBySizing(product.description);
-
-  const currentItemType = inferItemTypeFromTitle(product.title);
-  const currentColor = inferColorFromTitle(product.title);
-  const currentBrand = inferBrandFromTitle(product.title);
-
-  const scored = allCandidates.map((p) => {
-    let score = 0;
-    if (currentItemType && inferItemTypeFromTitle(p.title) === currentItemType) score += 4;
-    if (currentColor && inferColorFromTitle(p.title) === currentColor) score += 2;
-    if (currentBrand && inferBrandFromTitle(p.title) === currentBrand) score += 1;
-    return { product: p, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  const recommendations = scored.slice(0, 4).map((s) => s.product);
+  const { detailsHtml, sizingItems, conditionItems } = splitDescription(product.description);
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen">
@@ -359,12 +407,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                         className="product-description prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_strong]:text-black [&_h1]:text-lg [&_h1]:font-serif [&_h2]:text-base [&_h2]:font-serif [&_h3]:text-sm [&_h3]:font-medium [&_br]:block"
                         dangerouslySetInnerHTML={{ __html: detailsHtml }}
                       />
-                    ) : sizingItems.length > 0 ? (
-                      <ul className="list-disc pl-5 space-y-1">
-                        {sizingItems.map((item, i) => (
-                          <li key={i}>{item}</li>
-                        ))}
-                      </ul>
                     ) : (
                       <p>{product.title}</p>
                     ),
@@ -399,6 +441,20 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                           </p>
                         )}
                       </div>
+                    ),
+                  },
+                  {
+                    title: "Condition",
+                    content: conditionItems.length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1">
+                        {conditionItems.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-black/60 italic">
+                        Condition not described — please refer to the photos listed.
+                      </p>
                     ),
                   },
                   {

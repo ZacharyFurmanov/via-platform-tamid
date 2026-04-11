@@ -20,8 +20,40 @@ type ProductDetailModalProps = {
     externalUrl?: string;
     image: string;
     images?: string[];
+    description?: string | null;
+    size?: string | null;
   } | null;
 };
+
+function extractConditionFromDescription(description: string | null | undefined): string | null {
+  if (!description) return null;
+  const plain = description
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#\d]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const labelMatch = plain.match(/condition\s*[:\-–]\s*([^.\n,;]{3,80})/i);
+  if (labelMatch) return labelMatch[1].trim();
+
+  const abbreviations: Record<string, string> = {
+    NWT: "New with tags", NWOT: "New without tags",
+    EUC: "Excellent used condition", VGUC: "Very good used condition", GUC: "Good used condition",
+  };
+  for (const [abbr, full] of Object.entries(abbreviations)) {
+    if (new RegExp(`(?:^|\\s)${abbr}(?:\\s|$|[.,;])`, "i").test(plain)) return full;
+  }
+
+  const sentences = plain.split(/(?<=[.!?\n])\s+|[\n]/);
+  for (const sentence of sentences) {
+    const s = sentence.trim();
+    if (!s || s.length > 150) continue;
+    if (/\b(?:condition|pre-?owned|pre-?loved|gently used|like new|mint|new with tags|new without tags|light wear|some wear|signs of wear|well loved|worn)\b/i.test(s)) {
+      return s;
+    }
+  }
+  return null;
+}
 
 export default function ProductDetailModal({
   isOpen,
@@ -139,6 +171,21 @@ export default function ProductDetailModal({
           </h2>
 
           <p className="text-sm text-[#5D0F17]/60 mb-1">{product.categoryLabel}</p>
+
+          {product.size && (
+            <p className="text-sm text-[#5D0F17]/70 mb-0.5">
+              Size: <span className="font-medium">{product.size}</span>
+            </p>
+          )}
+
+          <p className="text-sm text-[#5D0F17]/70 mb-3">
+            Condition:{" "}
+            {extractConditionFromDescription(product.description) ? (
+              <span className="font-medium">{extractConditionFromDescription(product.description)}</span>
+            ) : (
+              <span className="italic text-[#5D0F17]/50">not described — please refer to the photos listed</span>
+            )}
+          </p>
 
           <div className="flex items-baseline gap-3 mb-6">
             <p className="text-xl font-medium text-[#5D0F17]">

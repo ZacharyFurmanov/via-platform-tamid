@@ -366,6 +366,33 @@ export async function getRecommendedProducts(
 }
 
 /**
+ * Get products matching a title keyword (brand name, item type, etc.)
+ * Used to seed the recommendation pool with contextually relevant items.
+ */
+export async function getProductsByTitleKeyword(
+  keyword: string,
+  excludeId: number,
+  limit: number = 40
+): Promise<DBProduct[]> {
+  const sql = neon(getDatabaseUrl());
+  const pattern = `%${keyword}%`;
+  const result = await sql`
+    SELECT * FROM products
+    WHERE id != ${excludeId}
+      AND title ILIKE ${pattern}
+      AND (
+        shopify_product_id IS NULL
+        OR collabs_link IS NOT NULL
+      )
+      AND title NOT ILIKE '%gift card%'
+      AND image IS NOT NULL AND image != ''
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
+    LIMIT ${limit}
+  `;
+  return result as DBProduct[];
+}
+
+/**
  * Get recently added products (new arrivals).
  * maxPerStore caps results per store for diversity (use 2 for homepage carousel, large number for full page).
  */

@@ -2,6 +2,7 @@ import type { StoreProduct } from "./types";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
+import { deriveSize } from "./inventory";
 
 // Keyword → category mapping, checked in order.
 // Rule: specific garment-type keywords (skirt, dress, shorts) are checked
@@ -24,6 +25,8 @@ const categoryKeywords: [CategorySlug, string[]][] = [
     "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford",
     "derby", "brogue", "trainer", "slide", "slingback",
     "mary jane", "moccasin",
+    "ballet flat", "ballerina flat", "ballet flats",
+    "flat shoe", "flat boot",
     "blahnik", "louboutin", "stuart weitzman", "roger vivier",
   ]],
   ["bags", [
@@ -138,10 +141,28 @@ export const inferCategoryFromTitle = (title: string | null | undefined): Catego
 export const inferItemTypeFromTitle = (title: string): string | null => {
   const t = title.toLowerCase();
   const types = [
-    "jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers",
-    "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit",
-    "jumpsuit", "romper", "shorts", "cape", "poncho", "boot", "heel",
-    "sandal", "sneaker", "bag", "clutch", "tote", "top",
+    // Shoes — checked before generic clothing words
+    "ballet flat", "ballet flats", "ballerina flat",
+    "loafer", "mule", "clog", "slingback", "mary jane", "moccasin",
+    "boot", "bootie", "heel", "pump", "sandal", "sneaker", "trainer",
+    "espadrille", "wedge", "oxford", "derby", "brogue", "slide",
+    "flat", // generic flat (after "ballet flat")
+    // Bags
+    "clutch", "tote", "handbag", "crossbody", "satchel", "baguette",
+    "bucket bag", "shoulder bag",
+    "bag",
+    // Clothing
+    "jacket", "coat", "blazer", "trench", "puffer", "bomber",
+    "dress", "gown",
+    "skirt",
+    "shorts",
+    "jumpsuit", "romper",
+    "pants", "trousers", "jeans",
+    "blouse", "shirt", "top", "tee",
+    "sweater", "cardigan", "knit",
+    "vest", "suit",
+    "cape", "poncho",
+    "scarf", "belt",
   ];
   for (const type of types) {
     if (t.includes(type)) return type;
@@ -177,6 +198,42 @@ export const inferBrandFromTitle = (title: string): string | null => {
   return null;
 };
 
+/**
+ * Like inferBrandFromTitle but returns the first matched keyword string
+ * (e.g. "dolce & gabbana", "chanel") — suitable for SQL ILIKE searches.
+ */
+export const inferBrandKeywordFromTitle = (title: string): string | null => {
+  const t = title.toLowerCase();
+  for (const brand of brandDefs) {
+    for (const keyword of brand.keywords) {
+      const matches =
+        keyword.length <= 3
+          ? new RegExp(`(?<![a-z])${keyword}(?![a-z])`).test(t)
+          : t.includes(keyword);
+      if (matches) return keyword;
+    }
+  }
+  return null;
+};
+
+/**
+ * Returns the primary item-type keyword to use for SQL ILIKE title search.
+ * Normalizes compound types to their most searchable single word.
+ */
+export const inferItemTypeKeyword = (title: string): string | null => {
+  const type = inferItemTypeFromTitle(title);
+  if (!type) return null;
+  // Normalize compound types to the most distinctive word
+  const normMap: Record<string, string> = {
+    "ballet flat": "ballet flat",
+    "ballet flats": "ballet flat",
+    "ballerina flat": "ballet flat",
+    "bucket bag": "bucket bag",
+    "shoulder bag": "shoulder bag",
+  };
+  return normMap[type] ?? type.split(" ")[0]; // first word is usually searchable
+};
+
 // Parse images JSON from DB, falling back to single image
 function parseImages(product: DBProduct): string[] {
   if (product.images) {
@@ -201,7 +258,7 @@ function transformDBProduct(product: DBProduct): StoreProduct {
     externalUrl: product.external_url ?? undefined,
     image: product.image ?? undefined,
     images: parseImages(product),
-    size: product.size ?? null,
+    size: deriveSize(product),
     syncedAt: product.synced_at instanceof Date
       ? product.synced_at.toISOString()
       : String(product.synced_at),
