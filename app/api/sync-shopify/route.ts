@@ -7,7 +7,7 @@ import {
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertToUSD } from "@/app/lib/stores";
+import { convertCurrencyToUSD } from "@/app/lib/stores";
 import { ALL_STORES } from "@/app/lib/storeConfig";
 
 export async function POST(request: NextRequest) {
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
       .map((p) => ({
         title: p.title,
-        price: convertToUSD(p.price as number, storeSlug),
+        price: convertCurrencyToUSD(p.price as number, p.currency),
         currency: "USD",
         image: p.image ?? undefined,
         images: p.images,

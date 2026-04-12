@@ -12,7 +12,7 @@ import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
 import { stores } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertToUSD } from "@/app/lib/stores";
+import { convertCurrencyToUSD } from "@/app/lib/stores";
 
 export async function GET(request: Request) {
   console.log("[Sync Stores] Cron job triggered");
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
           .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
           .map((p) => ({
             title: p.title,
-            price: convertToUSD(p.price as number, storeSlug),
+            price: convertCurrencyToUSD(p.price as number, p.currency),
             currency: "USD",
             image: p.image ?? undefined,
             images: p.images,

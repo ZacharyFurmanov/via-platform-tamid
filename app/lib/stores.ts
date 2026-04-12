@@ -838,13 +838,21 @@ const exchangeRatesToUSD: Record<string, number> = {
 };
 
 /**
- * Convert a price to USD based on the store's currency.
- * Uses the store slug to determine the source currency.
+ * Convert a price to USD given an explicit currency code (e.g. "CAD", "GBP").
+ * Preferred over convertToUSD when the actual currency is available from the API.
+ */
+export function convertCurrencyToUSD(price: number, currency: string): number {
+  if (!currency || currency === "USD") return price;
+  const rate = exchangeRatesToUSD[currency] ?? 1;
+  return Math.ceil(price * rate);
+}
+
+/**
+ * Convert a price to USD based on the store's currency config.
+ * Falls back to the store's configured currency if no API currency is available.
  */
 export function convertToUSD(price: number, storeSlug: string): number {
   const store = stores.find((s) => s.slug === storeSlug);
   const currency = store?.currency ?? "USD";
-  if (currency === "USD") return price;
-  const rate = exchangeRatesToUSD[currency] ?? 1;
-  return Math.ceil(price * rate);
+  return convertCurrencyToUSD(price, currency);
 }
