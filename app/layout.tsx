@@ -17,16 +17,16 @@ import { Analytics } from "@vercel/analytics/next";
 import FirebaseAnalyticsProvider from "./components/FirebaseAnalyticsProvider";
 
 export const metadata: Metadata = {
-  title: "VYA — Vintage & Secondhand Platform",
-  description: "Discover the best independent vintage and secondhand stores worldwide. Shop curated clothing, bags, shoes, and accessories from trusted stores on VYA.",
+  title: "VYA — The world's best vintage, all in one place.",
+  description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of. All trusted and verified stores.",
   keywords: ["vintage", "secondhand", "vintage clothing", "vintage platform", "independent vintage stores", "VYA platform", "designer vintage", "pre-loved fashion"],
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
   },
   openGraph: {
-    title: "VYA — Vintage & Secondhand Platform",
-    description: "Discover the best independent vintage and secondhand stores worldwide. Shop curated clothing, bags, shoes, and accessories from trusted stores.",
+    title: "The world's best vintage, all in one place.",
+    description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of. All trusted and verified stores.",
     url: "https://vyaplatform.com",
     siteName: "VYA",
     images: [
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "VYA — Vintage & Secondhand Platform",
-    description: "Discover the best independent vintage and secondhand stores worldwide.",
+    title: "The world's best vintage, all in one place.",
+    description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of.",
     images: ["https://vyaplatform.com/og-image.png"],
   },
   other: {
