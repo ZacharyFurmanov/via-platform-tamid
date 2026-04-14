@@ -22,15 +22,19 @@ async function scrapeProductPageSections(url: string): Promise<string> {
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return "";
-    const html = await res.text();
+    let html = await res.text();
 
-    // Match <h2>...</h2> followed (within 500 chars) by <p>...</p>
-    const sectionRe = /<h2[^>]*>([\s\S]*?)<\/h2>[\s\S]{0,500}?<p[^>]*>([\s\S]*?)<\/p>/gi;
+    // Strip script/style/noscript blocks first to avoid matching JSON-LD or embedded JS
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+    html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
+    html = html.replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+
+    // Match <h2> followed closely (within 200 chars) by <p>
+    const sectionRe = /<h2[^>]*>([\s\S]*?)<\/h2>[\s\S]{0,200}?<p[^>]*>([\s\S]*?)<\/p>/gi;
     let match;
     const sections: string[] = [];
 
     while ((match = sectionRe.exec(html)) !== null) {
-      // Strip HTML tags and non-ASCII (emojis) from heading
       const heading = match[1]
         .replace(/<[^>]+>/g, "")
         .replace(/[^\x00-\x7F]/g, "")
@@ -42,8 +46,9 @@ async function scrapeProductPageSections(url: string): Promise<string> {
         .trim();
 
       if (!heading || !content) continue;
+      // Skip anything that looks like JSON or is suspiciously long
+      if (content.startsWith("{") || content.startsWith("[") || content.length > 300) continue;
 
-      // Only include product-relevant sections
       const h = heading.toLowerCase();
       if (
         h.includes("condition") ||
@@ -53,7 +58,6 @@ async function scrapeProductPageSections(url: string): Promise<string> {
         h.includes("include") ||
         h.includes("detail")
       ) {
-        // Format as "Heading: content" so splitDescription can parse it
         sections.push(`<p>${heading}: ${content}</p>`);
       }
     }
