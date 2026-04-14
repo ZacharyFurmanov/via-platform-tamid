@@ -691,6 +691,63 @@ export async function sendNewArrivalsEmail(
   return { sent, failed };
 }
 
+/**
+ * Re-engagement email for approved users who have never logged in.
+ * Subject: Great finds are waiting for you
+ */
+export async function sendReengagementEmail(
+  emails: { email: string; firstName: string | null }[]
+): Promise<{ sent: number; failed: number }> {
+  const resend = getResend();
+  let sent = 0;
+  let failed = 0;
+
+  const shopUrl = `${BASE_URL}/browse`;
+
+  const content = `
+    <h1 style="font-size:26px;font-weight:400;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+       margin:0 0 20px;line-height:1.3;">Great finds are waiting for you.</h1>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 16px;">
+      You&rsquo;ve been approved to shop VYA &mdash; the curated vintage &amp; secondhand platform where every piece is one-of-a-kind.
+    </p>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 32px;">
+      Whether you&rsquo;re looking for a chic ballet flat, a designer shoulder bag, or that rare find you&rsquo;ve been hunting &mdash;
+      it&rsquo;s all here. Once it&rsquo;s gone, it&rsquo;s gone for good.
+    </p>
+    <div style="text-align:center;margin-bottom:40px;">
+      <a href="${shopUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 40px;
+                text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Sign In &amp; Start Shopping</a>
+    </div>
+    <p style="font-size:13px;color:rgba(93,15,23,0.55);font-family:Georgia,'Times New Roman',serif;
+       line-height:1.75;margin:0;">
+      New pieces drop weekly from our network of curated vintage stores.
+    </p>
+  `;
+
+  for (const { email, firstName } of emails) {
+    const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const greeting = firstName ? firstName.trim() : null;
+    const subtitle = greeting ? `Hi ${greeting} — welcome to VYA` : "Welcome to VYA";
+    const html = viaShell(subtitle, content, unsubUrl);
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "Great finds are waiting for you — VYA",
+        html,
+      });
+      sent++;
+      await new Promise((r) => setTimeout(r, 100));
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
+
 export type SourcingEmailDetails = {
   userEmail: string;
   userName: string | null;

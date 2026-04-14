@@ -7,7 +7,7 @@ import {
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertCurrencyToUSD } from "@/app/lib/stores";
+import { convertCurrencyToUSD, stores } from "@/app/lib/stores";
 import { ALL_STORES } from "@/app/lib/storeConfig";
 
 /**
@@ -22,43 +22,35 @@ async function scrapeProductPageSections(url: string): Promise<string> {
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return "";
-    let html = await res.text();
+    const html = await res.text();
 
-    // Strip script/style/noscript blocks first to avoid matching JSON-LD or embedded JS
-    html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-    html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
-    html = html.replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+    // Convert to plain text — strip scripts/styles then all tags
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
-    // Match <h2> followed closely (within 200 chars) by <p>
-    const sectionRe = /<h2[^>]*>([\s\S]*?)<\/h2>[\s\S]{0,200}?<p[^>]*>([\s\S]*?)<\/p>/gi;
-    let match;
     const sections: string[] = [];
+    // Boundary: the next recognizable section heading stops the capture
+    const nextSection = "\\s+(?:Condition|Dimensions?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe)";
 
-    while ((match = sectionRe.exec(html)) !== null) {
-      const heading = match[1]
-        .replace(/<[^>]+>/g, "")
-        .replace(/[^\x00-\x7F]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-      const content = match[2]
-        .replace(/<[^>]+>/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
+    // Extract "Dimensions [value]"
+    const dimResult = new RegExp(`\\bDimensions?\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
+    if (dimResult) {
+      const val = dimResult[1].trim();
+      if (val.length >= 3 && val.length <= 200) {
+        sections.push(`<p>Dimensions: ${val}</p>`);
+      }
+    }
 
-      if (!heading || !content) continue;
-      // Skip anything that looks like JSON or is suspiciously long
-      if (content.startsWith("{") || content.startsWith("[") || content.length > 300) continue;
-
-      const h = heading.toLowerCase();
-      if (
-        h.includes("condition") ||
-        h.includes("dimension") ||
-        h.includes("material") ||
-        h.includes("hardware") ||
-        h.includes("include") ||
-        h.includes("detail")
-      ) {
-        sections.push(`<p>${heading}: ${content}</p>`);
+    // Extract "Condition [value]"
+    const condResult = new RegExp(`\\bCondition\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
+    if (condResult) {
+      const val = condResult[1].trim();
+      if (val.length >= 3 && val.length <= 300) {
+        sections.push(`<p>Condition: ${val}</p>`);
       }
     }
 
@@ -131,10 +123,13 @@ export async function POST(request: NextRequest) {
     } else {
       // Try public products.json endpoint (no token required)
       try {
+        const storeEntry = stores.find((s) => s.slug === providedSlug || s.name.toLowerCase() === storeName.toLowerCase());
+        const storeCurrency = (storeEntry as any)?.currency ?? "USD";
         fetchResult = await fetchShopifyProductsPublic(
           storeDomain,
           storeName,
-          maxProducts || 1000
+          maxProducts || 1000,
+          storeCurrency
         );
       } catch (publicError) {
         return NextResponse.json(

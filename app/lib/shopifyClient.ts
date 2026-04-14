@@ -535,7 +535,8 @@ export async function testShopifyConnection(
 export async function fetchShopifyProductsPublic(
   storeDomain: string,
   storeName: string,
-  maxProducts: number = 250
+  maxProducts: number = 250,
+  defaultCurrency: string = "USD"
 ): Promise<ShopifyFetchResult> {
   const normalizedDomain = normalizeStoreDomain(storeDomain);
   const products: ShopifyProduct[] = [];
@@ -657,7 +658,7 @@ export async function fetchShopifyProductsPublic(
         title: product.title,
         price: isNaN(price as number) ? null : price,
         compareAtPrice: compareAtPricePublic,
-        currency: "USD", // Public endpoint doesn't include currency, default to USD
+        currency: defaultCurrency, // Public endpoint doesn't include currency; use store's configured currency
         image: imageUrl,
         images: allImageUrls,
         externalUrl: `https://${normalizedDomain}/products/${product.handle}`,
