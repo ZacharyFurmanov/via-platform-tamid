@@ -84,14 +84,10 @@ export async function GET(request: NextRequest) {
         ? sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0 AND timestamp >= ${cutoffIso}`
         : sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0`,
 
-      // totalCustomers (pilot_access + waitlist deduped) + approvedCustomers
+      // totalCustomers — registered accounts (users table) + pilot/waitlist breakdown
       sql`
         SELECT
-          (SELECT COUNT(DISTINCT email) FROM (
-            SELECT LOWER(email) AS email FROM pilot_access
-            UNION
-            SELECT LOWER(email) AS email FROM waitlist
-          ) AS all_emails)::int AS total,
+          (SELECT COUNT(*)::int FROM users)::int AS total,
           (SELECT COUNT(*) FROM pilot_access WHERE status = 'approved')::int AS approved,
           (SELECT COUNT(*) FROM pilot_access)::int AS pilot_total,
           (SELECT COUNT(*) FROM waitlist

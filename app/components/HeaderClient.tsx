@@ -82,6 +82,7 @@ export default function HeaderClient({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [storesDropdownOpen, setStoresDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [collectionsDropdownOpen, setCollectionsDropdownOpen] = useState(false);
@@ -244,6 +245,14 @@ export default function HeaderClient({
       setActiveIndex(-1);
     }
   }, [searchOpen]);
+
+  // Closes search, clears state, and dismisses the mobile keyboard
+  const closeSearch = (href?: string) => {
+    searchInputRef.current?.blur();
+    setSearchOpen(false);
+    setQuery("");
+    if (href) router.push(href);
+  };
 
   return (
     <>
@@ -667,13 +676,14 @@ export default function HeaderClient({
         <div className="fixed inset-0 z-50 bg-[#5D0F17]/30 backdrop-blur-sm flex items-start justify-center md:pt-24">
           <div className="bg-[#F7F3EA] w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
             <button
-              onClick={() => setSearchOpen(false)}
+              onClick={() => closeSearch()}
               className="absolute top-4 right-4 text-xs uppercase text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
             >
               Close
             </button>
 
             <input
+              ref={searchInputRef}
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -694,7 +704,7 @@ export default function HeaderClient({
                     ].map((cat) => (
                       <button
                         key={cat.slug}
-                        onClick={() => { setSearchOpen(false); router.push(`/categories/${cat.slug}`); }}
+                        onClick={() => closeSearch(`/categories/${cat.slug}`)}
                         className="border border-[#5D0F17]/30 py-3 text-sm text-center text-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
                       >
                         {cat.label}
@@ -705,7 +715,7 @@ export default function HeaderClient({
                   {stores.map((store) => (
                     <button
                       key={store.slug}
-                      onClick={() => { setSearchOpen(false); router.push(`/stores/${store.slug}`); }}
+                      onClick={() => closeSearch(`/stores/${store.slug}`)}
                       className="w-full text-left px-3 py-3 hover:bg-[#D8CABD]/40 flex items-center justify-between text-[#5D0F17]"
                     >
                       <span className="text-sm">{store.name}</span>
@@ -735,10 +745,7 @@ export default function HeaderClient({
                   return (
                     <button
                       key={`${r.type}-${idx}`}
-                      onClick={() => {
-                        setSearchOpen(false);
-                        router.push(r.href);
-                      }}
+                      onClick={() => closeSearch(r.href)}
                       className={`w-full text-left px-3 py-2.5 flex items-center gap-3 text-[#5D0F17] ${
                         idx === activeIndex
                           ? "bg-[#5D0F17] text-[#F7F3EA]"
@@ -794,10 +801,7 @@ export default function HeaderClient({
                     )}
                     {results.length > 0 && query.trim() && (
                       <button
-                        onClick={() => {
-                          setSearchOpen(false);
-                          router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-                        }}
+                        onClick={() => closeSearch(`/search?q=${encodeURIComponent(query.trim())}`)}
                         className="w-full text-left px-3 py-3 mt-2 border-t border-[#5D0F17]/10 text-sm text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
                       >
                         See all results for &ldquo;{query.trim()}&rdquo;

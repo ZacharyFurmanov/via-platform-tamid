@@ -23,7 +23,7 @@ export default function GlobalPageTracker() {
   const { data: session, status } = useSession();
   const utmTracked = useRef(false);
 
-  // Capture UTM params once per session on first load
+  // Capture UTM params (or infer source from referrer) once per session on first load
   useEffect(() => {
     if (utmTracked.current) return;
     if (typeof window === "undefined") return;
@@ -34,7 +34,50 @@ export default function GlobalPageTracker() {
     } catch {}
 
     const params = new URLSearchParams(window.location.search);
-    const utmSource = params.get("utm_source");
+    let utmSource = params.get("utm_source");
+    let utmMedium = params.get("utm_medium");
+    let utmCampaign = params.get("utm_campaign");
+    const utmContent = params.get("utm_content");
+    const utmTerm = params.get("utm_term");
+
+    // If no explicit UTM params, try to infer source from the HTTP referrer
+    if (!utmSource) {
+      const ref = document.referrer;
+      if (ref) {
+        try {
+          const refHost = new URL(ref).hostname.replace(/^www\./, "");
+          const REFERRER_MAP: Record<string, string> = {
+            "instagram.com": "instagram",
+            "l.instagram.com": "instagram",
+            "tiktok.com": "tiktok",
+            "vm.tiktok.com": "tiktok",
+            "t.co": "twitter",
+            "twitter.com": "twitter",
+            "x.com": "twitter",
+            "facebook.com": "facebook",
+            "m.facebook.com": "facebook",
+            "l.facebook.com": "facebook",
+            "fb.com": "facebook",
+            "linkedin.com": "linkedin",
+            "lnkd.in": "linkedin",
+            "threads.net": "threads",
+            "pinterest.com": "pinterest",
+            "pin.it": "pinterest",
+            "youtube.com": "youtube",
+            "youtu.be": "youtube",
+            "substack.com": "substack",
+            "reddit.com": "reddit",
+          };
+          const inferred = REFERRER_MAP[refHost];
+          if (inferred) {
+            utmSource = inferred;
+            utmMedium = utmMedium ?? "social";
+            utmCampaign = utmCampaign ?? "organic";
+          }
+        } catch {}
+      }
+    }
+
     if (!utmSource) return;
 
     utmTracked.current = true;
@@ -48,10 +91,10 @@ export default function GlobalPageTracker() {
 
     const payload = JSON.stringify({
       utm_source: utmSource,
-      utm_medium: params.get("utm_medium") ?? undefined,
-      utm_campaign: params.get("utm_campaign") ?? undefined,
-      utm_content: params.get("utm_content") ?? undefined,
-      utm_term: params.get("utm_term") ?? undefined,
+      utm_medium: utmMedium ?? undefined,
+      utm_campaign: utmCampaign ?? undefined,
+      utm_content: utmContent ?? undefined,
+      utm_term: utmTerm ?? undefined,
       landing_path: window.location.pathname,
       user_id: userId,
     });

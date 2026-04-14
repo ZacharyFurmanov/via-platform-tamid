@@ -352,8 +352,8 @@ export default function DeepAnalyticsPage() {
             {/* Signups group */}
             <p style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Signups</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
-              <StatCard label="Total (all sources)" value={data.kpis.totalCustomers.toLocaleString()} href="/admin/customers" />
-              <StatCard label="Pilot Users" value={data.kpis.pilotTotal.toLocaleString()} href="/admin/customers" />
+              <StatCard label="Registered Accounts" value={data.kpis.totalCustomers.toLocaleString()} href="/admin/customers" />
+<StatCard label="Pilot Users" value={data.kpis.pilotTotal.toLocaleString()} href="/admin/customers" />
               <StatCard label="Approved" value={data.kpis.approvedCustomers.toLocaleString()} href="/admin/customers" />
               <StatCard label="Waitlist Only" value={data.kpis.waitlistOnly.toLocaleString()} href="/admin/customers" />
               <StatCard

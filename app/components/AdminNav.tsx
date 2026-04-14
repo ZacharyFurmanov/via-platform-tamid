@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: "Referral Board", href: "/admin/giveaway" },
   { label: "Returns", href: "/admin/returns" },
   { label: "Sourcing", href: "/admin/sourcing" },
+  { label: "Social Links", href: "/admin/social-links" },
   { label: "Stores", href: "/admin/stores" },
 ];
 
