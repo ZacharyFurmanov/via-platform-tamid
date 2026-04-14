@@ -3,6 +3,7 @@ import {
   getAllEditorsPicks,
   addEditorsPick,
   removeEditorsPick,
+  getActiveCollectionSlugs,
 } from "@/app/lib/editors-picks-db";
 
 function hashPassword(password: string): string {
@@ -22,6 +23,16 @@ function isAuthorized(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ?active=true returns the set of collection slugs that have at least one item
+  if (request.nextUrl.searchParams.get("active") === "true") {
+    try {
+      const slugs = await getActiveCollectionSlugs();
+      return NextResponse.json({ slugs: Array.from(slugs) });
+    } catch (error) {
+      return NextResponse.json({ error: "Failed to fetch active slugs" }, { status: 500 });
+    }
   }
 
   const collectionSlug = request.nextUrl.searchParams.get("collection") ?? "editors-picks";

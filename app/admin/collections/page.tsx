@@ -33,6 +33,7 @@ export default function CollectionsAdminPage() {
   const [loadingPicks, setLoadingPicks] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
+  const [activeSlugs, setActiveSlugs] = useState<Set<string> | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // User likes import
@@ -41,6 +42,13 @@ export default function CollectionsAdminPage() {
   const [likesLoading, setLikesLoading] = useState(false);
   const [likesError, setLikesError] = useState<string | null>(null);
   const [bulkAdding, setBulkAdding] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/editors-picks?active=true")
+      .then((r) => r.json())
+      .then((d) => setActiveSlugs(new Set(d.slugs ?? [])))
+      .catch(() => setActiveSlugs(new Set()));
+  }, []);
 
   const loadPicks = useCallback(async (collectionSlug: string) => {
     setLoadingPicks(true);
@@ -185,9 +193,13 @@ export default function CollectionsAdminPage() {
             </span>
           </div>
 
-          {/* Collection tabs */}
-          <div style={{ display: "flex", gap: 0, borderTop: "1px solid #e5e7eb" }}>
-            {COLLECTIONS.map((col) => (
+          {/* Collection tabs — only show collections with items, plus the last one (newest) */}
+          <div style={{ display: "flex", gap: 0, borderTop: "1px solid #e5e7eb", overflowX: "auto" }}>
+            {COLLECTIONS.filter((col, i) =>
+              activeSlugs === null || // still loading — show all
+              activeSlugs.has(col.slug) ||
+              i === COLLECTIONS.length - 1 // always show newest collection
+            ).map((col) => (
               <button
                 key={col.slug}
                 onClick={() => setActiveCollection(col)}
