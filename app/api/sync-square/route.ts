@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         variantId: p.variantId ?? undefined,
       }));
 
-    const productCount = await syncProducts(storeSlug, storeConfig.name, mapped);
+    const { count: productCount } = await syncProducts(storeSlug, storeConfig.name, mapped);
 
     return NextResponse.json({ success: true, productCount, skippedCount });
   } catch (err) {

@@ -474,7 +474,7 @@ export const stores = [
     authenticityPolicy:
       "Every piece at Rareality Archive is personally sourced with a sharp archival eye — rare, considered items hand-selected for quality, character, and lasting appeal. Each item is inspected before listing and accurately described with any notable condition details clearly disclosed.",
     shippingPolicy:
-      "Ships from Australia. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+      "Ships from Australia. Shipping rates and delivery times are calculated at checkout. For U.S. customers, all applicable tariffs and duties are included in the price — no surprise fees on delivery.",
     returnPolicy:
       "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, use the form below within 2 business days of delivery.",
   },

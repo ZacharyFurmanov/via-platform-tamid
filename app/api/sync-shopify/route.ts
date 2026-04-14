@@ -9,6 +9,8 @@ import {
 import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertCurrencyToUSD, stores } from "@/app/lib/stores";
 import { ALL_STORES } from "@/app/lib/storeConfig";
+import { getPriceDropCandidates, recordPriceDropNotificationsSent } from "@/app/lib/notification-db";
+import { sendPriceDropEmails } from "@/app/lib/email";
 
 /**
  * Fetches a Shopify product page and extracts metafield sections (h2/p pairs)
@@ -197,7 +199,24 @@ export async function POST(request: NextRequest) {
     const skippedCount = fetchResult.skippedCount;
 
     // Sync products to database
-    const productCount = await syncProducts(storeSlug, storeName, products);
+    const { count: productCount, priceDrops } = await syncProducts(storeSlug, storeName, products);
+
+    // Fire-and-forget: send price drop emails to users who favorited/viewed affected products
+    if (priceDrops.length > 0) {
+      (async () => {
+        try {
+          const candidates = await getPriceDropCandidates(priceDrops);
+          if (candidates.length > 0) {
+            await sendPriceDropEmails(candidates);
+            await recordPriceDropNotificationsSent(
+              candidates.map((c) => ({ user_id: c.user_id, product_id: c.product_id, new_price: c.new_price }))
+            );
+          }
+        } catch (e) {
+          console.error("[price-drop] notification error:", e);
+        }
+      })();
+    }
 
     return NextResponse.json({
       success: true,
@@ -207,6 +226,7 @@ export async function POST(request: NextRequest) {
       storeSlug,
       shopName,
       products,
+      priceDrops: priceDrops.length,
     });
   } catch (error) {
     console.error("Shopify sync error:", error);

@@ -304,6 +304,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const categorySlug = currentCategorySlug;
   const categoryLabel = categoryMap[categorySlug];
   const price = `$${Math.round(Number(product.price))}`;
+  const compareAtPrice =
+    product.compare_at_price && Number(product.compare_at_price) > Number(product.price)
+      ? `$${Math.round(Number(product.compare_at_price))}`
+      : null;
 
   // Use deriveSize to extract the correct size (checks title first, then description, then DB)
   const rawSize = deriveSize(product);
@@ -389,7 +393,12 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             )}
 
             <div className="flex items-center gap-4 mb-4 md:mb-8">
-              <p className="text-2xl font-medium text-black">{price}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-medium text-black">{price}</p>
+                {compareAtPrice && (
+                  <p className="text-base text-black/40 line-through">{compareAtPrice}</p>
+                )}
+              </div>
               <FavoriteButton type="product" targetId={dbId} size="md" favoriteCount={favoriteCount} />
               {cartCount > 0 && (
                 <span className="text-xs text-black/50">

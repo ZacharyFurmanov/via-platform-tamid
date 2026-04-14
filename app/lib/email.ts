@@ -748,6 +748,123 @@ export async function sendReengagementEmail(
   return { sent, failed };
 }
 
+type PriceDropItem = {
+  product_id: number;
+  product_title: string;
+  product_image: string | null;
+  store_name: string;
+  store_slug: string;
+  old_price: number;
+  new_price: number;
+};
+
+/**
+ * Send price drop notification emails.
+ * Groups multiple drops per user into a single email.
+ * `notifications` is the flat list from getPriceDropCandidates.
+ */
+export async function sendPriceDropEmails(
+  notifications: Array<{ user_id: string; email: string } & PriceDropItem>
+): Promise<{ sent: number; failed: number }> {
+  if (notifications.length === 0) return { sent: 0, failed: 0 };
+
+  const resend = getResend();
+
+  // Group by user
+  const byUser = new Map<string, { email: string; items: PriceDropItem[] }>();
+  for (const n of notifications) {
+    if (!byUser.has(n.user_id)) {
+      byUser.set(n.user_id, { email: n.email, items: [] });
+    }
+    byUser.get(n.user_id)!.items.push({
+      product_id: n.product_id,
+      product_title: n.product_title,
+      product_image: n.product_image,
+      store_name: n.store_name,
+      store_slug: n.store_slug,
+      old_price: n.old_price,
+      new_price: n.new_price,
+    });
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const [, { email, items }] of byUser) {
+    const itemsHtml = items.map((item) => {
+      const productUrl = withUtm(`${BASE_URL}/products/${item.store_slug}-${item.product_id}`, "price_drop");
+      const safeUrl = productUrl.replace(/&/g, "&amp;");
+      const safeImgSrc = item.product_image ? item.product_image.replace(/&/g, "&amp;") : null;
+      const imgBlock = safeImgSrc
+        ? `<img src="${safeImgSrc}" alt="${item.product_title.replace(/"/g, "&quot;")}" width="120"
+             style="display:block;width:120px;height:120px;object-fit:cover;flex-shrink:0;" border="0" />`
+        : `<div style="width:120px;height:120px;background:rgba(93,15,23,0.06);flex-shrink:0;"></div>`;
+
+      const oldPriceStr = `$${item.old_price.toFixed(0)}`;
+      const newPriceStr = `$${item.new_price.toFixed(0)}`;
+      const savings = Math.round(((item.old_price - item.new_price) / item.old_price) * 100);
+
+      return `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;border-bottom:1px solid rgba(93,15,23,0.08);padding-bottom:24px;">
+          <tr>
+            <td width="130" valign="top" style="padding-right:16px;">
+              <a href="${safeUrl}" style="display:block;text-decoration:none;">${imgBlock}</a>
+            </td>
+            <td valign="top">
+              <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+                   margin-bottom:4px;font-family:Georgia,'Times New Roman',serif;">${item.store_name}</div>
+              <div style="font-size:14px;color:#5D0F17;margin-bottom:8px;font-family:Georgia,'Times New Roman',serif;line-height:1.35;">
+                ${item.product_title}
+              </div>
+              <div style="margin-bottom:12px;">
+                <span style="font-size:16px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;font-weight:600;">${newPriceStr}</span>
+                <span style="font-size:13px;color:rgba(93,15,23,0.4);text-decoration:line-through;margin-left:8px;
+                     font-family:Georgia,'Times New Roman',serif;">${oldPriceStr}</span>
+                <span style="font-size:11px;color:#5D0F17;background:rgba(93,15,23,0.08);padding:2px 8px;
+                     margin-left:8px;font-family:Georgia,'Times New Roman',serif;">${savings}% off</span>
+              </div>
+              <a href="${safeUrl}"
+                 style="display:inline-block;border:1px solid #5D0F17;color:#5D0F17;padding:8px 18px;
+                        text-decoration:none;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+                        font-family:Georgia,'Times New Roman',serif;">View Item</a>
+            </td>
+          </tr>
+        </table>
+      `;
+    }).join("");
+
+    const plural = items.length > 1 ? "items you saved have" : "an item you saved has";
+    const content = `
+      <h1 style="font-size:22px;font-weight:400;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+         margin:0 0 16px;line-height:1.3;">Price ${items.length > 1 ? "drops" : "drop"} on your saved items</h1>
+      <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 32px;">
+        Good news &mdash; ${plural} dropped in price. These are one-of-a-kind pieces, so once they&rsquo;re gone, they&rsquo;re gone.
+      </p>
+      ${itemsHtml}
+    `;
+
+    const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+    const subject = items.length > 1
+      ? `Price drops on ${items.length} items you saved — VYA`
+      : `Price drop: ${items[0].product_title}`;
+
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject,
+        html: viaShell("Price Drop", content, unsubUrl),
+      });
+      sent++;
+      await new Promise((r) => setTimeout(r, 100));
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
+
 export type SourcingEmailDetails = {
   userEmail: string;
   userName: string | null;

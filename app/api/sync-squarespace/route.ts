@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       .replace(/^-|-$/g, "");
 
     // Sync products to database
-    const productCount = await syncProducts(storeSlug, storeName, products);
+    const { count: productCount } = await syncProducts(storeSlug, storeName, products);
 
     return NextResponse.json({
       success: true,

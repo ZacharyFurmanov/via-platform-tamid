@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
 
-    const productCount = await syncProducts(dbSlug, storeName, products);
+    const { count: productCount } = await syncProducts(dbSlug, storeName, products);
 
     return NextResponse.json({
       success: true,

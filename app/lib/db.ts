@@ -163,6 +163,16 @@ export async function initDatabase() {
  * Sync products for a store using upsert to preserve stable product IDs.
  * Products no longer in the feed are removed; existing ones are updated in place.
  */
+export type PriceDrop = {
+  productId: number;
+  title: string;
+  image: string | null;
+  oldPrice: number;
+  newPrice: number;
+  storeSlug: string;
+  storeName: string;
+};
+
 export async function syncProducts(
   storeSlug: string,
   storeName: string,
@@ -179,7 +189,7 @@ export async function syncProducts(
     size?: string;
     compareAtPrice?: number | null;
   }>
-) {
+): Promise<{ count: number; priceDrops: PriceDrop[] }> {
   const sql = neon(getDatabaseUrl());
 
   // Titles that should never appear on VYA — blocked globally across all stores.
@@ -208,6 +218,19 @@ export async function syncProducts(
         OR title ILIKE '%authentification%'
       )
   `;
+
+  // Snapshot current prices so we can detect drops after upsert
+  const oldRows = await sql`
+    SELECT id, title, price, image FROM products WHERE store_slug = ${storeSlug}
+  `;
+  const oldByTitle = new Map<string, { id: number; price: number; image: string | null }>();
+  for (const row of oldRows) {
+    oldByTitle.set(row.title as string, {
+      id: row.id as number,
+      price: Number(row.price),
+      image: row.image as string | null,
+    });
+  }
 
   // Load titles that have ever been shown to Insiders for this store.
   // If a product was deleted and re-inserted, we restore insider_notified = TRUE
@@ -260,6 +283,24 @@ export async function syncProducts(
     `;
   }
 
+  // Detect price drops for products that existed before this sync
+  const priceDrops: PriceDrop[] = [];
+  for (const product of products) {
+    if (isBlocked(product.title)) continue;
+    const old = oldByTitle.get(product.title);
+    if (old && product.price < old.price) {
+      priceDrops.push({
+        productId: old.id,
+        title: product.title,
+        image: product.image || old.image || null,
+        oldPrice: old.price,
+        newPrice: product.price,
+        storeSlug,
+        storeName,
+      });
+    }
+  }
+
   // Remove products that are no longer in the feed
   if (titles.length > 0) {
     await sql`
@@ -271,7 +312,7 @@ export async function syncProducts(
     await sql`DELETE FROM products WHERE store_slug = ${storeSlug}`;
   }
 
-  return products.length;
+  return { count: products.length, priceDrops };
 }
 
 /**

@@ -184,3 +184,108 @@ export async function getNotificationsSentTodayCount(userId: string): Promise<nu
 
   return Number(rows[0]?.count ?? 0);
 }
+
+// ---------------------------------------------------------------------------
+// Price Drop Notifications
+// ---------------------------------------------------------------------------
+
+export type PriceDropNotificationCandidate = {
+  user_id: string;
+  email: string;
+  product_id: number;
+  product_title: string;
+  product_image: string | null;
+  store_name: string;
+  store_slug: string;
+  old_price: number;
+  new_price: number;
+};
+
+/**
+ * Initialise the price_drop_notifications table (idempotent).
+ */
+async function ensurePriceDropTable() {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    CREATE TABLE IF NOT EXISTS price_drop_notifications (
+      id SERIAL PRIMARY KEY,
+      user_id UUID NOT NULL,
+      product_id INT NOT NULL,
+      new_price NUMERIC(10,2) NOT NULL,
+      sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE (user_id, product_id, new_price)
+    )
+  `;
+}
+
+/**
+ * For each price-dropped product, find users who favorited OR viewed it and
+ * haven't already received a notification at this exact new price.
+ * Respects notification_emails_enabled on the users table.
+ */
+export async function getPriceDropCandidates(
+  priceDrops: Array<{ productId: number; oldPrice: number; newPrice: number; title: string; image: string | null; storeSlug: string; storeName: string }>
+): Promise<PriceDropNotificationCandidate[]> {
+  if (priceDrops.length === 0) return [];
+  await ensurePriceDropTable();
+  const sql = neon(getDatabaseUrl());
+
+  const results: PriceDropNotificationCandidate[] = [];
+
+  for (const drop of priceDrops) {
+    // Users who favorited OR viewed (deduplicated) and haven't been notified at this price
+    const rows = await sql`
+      SELECT DISTINCT u.id AS user_id, u.email
+      FROM users u
+      WHERE u.notification_emails_enabled = TRUE
+        AND (
+          EXISTS (
+            SELECT 1 FROM product_favorites pf
+            WHERE pf.user_id = u.id AND pf.product_id = ${drop.productId}
+          )
+          OR EXISTS (
+            SELECT 1 FROM product_views pv
+            WHERE pv.user_id = u.id::text AND pv.product_id = ${`${drop.storeSlug}-${drop.productId}`}
+          )
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM price_drop_notifications pdn
+          WHERE pdn.user_id = u.id AND pdn.product_id = ${drop.productId} AND pdn.new_price = ${drop.newPrice}
+        )
+    `;
+
+    for (const row of rows) {
+      results.push({
+        user_id: row.user_id as string,
+        email: row.email as string,
+        product_id: drop.productId,
+        product_title: drop.title,
+        product_image: drop.image,
+        store_name: drop.storeName,
+        store_slug: drop.storeSlug,
+        old_price: drop.oldPrice,
+        new_price: drop.newPrice,
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Mark price drop notifications as sent so we don't resend them.
+ */
+export async function recordPriceDropNotificationsSent(
+  candidates: Array<{ user_id: string; product_id: number; new_price: number }>
+): Promise<void> {
+  if (candidates.length === 0) return;
+  await ensurePriceDropTable();
+  const sql = neon(getDatabaseUrl());
+  for (const c of candidates) {
+    await sql`
+      INSERT INTO price_drop_notifications (user_id, product_id, new_price)
+      VALUES (${c.user_id}, ${c.product_id}, ${c.new_price})
+      ON CONFLICT (user_id, product_id, new_price) DO NOTHING
+    `;
+  }
+}

@@ -91,7 +91,7 @@ export async function GET(request: Request) {
             compareAtPrice: p.compareAtPrice ?? undefined,
           }));
 
-        const productCount = await syncProducts(storeSlug, store.name, products);
+        const { count: productCount } = await syncProducts(storeSlug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
       } else if (store.type === "bigcartel") {
         const { products: rawProducts } = await parseBigCartelJSON(
@@ -111,7 +111,7 @@ export async function GET(request: Request) {
             description: p.description ?? undefined,
           }));
 
-        const productCount = await syncProducts(store.slug, store.name, products);
+        const { count: productCount } = await syncProducts(store.slug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
       } else if (store.type === "square") {
         const storeInfo = stores.find((s) => s.slug === store.slug);
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
             size: p.size ?? undefined,
             variantId: p.variantId ?? undefined,
           }));
-        const productCount = await syncProducts(store.slug, store.name, mappedProducts);
+        const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
         console.log(`[Sync Stores] Square: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
         results.push({ store: store.name, success: true, productCount });
       } else {
@@ -165,7 +165,7 @@ export async function GET(request: Request) {
             size: p.size ?? undefined,
           }));
 
-        const productCount = await syncProducts(storeSlug, store.name, products);
+        const { count: productCount } = await syncProducts(storeSlug, store.name, products);
         results.push({ store: store.name, success: true, productCount });
       }
 
