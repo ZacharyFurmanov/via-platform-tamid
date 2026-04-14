@@ -69,6 +69,29 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing. Use the form below if you have any questions before buying.",
   },
   {
+    slug: "chomp-chomp-vintage",
+    dashboardToken: "ccv-4e8b2f1a9d3c",
+    name: "Chomp Chomp Vintage",
+    location: "London, UK",
+    description: "",
+    website: "https://chompchompvintage.com",
+    contactEmail: "chompchompvintage@gmail.com",
+    dataSource: "chomp-chomp-vintage",
+    image: "/stores/chomp-chomp-vintage.jpg",
+    logo: "/stores/chomp-chomp-vintage.jpg",
+    logoBg: "#ffffff",
+    currency: "GBP",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "235622",
+    authenticityPolicy:
+      "Every item at Chomp Chomp Vintage is personally sourced and carefully inspected before listing. Each piece is accurately described so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+    returnPolicy:
+      "All sales are final. As a vintage retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "club-fleur",
     dashboardToken: "cf-7a2d9e1b4c8f3",
     name: "Club Fleur Vintage",
