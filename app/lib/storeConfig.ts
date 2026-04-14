@@ -18,6 +18,8 @@ export type ShopifyStore = {
   excludeKeywords?: string[];
   /** If set, only sync products from these Shopify collection handles (e.g. ["designer", "vintage"]) */
   collectionHandles?: string[];
+  /** If true, fetch each product's page HTML during sync to extract metafield sections (condition, dimensions, etc.) */
+  scrapeProductPage?: boolean;
 };
 
 export type BigCartelStore = {
@@ -239,6 +241,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "West Village Vintage",
     slug: "west-village-vintage",
     storeDomain: "westvillagevintage.com",
+  },
+  {
+    type: "shopify",
+    name: "Chomp Chomp Vintage",
+    slug: "chomp-chomp-vintage",
+    storeDomain: "chompchompvintage.com",
+    scrapeProductPage: true,
   },
 ];
 

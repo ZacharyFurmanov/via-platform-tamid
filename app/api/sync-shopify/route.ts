@@ -10,6 +10,60 @@ import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertCurrencyToUSD } from "@/app/lib/stores";
 import { ALL_STORES } from "@/app/lib/storeConfig";
 
+/**
+ * Fetches a Shopify product page and extracts metafield sections (h2/p pairs)
+ * that aren't in the body_html, such as Condition and Dimensions.
+ * Returns appended HTML in a format compatible with splitDescription parsing.
+ */
+async function scrapeProductPageSections(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "text/html" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return "";
+    const html = await res.text();
+
+    // Match <h2>...</h2> followed (within 500 chars) by <p>...</p>
+    const sectionRe = /<h2[^>]*>([\s\S]*?)<\/h2>[\s\S]{0,500}?<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let match;
+    const sections: string[] = [];
+
+    while ((match = sectionRe.exec(html)) !== null) {
+      // Strip HTML tags and non-ASCII (emojis) from heading
+      const heading = match[1]
+        .replace(/<[^>]+>/g, "")
+        .replace(/[^\x00-\x7F]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      const content = match[2]
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!heading || !content) continue;
+
+      // Only include product-relevant sections
+      const h = heading.toLowerCase();
+      if (
+        h.includes("condition") ||
+        h.includes("dimension") ||
+        h.includes("material") ||
+        h.includes("hardware") ||
+        h.includes("include") ||
+        h.includes("detail")
+      ) {
+        // Format as "Heading: content" so splitDescription can parse it
+        sections.push(`<p>${heading}: ${content}</p>`);
+      }
+    }
+
+    return sections.join("");
+  } catch {
+    return "";
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -110,6 +164,20 @@ export async function POST(request: NextRequest) {
 
     // Convert to standard format for storage, filtering out null prices and excluded titles/keywords
     const rawProducts = fetchResult.products.map(toRSSProductFormat);
+
+    // For stores with scrapeProductPage, enrich descriptions with metafield sections
+    // scraped from the product page HTML (e.g. Condition, Dimensions)
+    const shouldScrape = (storeConfig as any)?.scrapeProductPage === true;
+    if (shouldScrape) {
+      await Promise.all(
+        rawProducts.map(async (p) => {
+          const extra = await scrapeProductPageSections(p.externalUrl);
+          if (extra) {
+            p.description = (p.description || "") + extra;
+          }
+        })
+      );
+    }
     const products = rawProducts
       .filter((p) => p.price !== null)
       .filter((p) => !excludedTitles.has(p.title.toLowerCase()))

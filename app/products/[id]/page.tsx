@@ -61,6 +61,8 @@ function isMeasurementLine(text: string): boolean {
   if (!t) return false;
   // Size labels: "Size: M", "Labeled size: 10", "Tagged size S", "Size & fit: ..."
   if (/(?:tagged|labeled|marked)?\s*size\s*[:\s&]/.test(t)) return true;
+  // Dimension labels: "Dimensions: W34 x H24 x D12 (CM)", "Dimensions: 12 x 8 x 4 inches"
+  if (/^dimensions?\s*:/.test(t)) return true;
   // Measurement with optional ~ and inches/cm value: "Bust: ~16"", "Waist: 14 cm"
   if (/:\s*~?\s*\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b)/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
