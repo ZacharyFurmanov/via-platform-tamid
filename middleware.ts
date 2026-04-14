@@ -114,9 +114,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin routes
-  if (pathname.startsWith("/admin")) {
+  // Admin routes (browser UI + API)
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
     if (!(await isAdminAuthenticated(request))) {
+      // API admin routes return 401; browser admin routes redirect to login
+      if (pathname.startsWith("/api/admin")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
