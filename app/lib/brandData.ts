@@ -16,6 +16,7 @@ export const brands: BrandDef[] = [
   { slug: "saint-laurent", label: "Saint Laurent", keywords: ["saint laurent", "ysl", "yves saint laurent"] },
   { slug: "balenciaga", label: "Balenciaga", keywords: ["balenciaga"] },
   { slug: "celine", label: "Celine", keywords: ["celine", "céline"] },
+  { slug: "chloe", label: "Chloé", keywords: ["chloe", "chloé"] },
   { slug: "loewe", label: "Loewe", keywords: ["loewe"] },
   { slug: "fendi", label: "Fendi", keywords: ["fendi"] },
   { slug: "valentino", label: "Valentino", keywords: ["valentino"] },
