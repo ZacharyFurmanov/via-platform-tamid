@@ -833,27 +833,27 @@ export async function sendPriceDropEmails(
       `;
     }).join("");
 
-    const plural = items.length > 1 ? "items you saved have" : "an item you saved has";
     const content = `
       <h1 style="font-size:22px;font-weight:400;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
-         margin:0 0 16px;line-height:1.3;">Price ${items.length > 1 ? "drops" : "drop"} on your saved items</h1>
+         margin:0 0 16px;line-height:1.3;">Your saved ${items.length > 1 ? "pieces" : "piece"} ${items.length > 1 ? "just got" : "just got"} more affordable.</h1>
       <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 32px;">
-        Good news &mdash; ${plural} dropped in price. These are one-of-a-kind pieces, so once they&rsquo;re gone, they&rsquo;re gone.
+        The ${items.length > 1 ? "pieces" : "piece"} you had your eye on ${items.length > 1 ? "have" : "has"} dropped in price &mdash; and you won&rsquo;t want to miss this.
+        These are one-of-a-kind vintage finds. Once ${items.length > 1 ? "they&rsquo;re" : "it&rsquo;s"} gone, ${items.length > 1 ? "they&rsquo;re" : "it&rsquo;s"} gone for good.
       </p>
       ${itemsHtml}
     `;
 
     const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
     const subject = items.length > 1
-      ? `Price drops on ${items.length} items you saved — VYA`
-      : `Price drop: ${items[0].product_title}`;
+      ? `Price drops on your favorites — don't miss out`
+      : `Your saved piece just dropped in price`;
 
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
-        html: viaShell("Price Drop", content, unsubUrl),
+        html: viaShell("Your Favorites", content, unsubUrl),
       });
       sent++;
       await new Promise((r) => setTimeout(r, 100));
