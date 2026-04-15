@@ -1,11 +1,11 @@
-import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import { getEveryonesFavorites } from "@/app/lib/editors-picks-db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import Link from "next/link";
 import EditorsPicksScroller from "./EditorsPicksScroller";
 
 export default async function EditorsPicksSection() {
-  const picks = await getAllEditorsPicks();
+  const picks = await getEveryonesFavorites(75);
 
   if (picks.length === 0) return null;
 
@@ -31,14 +31,14 @@ export default async function EditorsPicksSection() {
         <div className="px-6 mb-8 sm:mb-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Curated by the Editor</p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Editor&apos;s Picks</h2>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Curated by the community</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Everyone&apos;s Favorites</h2>
             </div>
             <Link
               href="/editors-picks"
               className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
             >
-              View All Picks
+              View All
             </Link>
           </div>
         </div>

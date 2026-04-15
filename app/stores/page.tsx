@@ -77,7 +77,6 @@ export default function StoresPage() {
                   {store.location}
                 </p>
 
-
               </div>
             ))}
 

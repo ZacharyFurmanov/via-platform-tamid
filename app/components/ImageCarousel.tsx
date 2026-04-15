@@ -166,7 +166,7 @@ export default function ImageCarousel({
         {isEditorsPick && (
           <div className="hidden sm:block absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">
             <span className="text-[#F7F3EA] text-[9px] uppercase tracking-[0.15em] font-medium">
-              Editor&apos;s Pick
+              Everyone&apos;s Favorite
             </span>
           </div>
         )}

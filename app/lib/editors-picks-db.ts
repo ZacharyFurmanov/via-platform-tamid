@@ -18,6 +18,7 @@ let _initialized = false;
 export type PickWithProduct = {
   pickId: number;
   position: number;
+  favoriteCount?: number;
   product: {
     id: number;
     storeSlug: string;
@@ -250,6 +251,54 @@ export async function getProductsByStore(storeSlug: string, limit = 300): Promis
     LIMIT ${limit}
   `;
   return rows.map(mapProductRow);
+}
+
+/**
+ * Dynamically returns the top `limit` most-favorited products across all stores.
+ * This powers the "Everyone's Favorites" section — no manual curation required.
+ * Falls back to most-clicked products if no favorites exist yet.
+ */
+export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct[]> {
+  const sql = neon(getDatabaseUrl());
+
+  const rows = await sql`
+    SELECT
+      p.id AS product_id,
+      p.store_slug,
+      p.store_name,
+      p.title,
+      p.price,
+      p.image,
+      p.images,
+      p.size,
+      p.external_url,
+      COUNT(pf.id)::int AS favorite_count
+    FROM products p
+    JOIN product_favorites pf ON pf.product_id = p.id
+    WHERE p.image IS NOT NULL
+      AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+      AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
+    GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
+    ORDER BY favorite_count DESC, p.created_at DESC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((r, i) => ({
+    pickId: r.product_id as number,
+    position: i,
+    favoriteCount: r.favorite_count as number,
+    product: {
+      id: r.product_id as number,
+      storeSlug: r.store_slug as string,
+      storeName: r.store_name as string,
+      title: r.title as string,
+      price: Number(r.price),
+      image: r.image as string | null,
+      images: r.images as string | null,
+      size: r.size as string | null,
+      externalUrl: r.external_url as string | null,
+    },
+  }));
 }
 
 export async function searchProducts(q: string, storeSlug?: string): Promise<ProductResult[]> {

@@ -16,6 +16,7 @@ import { brandMap } from "@/app/lib/brandData";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import TrackStoreView from "@/app/components/TrackStoreView";
 import PageTracker from "@/app/components/PageTracker";
+import VyaVerifiedBadge from "@/app/components/VyaVerifiedBadge";
 
 type StorePageProps = {
   params: Promise<{
@@ -164,6 +165,8 @@ export default async function StorePage({ params }: StorePageProps) {
             <h1 className="text-2xl sm:text-3xl font-serif">{store.name}</h1>
             <FavoriteButton type="store" targetId={store.slug} size="md" />
           </div>
+
+          <VyaVerifiedBadge className="mb-3" />
 
           <p className="text-sm text-[#5D0F17]/50 mb-3">{store.location}</p>
 

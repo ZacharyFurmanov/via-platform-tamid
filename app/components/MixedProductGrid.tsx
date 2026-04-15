@@ -14,6 +14,7 @@ type GridProduct = {
   categoryLabel: CategoryLabel;
   from?: string;
   size?: string | null;
+  favoriteCount?: number;
 };
 
 // Every 5th item (index 0, 5, 10…) spans 2 columns for visual variety
@@ -57,6 +58,7 @@ export default function MixedProductGrid({
               size={product.size}
               from={from}
               isEditorsPick={allEditorsPicks}
+              favoriteCount={product.favoriteCount}
             />
           </div>
         );

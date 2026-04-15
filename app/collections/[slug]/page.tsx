@@ -42,9 +42,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .filter((img): img is string => !!img)
     .slice(0, 4);
 
-  const description = collection.curatedBy
-    ? `Curated by ${collection.curatedBy} — hand-selected vintage & secondhand pieces on VYA.`
-    : `Hand-selected vintage & secondhand pieces — ${collection.name} on VYA.`;
+  const curatedBy: string | null = collection.curatedBy ?? null;
+  const description = curatedBy
+    ? `Curated by ${curatedBy} — hand-selected vintage & secondhand pieces on VYA.`
+    : `Hand-selected vintage & secondhand pieces — ${(collection as { name: string }).name} on VYA.`;
 
   return {
     title: `${collection.name} — VYA`,

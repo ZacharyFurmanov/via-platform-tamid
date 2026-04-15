@@ -840,6 +840,7 @@ export const storeContactEmails: Record<string, string> = {
   "for-the-globe": "for.the.globe1@gmail.com",
   "front-page-finds": "charlee@frontpagefinds.com",
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
+  "chomp-chomp-vintage": "chompchompvintage@gmail.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
   "west-village-vintage": "info@westvillagevintage.com",
   // VYA admin test account — sees all requests

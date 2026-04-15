@@ -120,6 +120,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Vintari Vault",
     slug: "vintari-vault",
     storeDomain: "vintarivault.com",
+    scrapeProductPage: true,
   },
   {
     type: "shopify",

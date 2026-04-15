@@ -166,7 +166,7 @@ export default function ProductCard({
 
       {/* Favorite button overlay — hidden on mobile (no hover), visible on desktop hover */}
       {numericId != null && (
-        <div className="absolute top-2 right-2 z-40 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className={`absolute top-2 right-2 z-40 transition-opacity ${favoriteCount && favoriteCount > 0 ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
           <FavoriteButton type="product" targetId={numericId} size="sm" favoriteCount={favoriteCount} />
         </div>
       )}

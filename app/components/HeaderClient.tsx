@@ -25,7 +25,7 @@ type SearchResult =
 
 const ANNOUNCEMENTS = [
   { text: "New Arrivals Added Weekly", short: "New Arrivals Weekly", href: "/new-arrivals" },
-  { text: "All stores are trusted & verified by VYA", short: "Trusted & Verified Stores", href: "/verified" },
+  { text: "All stores are trusted & verified by VYA", short: "Trusted & Verified Stores", href: "/trust" },
 ];
 
 function AnnouncementBar() {

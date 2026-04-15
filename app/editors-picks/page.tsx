@@ -1,12 +1,12 @@
 export const dynamic = "force-dynamic";
 
-import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
+import { getEveryonesFavorites } from "@/app/lib/editors-picks-db";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { categoryMap } from "@/app/lib/categoryMap";
 import MixedProductGrid from "@/app/components/MixedProductGrid";
 
 export default async function EditorsPicksPage() {
-  const picks = await getAllEditorsPicks();
+  const picks = await getEveryonesFavorites(75);
 
   const gridProducts = picks.map((pick) => ({
     id: pick.product.id,
@@ -18,15 +18,17 @@ export default async function EditorsPicksPage() {
     images: pick.product.images,
     size: pick.product.size,
     categoryLabel: categoryMap[inferCategoryFromTitle(pick.product.title)],
+    favoriteCount: pick.favoriteCount,
   }));
 
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       <section className="border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
-          <h1 className="text-2xl sm:text-3xl font-serif mb-2">Editor&apos;s Picks</h1>
+          <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-2 font-sans">Curated by the community</p>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-2">Everyone&apos;s Favorites</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            Hand-selected from all of our stores.
+            The most-loved pieces from our community of tastemakers — ranked by the people with the best taste.
           </p>
         </div>
       </section>
@@ -35,7 +37,7 @@ export default async function EditorsPicksPage() {
         <div className="max-w-7xl mx-auto px-6">
           {gridProducts.length === 0 ? (
             <p className="text-[#5D0F17]/50 text-sm">
-              No picks this week yet — check back Sunday.
+              No favorites yet — start hearting pieces to see them here.
             </p>
           ) : (
             <MixedProductGrid products={gridProducts} from="/editors-picks" allEditorsPicks />

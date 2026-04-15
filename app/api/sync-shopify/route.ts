@@ -36,14 +36,14 @@ async function scrapeProductPageSections(url: string): Promise<string> {
 
     const sections: string[] = [];
     // Boundary: the next recognizable section heading stops the capture
-    const nextSection = "\\s+(?:Condition|Dimensions?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe)";
+    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic)";
 
-    // Extract "Dimensions [value]"
-    const dimResult = new RegExp(`\\bDimensions?\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
+    // Extract "Dimensions" or "Measurements" value
+    const dimResult = new RegExp(`\\b(?:Dimensions?|Measurements?)\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
     if (dimResult) {
       const val = dimResult[1].trim();
-      if (val.length >= 3 && val.length <= 200) {
-        sections.push(`<p>Dimensions: ${val}</p>`);
+      if (val.length >= 3 && val.length <= 400) {
+        sections.push(`<p>Measurements: ${val}</p>`);
       }
     }
 

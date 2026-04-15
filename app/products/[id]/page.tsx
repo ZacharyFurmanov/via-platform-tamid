@@ -61,8 +61,8 @@ function isMeasurementLine(text: string): boolean {
   if (!t) return false;
   // Size labels: "Size: M", "Labeled size: 10", "Tagged size S", "Size & fit: ..."
   if (/(?:tagged|labeled|marked)?\s*size\s*[:\s&]/.test(t)) return true;
-  // Dimension labels: "Dimensions: W34 x H24 x D12 (CM)", "Dimensions: 12 x 8 x 4 inches"
-  if (/^dimensions?\s*:/.test(t)) return true;
+  // Dimension/measurement labels
+  if (/^(?:dimensions?|measurements?)\s*:/.test(t)) return true;
   // Measurement with optional ~ and inches/cm value: "Bust: ~16"", "Waist: 14 cm"
   if (/:\s*~?\s*\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b)/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
@@ -134,6 +134,17 @@ function splitDescription(html: string | null): {
   }
 
   if (hasLiTags) {
+    // Also scan any <p> tags that may have been appended by the scraper
+    // (e.g. <p>Condition: ...</p> and <p>Measurements: ...</p>)
+    const pPattern2 = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let pMatch: RegExpExecArray | null;
+    while ((pMatch = pPattern2.exec(html)) !== null) {
+      const inner = pMatch[1];
+      const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+      if (!plain) continue;
+      if (isMeasurementLine(plain)) sizingItems.push(plain);
+      else if (isConditionLine(plain)) conditionItems.push(plain);
+    }
     const detailsHtml = detailItems.length > 0 ? `<ul>${detailItems.join("")}</ul>` : null;
     return { detailsHtml, sizingItems, conditionItems };
   }
