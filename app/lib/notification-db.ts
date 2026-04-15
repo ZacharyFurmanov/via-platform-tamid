@@ -74,7 +74,7 @@ export async function getFavoriteNotificationCandidates(): Promise<NotificationC
          WHERE fn.user_id = pf.user_id AND fn.product_id = pf.product_id),
         pf.created_at
       )
-    WHERE u.notification_emails_enabled = TRUE
+    WHERE COALESCE(u.notification_emails_enabled, TRUE) = TRUE
     GROUP BY pf.user_id, u.email, p.id, p.title, p.image, p.store_name, p.store_slug, p.price, p.currency
     HAVING COUNT(c.id) >= 3
   `;
@@ -150,7 +150,7 @@ export async function getTrendingCandidates(): Promise<TrendingCandidate[]> {
       GROUP BY product_id
       HAVING COUNT(*) >= 15
     ) counts ON counts.product_id = pf.product_id
-    WHERE u.notification_emails_enabled = TRUE
+    WHERE COALESCE(u.notification_emails_enabled, TRUE) = TRUE
       AND NOT EXISTS (
         SELECT 1 FROM trending_notifications tn
         WHERE tn.user_id = pf.user_id AND tn.product_id = pf.product_id
@@ -237,7 +237,8 @@ export async function getPriceDropCandidates(
     const rows = await sql`
       SELECT DISTINCT u.id AS user_id, u.email
       FROM users u
-      WHERE u.notification_emails_enabled = TRUE
+      WHERE COALESCE(u.notification_emails_enabled, TRUE) = TRUE
+        AND u.email IS NOT NULL
         AND (
           EXISTS (
             SELECT 1 FROM product_favorites pf
