@@ -201,22 +201,7 @@ export async function POST(request: NextRequest) {
     // Sync products to database
     const { count: productCount, priceDrops } = await syncProducts(storeSlug, storeName, products);
 
-    // Fire-and-forget: send price drop emails to users who favorited/viewed affected products
-    if (priceDrops.length > 0) {
-      (async () => {
-        try {
-          const candidates = await getPriceDropCandidates(priceDrops);
-          if (candidates.length > 0) {
-            await sendPriceDropEmails(candidates);
-            await recordPriceDropNotificationsSent(
-              candidates.map((c) => ({ user_id: c.user_id, product_id: c.product_id, new_price: c.new_price }))
-            );
-          }
-        } catch (e) {
-          console.error("[price-drop] notification error:", e);
-        }
-      })();
-    }
+    // Price drop emails disabled
 
     return NextResponse.json({
       success: true,
