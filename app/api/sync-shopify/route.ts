@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         variantId: p.variantId ?? undefined,
         shopifyProductId: p.shopifyProductId ?? undefined,
         size: p.size ?? undefined,
-        compareAtPrice: p.compareAtPrice ?? undefined,
+        compareAtPrice: p.compareAtPrice != null ? convertCurrencyToUSD(p.compareAtPrice, p.currency) : undefined,
       }));
     const skippedCount = fetchResult.skippedCount;
 

@@ -60,10 +60,13 @@ export async function GET(request: Request) {
             1000
           );
         } else {
+          const storeInfo = stores.find((s) => s.slug === store.slug);
+          const storeCurrency = (storeInfo as any)?.currency ?? "USD";
           fetchResult = await fetchShopifyProductsPublic(
             store.storeDomain,
             store.name,
-            1000
+            1000,
+            storeCurrency
           );
         }
 
@@ -88,7 +91,7 @@ export async function GET(request: Request) {
             variantId: p.variantId ?? undefined,
             shopifyProductId: p.shopifyProductId ?? undefined,
             size: p.size ?? undefined,
-            compareAtPrice: p.compareAtPrice ?? undefined,
+            compareAtPrice: p.compareAtPrice != null ? convertCurrencyToUSD(p.compareAtPrice as number, p.currency) : undefined,
           }));
 
         const { count: productCount } = await syncProducts(storeSlug, store.name, products);

@@ -11,7 +11,7 @@ export const stores = [
     image: "/stores/ascensio-vintage.jpg",
     logo: "/stores/ascensio-vintage-logo.jpg",
     logoBg: "#ffffff",
-    currency: "USD",
+    currency: "GBP",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "1234",
     collabsStoreId: "228601",
