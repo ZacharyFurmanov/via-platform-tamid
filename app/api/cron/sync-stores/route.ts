@@ -12,10 +12,13 @@ import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
 import { stores } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertCurrencyToUSD } from "@/app/lib/stores";
+import { convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 
 export async function GET(request: Request) {
   console.log("[Sync Stores] Cron job triggered");
+
+  // Fetch live exchange rates once before syncing all stores
+  await refreshExchangeRates();
 
   const authHeader = request.headers.get("authorization");
 

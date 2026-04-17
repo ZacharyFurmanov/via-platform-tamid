@@ -140,6 +140,7 @@ type Metrics = {
   mau: { current: number; prev: number; totalEverActive: number };
   stickiness: { current: number; prev: number };
   returningUsers: { last7d: number; last30d: number };
+  buyerRetention: { totalBuyers: number; returnedAfterPurchase: number; boughtAgain: number; returnRate: number | null; repeatPurchaseRate: number | null };
   saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
   revenuePerUser: { value: number; buyingUsers: number };
   gmvByWeek: { week: string; gmv: number }[];
@@ -368,6 +369,66 @@ export default function KeyMetricsPage() {
                     </div>
                   </div>
                   <p style={{ fontSize: 11, color: "#9ca3af", margin: "10px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 8 }}>How often monthly users come back weekly</p>
+                </div>
+
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 16px" }}>
+                    Buyer Retention — {data.period?.label ?? "Last 30 Days"}
+                  </p>
+
+                  {/* Came back after purchase */}
+                  <div style={{ marginBottom: 14 }}>
+                    <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 4px" }}>Came back after buying</p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+                      <p style={{ fontSize: 30, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
+                        {data.buyerRetention.returnRate === null ? "—" : fmtPct(data.buyerRetention.returnRate)}
+                      </p>
+                      <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                        {fmtNum(data.buyerRetention.returnedAfterPurchase)} of {fmtNum(data.buyerRetention.totalBuyers)} buyers
+                      </p>
+                    </div>
+                    <div style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}>
+                      {[
+                        { label: "Below 30%", verdict: "Needs work", color: "#b91c1c", threshold: null },
+                        { label: "30–60%",    verdict: "Okay",       color: "#92400e", threshold: null },
+                        { label: "Above 60%", verdict: "Healthy",    color: "#15803d", threshold: null },
+                      ].map((row) => (
+                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6b7280", marginBottom: 2 }}>
+                          <span>{row.label}</span><span style={{ color: row.color, fontWeight: 600 }}>{row.verdict}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 14px" }} />
+
+                  {/* Bought again */}
+                  <div>
+                    <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 4px" }}>Bought again</p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+                      <p style={{ fontSize: 30, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
+                        {data.buyerRetention.repeatPurchaseRate === null ? "—" : fmtPct(data.buyerRetention.repeatPurchaseRate)}
+                      </p>
+                      <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                        {fmtNum(data.buyerRetention.boughtAgain)} of {fmtNum(data.buyerRetention.totalBuyers)} buyers
+                      </p>
+                    </div>
+                    <div style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}>
+                      {[
+                        { label: "Below 5%",  verdict: "Needs work", color: "#b91c1c" },
+                        { label: "5–15%",     verdict: "Okay",       color: "#92400e" },
+                        { label: "Above 15%", verdict: "Healthy",    color: "#15803d" },
+                      ].map((row) => (
+                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6b7280", marginBottom: 2 }}>
+                          <span>{row.label}</span><span style={{ color: row.color, fontWeight: 600 }}>{row.verdict}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: 11, color: "#9ca3af", margin: "12px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
+                    Of buyers in this period. Higher is better.
+                  </p>
                 </div>
               </div>
             </section>

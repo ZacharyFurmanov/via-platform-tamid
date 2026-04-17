@@ -47,11 +47,10 @@ export default function HomePage() {
         {/* Text section below mobile hero */}
         <section className="px-6 py-10">
         <h1 className="text-3xl font-serif text-[#5D0F17] mb-3 leading-tight">
-          The world&apos;s best vintage,<br />all in one place.
+          Gain access to the world&apos;s best vintage.
         </h1>
         <p className="text-sm text-[#5D0F17]/80 font-sans leading-relaxed">
-          Shop from the best independent vintage and secondhand stores worldwide.
-          The pieces you&apos;ve been dreaming of. All trusted and verified stores.
+          Shop from the best vintage and secondhand stores worldwide. Every store represented on VYA has been carefully vetted, ensuring authenticity, quality, and care. Every purchase supports real people, not mass production.
         </p>
       </section>
       </div>
@@ -75,11 +74,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-6 w-full">
             <div className="w-1/2 animate-hero">
               <h1 className="text-5xl font-serif mb-8 text-[#5D0F17] leading-tight">
-                The world&apos;s best vintage,<br />all in one place.
+                Gain access to the world&apos;s best vintage.
               </h1>
               <p className="mb-12 text-base text-[#5D0F17]/80 font-sans leading-relaxed">
-                Shop from the best independent vintage and secondhand stores worldwide.
-                The pieces you&apos;ve been dreaming of. All trusted and verified stores.
+                Shop from the best vintage and secondhand stores worldwide. Every store represented on VYA has been carefully vetted, ensuring authenticity, quality, and care. Every purchase supports real people, not mass production.
               </p>
               <div className="flex gap-4 animate-hero delay-150">
                 <Link

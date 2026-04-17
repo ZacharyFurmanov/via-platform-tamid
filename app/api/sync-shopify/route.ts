@@ -7,7 +7,7 @@ import {
   toRSSProductFormat,
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertCurrencyToUSD, stores } from "@/app/lib/stores";
+import { convertCurrencyToUSD, refreshExchangeRates, stores } from "@/app/lib/stores";
 import { ALL_STORES } from "@/app/lib/storeConfig";
 import { getPriceDropCandidates, recordPriceDropNotificationsSent } from "@/app/lib/notification-db";
 import { sendPriceDropEmails } from "@/app/lib/email";
@@ -64,6 +64,9 @@ async function scrapeProductPageSections(url: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    // Fetch live exchange rates before any price conversion
+    await refreshExchangeRates();
+
     const body = await request.json();
     const { storeName, storeSlug: providedSlug, storeDomain, storefrontAccessToken, maxProducts, collectionHandles } = body;
 

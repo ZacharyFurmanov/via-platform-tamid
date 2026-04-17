@@ -103,6 +103,7 @@ export async function GET(request: NextRequest) {
     registeredUsersRows,
     waitlistRows,
     activityBreakdownRows,
+    churnRows,
     returningUsersRows,
   ] = await Promise.all([
     // GMV — all time + period windows
@@ -217,6 +218,51 @@ export async function GET(request: NextRequest) {
         (SELECT COUNT(DISTINCT user_id::text)::int FROM conversions WHERE user_id IS NOT NULL AND order_total > 0 AND (returned IS NULL OR returned = false) AND timestamp >= ${pStart} AND timestamp < ${pEnd}) AS buyers
     `,
 
+    // Buyer retention — scoped to selected period
+    sql`
+      WITH period_buyers AS (
+        SELECT
+          user_id::text AS uid,
+          MIN(timestamp) AS first_purchase_at
+        FROM conversions
+        WHERE user_id IS NOT NULL
+          AND order_total > 0
+          AND (returned IS NULL OR returned = false)
+          AND timestamp >= ${pStart} AND timestamp < ${pEnd}
+        GROUP BY user_id
+      ),
+      post_purchase_activity AS (
+        SELECT user_id::text AS uid, timestamp AS ts FROM clicks        WHERE user_id IS NOT NULL
+        UNION ALL
+        SELECT user_id::text,        timestamp AS ts FROM product_views  WHERE user_id IS NOT NULL
+        UNION ALL
+        SELECT user_id::text,        timestamp AS ts FROM page_type_views WHERE user_id IS NOT NULL AND page_type != 'other'
+      ),
+      returned_buyers AS (
+        SELECT DISTINCT pb.uid
+        FROM period_buyers pb
+        JOIN post_purchase_activity a ON a.uid = pb.uid AND a.ts > pb.first_purchase_at
+      ),
+      repeat_buyers AS (
+        SELECT DISTINCT pb.uid
+        FROM period_buyers pb
+        WHERE EXISTS (
+          SELECT 1 FROM conversions c
+          WHERE c.user_id::text = pb.uid
+            AND c.order_total > 0
+            AND (c.returned IS NULL OR c.returned = false)
+            AND c.timestamp > pb.first_purchase_at
+        )
+      )
+      SELECT
+        COUNT(DISTINCT pb.uid)::int  AS total_buyers,
+        COUNT(DISTINCT rb.uid)::int  AS returned_after_purchase,
+        COUNT(DISTINCT rep.uid)::int AS bought_again
+      FROM period_buyers pb
+      LEFT JOIN returned_buyers rb  ON rb.uid  = pb.uid
+      LEFT JOIN repeat_buyers   rep ON rep.uid = pb.uid
+    `,
+
     // Returning users — scoped to the selected period
     sql`
       SELECT
@@ -309,6 +355,17 @@ export async function GET(request: NextRequest) {
     returningUsers: {
       last7d: (returningUsersRows[0]?.returning_7d as number) ?? 0,
       last30d: (returningUsersRows[0]?.returning_30d as number) ?? 0,
+    },
+    buyerRetention: {
+      totalBuyers: (churnRows[0]?.total_buyers as number) ?? 0,
+      returnedAfterPurchase: (churnRows[0]?.returned_after_purchase as number) ?? 0,
+      boughtAgain: (churnRows[0]?.bought_again as number) ?? 0,
+      returnRate: (churnRows[0]?.total_buyers as number) > 0
+        ? (churnRows[0]?.returned_after_purchase as number) / (churnRows[0]?.total_buyers as number)
+        : null,
+      repeatPurchaseRate: (churnRows[0]?.total_buyers as number) > 0
+        ? (churnRows[0]?.bought_again as number) / (churnRows[0]?.total_buyers as number)
+        : null,
     },
     period: {
       start: pStart.toISOString(),

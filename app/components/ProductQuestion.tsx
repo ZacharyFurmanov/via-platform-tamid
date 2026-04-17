@@ -55,7 +55,7 @@ export default function ProductQuestion({
   }
 
   return (
-    <div id="more-info" className="mt-6">
+    <div id="more-info" className="mt-6 mb-6">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -97,7 +97,7 @@ export default function ProductQuestion({
           <button
             type="submit"
             disabled={status === "loading"}
-            className="bg-black text-white text-[11px] uppercase tracking-[0.15em] px-6 py-3 hover:bg-black/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#5D0F17] text-[#F7F3EA] text-[11px] uppercase tracking-[0.15em] px-6 py-3 hover:bg-[#5D0F17]/85 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {status === "loading" ? "Sending..." : "Send Question"}
           </button>

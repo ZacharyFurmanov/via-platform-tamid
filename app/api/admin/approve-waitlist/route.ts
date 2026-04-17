@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { approveAllWaitlistUsers } from "@/app/lib/pilot-db";
+import crypto from "crypto";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
   const adminToken = request.cookies.get("via_admin_token")?.value;
   const expectedToken = process.env.ADMIN_PASSWORD;
-  if (!expectedToken || !adminToken) return false;
-  let hash = 0;
-  for (let i = 0; i < expectedToken.length; i++) {
-    const char = expectedToken.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return adminToken === hash.toString(36);
+  if (!expectedToken) return false;
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${expectedToken}`) return true;
+  if (!adminToken) return false;
+  const expected = crypto.createHash("sha256").update(expectedToken).digest("hex");
+  return adminToken === expected;
 }
 
 export async function POST(request: NextRequest) {

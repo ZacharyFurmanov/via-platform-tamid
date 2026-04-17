@@ -852,22 +852,54 @@ export function getAllStoreEmails(): string[] {
   return Object.values(storeContactEmails).filter(Boolean);
 }
 
-// Approximate exchange rates to USD (update periodically)
-const exchangeRatesToUSD: Record<string, number> = {
+// Fallback rates used when the live fetch fails
+const FALLBACK_RATES: Record<string, number> = {
   USD: 1,
-  GBP: 1.26,
-  EUR: 1.08,
-  CAD: 0.74,
-  AUD: 0.65,
+  GBP: 1.35,
+  EUR: 1.09,
+  CAD: 0.73,
+  AUD: 0.64,
 };
+
+// Module-level rates — updated by refreshExchangeRates() at sync time
+let _exchangeRates: Record<string, number> = { ...FALLBACK_RATES };
+
+/**
+ * Fetches live exchange rates from Frankfurter (ECB data, no API key required)
+ * and updates the module-level rates used by convertCurrencyToUSD.
+ * Always call this at the start of a sync so prices reflect today's rates.
+ */
+export async function refreshExchangeRates(): Promise<void> {
+  try {
+    const res = await fetch("https://api.frankfurter.app/latest?base=USD", {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json() as { rates: Record<string, number> };
+    // Frankfurter returns rates as "X foreign per 1 USD"
+    // Invert to get "USD per 1 foreign unit"
+    const fresh: Record<string, number> = { USD: 1 };
+    for (const [currency, perUSD] of Object.entries(data.rates)) {
+      fresh[currency] = 1 / perUSD;
+    }
+    _exchangeRates = fresh;
+    console.log(
+      `[FX] Live rates — GBP:${fresh.GBP?.toFixed(4)} EUR:${fresh.EUR?.toFixed(4)} CAD:${fresh.CAD?.toFixed(4)} AUD:${fresh.AUD?.toFixed(4)}`
+    );
+  } catch (err) {
+    console.warn("[FX] Live fetch failed, using fallback rates:", err);
+    _exchangeRates = { ..._exchangeRates, ...FALLBACK_RATES };
+  }
+}
 
 /**
  * Convert a price to USD given an explicit currency code (e.g. "CAD", "GBP").
- * Preferred over convertToUSD when the actual currency is available from the API.
+ * Uses live rates if refreshExchangeRates() has been called this invocation,
+ * otherwise falls back to hardcoded approximations.
  */
 export function convertCurrencyToUSD(price: number, currency: string): number {
   if (!currency || currency === "USD") return price;
-  const rate = exchangeRatesToUSD[currency] ?? 1;
+  const rate = _exchangeRates[currency] ?? FALLBACK_RATES[currency] ?? 1;
   return Math.ceil(price * rate);
 }
 

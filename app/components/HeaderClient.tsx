@@ -673,29 +673,36 @@ export default function HeaderClient({
 
       {/* SEARCH OVERLAY */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-[#5D0F17]/30 backdrop-blur-sm flex items-start justify-center md:pt-24">
-          <div className="bg-[#F7F3EA] w-full h-full md:h-auto md:max-h-[80vh] md:max-w-2xl p-6 relative flex flex-col">
-            <button
-              onClick={() => closeSearch()}
-              className="absolute top-4 right-4 text-xs uppercase text-[#5D0F17]/60 hover:text-[#5D0F17] transition-colors"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 z-50 bg-[#5D0F17]/20 backdrop-blur-sm flex items-start justify-center md:pt-20" onClick={() => closeSearch()}>
+          <div className="bg-[#F7F3EA] w-full h-full md:h-auto md:max-h-[78vh] md:max-w-xl md:rounded-sm shadow-2xl relative flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 pt-5 pb-0 flex-shrink-0">
+              <svg className="w-4 h-4 text-[#5D0F17]/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" strokeWidth="1.5" /><line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="1.5" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search items or stores..."
+                className="flex-1 text-[15px] outline-none bg-transparent text-[#5D0F17] placeholder:text-[#5D0F17]/35 py-1"
+              />
+              <button
+                onClick={() => closeSearch()}
+                className="text-[10px] uppercase tracking-[0.12em] text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors flex-shrink-0"
+              >
+                Esc
+              </button>
+            </div>
 
-            <input
-              ref={searchInputRef}
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search items or stores..."
-              className="w-full border-b border-[#5D0F17] pb-3 text-lg outline-none flex-shrink-0 bg-transparent text-[#5D0F17] placeholder:text-[#5D0F17]/40"
-            />
+            <div className="mx-5 mt-3 border-b border-[#5D0F17]/10 flex-shrink-0" />
 
-            <div className="mt-4 overflow-y-auto flex-1 min-h-0">
+            <div className="mt-3 overflow-y-auto flex-1 min-h-0 pb-4">
               {!query.trim() && (
-                <div className="pt-1">
-                  <p className="px-3 pt-2 pb-2 text-[10px] uppercase tracking-widest text-[#5D0F17]/40">Browse by Category</p>
-                  <div className="px-3 pb-5 grid grid-cols-2 gap-2">
+                <div>
+                  <p className="px-5 pt-2 pb-2.5 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium">Browse by Category</p>
+                  <div className="px-5 pb-4 grid grid-cols-4 gap-2">
                     {[
                       { slug: "clothing", label: "Clothing" },
                       { slug: "bags", label: "Bags" },
@@ -705,31 +712,31 @@ export default function HeaderClient({
                       <button
                         key={cat.slug}
                         onClick={() => closeSearch(`/categories/${cat.slug}`)}
-                        className="border border-[#5D0F17]/30 py-3 text-sm text-center text-[#5D0F17] hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
+                        className="border border-[#5D0F17]/20 py-2 text-[11px] uppercase tracking-[0.1em] text-center text-[#5D0F17]/70 hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors rounded-sm"
                       >
                         {cat.label}
                       </button>
                     ))}
                   </div>
-                  <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-[#5D0F17]/40 border-t border-[#5D0F17]/10">Our Stores</p>
+                  <p className="px-5 py-2 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium border-t border-[#5D0F17]/8">Our Stores</p>
                   {stores.map((store) => (
                     <button
                       key={store.slug}
                       onClick={() => closeSearch(`/stores/${store.slug}`)}
-                      className="w-full text-left px-3 py-3 hover:bg-[#D8CABD]/40 flex items-center justify-between text-[#5D0F17]"
+                      className="w-full text-left px-5 py-2.5 hover:bg-[#5D0F17]/5 flex items-center justify-between text-[#5D0F17] transition-colors"
                     >
-                      <span className="text-sm">{store.name}</span>
-                      <span className="text-xs text-[#5D0F17]/40">{store.location}</span>
+                      <span className="text-[13px]">{store.name}</span>
+                      <span className="text-[11px] text-[#5D0F17]/35">{store.location}</span>
                     </button>
                   ))}
                 </div>
               )}
 
               {searchLoading && results.length === 0 && (
-                <p className="text-sm text-[#5D0F17]/40 px-3 py-2">Searching...</p>
+                <p className="text-[13px] text-[#5D0F17]/40 px-5 py-3">Searching...</p>
               )}
               {!searchLoading && query.trim().length >= 2 && results.length === 0 && (
-                <p className="text-sm text-[#5D0F17]/40 px-3 py-2">No results found</p>
+                <p className="text-[13px] text-[#5D0F17]/40 px-5 py-3">No results found</p>
               )}
 
               {(() => {
@@ -746,25 +753,25 @@ export default function HeaderClient({
                     <button
                       key={`${r.type}-${idx}`}
                       onClick={() => closeSearch(r.href)}
-                      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 text-[#5D0F17] ${
+                      className={`w-full text-left px-5 py-2.5 flex items-center gap-3 text-[#5D0F17] transition-colors ${
                         idx === activeIndex
                           ? "bg-[#5D0F17] text-[#F7F3EA]"
-                          : "hover:bg-[#D8CABD]/40"
+                          : "hover:bg-[#5D0F17]/5"
                       }`}
                     >
                       {r.type === "product" && r.image && (
                         <img
                           src={resizeImage(r.image, 120)}
                           alt=""
-                          className="w-10 h-13 object-cover flex-shrink-0"
+                          className="w-9 h-12 object-cover flex-shrink-0 rounded-sm"
                           loading="lazy"
                           decoding="async"
                         />
                       )}
                       <div className="flex-1 flex justify-between items-center min-w-0">
-                        <span className="truncate">{r.name}</span>
+                        <span className="truncate text-[13px]">{r.name}</span>
                         {"meta" in r && r.meta && (
-                          <span className="text-xs opacity-50 flex-shrink-0 ml-2">
+                          <span className="text-[11px] opacity-40 flex-shrink-0 ml-2">
                             {r.meta}
                           </span>
                         )}
@@ -776,26 +783,26 @@ export default function HeaderClient({
                 return (
                   <>
                     {designers.length > 0 && (
-                      <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Designers</p>
+                      <div className="mb-1">
+                        <p className="px-5 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium">Designers</p>
                         {designers.map(renderItem)}
                       </div>
                     )}
                     {cats.length > 0 && (
-                      <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Categories</p>
+                      <div className="mb-1">
+                        <p className="px-5 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium">Categories</p>
                         {cats.map(renderItem)}
                       </div>
                     )}
                     {storeResults.length > 0 && (
-                      <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Stores</p>
+                      <div className="mb-1">
+                        <p className="px-5 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium">Stores</p>
                         {storeResults.map(renderItem)}
                       </div>
                     )}
                     {products.length > 0 && (
-                      <div className="mb-2">
-                        <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 font-medium">Products</p>
+                      <div className="mb-1">
+                        <p className="px-5 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-[#5D0F17]/35 font-medium">Products</p>
                         {products.map(renderItem)}
                       </div>
                     )}

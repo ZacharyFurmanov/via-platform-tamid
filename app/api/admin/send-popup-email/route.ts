@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { sendPopupThankYouEmail } from "@/app/lib/email";
+import crypto from "crypto";
 
 export const maxDuration = 300;
 
@@ -150,13 +151,7 @@ function getDatabaseUrl() {
 }
 
 function hashPassword(password: string): string {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 function isAuthorized(request: NextRequest): boolean {

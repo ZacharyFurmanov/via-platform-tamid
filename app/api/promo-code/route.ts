@@ -7,6 +7,28 @@ const PROMO_CODES: Record<string, string> = {
   CLAIRE: "claire-referral",
 };
 
+// Simple in-memory rate limiter: max 5 failed attempts per IP per 15 minutes
+const failedAttempts = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILED_ATTEMPTS = 5;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = failedAttempts.get(ip);
+  if (!entry || now > entry.resetAt) return true;
+  return entry.count < MAX_FAILED_ATTEMPTS;
+}
+
+function recordFailedAttempt(ip: string) {
+  const now = Date.now();
+  const entry = failedAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    failedAttempts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+  } else {
+    entry.count += 1;
+  }
+}
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -19,6 +41,18 @@ function getDatabaseUrl() {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const code: string = String(body.code ?? "").trim().toUpperCase();
     const email: string = String(body.email ?? "").trim().toLowerCase();
@@ -27,7 +61,10 @@ export async function POST(request: NextRequest) {
     if (!email || !isValidEmail(email)) return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
 
     const source = PROMO_CODES[code];
-    if (!source) return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
+    if (!source) {
+      recordFailedAttempt(ip);
+      return NextResponse.json({ error: "Invalid promo code" }, { status: 400 });
+    }
 
     const sql = neon(getDatabaseUrl());
 
