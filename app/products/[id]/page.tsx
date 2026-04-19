@@ -109,7 +109,8 @@ function splitDescription(html: string | null): {
   html = html
     .replace(/<div([^>]*)>/gi, "<p$1>")
     .replace(/<\/div>/gi, "</p>")
-    .replace(/<h[1-6][^>]*>\s*(?:<br\s*\/?>)?\s*<\/h[1-6]>/gi, "");
+    // Convert ALL heading tags to <p> so section headers like <h2>Condition</h2> get parsed
+    .replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, "<p>$1</p>");
 
   const detailItems: string[] = [];
   const sizingItems: string[] = [];
@@ -134,14 +135,23 @@ function splitDescription(html: string | null): {
   }
 
   if (hasLiTags) {
-    // Also scan any <p> tags that may have been appended by the scraper
-    // (e.g. <p>Condition: ...</p> and <p>Measurements: ...</p>)
+    // Scan <p> tags (including converted headings) with full section-state tracking
     const pPattern2 = /<p[^>]*>([\s\S]*?)<\/p>/gi;
     let pMatch: RegExpExecArray | null;
+    let inConditionSectionP = false;
+    let inMeasurementsSectionP = false;
     while ((pMatch = pPattern2.exec(html)) !== null) {
       const inner = pMatch[1];
       const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
       if (!plain) continue;
+      // Section header detection
+      if (CONDITION_HEADERS.test(plain)) { inConditionSectionP = true; inMeasurementsSectionP = false; continue; }
+      if (MEASUREMENT_HEADERS.test(plain)) { inMeasurementsSectionP = true; inConditionSectionP = false; continue; }
+      if (SECTION_HEADER_RE.test(plain)) { inConditionSectionP = false; inMeasurementsSectionP = false; continue; }
+      // Section content
+      if (inConditionSectionP) { conditionItems.push(plain); continue; }
+      if (inMeasurementsSectionP) { sizingItems.push(plain); continue; }
+      // Fallback keyword matching
       if (isMeasurementLine(plain)) sizingItems.push(plain);
       else if (isConditionLine(plain)) conditionItems.push(plain);
     }
