@@ -34,14 +34,14 @@ export async function GET(request: NextRequest) {
           LEFT JOIN users u ON u.id::text = c.user_id
           WHERE c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
-          LIMIT 200
+          LIMIT 10000
         `
       : await sql`
           SELECT c.*, u.email AS user_email, u.name AS user_name
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
           ORDER BY c.timestamp DESC
-          LIMIT 200
+          LIMIT 10000
         `
     : storeSlug
       ? await sql`
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN users u ON u.id::text = c.user_id
           WHERE (c.matched = false OR c.matched IS NULL) AND c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
-          LIMIT 200
+          LIMIT 10000
         `
       : await sql`
           SELECT c.*, u.email AS user_email, u.name AS user_name
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN users u ON u.id::text = c.user_id
           WHERE (c.matched = false OR c.matched IS NULL)
           ORDER BY c.timestamp DESC
-          LIMIT 200
+          LIMIT 10000
         `;
 
   return NextResponse.json({

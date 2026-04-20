@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
         LIMIT 50
       `,
 
-      // recentConversions — last 50 orders with attribution + buyer identity
+      // recentConversions — all orders with attribution + buyer identity
       cutoffIso
         ? sql`
             SELECT
@@ -291,13 +291,15 @@ export async function GET(request: NextRequest) {
               c.via_click_id,
               c.matched_click_data,
               c.user_id,
+              c.returned,
+              c.returned_at,
               u.email AS buyer_email,
               u.name AS buyer_name
             FROM conversions c
             LEFT JOIN users u ON u.id::text = c.user_id
             WHERE c.order_total > 0 AND c.timestamp >= ${cutoffIso}
             ORDER BY c.timestamp DESC
-            LIMIT 50
+            LIMIT 10000
           `
         : sql`
             SELECT
@@ -311,13 +313,15 @@ export async function GET(request: NextRequest) {
               c.via_click_id,
               c.matched_click_data,
               c.user_id,
+              c.returned,
+              c.returned_at,
               u.email AS buyer_email,
               u.name AS buyer_name
             FROM conversions c
             LEFT JOIN users u ON u.id::text = c.user_id
             WHERE c.order_total > 0
             ORDER BY c.timestamp DESC
-            LIMIT 50
+            LIMIT 10000
           `,
 
       // inventorySummary

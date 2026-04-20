@@ -1196,9 +1196,9 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
       {rows.length === 0 ? (
         <p style={{ fontSize: 13, opacity: 0.5 }}>No orders in this period.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 600, border: `1px solid ${CREAM}`, borderRadius: 8 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
+            <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}>
               <tr>
                 <th style={hStyle}>Time</th>
                 <th style={hStyle}>Store</th>

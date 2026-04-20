@@ -159,7 +159,7 @@ export default function AdminConversionsPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
       <AdminNav />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
@@ -197,9 +197,9 @@ export default function AdminConversionsPage() {
         ) : conversions.length === 0 ? (
           <p style={{ color: "#9ca3af", fontSize: 14 }}>No {filter === "unmatched" ? "unmatched " : ""}conversions found.</p>
         ) : (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, height: "calc(100vh - 220px)", overflowY: "scroll" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
+              <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}>
                 <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
                   {["Date", "Store", "Order ID", "Amount", "Customer", "Status", ""].map((h) => (
                     <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", fontWeight: 600 }}>{h}</th>
