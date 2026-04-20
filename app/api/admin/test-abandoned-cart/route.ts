@@ -41,12 +41,7 @@ export async function GET(request: NextRequest) {
 
   await sendAbandonedCartEmail(
     "hana@vyaplatform.com",
-    p.title,
-    p.image,
-    p.store_name,
-    `${BASE_URL}/products/${p.store_slug}-${p.id}`,
-    Number(p.price),
-    "USD",
+    [{ productTitle: p.title, productImage: p.image, storeName: p.store_name, productUrl: `${BASE_URL}/products/${p.store_slug}-${p.id}`, price: Number(p.price), currency: "USD" }],
   );
   return NextResponse.json({ ok: true, sent: "hana@vyaplatform.com", product: p.title });
 }

@@ -163,9 +163,12 @@ export type ConversionRecord = {
   matched: boolean;
   userId?: string | null;
   matchedClickData?: {
-    clickId: string;
-    clickTimestamp: string;
-    productName: string;
+    clickId?: string;
+    clickTimestamp?: string;
+    productName?: string;
+    source?: string;
+    userId?: string;
+    buyerEmail?: string;
   };
 };
 

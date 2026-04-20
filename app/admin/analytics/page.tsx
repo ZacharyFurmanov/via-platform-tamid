@@ -376,13 +376,13 @@ export default function DeepAnalyticsPage() {
               <StatCard
                 label="Revenue"
                 value={formatRevenue(data.kpis.totalRevenue)}
-                sub={data.kpis.collabsEstimatedRevenue ? `~${formatRevenue(data.kpis.collabsEstimatedRevenue)} est. from Collabs` : undefined}
+                sub={data.kpis.collabsEstimatedRevenue ? `~${formatRevenue(data.kpis.collabsEstimatedRevenue)} est. from Collabs` : "All time"}
                 href="/admin/key-metrics"
               />
               <StatCard
                 label="Total Commission"
                 value={data.kpis.totalCommission ? formatRevenue(data.kpis.totalCommission) : "—"}
-                sub="across all stores (7/5/3% tiers)"
+                sub="All time · 7/5/3% tiers"
                 href="/admin/conversions"
               />
             </div>

@@ -1261,50 +1261,98 @@ export async function sendCollabsCredentialsExpiredAlert(): Promise<void> {
 
 export async function sendAbandonedCartEmail(
   email: string,
-  productTitle: string,
-  productImage: string | null,
-  storeName: string,
-  productUrl: string,
-  price?: number,
-  currency?: string,
+  items: Array<{
+    productTitle: string;
+    productImage: string | null;
+    storeName: string;
+    productUrl: string;
+    price?: number;
+    currency?: string;
+  }>,
 ): Promise<void> {
   const resend = getResend();
 
-  const imgBlock = productImage
-    ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
-         <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
-           style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
-       </a>`
-    : `<div style="height:28px;"></div>`;
+  let content: string;
 
-  const priceBlock = price && currency
-    ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
-         ${formatEmailPrice(price, currency)}
-       </p>`
-    : `<div style="height:16px;"></div>`;
+  if (items.length === 1) {
+    // Single-item: large hero format
+    const { productTitle, productImage, storeName, productUrl, price, currency } = items[0];
+    const imgBlock = productImage
+      ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
+           <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
+             style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
+         </a>`
+      : `<div style="height:28px;"></div>`;
+    const priceBlock = price && currency
+      ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">${formatEmailPrice(price, currency)}</p>`
+      : `<div style="height:16px;"></div>`;
+    content = `
+      <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+        Vintage doesn&rsquo;t wait around.
+      </p>
+      <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+        Your cart is waiting &mdash; but vintage is one of a kind. Get it now before someone else does.
+      </p>
+      ${imgBlock}
+      <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
+      <a href="${productUrl}" style="text-decoration:none;">
+        <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+           line-height:1.35;margin:0 0 8px;">${productTitle}</p>
+      </a>
+      ${priceBlock}
+      <a href="${productUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Complete Your Purchase</a>
+    `;
+  } else {
+    // Multi-item: list format
+    const itemsHtml = items.map(({ productTitle, productImage, storeName, productUrl, price, currency }) => {
+      const img = productImage
+        ? `<a href="${productUrl}" style="text-decoration:none;display:block;width:80px;flex-shrink:0;">
+             <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="80"
+               style="display:block;width:80px;height:80px;object-fit:cover;" border="0" />
+           </a>`
+        : `<div style="width:80px;height:80px;background:#ede9e0;flex-shrink:0;"></div>`;
+      const priceStr = price && currency ? formatEmailPrice(price, currency) : "";
+      return `
+        <tr>
+          <td style="padding:16px 0;border-bottom:1px solid rgba(93,15,23,0.08);">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+              <tr>
+                <td style="width:80px;vertical-align:top;">${img}</td>
+                <td style="padding-left:16px;vertical-align:top;">
+                  <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+                     font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">${storeName}</p>
+                  <a href="${productUrl}" style="text-decoration:none;">
+                    <p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+                       line-height:1.3;margin:0 0 6px;">${productTitle}</p>
+                  </a>
+                  ${priceStr ? `<p style="font-size:13px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 10px;">${priceStr}</p>` : ""}
+                  <a href="${productUrl}"
+                     style="display:inline-block;border:1px solid rgba(93,15,23,0.4);color:#5D0F17 !important;padding:6px 18px;
+                            text-decoration:none;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+                            font-family:Georgia,'Times New Roman',serif;">View Item</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`;
+    }).join("");
 
-  const content = `
-    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
-      Vintage doesn&rsquo;t wait around.
-    </p>
-    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
-      Your cart is waiting &mdash; but vintage is one of a kind. Get it now before someone else does.
-    </p>
-
-    ${imgBlock}
-
-    <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-       font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
-    <a href="${productUrl}" style="text-decoration:none;">
-      <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
-         line-height:1.35;margin:0 0 8px;">${productTitle}</p>
-    </a>
-    ${priceBlock}
-    <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
-              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
-              font-family:Georgia,'Times New Roman',serif;">Complete Your Purchase</a>
-  `;
+    content = `
+      <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+        Vintage doesn&rsquo;t wait around.
+      </p>
+      <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 24px;">
+        You left ${items.length} items in your cart &mdash; and each one is one of a kind.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+        ${itemsHtml}
+      </table>
+    `;
+  }
 
   await resend.emails.send({
     from: FROM_EMAIL,

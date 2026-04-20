@@ -117,3 +117,11 @@ export async function markAbandonedCartEmailSent(userId: string, productId: numb
     WHERE user_id = ${userId} AND product_id = ${productId}
   `;
 }
+
+export async function markAbandonedCartEmailSentForUser(userId: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    UPDATE user_cart_items SET email_sent_at = NOW()
+    WHERE user_id = ${userId} AND email_sent_at IS NULL
+  `;
+}

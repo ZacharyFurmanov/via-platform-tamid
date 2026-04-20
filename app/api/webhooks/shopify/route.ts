@@ -119,24 +119,48 @@ export async function POST(request: NextRequest) {
   const itemsTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const orderTotal = rawTotal > 0 ? rawTotal : itemsTotal;
 
+  // Extract buyer email from order (Shopify includes it at order.email or order.customer.email)
+  const buyerEmail: string | null =
+    (order.email as string | null) ||
+    ((order.customer as Record<string, unknown> | null)?.email as string | null) ||
+    null;
+
+  const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
+
   // Try to find a matching VYA click — most recent click for this store in the
-  // last 24 hours. Not a perfect match but covers the typical purchase window.
-  let matchedClick: { click_id: string; timestamp: unknown; product_name: string } | null = null;
+  // last 7 days. Wider window catches users who browse then buy days later.
+  let matchedClick: { click_id: string; timestamp: unknown; product_name: string; user_id: string | null } | null = null;
   try {
-    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const rows = await sql`
-      SELECT click_id, timestamp, product_name
+      SELECT click_id, timestamp, product_name, user_id
       FROM clicks
       WHERE store_slug = ${storeSlug}
         AND timestamp >= ${cutoff}
       ORDER BY timestamp DESC
       LIMIT 1
     `;
-    if (rows.length > 0) matchedClick = rows[0] as { click_id: string; timestamp: unknown; product_name: string };
+    if (rows.length > 0) matchedClick = rows[0] as { click_id: string; timestamp: unknown; product_name: string; user_id: string | null };
   } catch (err) {
     console.error(`[shopify-webhook] Failed to query clicks for match:`, err);
   }
+
+  // Try to match by buyer email — look up the VYA user account for this order
+  let matchedUserId: string | null = matchedClick?.user_id ?? null;
+  if (!matchedUserId && buyerEmail) {
+    try {
+      const userRows = await sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${buyerEmail}) LIMIT 1`;
+      if (userRows.length > 0) matchedUserId = String(userRows[0].id);
+    } catch (err) {
+      console.error(`[shopify-webhook] Failed to look up user by email:`, err);
+    }
+  }
+  // Also try to enrich click's user_id if the click had no user but we found one by email
+  if (matchedClick && !matchedClick.user_id && matchedUserId) {
+    matchedClick = { ...matchedClick, user_id: matchedUserId };
+  }
+
+  const isMatched = !!matchedClick || !!matchedUserId;
 
   const conversionId = `shopify-${storeSlug}-${orderId}`;
 
@@ -149,9 +173,10 @@ export async function POST(request: NextRequest) {
       currency,
       items,
       viaClickId: matchedClick ? String(matchedClick.click_id) : null,
+      userId: matchedUserId ?? undefined,
       storeSlug,
       storeName,
-      matched: !!matchedClick,
+      matched: isMatched,
       matchedClickData: matchedClick
         ? {
             clickId: String(matchedClick.click_id),
@@ -160,6 +185,8 @@ export async function POST(request: NextRequest) {
               String(matchedClick.timestamp),
             productName: String(matchedClick.product_name),
           }
+        : matchedUserId
+        ? { source: "email-match", userId: matchedUserId, buyerEmail: buyerEmail ?? undefined }
         : undefined,
     });
 
@@ -167,7 +194,7 @@ export async function POST(request: NextRequest) {
       console.log(`[shopify-webhook] Duplicate order ignored: ${orderId} (${storeName})`);
     } else {
       console.log(
-        `[shopify-webhook] Conversion saved: store=${storeSlug}, order=${orderId}, total=${currency} ${orderTotal}, matched=${!!matchedClick}`
+        `[shopify-webhook] Conversion saved: store=${storeSlug}, order=${orderId}, total=${currency} ${orderTotal}, matched=${isMatched}, userId=${matchedUserId ?? "none"}`
       );
     }
   } catch (err) {
