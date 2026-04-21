@@ -53,10 +53,12 @@ export async function GET(request: Request) {
       }
     }
 
-    // Determine the window: from last send (or 7 days ago) to now
-    const since = lastSentRaw
-      ? new Date(lastSentRaw)
-      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // Test sends always look back 7 days so the window is useful regardless of when cron last ran
+    const since = testEmail
+      ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      : lastSentRaw
+        ? new Date(lastSentRaw)
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
     if (!dbUrl) {
