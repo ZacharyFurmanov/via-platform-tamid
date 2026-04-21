@@ -82,6 +82,22 @@ export async function GET(request: Request) {
     const products = rows as DBProduct[];
 
     if (products.length === 0) {
+      if (testEmail) {
+        // Debug: show counts with and without the shopify filter to diagnose
+        const [unfiltered] = await sql`
+          SELECT COUNT(*) as total,
+            COUNT(*) FILTER (WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL) as after_shopify_filter
+          FROM products
+          WHERE created_at IS NOT NULL
+            AND created_at >= ${sinceIso}
+            AND created_at <= NOW() - interval '24 hours'
+            AND image IS NOT NULL AND image != ''
+        `;
+        return NextResponse.json({
+          ok: true, message: "No new arrivals this week.", sent: 0,
+          debug: { since: sinceIso, totalInWindow: unfiltered.total, afterShopifyFilter: unfiltered.after_shopify_filter },
+        });
+      }
       // Timestamp already claimed above — window resets from now
       return NextResponse.json({ ok: true, message: "No new arrivals this week.", sent: 0 });
     }
