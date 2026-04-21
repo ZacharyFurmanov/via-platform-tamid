@@ -12,14 +12,15 @@ export const maxDuration = 300;
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
+  const { searchParams } = new URL(request.url);
+  const testEmail = searchParams.get("testEmail");
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Allow unauthenticated access for test sends (testEmail param) — never touches the lock
+  if (!testEmail && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const { searchParams } = new URL(request.url);
-    const testEmail = searchParams.get("testEmail");
 
     // Read last-sent time first (used for the since window below)
     const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
