@@ -52,9 +52,12 @@ export async function POST(request: NextRequest) {
 
   const sql = neon(dbUrl);
   const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
-  const since = lastSentRaw
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  // Always look back at least 7 days — if the cron ran recently and set the lock
+  // to today, using that as `since` would produce an empty window.
+  const since = lastSentRaw && new Date(lastSentRaw) < sevenDaysAgo
     ? new Date(lastSentRaw)
-    : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    : sevenDaysAgo;
   const sinceIso = since.toISOString();
 
   const rows = await sql`
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (products.length === 0) {
-    return NextResponse.json({ ok: true, message: "No new arrivals in window.", since: sinceIso, sent: 0 });
+    return NextResponse.json({ ok: true, message: "No new arrivals in window.", since: sinceIso, products: 0, sent: 0 });
   }
 
   const emails = testEmail ? [testEmail] : await getApprovedPilotEmails();
