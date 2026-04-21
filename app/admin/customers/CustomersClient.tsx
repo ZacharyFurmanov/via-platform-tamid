@@ -270,12 +270,16 @@ export default function CustomersClient() {
     setSendingNewArrivals(true);
     setNewArrivalsResult(null);
     try {
-      const res = await fetch("/api/admin/send-new-arrivals-all", { method: "POST" });
+      const res = await fetch("/api/admin/send-new-arrivals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ send: true }),
+      });
       const data = await res.json();
       if (!res.ok) {
         setNewArrivalsResult(`Error: ${data.error}`);
       } else {
-        setNewArrivalsResult(`Sent to ${data.sent} users (${data.productCount} products)`);
+        setNewArrivalsResult(`Sent to ${data.sent} users (${data.products} products)`);
       }
       setTimeout(() => setNewArrivalsResult(null), 6000);
     } finally {
