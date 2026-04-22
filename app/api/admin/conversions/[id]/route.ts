@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { sendStoreSaleEmail } from "@/app/lib/email";
+import { stores, storeContactEmails } from "@/app/lib/stores";
 
 function hashPassword(password: string): string {
   const crypto = require("crypto");
@@ -125,6 +127,38 @@ export async function POST(
     `;
   } else {
     return NextResponse.json({ error: "Provide clickId, userId, or userEmail" }, { status: 400 });
+  }
+
+  // Send store sale notification email (only if not already sent for this conversion)
+  try {
+    const convRows = await sql`
+      SELECT store_slug, store_name, order_total, currency, order_id, timestamp, matched_click_data, sale_email_sent
+      FROM conversions WHERE conversion_id = ${id} LIMIT 1
+    `;
+    const conv = convRows[0];
+    if (conv && !conv.sale_email_sent) {
+      const storeConfig = stores.find((s) => s.slug === conv.store_slug);
+      const storeEmail = storeContactEmails[conv.store_slug as string];
+      if (storeConfig && storeEmail) {
+        const productName = (conv.matched_click_data as { productName?: string } | null)?.productName ?? null;
+        await sendStoreSaleEmail({
+          storeEmail,
+          storeName: conv.store_name as string,
+          storeSlug: conv.store_slug as string,
+          dashboardToken: storeConfig.dashboardToken,
+          orderTotal: Number(conv.order_total),
+          currency: (conv.currency as string) || "USD",
+          productName,
+          orderId: conv.order_id as string,
+          timestamp: conv.timestamp instanceof Date ? conv.timestamp.toISOString() : conv.timestamp as string,
+        });
+        // Mark as sent so re-matching doesn't re-send
+        await sql`UPDATE conversions SET sale_email_sent = true WHERE conversion_id = ${id}`.catch(() => {});
+      }
+    }
+  } catch (err) {
+    console.error("[match] Failed to send store sale email:", err);
+    // Don't fail the match if the email fails
   }
 
   return NextResponse.json({ ok: true });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ export default function FavoriteButton({
   const { data: session } = useSession();
   const router = useRouter();
   const { isProductFavorited, isStoreFavorited, toggleProduct, toggleStore } = useFavorites();
+  const [showSignInHint, setShowSignInHint] = useState(false);
 
   const isFavorited =
     type === "product"
@@ -40,7 +42,8 @@ export default function FavoriteButton({
     e.stopPropagation();
 
     if (!session) {
-      router.push("/login");
+      setShowSignInHint(true);
+      setTimeout(() => setShowSignInHint(false), 2500);
       return;
     }
 
@@ -59,13 +62,50 @@ export default function FavoriteButton({
 
   if (showCount) {
     return (
+      <div className="relative inline-flex">
+        <button
+          onClick={handleClick}
+          aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+          className={`inline-flex items-center gap-1.5 transition-all duration-200 ${
+            size === "sm"
+              ? "h-8 px-2 rounded-full bg-white/80 hover:bg-white shadow-sm"
+              : "h-10 px-3 rounded-full bg-neutral-100 hover:bg-neutral-200"
+          } ${className}`}
+        >
+          <Heart
+            size={iconSize}
+            className={`transition-colors duration-200 ${
+              isFavorited ? "fill-red-500 text-red-500" : "fill-none text-black/60"
+            }`}
+          />
+          <span className={`font-medium text-black/60 ${size === "sm" ? "text-[11px]" : "text-xs"}`}>
+            {favoriteCount}
+          </span>
+        </button>
+        {showSignInHint && (
+          <div className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-black/80 text-white text-[11px] px-3 py-1.5 rounded pointer-events-none z-50">
+            <button
+              className="underline pointer-events-auto"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push("/login"); }}
+            >
+              Sign in
+            </button>
+            {" "}to save favorites
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative inline-flex">
       <button
         onClick={handleClick}
         aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-        className={`inline-flex items-center gap-1.5 transition-all duration-200 ${
+        className={`inline-flex items-center justify-center transition-all duration-200 ${
           size === "sm"
-            ? "h-8 px-2 rounded-full bg-white/80 hover:bg-white shadow-sm"
-            : "h-10 px-3 rounded-full bg-neutral-100 hover:bg-neutral-200"
+            ? "w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow-sm"
+            : "w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200"
         } ${className}`}
       >
         <Heart
@@ -74,29 +114,18 @@ export default function FavoriteButton({
             isFavorited ? "fill-red-500 text-red-500" : "fill-none text-black/60"
           }`}
         />
-        <span className={`font-medium text-black/60 ${size === "sm" ? "text-[11px]" : "text-xs"}`}>
-          {favoriteCount}
-        </span>
       </button>
-    );
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-      className={`inline-flex items-center justify-center transition-all duration-200 ${
-        size === "sm"
-          ? "w-8 h-8 rounded-full bg-white/80 hover:bg-white shadow-sm"
-          : "w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200"
-      } ${className}`}
-    >
-      <Heart
-        size={iconSize}
-        className={`transition-colors duration-200 ${
-          isFavorited ? "fill-red-500 text-red-500" : "fill-none text-black/60"
-        }`}
-      />
-    </button>
+      {showSignInHint && (
+        <div className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-black/80 text-white text-[11px] px-3 py-1.5 rounded pointer-events-none z-50">
+          <button
+            className="underline pointer-events-auto"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push("/login"); }}
+          >
+            Sign in
+          </button>
+          {" "}to save favorites
+        </div>
+      )}
+    </div>
   );
 }

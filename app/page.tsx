@@ -20,18 +20,18 @@ export default function HomePage() {
       <div className="md:hidden">
         <section className="relative overflow-hidden" style={{ height: "85vh" }}>
           <Image
-            src="/hero-v6.jpg"
+            src="/hero-v7.jpg"
             alt=""
             fill
             priority
             className="object-cover"
-            style={{ objectPosition: "center bottom" }}
+            style={{ objectPosition: "center center" }}
             sizes="100vw"
           />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 45%)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
           <div className="absolute bottom-8 left-6 right-6 z-10">
             <h1 className="text-3xl font-serif text-[#F7F3EA] mb-6 leading-tight">
-              Access the world&apos;s best vintage.
+              Discover the world&apos;s best vintage.
             </h1>
             <div className="flex gap-3">
               <Link
@@ -57,18 +57,18 @@ export default function HomePage() {
         style={{ backgroundColor: "#D8C8BC", minHeight: "100vh" }}
       >
         <Image
-          src="/hero-v6.jpg"
+          src="/hero-v7.jpg"
           alt=""
           fill
           priority
           className="object-cover"
-          style={{ objectPosition: "center bottom" }}
+          style={{ objectPosition: "center center" }}
           sizes="100vw"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 45%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
         <div className="absolute bottom-[28%] left-10 z-10 animate-hero">
           <h1 className="text-6xl font-serif mb-8 text-[#F7F3EA] leading-tight max-w-xl">
-            Access the world&apos;s best vintage.
+            Discover the world&apos;s best vintage.
           </h1>
           <div className="flex gap-4">
             <Link
@@ -90,16 +90,10 @@ export default function HomePage() {
       {/* ================= HOW IT WORKS ================= */}
       <section className="bg-[#F7F3EA] py-8 sm:py-12 border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="flex items-center justify-between gap-8 mb-8">
+          <div className="mb-8">
             <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug max-w-lg">
               Rare finds, within reach. Shop the world&apos;s best vintage, all in one place.
             </p>
-            <Link
-              href="/faqs"
-              className="hidden sm:inline-block flex-shrink-0 border border-[#5D0F17] text-[#5D0F17] px-6 py-2.5 text-xs uppercase tracking-[0.15em] hover:bg-[#5D0F17] hover:text-[#F7F3EA] transition-colors font-sans"
-            >
-              How It Works
-            </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-7 border-t border-[#5D0F17]/10">
             {[

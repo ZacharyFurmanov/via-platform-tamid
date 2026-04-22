@@ -143,26 +143,60 @@ function SearchResultsContent({ q }: { q: string }) {
             <p className="text-sm text-[#5D0F17]/40">Searching...</p>
           )}
 
-          {/* Quick links: Stores only */}
-          {!loading && matchedStores.length > 0 && (
+          {/* Quick links: Stores, Categories, Designers */}
+          {!loading && hasQuickLinks && (
             <div className="flex flex-wrap gap-x-10 gap-y-6 mb-12 pb-10 border-b border-[#5D0F17]/10">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Stores</p>
-                <div className="flex flex-wrap gap-2">
-                  {matchedStores.map((s) => (
-                    <TrackedStoreLink
-                      key={s.slug}
-                      href={`/stores/${s.slug}`}
-                      storeSlug={s.slug}
-                      storeName={s.name}
-                      surface="search_results"
-                      className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
-                    >
-                      {s.name}
-                    </TrackedStoreLink>
-                  ))}
+              {matchedStores.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Stores</p>
+                  <div className="flex flex-wrap gap-2">
+                    {matchedStores.map((s) => (
+                      <TrackedStoreLink
+                        key={s.slug}
+                        href={`/stores/${s.slug}`}
+                        storeSlug={s.slug}
+                        storeName={s.name}
+                        surface="search_results"
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
+                      >
+                        {s.name}
+                      </TrackedStoreLink>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+              {categories.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((c) => (
+                      <Link
+                        key={c.slug}
+                        href={`/categories/${c.slug}`}
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
+                      >
+                        {c.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {designers.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-3">Designers</p>
+                  <div className="flex flex-wrap gap-2">
+                    {designers.map((d) => (
+                      <Link
+                        key={d.slug}
+                        href={`/designers/${d.slug}`}
+                        className="inline-block border border-[#5D0F17]/20 px-4 py-2 text-sm hover:bg-[#5D0F17] hover:text-[#F7F3EA] hover:border-[#5D0F17] transition-colors"
+                      >
+                        {d.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -507,7 +507,7 @@ export default function HeaderClient({
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-[#5D0F17]/30"
+            className="absolute top-[104px] left-0 right-0 bottom-0 bg-black/10"
             onClick={() => setMobileMenuOpen(false)}
           />
 

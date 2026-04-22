@@ -31,7 +31,6 @@ export default async function EditorsPicksSection() {
         <div className="px-6 mb-8 sm:mb-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Curated by the community</p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Everyone&apos;s Favorites</h2>
             </div>
             <Link

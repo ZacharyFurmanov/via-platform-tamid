@@ -197,7 +197,7 @@ export async function GET(request: Request) {
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
         ORDER BY created_at DESC NULLS LAST
-        LIMIT 50
+        LIMIT 500
       `;
     } else {
       // Strip stop words so "dolce and gabbana" → ["dolce","gabbana"]
@@ -226,7 +226,7 @@ export async function GET(request: Request) {
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
               AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
             ORDER BY created_at DESC NULLS LAST
-            LIMIT 50
+            LIMIT 500
           `;
 
           // Fallback: category only if modifiers too specific (e.g. rare brand + category)
@@ -238,7 +238,7 @@ export async function GET(request: Request) {
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
                 AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
               ORDER BY created_at DESC NULLS LAST
-              LIMIT 50
+              LIMIT 500
             `;
           }
         } else {
@@ -252,7 +252,7 @@ export async function GET(request: Request) {
               AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
               AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
             ORDER BY created_at DESC NULLS LAST
-            LIMIT 50
+            LIMIT 500
           `;
 
           // Fallback: any word matches (OR), ranked by how many words match
@@ -264,7 +264,7 @@ export async function GET(request: Request) {
                 AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
                 AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
               ORDER BY created_at DESC NULLS LAST
-              LIMIT 50
+              LIMIT 500
             `;
           }
         }
@@ -282,7 +282,7 @@ export async function GET(request: Request) {
           ORDER BY
             CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
             created_at DESC NULLS LAST
-          LIMIT 50
+          LIMIT 500
         `;
       }
     }

@@ -7,6 +7,7 @@ import Image from "next/image";
 const NAV_ITEMS = [
   { label: "Analytics", href: "/admin/analytics" },
   { label: "Key Metrics", href: "/admin/key-metrics" },
+  { label: "Conversions", href: "/admin/conversions" },
   { label: "Customers", href: "/admin/customers" },
   { label: "Emails", href: "/admin/emails" },
   { label: "Collections", href: "/admin/collections" },

@@ -529,9 +529,19 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
               productUrl={`https://vyaplatform.com/products/${compositeId}`}
             />
 
-            {/* Add to Cart */}
+            {/* CTAs — Buy Now primary, Add to Cart secondary */}
             {product.external_url ? (
               <>
+                <BuyNowButton
+                  compositeId={compositeId}
+                  title={product.title}
+                  price={`$${product.price}`}
+                  image={productImages[0] || ""}
+                  storeName={store.name}
+                  storeSlug={store.slug}
+                  externalUrl={product.external_url || ""}
+                  checkoutUrl={checkoutUrl}
+                />
                 <AddToCartButton
                   item={{
                     compositeId,
@@ -545,24 +555,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                     collabsLink: product.collabs_link ?? undefined,
                   }}
                 />
-                <BuyNowButton
-                  compositeId={compositeId}
-                  title={product.title}
-                  price={`$${product.price}`}
-                  image={productImages[0] || ""}
-                  storeName={store.name}
-                  storeSlug={store.slug}
-                  externalUrl={product.external_url || ""}
-                  checkoutUrl={checkoutUrl}
-                />
               </>
             ) : (
-              <button
-                disabled
-                className="block w-full bg-neutral-300 text-white py-4 text-sm uppercase tracking-wide text-center cursor-not-allowed"
+              <Link
+                href={`/stores/${store.slug}`}
+                className="block w-full border border-[#5D0F17]/30 text-[#5D0F17]/60 py-4 text-sm uppercase tracking-wide text-center hover:bg-[#5D0F17]/5 transition"
               >
-                Coming Soon
-              </button>
+                Browse {store.name} →
+              </Link>
             )}
 
             <AddToCollectionButton

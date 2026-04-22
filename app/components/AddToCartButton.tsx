@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart, CartItem } from "./CartProvider";
 import { trackAddToCart } from "@/app/lib/firebase-analytics";
@@ -20,7 +21,7 @@ export default function AddToCartButton({ item }: AddToCartButtonProps) {
     if (alreadyInCart) return;
     addItem(item);
     setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1500);
+    setTimeout(() => setJustAdded(false), 3000);
 
     trackAddToCart(
       {
@@ -52,18 +53,26 @@ export default function AddToCartButton({ item }: AddToCartButtonProps) {
   };
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={alreadyInCart && !justAdded}
-      className={`block w-full py-4 text-sm uppercase tracking-wide text-center transition ${
-        justAdded
-          ? "bg-green-700 text-white"
-          : alreadyInCart
-          ? "bg-[#5D0F17]/30 text-[#F7F3EA] cursor-default"
-          : "bg-[#5D0F17] text-[#F7F3EA] hover:bg-[#5D0F17]/85"
-      }`}
-    >
-      {justAdded ? "Added to Cart!" : alreadyInCart ? "In Cart" : "Add to Cart"}
-    </button>
+    <div className="mt-2">
+      <button
+        onClick={handleClick}
+        disabled={alreadyInCart || justAdded}
+        className={`block w-full py-4 text-sm uppercase tracking-wide text-center transition border ${
+          justAdded || alreadyInCart
+            ? "border-[#5D0F17]/30 text-[#5D0F17]/40 cursor-default"
+            : "border-[#5D0F17] text-[#5D0F17] hover:bg-[#5D0F17]/5"
+        }`}
+      >
+        {justAdded ? "Added to Cart" : alreadyInCart ? "In Cart" : "Add to Cart"}
+      </button>
+      {justAdded && (
+        <Link
+          href="/cart"
+          className="block w-full py-2.5 text-xs uppercase tracking-[0.15em] text-center text-[#5D0F17]/60 hover:text-[#5D0F17] transition"
+        >
+          View Cart →
+        </Link>
+      )}
+    </div>
   );
 }

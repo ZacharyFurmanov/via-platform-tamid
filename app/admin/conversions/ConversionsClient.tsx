@@ -49,7 +49,7 @@ export default function AdminConversionsPage() {
   const searchParams = useSearchParams();
   const [conversions, setConversions] = useState<Conversion[]>([]);
   const [loading, setLoading] = useState(true);
-  const initialFilter = searchParams.get("filter") === "all" ? "all" : "unmatched";
+  const initialFilter = searchParams.get("filter") === "unmatched" ? "unmatched" : "all";
   const [filter, setFilter] = useState<"unmatched" | "all">(initialFilter);
   const [selected, setSelected] = useState<Conversion | null>(null);
   const [candidates, setCandidates] = useState<CandidateClick[]>([]);

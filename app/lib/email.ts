@@ -654,9 +654,15 @@ export async function sendNewArrivalsEmail(
       These pieces won&rsquo;t be here for long.
     </p>
     <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
-       line-height:1.75;margin:0 0 40px;">
+       line-height:1.75;margin:0 0 24px;">
       Every piece on VYA is one-of-a-kind &mdash; once it&rsquo;s gone, it&rsquo;s gone forever. No restocks, no second chances.
     </p>
+    <div style="text-align:center;margin-bottom:36px;">
+      <a href="${newArrivalsUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
+    </div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
       ${rows.join("")}
     </table>
@@ -1503,3 +1509,83 @@ export async function sendPopupThankYouEmail(
   return { sent, failed };
 }
 
+/**
+ * Notify a store that they made a sale attributed to VYA.
+ * Only called after an admin manually matches the conversion.
+ */
+export async function sendStoreSaleEmail({
+  storeEmail,
+  storeName,
+  storeSlug,
+  dashboardToken,
+  orderTotal,
+  currency,
+  productName,
+  orderId,
+  timestamp,
+}: {
+  storeEmail: string;
+  storeName: string;
+  storeSlug: string;
+  dashboardToken: string;
+  orderTotal: number;
+  currency: string;
+  productName?: string | null;
+  orderId: string;
+  timestamp: string;
+}): Promise<void> {
+  const resend = getResend();
+
+  const dashboardUrl = `${BASE_URL}/for-stores/analytics?store=${storeSlug}&token=${dashboardToken}`;
+  const formattedTotal = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "USD",
+    maximumFractionDigits: 0,
+  }).format(orderTotal);
+  const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const content = `
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;">
+      Hi ${storeName},
+    </p>
+    <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 24px;font-family:Georgia,'Times New Roman',serif;">
+      You made a sale through VYA.
+    </p>
+
+    <div style="background:#F7F3EA;border:1px solid rgba(93,15,23,0.15);padding:24px 28px;margin:0 0 28px;">
+      ${productName ? `<p style="font-size:15px;color:#5D0F17;margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-weight:600;">${productName}</p>` : ""}
+      <p style="font-size:22px;font-weight:700;color:#5D0F17;margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;">${formattedTotal}</p>
+      <p style="font-size:12px;color:rgba(93,15,23,0.5);margin:0;font-family:Georgia,'Times New Roman',serif;text-transform:uppercase;letter-spacing:0.1em;">
+        ${formattedDate} · Order #${orderId}
+      </p>
+    </div>
+
+    <p style="font-size:15px;color:#5D0F17;line-height:1.7;margin:0 0 24px;font-family:Georgia,'Times New Roman',serif;">
+      A VYA member visited your store through our platform and completed this purchase. You can view all your VYA-attributed sales in your store dashboard.
+    </p>
+
+    <div style="margin:0 0 28px;">
+      <a href="${dashboardUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 36px;
+                text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">View Your Dashboard</a>
+    </div>
+
+    <p style="font-size:13px;color:rgba(93,15,23,0.5);line-height:1.6;margin:0;font-family:Georgia,'Times New Roman',serif;">
+      Questions? Reply to this email or reach us at <a href="mailto:partnerships@vyaplatform.com" style="color:#5D0F17;">partnerships@vyaplatform.com</a>
+    </p>
+  `;
+
+  const html = viaShell("Store Sale Notification", content);
+
+  await resend.emails.send({
+    from: "Hana @ VYA <hana@vyaplatform.com>",
+    to: storeEmail,
+    subject: `You made a sale through VYA — ${formattedTotal}`,
+    html,
+  });
+}
