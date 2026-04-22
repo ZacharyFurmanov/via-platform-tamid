@@ -758,6 +758,30 @@ export const stores = [
       "All sales are final. Each item is authenticated and carefully described. Please review all item details and photos before purchasing.",
   },
   {
+    slug: "other-matters-atelier",
+    dashboardToken: "oma-7f3b9e2c1a4d",
+    name: "Other Matters Atelier",
+    location: "Los Angeles, CA",
+    description:
+      "other matters atelier is an edit of one-of-one archival designer pieces sourced from paris — flea markets, private archives, the kinds of finds that don't surface twice. every piece is chosen through the eye of a working fashion designer with over a decade in the industry. construction and provenance matter as much as the label. the collection is always small by design.",
+    website: "https://othermattersatelier.com",
+    contactEmail: "othermattersatelier@gmail.com",
+    dataSource: "other-matters-atelier",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "001",
+    collabsStoreId: "236775",
+    authenticityPolicy:
+      "Every piece at Other Matters Atelier is personally sourced and chosen with an expert eye. Each item is accurately described so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from Los Angeles, CA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. As a curated archive of one-of-one pieces, please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "west-village-vintage",
     dashboardToken: "wvv-4a8c2e1d7f9b",
     name: "West Village Vintage",
@@ -842,6 +866,7 @@ export const storeContactEmails: Record<string, string> = {
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "chomp-chomp-vintage": "chompchompvintage@gmail.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
+  "other-matters-atelier": "othermattersatelier@gmail.com",
   "west-village-vintage": "info@westvillagevintage.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@vyaplatform.com",
