@@ -29,7 +29,7 @@ export default function HomePage() {
             sizes="100vw"
           />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
-          <div className="absolute bottom-8 left-6 right-6 z-10">
+          <div className="absolute bottom-24 left-6 right-6 z-10">
             <h1 className="text-3xl font-serif text-[#F7F3EA] mb-6 leading-tight">
               Discover the world&apos;s best vintage.
             </h1>
@@ -122,7 +122,7 @@ export default function HomePage() {
           <Link
             href="/collections/summer-edit"
             className="relative group overflow-hidden w-full sm:w-1/2"
-            style={{ height: "100vh" }}
+            style={{ height: "60vw", minHeight: "320px", maxHeight: "100vh" }}
           >
             <Image
               src="/edit-summer.jpg"
@@ -145,7 +145,7 @@ export default function HomePage() {
           <Link
             href="/collections/bridal-era"
             className="relative group overflow-hidden w-full sm:w-1/2"
-            style={{ height: "100vh" }}
+            style={{ height: "60vw", minHeight: "320px", maxHeight: "100vh" }}
           >
             <Image
               src="/edit-4.jpg"
@@ -171,7 +171,10 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-12 sm:py-16 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto">
           <div className="px-6 mb-8 flex items-end justify-between">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Store</h2>
+            </div>
             <Link
               href="/stores"
               className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
@@ -197,7 +200,10 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto">
           <div className="px-6 mb-10 sm:mb-14 flex items-end justify-between">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Category</h2>
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Shop by</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Category</h2>
+            </div>
             <Link
               href="/categories"
               className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
@@ -231,7 +237,7 @@ export default function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
                     <div className="absolute bottom-6 left-6 text-[#F7F3EA]">
                       <h3 className="text-xl sm:text-2xl font-serif leading-none">{category.label}</h3>
-                      <p className="text-[10px] uppercase tracking-[0.15em] font-sans mt-2 opacity-70">Explore</p>
+                      <p className="text-[10px] uppercase tracking-[0.15em] font-sans mt-2 opacity-90">Explore</p>
                     </div>
                   </div>
                 </Link>
@@ -289,7 +295,10 @@ export default function HomePage() {
       <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-10 sm:mb-14 flex items-end justify-between">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
+            <div>
+              <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
+            </div>
             <Link
               href="/stories"
               className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"

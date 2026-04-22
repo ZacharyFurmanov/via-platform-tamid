@@ -44,7 +44,7 @@ function StoreCard({ store }: { store: (typeof stores)[number] }) {
         )}
       </div>
       <div className="pt-2 pb-1">
-        <p className="text-[9px] uppercase tracking-wide text-[#5D0F17]/50 mb-0.5 truncate">
+        <p className="text-[9px] uppercase tracking-wide text-[#5D0F17]/70 mb-0.5 truncate">
           {store.location}
         </p>
         <h3 className="font-serif text-xs sm:text-sm text-[#5D0F17] leading-snug line-clamp-2">

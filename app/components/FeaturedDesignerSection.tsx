@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function FeaturedDesignerSection() {
   return (
     <section className="border-t border-[#5D0F17]/10">
-      <Link href="/search?q=dior" className="block relative w-full overflow-hidden group" style={{ aspectRatio: "16/7" }}>
+      <Link href="/search?q=dior" className="block relative w-full overflow-hidden group" style={{ aspectRatio: "16/7", minHeight: "260px" }}>
         <Image
           src="/featured-dior-4.jpg"
           alt="Christian Dior"

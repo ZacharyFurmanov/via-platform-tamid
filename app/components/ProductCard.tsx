@@ -158,7 +158,7 @@ export default function ProductCard({
             )}
           </div>
 
-          <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/40 mt-1">
+          <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60 mt-1">
             {storeName}
           </p>
         </div>
