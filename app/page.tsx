@@ -29,7 +29,7 @@ export default function HomePage() {
             sizes="100vw"
           />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
-          <div className="absolute bottom-24 left-6 right-6 z-10">
+          <div className="absolute bottom-36 left-6 right-6 z-10">
             <h1 className="text-3xl font-serif text-[#F7F3EA] mb-6 leading-tight">
               Discover the world&apos;s best vintage.
             </h1>
@@ -90,16 +90,19 @@ export default function HomePage() {
       {/* ================= HOW IT WORKS ================= */}
       <section className="bg-[#F7F3EA] py-8 sm:py-12 border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="mb-8">
-            <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug max-w-lg">
-              Rare finds, within reach. Shop the world&apos;s best vintage, all in one place.
+          <div className="mb-6">
+            <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug max-w-xl">
+              The best pieces, within reach. Shop from different vintage stores all over the world, in one place.
+            </p>
+            <p className="text-xs text-[#5D0F17]/60 font-sans leading-relaxed max-w-xl mt-4">
+              Every store represented on VYA has been carefully vetted, ensuring authenticity, quality, and care. Every purchase from VYA supports real people — not mass production.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-7 border-t border-[#5D0F17]/10">
             {[
               { n: "1.", label: "Browse", desc: "Search curated inventory from the world's best vintage stores." },
-              { n: "2.", label: "Discover", desc: "Find rare, one-of-a-kind pieces you won't see anywhere else." },
-              { n: "3.", label: "Shop", desc: "Checkout directly with the store — no middleman, no markup." },
+              { n: "2.", label: "Discover", desc: "Find one-of-a-kind pieces you won't see anywhere else." },
+              { n: "3.", label: "Shop", desc: "Add to cart then head to checkout & wear something no one else has." },
               { n: "4.", label: "Wear", desc: "Every purchase supports real people and a more sustainable future." },
             ].map(({ n, label, desc }) => (
               <div key={n}>

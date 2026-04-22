@@ -239,6 +239,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
+    name: "Other Matters Atelier",
+    slug: "other-matters-atelier",
+    storeDomain: "othermattersatelier.com",
+  },
+  {
+    type: "shopify",
     name: "West Village Vintage",
     slug: "west-village-vintage",
     storeDomain: "westvillagevintage.com",

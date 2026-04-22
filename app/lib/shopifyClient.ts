@@ -290,6 +290,11 @@ export function extractSizeFromDescription(description: string | null): string |
   const bareNumericMatch = bareNumericRe.exec(text);
   if (bareNumericMatch) return bareNumericMatch[1].trim();
 
+  // 3c. "Size XS," / "Size M." — bare "size" + space + letter abbreviation (no colon).
+  const bareLetterRe = new RegExp(`\\bsize\\s+(${SIZE_VALUE_PATTERN})(?:[,.]|\\s|$)`, "i");
+  const bareLetterMatch = bareLetterRe.exec(text);
+  if (bareLetterMatch) return bareLetterMatch[1].trim();
+
   // 4. Standalone EU/IT/FR/DE size anywhere in description (e.g. "• EU 39" as a bullet point)
   const euStandaloneRe = /\b((?:EU|IT|FR|DE)\s*\d[\d.]*)\b/i;
   const euStandaloneMatch = euStandaloneRe.exec(text);
