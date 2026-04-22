@@ -57,9 +57,9 @@ function StoreCard({ store }: { store: (typeof stores)[number] }) {
 
 export default function StoreCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
   const pausedRef = useRef(false);
-  const resumeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Mouse-drag state
   const dragRef = useRef({ active: false, startX: 0, startScroll: 0 });
