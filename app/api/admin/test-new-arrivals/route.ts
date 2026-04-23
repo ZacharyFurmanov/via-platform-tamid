@@ -24,25 +24,16 @@ export async function GET(request: NextRequest) {
   const sql = neon(url!);
 
   const rows = await sql`
-    SELECT id, title, price, image, images, store_name, store_slug, url, condition, description
+    SELECT id, title, price, currency, image, images, store_name, store_slug,
+           external_url, description, variant_id, shopify_product_id,
+           collabs_link, size, compare_at_price, insider_notified, synced_at, created_at
     FROM products
     WHERE image IS NOT NULL
     ORDER BY created_at DESC NULLS LAST
     LIMIT 12
   `;
 
-  const products = rows.map((r) => ({
-    id: r.id as number,
-    title: r.title as string,
-    price: Number(r.price),
-    image: r.image as string,
-    images: r.images as string[] | undefined,
-    store_name: r.store_name as string,
-    store_slug: r.store_slug as string,
-    url: r.url as string,
-    condition: r.condition as string | undefined,
-    description: r.description as string | undefined,
-  })) as DBProduct[];
+  const products = rows as unknown as DBProduct[];
 
   const { sent, failed } = await sendNewArrivalsEmail([to], products);
   return NextResponse.json({ ok: true, sent, failed, to, productCount: products.length });
