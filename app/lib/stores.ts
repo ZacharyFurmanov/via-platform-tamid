@@ -11,7 +11,7 @@ export const stores = [
     image: "/stores/ascensio-vintage.jpg",
     logo: "/stores/ascensio-vintage-logo.jpg",
     logoBg: "#ffffff",
-    currency: "GBP",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "1234",
     collabsStoreId: "228601",
@@ -215,7 +215,7 @@ export const stores = [
     image: "/stores/house-on-a-chain.jpg",
     logo: "/stores/house-on-a-chain-logo.jpg",
     logoBg: "#f5f3f0",
-    currency: "GBP",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "VIA-7",
     collabsStoreId: "230455",
@@ -238,7 +238,7 @@ export const stores = [
     image: "/stores/jade-vintage.jpg",
     logo: "/stores/jade-vintage.jpg",
     logoBg: "#ffffff",
-    currency: "CAD",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "VYA",
     collabsStoreId: "233878",
@@ -491,7 +491,7 @@ export const stores = [
     image: "/stores/rareality-archive.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
-    currency: "AUD",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "RAREALITY",
     collabsStoreId: "230749",
@@ -538,7 +538,7 @@ export const stores = [
     image: "/stores/sheer-vintage-story.jpg",
     logo: "/stores/placeholder.svg",
     logoBg: "#ffffff",
-    currency: "CAD",
+    currency: "USD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "SHEER",
     collabsStoreId: "231298",
@@ -595,6 +595,29 @@ export const stores = [
       "Ships from Washington, DC. Shipping rates are calculated at checkout.",
     returnPolicy:
       "Returns accepted within 7 days of delivery — items must be shipped back within 7 business days of return confirmation. Refunds are issued as store credit for the full price minus a $15 restocking and return shipping fee. Final sale items (belts, jewelry, swimwear, lingerie, and sale items) are not eligible. Contact hello@sourcedbyscottie.com to initiate a return.",
+  },
+  {
+    slug: "tess-elizabeth-vintage",
+    dashboardToken: "tev-7b3d1a9c5e2f",
+    name: "Tess Elizabeth Vintage",
+    location: "Los Angeles, CA",
+    description:
+      "Tess Elizabeth Vintage is a curated collection of timeless vintage and antique pieces, founded by Tess Elizabeth — Los Angeles-based photographer and creative director. Each piece is carefully selected for its craftsmanship, story, and modern wearability, bringing history into the present through romantic curation and design.",
+    website: "https://tesselizabethvintage.com",
+    dataSource: "tess-elizabeth-vintage",
+    image: "/stores/tess-elizabeth-vintage.jpg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "236972",
+    authenticityPolicy:
+      "Every piece at Tess Elizabeth Vintage is hand-selected and inspected before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
     slug: "the-objects-of-affection",
@@ -801,29 +824,6 @@ export const stores = [
       "Authenticity Guaranteed. Every piece at West Village Vintage is personally sourced and held to a simple standard: if we wouldn't personally wear it in its current condition, we won't sell it. Each item is thoroughly inspected and accurately described so you can shop with confidence.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
-    returnPolicy:
-      "All sales are final. Please review all item details and photos carefully before purchasing.",
-  },
-  {
-    slug: "tess-elizabeth-vintage",
-    dashboardToken: "tev-7b3d1a9c5e2f",
-    name: "Tess Elizabeth Vintage",
-    location: "United States",
-    description:
-      "Tess Elizabeth Vintage is a curated collection of vintage and secondhand clothing, accessories, and designer pieces — hand-selected for quality, character, and lasting style.",
-    website: "https://tesselizabethvintage.com",
-    dataSource: "tess-elizabeth-vintage",
-    image: "/stores/placeholder.svg",
-    logo: "/stores/placeholder.svg",
-    logoBg: "#ffffff",
-    currency: "USD",
-    commissionType: "shopify-collabs" as const,
-    affiliatePath: "VYA",
-    collabsStoreId: "236972",
-    authenticityPolicy:
-      "Every piece at Tess Elizabeth Vintage is hand-selected and inspected before listing. Items are accurately described with full condition details.",
-    shippingPolicy:
-      "Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
