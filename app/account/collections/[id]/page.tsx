@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProductCard from "@/app/components/ProductCard";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 type CollectionItem = {
   id: number;
@@ -128,7 +129,7 @@ export default function CollectionDetailPage() {
                       id={compositeId}
                       dbId={item.productId}
                       name={title}
-                      price={snap?.price ? `$${Math.round(snap.price)}` : "—"}
+                      price={snap?.price ? formatPrice(snap.price) : "—"}
                       category={categoryLabel}
                       storeName={snap?.store ?? storeSlug}
                       storeSlug={storeSlug}

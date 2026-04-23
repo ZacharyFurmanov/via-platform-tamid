@@ -34,6 +34,7 @@ function extractColor(title: string): string | null {
 }
 import { normalizeSize, sortSizes } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
+import { formatPrice } from "@/app/lib/formatPrice";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import { diversityInterleave } from "@/app/lib/productRanking";
 import {
@@ -46,6 +47,7 @@ export type FilterableProduct = {
   dbId?: number;
   title: string;
   price: number;
+  currency?: string;
   compareAtPrice?: number | null;
   category: string;
   categoryLabel: CategoryLabel;
@@ -522,8 +524,8 @@ export default function FilteredProductGrid({
                 id={product.id}
                 dbId={product.dbId}
                 name={product.title}
-                price={`$${Math.round(product.price)}`}
-                compareAtPrice={product.compareAtPrice ? `$${Math.round(product.compareAtPrice)}` : undefined}
+                price={formatPrice(product.price, product.currency)}
+                compareAtPrice={product.compareAtPrice ? formatPrice(product.compareAtPrice, product.currency) : undefined}
                 category={product.categoryLabel}
                 storeName={product.store}
                 storeSlug={product.storeSlug}

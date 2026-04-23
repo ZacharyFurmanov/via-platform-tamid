@@ -19,6 +19,7 @@ import ProductAccordion from "@/app/components/ProductAccordion";
 import TrackProductView from "@/app/components/TrackProductView";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
 import AddToCollectionButton from "@/app/components/AddToCollectionButton";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
@@ -324,10 +325,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   const categorySlug = currentCategorySlug;
   const categoryLabel = categoryMap[categorySlug];
-  const price = `$${Math.round(Number(product.price))}`;
+  const price = formatPrice(Number(product.price), product.currency);
   const compareAtPrice =
     product.compare_at_price && Number(product.compare_at_price) > Number(product.price)
-      ? `$${Math.round(Number(product.compare_at_price))}`
+      ? formatPrice(Number(product.compare_at_price), product.currency)
       : null;
 
   // Use deriveSize to extract the correct size (checks title first, then description, then DB)
@@ -535,7 +536,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 <BuyNowButton
                   compositeId={compositeId}
                   title={product.title}
-                  price={`$${product.price}`}
+                  price={formatPrice(Number(product.price), product.currency)}
                   image={productImages[0] || ""}
                   storeName={store.name}
                   storeSlug={store.slug}
@@ -590,7 +591,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {recommendations.map((rec) => {
                 const recId = `${rec.store_slug}-${rec.id}`;
-                const recPrice = `$${Math.round(Number(rec.price))}`;
+                const recPrice = formatPrice(Number(rec.price), rec.currency);
                 const recCategory = categoryMap[inferCategoryFromTitle(rec.title)];
 
                 let recImages: string[] = [];

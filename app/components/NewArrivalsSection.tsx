@@ -4,6 +4,7 @@ import { categoryMap } from "@/app/lib/categoryMap";
 import { deriveSize } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import Link from "next/link";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 export default async function NewArrivalsSection() {
   const products = await getNewArrivals(12, 7);
@@ -44,7 +45,7 @@ export default async function NewArrivalsSection() {
                     id={compositeId}
                     dbId={product.id}
                     name={product.title}
-                    price={`$${Math.round(Number(product.price))}`}
+                    price={formatPrice(Number(product.price), product.currency)}
                     category={categoryLabel}
                     storeName={product.store_name}
                     storeSlug={product.store_slug}

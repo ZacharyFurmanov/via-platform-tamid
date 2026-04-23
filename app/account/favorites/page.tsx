@@ -96,6 +96,7 @@ export default async function FavoritesPage() {
         dbId: product.id,
         title: product.title,
         price: Number(product.price),
+        currency: product.currency,
         compareAtPrice: product.compare_at_price != null ? Number(product.compare_at_price) : null,
         category: categorySlug,
         categoryLabel,

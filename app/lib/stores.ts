@@ -804,6 +804,29 @@ export const stores = [
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
+  {
+    slug: "tess-elizabeth-vintage",
+    dashboardToken: "tev-7b3d1a9c5e2f",
+    name: "Tess Elizabeth Vintage",
+    location: "United States",
+    description:
+      "Tess Elizabeth Vintage is a curated collection of vintage and secondhand clothing, accessories, and designer pieces — hand-selected for quality, character, and lasting style.",
+    website: "https://tesselizabethvintage.com",
+    dataSource: "tess-elizabeth-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "236972",
+    authenticityPolicy:
+      "Every piece at Tess Elizabeth Vintage is hand-selected and inspected before listing. Items are accurately described with full condition details.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**
@@ -880,10 +903,10 @@ export function getAllStoreEmails(): string[] {
 // Fallback rates used when the live fetch fails (updated April 2026)
 const FALLBACK_RATES: Record<string, number> = {
   USD: 1,
-  GBP: 1.33,
-  EUR: 1.14,
-  CAD: 0.72,
-  AUD: 0.64,
+  GBP: 1.35,
+  EUR: 1.17,
+  CAD: 0.73,
+  AUD: 0.72,
 };
 
 // Module-level rates — updated by refreshExchangeRates() at sync time

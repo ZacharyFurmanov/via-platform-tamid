@@ -186,19 +186,24 @@ export async function POST(request: NextRequest) {
       .filter((p) => p.price !== null)
       .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
       .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
-      .map((p) => ({
-        title: p.title,
-        price: convertCurrencyToUSD(p.price as number, p.currency),
-        currency: "USD",
-        image: p.image ?? undefined,
-        images: p.images,
-        externalUrl: p.externalUrl,
-        description: p.description ?? undefined,
-        variantId: p.variantId ?? undefined,
-        shopifyProductId: p.shopifyProductId ?? undefined,
-        size: p.size ?? undefined,
-        compareAtPrice: p.compareAtPrice != null ? convertCurrencyToUSD(p.compareAtPrice, p.currency) : undefined,
-      }));
+      .map((p) => {
+        const storeCurrency = p.currency || "USD";
+        return {
+          title: p.title,
+          price: convertCurrencyToUSD(p.price as number, storeCurrency),
+          currency: "USD",
+          image: p.image ?? undefined,
+          images: p.images,
+          externalUrl: p.externalUrl,
+          description: p.description ?? undefined,
+          variantId: p.variantId ?? undefined,
+          shopifyProductId: p.shopifyProductId ?? undefined,
+          size: p.size ?? undefined,
+          compareAtPrice: p.compareAtPrice != null
+            ? convertCurrencyToUSD(p.compareAtPrice as number, storeCurrency)
+            : undefined,
+        };
+      });
     const skippedCount = fetchResult.skippedCount;
 
     // Sync products to database

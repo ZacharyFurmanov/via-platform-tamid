@@ -25,6 +25,7 @@ export type PickWithProduct = {
     storeName: string;
     title: string;
     price: number;
+    currency?: string | null;
     image: string | null;
     images: string | null;
     size: string | null;
@@ -75,6 +76,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
       p.store_name,
       p.title,
       p.price,
+      p.currency,
       p.image,
       p.images,
       p.size,
@@ -86,7 +88,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
     LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
     WHERE ep.collection_slug = ${collectionSlug}
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-    GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url, p.created_at
+    GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url, p.created_at
     ORDER BY ep.added_at DESC, ep.id DESC
   `;
 
@@ -99,6 +101,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
       storeName: r.store_name as string,
       title: r.title as string,
       price: Number(r.price),
+      currency: r.currency as string | null,
       image: r.image as string | null,
       images: r.images as string | null,
       size: r.size as string | null,
@@ -122,6 +125,7 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
       p.store_name,
       p.title,
       p.price,
+      p.currency,
       p.image,
       p.images,
       p.size,
@@ -131,7 +135,7 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
     JOIN products p ON p.id = ep.product_id
     LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
     WHERE (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
-    GROUP BY ep.id, ep.collection_slug, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
+    GROUP BY ep.id, ep.collection_slug, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url
     ORDER BY ep.collection_slug, ep.added_at DESC, ep.id DESC
   `;
 
@@ -150,6 +154,7 @@ export async function getAllCollectionPicks(): Promise<Record<string, PickWithPr
         storeName: r.store_name as string,
         title: r.title as string,
         price: Number(r.price),
+        currency: r.currency as string | null,
         image: r.image as string | null,
         images: r.images as string | null,
         size: r.size as string | null,
@@ -268,6 +273,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
       p.store_name,
       p.title,
       p.price,
+      p.currency,
       p.image,
       p.images,
       p.size,
@@ -278,7 +284,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
     WHERE p.image IS NOT NULL
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
       AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
-    GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.image, p.images, p.size, p.external_url
+    GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url
     ORDER BY favorite_count DESC, p.created_at DESC
     LIMIT ${limit}
   `;
@@ -293,6 +299,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
       storeName: r.store_name as string,
       title: r.title as string,
       price: Number(r.price),
+      currency: r.currency as string | null,
       image: r.image as string | null,
       images: r.images as string | null,
       size: r.size as string | null,

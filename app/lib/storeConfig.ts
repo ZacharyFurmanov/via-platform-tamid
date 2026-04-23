@@ -256,6 +256,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     storeDomain: "chompchompvintage.com",
     scrapeProductPage: true,
   },
+  {
+    type: "shopify",
+    name: "Tess Elizabeth Vintage",
+    slug: "tess-elizabeth-vintage",
+    storeDomain: "tesselizabethvintage.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

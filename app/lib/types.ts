@@ -4,6 +4,7 @@ export type StoreProduct = {
   id: string;
   name: string;
   price: string;
+  currency?: string;
   category: CategorySlug; // ✅ slug ONLY
   storeSlug: string;
   externalUrl?: string;

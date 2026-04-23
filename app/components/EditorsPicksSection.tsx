@@ -15,6 +15,7 @@ export default async function EditorsPicksSection() {
       id: pick.product.id,
       title: pick.product.title,
       price: pick.product.price,
+      currency: pick.product.currency,
       image: pick.product.image ?? "",
       images: pick.product.images ?? "",
       storeSlug: pick.product.storeSlug,

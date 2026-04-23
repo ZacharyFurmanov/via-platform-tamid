@@ -128,6 +128,7 @@ export type InventoryItem = {
   brand: string | null;
   brandLabel: string | null;
   price: number;
+  currency?: string;
   compareAtPrice?: number | null;
   image: string;
   images: string[];
@@ -200,6 +201,7 @@ function transformDBProduct(product: DBProduct): InventoryItem {
     brand: brandSlug,
     brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
     price: Number(product.price),
+    currency: product.currency || "USD",
     compareAtPrice: product.compare_at_price != null ? Number(product.compare_at_price) : null,
     image: product.image ?? "/placeholder.jpg",
     images: parseImages(product),

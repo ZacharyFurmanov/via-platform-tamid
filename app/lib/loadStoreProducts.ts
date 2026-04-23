@@ -253,6 +253,7 @@ function transformDBProduct(product: DBProduct): StoreProduct {
     id: `${product.store_slug}-${product.id}`,
     name: product.title,
     price: priceString,
+    currency: product.currency || "USD",
     category: inferCategoryFromTitle(product.title),
     storeSlug: product.store_slug,
     externalUrl: product.external_url ?? undefined,

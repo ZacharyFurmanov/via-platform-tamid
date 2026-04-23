@@ -94,6 +94,7 @@ export default async function StorePage({ params }: StorePageProps) {
       dbId: dbIdMap.get(product.id),
       title: product.name,
       price,
+      currency: product.currency,
       category: product.category,
       categoryLabel: categoryMap[product.category as keyof typeof categoryMap],
       brand: brandSlug,

@@ -2,6 +2,7 @@
 
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ProductCard from "./ProductCard";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 type GridProduct = {
   id: number;
@@ -9,6 +10,7 @@ type GridProduct = {
   store_name: string;
   title: string;
   price: number;
+  currency?: string | null;
   image: string | null;
   images: string | null;
   categoryLabel: CategoryLabel;
@@ -49,7 +51,7 @@ export default function MixedProductGrid({
               id={compositeId}
               dbId={product.id}
               name={product.title}
-              price={`$${Math.round(Number(product.price))}`}
+              price={formatPrice(product.price, product.currency)}
               category={product.categoryLabel}
               storeName={product.store_name}
               storeSlug={product.store_slug}

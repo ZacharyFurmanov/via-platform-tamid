@@ -14,6 +14,7 @@ export default async function EditorsPicksPage() {
     store_name: pick.product.storeName,
     title: pick.product.title,
     price: pick.product.price,
+    currency: pick.product.currency,
     image: pick.product.image,
     images: pick.product.images,
     size: pick.product.size,

@@ -37,6 +37,7 @@ export default async function BrowsePage() {
       dbId: dbIdMap.get(item.id),
       title: item.title,
       price: item.price,
+      currency: item.currency,
       compareAtPrice: item.compareAtPrice,
       category: item.category,
       categoryLabel: categoryMap[item.category as keyof typeof categoryMap],

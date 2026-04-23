@@ -4,6 +4,7 @@ import { stores } from "@/app/lib/stores";
 import { brands } from "@/app/lib/brandData";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -313,7 +314,7 @@ export async function GET(request: Request) {
           name: p.title,
           storeSlug: p.store_slug,
           storeName: p.store_name,
-          price: `$${Math.round(Number(p.price))}`,
+          price: formatPrice(Number(p.price), p.currency as string | null),
           image: p.image,
           images: parsedImages,
         };

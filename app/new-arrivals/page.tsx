@@ -57,6 +57,7 @@ export default async function NewArrivalsPage() {
       dbId,
       title: item.title,
       price: Number(item.price),
+      currency: item.currency,
       compareAtPrice: item.compare_at_price != null ? Number(item.compare_at_price) : undefined,
       category: displaySlug,
       categoryLabel: displayLabel,

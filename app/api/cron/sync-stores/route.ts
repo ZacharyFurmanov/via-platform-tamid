@@ -10,9 +10,8 @@ import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
-import { stores } from "@/app/lib/stores";
+import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
-import { convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 
 export async function GET(request: Request) {
   console.log("[Sync Stores] Cron job triggered");
@@ -83,19 +82,24 @@ export async function GET(request: Request) {
           .filter((p) => p.price !== null)
           .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
           .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
-          .map((p) => ({
-            title: p.title,
-            price: convertCurrencyToUSD(p.price as number, p.currency),
-            currency: "USD",
-            image: p.image ?? undefined,
-            images: p.images,
-            externalUrl: p.externalUrl,
-            description: p.description ?? undefined,
-            variantId: p.variantId ?? undefined,
-            shopifyProductId: p.shopifyProductId ?? undefined,
-            size: p.size ?? undefined,
-            compareAtPrice: p.compareAtPrice != null ? convertCurrencyToUSD(p.compareAtPrice as number, p.currency) : undefined,
-          }));
+          .map((p) => {
+            const storeCurrency = p.currency || "USD";
+            return {
+              title: p.title,
+              price: convertCurrencyToUSD(p.price as number, storeCurrency),
+              currency: "USD",
+              image: p.image ?? undefined,
+              images: p.images,
+              externalUrl: p.externalUrl,
+              description: p.description ?? undefined,
+              variantId: p.variantId ?? undefined,
+              shopifyProductId: p.shopifyProductId ?? undefined,
+              size: p.size ?? undefined,
+              compareAtPrice: p.compareAtPrice != null
+                ? convertCurrencyToUSD(p.compareAtPrice as number, storeCurrency)
+                : undefined,
+            };
+          });
 
         const { count: productCount } = await syncProducts(storeSlug, store.name, products);
         results.push({ store: store.name, success: true, productCount });

@@ -5,6 +5,7 @@ import ProductCard from "@/app/components/ProductCard";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import type { FavoriteProductEntry } from "@/app/lib/favorites-db";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 type Props = {
   userId: string;
@@ -72,7 +73,7 @@ export default function SavesTab({ userId: _userId, favProducts }: Props) {
               id={compositeId}
               dbId={productId}
               name={title}
-              price={`$${Math.round(Number(price))}`}
+              price={formatPrice(Number(price), product?.currency)}
               category={categoryLabel}
               storeName={storeName}
               storeSlug={storeSlug}

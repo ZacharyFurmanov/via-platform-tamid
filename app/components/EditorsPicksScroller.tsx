@@ -1,6 +1,7 @@
 "use client";
 
 import ProductCard from "./ProductCard";
+import { formatPrice } from "@/app/lib/formatPrice";
 
 type Pick = {
   pickId: number;
@@ -8,6 +9,7 @@ type Pick = {
     id: number;
     title: string;
     price: string | number;
+    currency?: string | null;
     image: string;
     images: string;
     storeSlug: string;
@@ -37,7 +39,7 @@ export default function EditorsPicksScroller({ picks }: { picks: Pick[] }) {
               id={pick.product.compositeId}
               dbId={pick.product.id}
               name={pick.product.title}
-              price={`$${Math.round(Number(pick.product.price))}`}
+              price={formatPrice(Number(pick.product.price), pick.product.currency)}
               category={pick.product.categoryLabel as import("@/app/lib/categoryMap").CategoryLabel}
               storeName={pick.product.storeName}
               storeSlug={pick.product.storeSlug}
