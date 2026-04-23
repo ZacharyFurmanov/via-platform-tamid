@@ -326,10 +326,18 @@ export default function CustomersClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, firstName: name?.split(" ")[0] ?? undefined }),
       });
+      const data = await res.json();
       if (res.ok) {
         setCustomers((prev) =>
           prev.map((c) => c.email === email ? { ...c, status: "approved" } : c)
         );
+        if (data.emailSent) {
+          alert(`✓ Approved and email sent to ${email}`);
+        } else {
+          alert(`Approved but email FAILED for ${email}:\n${data.emailError || "Unknown error"}`);
+        }
+      } else {
+        alert(`Failed to approve ${email}: ${data.error}`);
       }
     } finally {
       setApproving(null);

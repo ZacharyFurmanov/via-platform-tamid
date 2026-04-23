@@ -24,14 +24,19 @@ export async function POST(request: NextRequest) {
 
   try {
     await approvePilotUser(email);
-    try {
-      await sendPilotApprovalEmail(email, firstName ?? undefined);
-    } catch (emailErr) {
-      console.error("[approve] email failed:", emailErr);
-    }
-    return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[approve]", err);
+    console.error("[approve] DB error:", err);
     return NextResponse.json({ error: "Failed to approve" }, { status: 500 });
   }
+
+  let emailError: string | null = null;
+  try {
+    await sendPilotApprovalEmail(email, firstName ?? undefined);
+    console.log(`[approve] Approval email sent to ${email}`);
+  } catch (emailErr) {
+    emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+    console.error("[approve] Email failed:", emailErr);
+  }
+
+  return NextResponse.json({ ok: true, emailSent: !emailError, emailError });
 }

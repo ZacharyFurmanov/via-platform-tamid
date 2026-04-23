@@ -162,7 +162,7 @@ export async function getPendingUsersToApprove(): Promise<
     ) refs ON refs.referred_by = pa.referral_code
     WHERE pa.status = 'pending'
     ORDER BY COALESCE(refs.ref_count, 0) DESC, pa.created_at ASC
-    LIMIT 20
+    LIMIT 10
   `;
   return rows as { email: string; first_name: string | null }[];
 }
