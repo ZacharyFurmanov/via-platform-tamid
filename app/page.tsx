@@ -29,7 +29,7 @@ export default function HomePage() {
             sizes="100vw"
           />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
-          <div className="absolute bottom-36 left-6 right-6 z-10">
+          <div className="absolute bottom-48 left-6 right-6 z-10">
             <h1 className="text-3xl font-serif text-[#F7F3EA] mb-6 leading-tight">
               Discover the world&apos;s best vintage.
             </h1>
@@ -90,26 +90,55 @@ export default function HomePage() {
       {/* ================= HOW IT WORKS ================= */}
       <section className="bg-[#F7F3EA] py-8 sm:py-12 border-b border-[#5D0F17]/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="mb-6">
-            <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug max-w-xl">
+          <div className="max-w-xl">
+            <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug">
               The best pieces, within reach. Shop from different vintage stores all over the world, in one place.
             </p>
-            <p className="text-xs text-[#5D0F17]/60 font-sans leading-relaxed max-w-xl mt-4">
+            <p className="text-xs text-[#5D0F17]/60 font-sans leading-relaxed mt-4">
               Every store represented on VYA has been carefully vetted, ensuring authenticity, quality, and care. Every purchase from VYA supports real people — not mass production.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-7 border-t border-[#5D0F17]/10">
-            {[
-              { n: "1.", label: "Browse", desc: "Search curated inventory from the world's best vintage stores." },
-              { n: "2.", label: "Discover", desc: "Find one-of-a-kind pieces you won't see anywhere else." },
-              { n: "3.", label: "Shop", desc: "Add to cart then head to checkout & wear something no one else has." },
-              { n: "4.", label: "Wear", desc: "Every purchase supports real people and a more sustainable future." },
-            ].map(({ n, label, desc }) => (
-              <div key={n}>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[#5D0F17]/40 mb-1.5 font-sans">{n} {label}</p>
-                <p className="text-xs text-[#5D0F17]/60 font-sans leading-relaxed">{desc}</p>
-              </div>
-            ))}
+        </div>
+      </section>
+
+      {/* ================= VYA EXPERIENCE ================= */}
+      <section className="bg-[#F7F3EA] py-16 sm:py-24 border-t border-[#5D0F17]/10">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <p className="text-lg sm:text-xl font-serif italic text-[#5D0F17]/70 mb-4">
+            The VYA Experience
+          </p>
+
+          <h2 className="text-3xl sm:text-4xl font-serif mb-4 sm:mb-6 text-[#5D0F17]">
+            A better way to shop vintage
+          </h2>
+
+          <p className="max-w-2xl mx-auto mb-12 sm:mb-16 text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+            VYA brings together the best independent vintage and secondhand stores
+            into one seamless browsing experience, while keeping checkout
+            with the store you love.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
+            <div>
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Browse across stores</h3>
+              <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+                Explore curated inventory from multiple stores at once.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Discover rare pieces</h3>
+              <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+                Find one-of-a-kind items you won&apos;t see everywhere else.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg sm:text-xl font-serif mb-2 sm:mb-3 text-[#5D0F17]">Checkout with confidence</h3>
+              <p className="text-[#5D0F17]/60 text-sm sm:text-base font-sans">
+                Purchase directly from the original store, no middlemen.
+              </p>
+            </div>
           </div>
         </div>
       </section>

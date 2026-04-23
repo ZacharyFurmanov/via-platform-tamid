@@ -227,6 +227,14 @@ h1, h2, h3 {
 
 
 /* ================================
+   Store carousel marquee
+================================ */
+@keyframes scroll-carousel {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ================================
    Product description font override
 ================================ */
 .product-description * {

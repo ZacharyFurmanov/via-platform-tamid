@@ -231,41 +231,77 @@ const WORD_SIZE_MAP: Record<string, string> = {
 };
 
 /**
- * Extracts a size from product description HTML.
- * Priority:
- * 1. Explicit parenthetical abbreviation: "Label: Medium (M)" → "M"
- * 2. Full word size after label keyword: "Label: Medium" → "M"
- * 3. Abbreviated size after label keyword: "Label: M" → "M"
- * 4. "fits XS", "best fits M" — common in vintage descriptions
+ * Extracts size using ONLY authoritative label keywords: "tagged size", "labeled size",
+ * "marked size", "label". Used as the top-priority source so "Tagged size: XS" always
+ * beats "Size: Large [store bucket]" that appears earlier in the description.
+ */
+export function extractTaggedSizeFromDescription(description: string | null): string | null {
+  if (!description) return null;
+  const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+  const STRICT = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
+
+  // EU/IT/FR/DE prefix: "Tagged size: EU 37"
+  const euRe = new RegExp(`(?:${STRICT})\\s*:?\\s*((?:EU|IT|FR|DE)\\s*:?\\s*\\d[\\d.]*)`, "i");
+  const euM = euRe.exec(text);
+  if (euM) return euM[1].trim().replace(/:\s*/, " ").replace(/\s+/, " ");
+
+  // Parenthetical abbreviation: "Label: Medium (M)" → "M"
+  const parenRe = new RegExp(`(?:${STRICT})\\s*:?[^(\\n]*?\\(\\s*(${SIZE_VALUE_PATTERN})\\s*\\)`, "i");
+  const parenM = parenRe.exec(text);
+  if (parenM) return parenM[1].trim();
+
+  // Abbreviated size: "Tagged size: XS"
+  const abbrRe = new RegExp(`(?:${STRICT})\\s*:?\\s*(${SIZE_VALUE_PATTERN})`, "i");
+  const abbrM = abbrRe.exec(text);
+  if (abbrM) return abbrM[1].trim();
+
+  // Full word size: "Tagged size: Medium"
+  const wordRe = new RegExp(
+    `(?:${STRICT})\\s*:?\\s*(extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large)(?:\\s|$|[^a-z])`,
+    "i"
+  );
+  const wordM = wordRe.exec(text);
+  if (wordM) {
+    const key = wordM[1].toLowerCase().replace(/\s+/g, " ").trim();
+    return WORD_SIZE_MAP[key.replace(/-/g, "")] ?? WORD_SIZE_MAP[key] ?? wordM[1];
+  }
+
+  return null;
+}
+
+/**
+ * Extracts a size from product description HTML using all available heuristics.
+ * For highest-priority extraction (tagged/labeled/marked keywords), use
+ * extractTaggedSizeFromDescription instead — it won't be fooled by an earlier
+ * "Size: Large [store bucket]" before "Tagged size: XS [actual tag]".
  */
 export function extractSizeFromDescription(description: string | null): string | null {
   if (!description) return null;
   const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
 
-  const LABEL_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?|size`;
-  const STRICT_LABEL_KW_LOCAL = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
+  const STRICT_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
 
-  // 0. EU/IT/FR/DE prefixed size after label keyword — takes priority over parenthetical
-  //    Handles "Label: EU 37 (UK 4)" → "EU 37", "Label: EU 39" → "EU 39"
-  //    Also handles "Size: EU: 37 / UK: 4" (colon between prefix and number)
+  // 0. EU/IT/FR/DE prefixed size after any label keyword (strict or bare "size:")
   const euLabelRe = new RegExp(
-    `(?:${STRICT_LABEL_KW_LOCAL}|size)\\s*:?\\s*((?:EU|IT|FR|DE)\\s*:?\\s*\\d[\\d.]*)`,
+    `(?:(?:${STRICT_KW})\\s*:?|size\\s*:)\\s*((?:EU|IT|FR|DE)\\s*:?\\s*\\d[\\d.]*)`,
     "i"
   );
   const euLabelMatch = euLabelRe.exec(text);
   if (euLabelMatch) return euLabelMatch[1].trim().replace(/:\s*/, " ").replace(/\s+/, " ");
 
-  // 1. Parenthetical abbreviation after label keyword: "Label: Medium (M)" → "M"
+  // 1. Parenthetical abbreviation after any label keyword or "size:"
+  const parenKw = `${STRICT_KW}|size`;
   const parenRe = new RegExp(
-    `(?:${LABEL_KW})\\s*:?[^(\\n]*?\\(\\s*(${SIZE_VALUE_PATTERN})\\s*\\)`,
+    `(?:${parenKw})\\s*:?[^(\\n]*?\\(\\s*(${SIZE_VALUE_PATTERN})\\s*\\)`,
     "i"
   );
   const parenMatch = parenRe.exec(text);
   if (parenMatch) return parenMatch[1].trim();
 
-  // 2. Full word size after label keyword: "Label: Medium", "Size: Large"
+  // 2. Full word size — requires colon after bare "size" to avoid freeform matches
+  //    ("size large" in narrative text, "I'd recommend size large" etc.)
   const wordRe = new RegExp(
-    `(?:${LABEL_KW})\\s*:?\\s*(extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large)(?:\\s|$|[^a-z])`,
+    `(?:(?:${STRICT_KW})\\s*:?|size\\s*:)\\s*(extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large)(?:\\s|$|[^a-z])`,
     "i"
   );
   const wordMatch = wordRe.exec(text);
@@ -274,23 +310,20 @@ export function extractSizeFromDescription(description: string | null): string |
     return WORD_SIZE_MAP[key.replace(/-/g, "")] ?? WORD_SIZE_MAP[key] ?? wordMatch[1];
   }
 
-  // 3. Abbreviated size after label keyword: "Size: M", "Tagged size: EU 38"
-  // Bare "size" requires a colon to avoid matching "size S" in freeform text.
-  const STRICT_LABEL_KW = `tagged\\s+size|labeled\\s+size|marked\\s+size|label(?:\\s+size)?`;
+  // 3. Abbreviated size after strict label or "size:" (with colon)
   const re = new RegExp(
-    `(?:(?:${STRICT_LABEL_KW})\\s*:?|size\\s*:)\\s*(${SIZE_VALUE_PATTERN})`,
+    `(?:(?:${STRICT_KW})\\s*:?|size\\s*:)\\s*(${SIZE_VALUE_PATTERN})`,
     "i"
   );
   const match = re.exec(text);
   if (match) return match[1].trim();
 
-  // 3b. "Size 39." / "Size 38.5" — bare "size" + space + numeric (no colon).
-  // Colon not required for pure numeric sizes; low false-positive risk.
+  // 3b. "Size 39." / "Size 38.5" — bare "size" + space + numeric (no colon needed; low false-positive)
   const bareNumericRe = /\bsize\s+((?:US|UK|EU|IT)?\s*\d[\d.]*)\.?(?:\s|$)/i;
   const bareNumericMatch = bareNumericRe.exec(text);
   if (bareNumericMatch) return bareNumericMatch[1].trim();
 
-  // 3c. "Size XS," / "Size M." — bare "size" + space + letter abbreviation (no colon).
+  // 3c. "Size XS," / "Size M." — bare "size" + space + letter abbreviation (no colon)
   const bareLetterRe = new RegExp(`\\bsize\\s+(${SIZE_VALUE_PATTERN})(?:[,.]|\\s|$)`, "i");
   const bareLetterMatch = bareLetterRe.exec(text);
   if (bareLetterMatch) return bareLetterMatch[1].trim();
@@ -428,14 +461,15 @@ export async function fetchShopifyProducts(
       const sizeOptionRaw = sizeOption?.value && sizeOption.value !== "Default Title" ? sizeOption.value : null;
       const sizeFromVariant = sizeOptionRaw ? normalizeCompoundSize(sizeOptionRaw) : null;
       const sizeFromTitle = extractSizeFromTitle(node.title);
+      const taggedSize = extractTaggedSizeFromDescription(node.descriptionHtml || null);
       const sizeFromDescription = extractSizeFromDescription(node.descriptionHtml || null);
-      // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), it may be wrong
-      // for accessories/shoes. Prefer the more specific description/title size when available.
+      // Priority: tagged/labeled/marked size > specific variant > title > generic variant > bare description
       const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
-      const specificSize = sizeFromDescription ?? sizeFromTitle;
-      const size = (sizeFromVariant && !isGenericOnly)
-        ? sizeFromVariant
-        : specificSize ?? (isGenericOnly ? sizeFromVariant : null);
+      const size = taggedSize
+        ?? (sizeFromVariant && !isGenericOnly ? sizeFromVariant : null)
+        ?? sizeFromTitle
+        ?? (isGenericOnly ? sizeFromVariant : null)
+        ?? sizeFromDescription;
 
       products.push({
         title: node.title,
@@ -637,15 +671,17 @@ export async function fetchShopifyProductsPublic(
       // Only accept variant.title as a size if it actually looks like a size (not a color like "Green")
       const rawVariantTitle = variant?.title && variant.title !== "Default Title" ? variant.title : null;
       const variantTitleIfSize = rawVariantTitle ? normalizeCompoundSize(rawVariantTitle) : null;
-      // If sizeFromVariant is only a generic clothing letter (S/M/L/XL…), prefer a more specific
-      // size from the title or description (e.g. "35" from "Dior Heels 35" beats "M").
       const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
       const sizeFromTitle = extractSizeFromTitle(product.title);
+      const taggedSize = extractTaggedSizeFromDescription(product.body_html || null);
       const sizeFromDescription = extractSizeFromDescription(product.body_html || null);
-      const specificSize = sizeFromDescription ?? sizeFromTitle;
-      const size = (sizeFromVariant && !isGenericOnly)
-        ? sizeFromVariant
-        : specificSize ?? variantTitleIfSize ?? (isGenericOnly ? sizeFromVariant : null);
+      // Priority: tagged/labeled/marked size > specific variant > title > generic variant > bare description
+      const size = taggedSize
+        ?? (sizeFromVariant && !isGenericOnly ? sizeFromVariant : null)
+        ?? sizeFromTitle
+        ?? variantTitleIfSize
+        ?? (isGenericOnly ? sizeFromVariant : null)
+        ?? sizeFromDescription;
       const allImageUrls: string[] = (product.images || [])
         .map((img: { src?: string }) => img.src)
         .filter(Boolean) as string[];
@@ -760,9 +796,15 @@ export async function fetchShopifyProductsByCollections(
         const variantTitleIfSize = rawVariantTitle ? normalizeCompoundSize(rawVariantTitle) : null;
         const isGenericOnly = !!sizeFromVariant && GENERIC_CLOTHING_SIZE.test(sizeFromVariant);
         const sizeFromTitle = extractSizeFromTitle(product.title);
+        const taggedSize = extractTaggedSizeFromDescription(product.body_html || null);
         const sizeFromDescription = extractSizeFromDescription(product.body_html || null);
-        const specificSize = sizeFromDescription ?? sizeFromTitle;
-        const size = (sizeFromVariant && !isGenericOnly) ? sizeFromVariant : specificSize ?? variantTitleIfSize ?? (isGenericOnly ? sizeFromVariant : null);
+        // Priority: tagged/labeled/marked size > specific variant > title > generic variant > bare description
+        const size = taggedSize
+          ?? (sizeFromVariant && !isGenericOnly ? sizeFromVariant : null)
+          ?? sizeFromTitle
+          ?? variantTitleIfSize
+          ?? (isGenericOnly ? sizeFromVariant : null)
+          ?? sizeFromDescription;
 
         const allImageUrls: string[] = (product.images || []).map((img: { src?: string }) => img.src).filter(Boolean) as string[];
         const imageUrl = allImageUrls[0] || null;

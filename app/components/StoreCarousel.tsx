@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
-const SPEED = 0.4; // px per frame (~24px/s at 60fps — slow drift)
+// ~35 stores × 192 px/card ÷ 24 px/s ≈ 280 s per full loop
+const DURATION = 280;
 
 function StoreCard({ store }: { store: (typeof stores)[number] }) {
   return (
@@ -55,91 +56,88 @@ function StoreCard({ store }: { store: (typeof stores)[number] }) {
   );
 }
 
+function getTranslateX(el: HTMLElement): number {
+  const t = window.getComputedStyle(el).transform;
+  if (!t || t === "none") return 0;
+  // matrix(a,b,c,d,tx,ty) — tx is index 4
+  const nums = t.match(/matrix\(([^)]+)\)/);
+  if (!nums) return 0;
+  return parseFloat(nums[1].split(",")[4]) || 0;
+}
+
 export default function StoreCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | undefined>(undefined);
-  const pausedRef = useRef(false);
-  const resumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const drag = useRef({ active: false, startX: 0, baseX: 0, lastX: 0 });
+  const [animDelay, setAnimDelay] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [hovered, setHovered] = useState(false);
 
-  // Mouse-drag state
-  const dragRef = useRef({ active: false, startX: 0, startScroll: 0 });
-
-  const pause = () => {
-    pausedRef.current = true;
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const currentX = getTranslateX(track);
+    drag.current = { active: true, startX: e.touches[0].clientX, baseX: currentX, lastX: currentX };
+    setDragX(currentX);
+    setDragging(true);
   };
 
-  const resume = (delay = 1200) => {
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => {
-      pausedRef.current = false;
-    }, delay);
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!drag.current.active) return;
+    const dx = e.touches[0].clientX - drag.current.startX;
+    const newX = drag.current.baseX + dx;
+    drag.current.lastX = newX;
+    setDragX(newX);
   };
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+  const onTouchEnd = () => {
+    if (!drag.current.active) return;
+    drag.current.active = false;
+    const track = trackRef.current;
+    if (!track) { setDragging(false); return; }
 
-    function tick() {
-      if (el && !pausedRef.current) {
-        el.scrollLeft += SPEED;
-        // Seamless loop: when we've scrolled exactly half the track, reset to 0
-        if (el.scrollLeft >= el.scrollWidth / 2) {
-          el.scrollLeft -= el.scrollWidth / 2;
-        }
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    };
-  }, []);
-
-  // Mouse drag handlers
-  const onMouseDown = (e: React.MouseEvent) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    dragRef.current = { active: true, startX: e.pageX, startScroll: el.scrollLeft };
-    pause();
+    // halfWidth = the distance the animation covers (translateX goes 0 → -halfWidth)
+    const halfWidth = track.offsetWidth / 2;
+    // Normalize to a position within one cycle
+    const raw = Math.abs(drag.current.lastX);
+    const normalised = raw % halfWidth;
+    const progress = normalised / halfWidth;
+    setAnimDelay(-(progress * DURATION));
+    setDragging(false);
   };
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!dragRef.current.active) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const dx = e.pageX - dragRef.current.startX;
-    el.scrollLeft = dragRef.current.startScroll - dx;
-  };
-
-  const onMouseUp = () => {
-    dragRef.current.active = false;
-    resume(1200);
-  };
+  const trackStyle: React.CSSProperties = dragging
+    ? { width: "max-content", transform: `translateX(${dragX}px)` }
+    : {
+        width: "max-content",
+        animation: `scroll-carousel ${DURATION}s linear infinite`,
+        animationDelay: `${animDelay}s`,
+        animationPlayState: hovered ? "paused" : "running",
+      };
 
   return (
     <div
-      ref={scrollRef}
-      onMouseEnter={pause}
-      onMouseLeave={() => { dragRef.current.active = false; resume(800); }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onTouchStart={pause}
-      onTouchEnd={() => resume(1500)}
-      className="overflow-x-scroll scrollbar-hide flex gap-4 sm:gap-6 cursor-grab active:cursor-grabbing select-none"
+      className="overflow-hidden"
       style={{
-        scrollBehavior: "auto",
         maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
         WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
-      {/* Two copies for seamless loop */}
-      {[...stores, ...stores].map((store, i) => (
-        <StoreCard key={`${store.slug}-${i}`} store={store} />
-      ))}
+      <div
+        ref={trackRef}
+        className="flex gap-4 sm:gap-6 select-none"
+        style={trackStyle}
+      >
+        {/* Two copies for seamless loop */}
+        {[...stores, ...stores].map((store, i) => (
+          <StoreCard key={`${store.slug}-${i}`} store={store} />
+        ))}
+      </div>
     </div>
   );
 }

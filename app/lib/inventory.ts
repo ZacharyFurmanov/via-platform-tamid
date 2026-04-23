@@ -2,7 +2,7 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
-import { extractSizeFromTitle, extractSizeFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
+import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
@@ -165,13 +165,15 @@ export function deriveSize(product: DBProduct): string | null {
   const dbSize = product.size && isValidSizeValue(product.size) ? product.size : null;
   const isGenericDb = dbSize != null && GENERIC_CLOTHING_SIZE.test(dbSize);
 
-  // 1. Title — always check first; store-written titles are the most explicit signal
+  // 1. Tagged/labeled/marked size in description — most authoritative (actual garment tag)
+  //    Must run before title/DB to prevent "Size: Large [store bucket]" from winning
+  //    over "Tagged size: XS [actual tag]" that appears later in the description.
+  const taggedSize = extractTaggedSizeFromDescription(product.description);
+  if (taggedSize) return taggedSize;
+
+  // 2. Title — very explicit signal
   const sizeFromTitle = extractSizeFromTitle(product.title);
   if (sizeFromTitle) return sizeFromTitle;
-
-  // 2. Description label
-  const sizeFromDesc = extractSizeFromDescription(product.description);
-  if (sizeFromDesc) return sizeFromDesc;
 
   // 3. Non-generic DB size (numeric, EU/UK prefixed)
   if (dbSize && !isGenericDb) return dbSize;
@@ -180,7 +182,11 @@ export function deriveSize(product: DBProduct): string | null {
   const sizeFromMeasurements = inferSizeFromMeasurements(product.description);
   if (sizeFromMeasurements) return sizeFromMeasurements;
 
-  // 5. Generic DB size (S/M/L) as last resort
+  // 5. Bare description scan (lowest trust — may match store-category text)
+  const sizeFromDesc = extractSizeFromDescription(product.description);
+  if (sizeFromDesc) return sizeFromDesc;
+
+  // 6. Generic DB size (S/M/L) as last resort
   return dbSize;
 }
 

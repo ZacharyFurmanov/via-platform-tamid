@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveConversion } from "@/app/lib/analytics-db";
-import { stores } from "@/app/lib/stores";
+import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { neon } from "@neondatabase/serverless";
 
 /**
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
   const { slug: storeSlug, name: storeName } = resolved;
 
   const orderId = String(order.id);
-  const currency = (order.currency as string) || "USD";
+  const orderCurrency = (order.currency as string) || "USD";
 
   const lineItems = (order.line_items as Array<Record<string, unknown>>) || [];
   const items = lineItems.map((item) => ({
@@ -117,7 +117,13 @@ export async function POST(request: NextRequest) {
   // Prefer total_price from Shopify; fall back to summing line items if missing/zero
   const rawTotal = parseFloat(String(order.total_price || order.subtotal_price || "0"));
   const itemsTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const orderTotal = rawTotal > 0 ? rawTotal : itemsTotal;
+  const localTotal = rawTotal > 0 ? rawTotal : itemsTotal;
+
+  // Convert to USD so analytics/commission math is always in one currency.
+  // Fetch live rates; falls back to hardcoded approximations if the request fails.
+  if (orderCurrency !== "USD") await refreshExchangeRates();
+  const orderTotal = convertCurrencyToUSD(localTotal, orderCurrency);
+  const currency = "USD";
 
   // Extract buyer email from order (Shopify includes it at order.email or order.customer.email)
   const buyerEmail: string | null =

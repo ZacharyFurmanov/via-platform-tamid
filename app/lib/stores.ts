@@ -877,12 +877,12 @@ export function getAllStoreEmails(): string[] {
   return Object.values(storeContactEmails).filter(Boolean);
 }
 
-// Fallback rates used when the live fetch fails
+// Fallback rates used when the live fetch fails (updated April 2026)
 const FALLBACK_RATES: Record<string, number> = {
   USD: 1,
-  GBP: 1.35,
-  EUR: 1.09,
-  CAD: 0.73,
+  GBP: 1.33,
+  EUR: 1.14,
+  CAD: 0.72,
   AUD: 0.64,
 };
 
