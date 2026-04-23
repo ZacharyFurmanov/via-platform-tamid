@@ -74,10 +74,10 @@ export default function StoreCarousel() {
 
     function tick() {
       if (!paused) {
-        el.scrollLeft += SPEED;
+        el!.scrollLeft += SPEED;
         // Seamless loop: when we've scrolled through the first copy, jump back
-        const half = el.scrollWidth / 2;
-        if (el.scrollLeft >= half) el.scrollLeft -= half;
+        const half = el!.scrollWidth / 2;
+        if (el!.scrollLeft >= half) el!.scrollLeft -= half;
       }
       animId = requestAnimationFrame(tick);
     }
