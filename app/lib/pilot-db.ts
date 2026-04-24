@@ -181,12 +181,22 @@ export async function getApprovedPilotEmails(): Promise<string[]> {
   return rows.map((r) => r.email as string);
 }
 
-/** Returns emails of all users who have created an account (active users, all time). */
+/** Returns emails of users who have been active (clicked, saved, viewed, or ordered) at least once. */
 export async function getActiveUserEmails(): Promise<string[]> {
   const sql = getDb();
   const rows = await sql`
-    SELECT LOWER(email) AS email FROM users
-    WHERE email IS NOT NULL AND email != ''
+    SELECT LOWER(u.email) AS email
+    FROM users u
+    WHERE u.email IS NOT NULL AND u.email != ''
+      AND EXISTS (
+        SELECT 1 FROM clicks          WHERE user_id = u.id AND user_id IS NOT NULL
+        UNION ALL
+        SELECT 1 FROM product_favorites WHERE user_id = u.id AND user_id IS NOT NULL
+        UNION ALL
+        SELECT 1 FROM store_favorites   WHERE user_id = u.id AND user_id IS NOT NULL
+        UNION ALL
+        SELECT 1 FROM conversions       WHERE user_id = u.id AND user_id IS NOT NULL
+      )
   `;
   return rows.map((r) => r.email as string);
 }

@@ -59,6 +59,7 @@ function NewArrivalsPanel() {
 function FeedbackEmailPanel() {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
 
   async function callRoute(body: object) {
     setLoading(true);
@@ -82,8 +83,32 @@ function FeedbackEmailPanel() {
     <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "24px", marginBottom: 32 }}>
       <h2 className="font-serif" style={{ fontSize: 20, color: "#5D0F17", marginBottom: 8 }}>Feedback Form Email</h2>
       <p style={{ fontSize: 13, color: "rgba(93,15,23,0.5)", marginBottom: 16 }}>
-        Send a feedback request to all active users (everyone who has created an account). Links to the Typeform survey.
+        Send a feedback request to active users (users who have clicked, saved, or ordered at least once). Links to the Typeform survey.
       </p>
+
+      {/* Test email input */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ fontSize: 12, color: "rgba(93,15,23,0.6)", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Send test to a single email
+        </label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            placeholder="email@example.com"
+            style={{ flex: 1, maxWidth: 300, padding: "8px 12px", border: "1px solid #e5e7eb", fontSize: 13, color: "#5D0F17", outline: "none" }}
+          />
+          <button
+            onClick={() => { if (testEmail.trim()) callRoute({ testEmail: testEmail.trim() }); }}
+            disabled={loading || !testEmail.trim()}
+            style={{ padding: "8px 18px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading || !testEmail.trim() ? "not-allowed" : "pointer", opacity: loading || !testEmail.trim() ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          >
+            Send Test
+          </button>
+        </div>
+      </div>
+
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button
           onClick={() => callRoute({ preview: true })}
@@ -93,19 +118,11 @@ function FeedbackEmailPanel() {
           Preview
         </button>
         <button
-          onClick={() => {
-            const test = prompt("Test email address (leave blank to send to all):");
-            if (test === null) return;
-            if (test.trim()) {
-              callRoute({ testEmail: test.trim() });
-            } else if (confirm("Send feedback email to ALL active users?")) {
-              callRoute({ send: true });
-            }
-          }}
+          onClick={() => { if (confirm("Send feedback email to ALL active users?")) callRoute({ send: true }); }}
           disabled={loading}
           style={{ padding: "10px 20px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
         >
-          {loading ? "Sending…" : "Send"}
+          {loading ? "Sending…" : "Send to Everyone"}
         </button>
       </div>
       {status && (
