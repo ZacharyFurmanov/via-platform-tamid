@@ -1221,6 +1221,52 @@ export async function sendPilotApprovalEmail(
   });
 }
 
+export async function sendFeedbackEmail(
+  emails: string[]
+): Promise<{ sent: number; failed: number }> {
+  const resend = getResend();
+  let sent = 0;
+  let failed = 0;
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,serif;margin:0 0 16px;">Hi,</p>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,serif;line-height:1.75;margin:0 0 24px;">
+      We're building VYA around you — and we'd love to hear what you actually think.
+    </p>
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,serif;line-height:1.75;margin:0 0 24px;">
+      It takes 2 minutes and genuinely shapes what we build next.
+    </p>
+    <a href="https://form.typeform.com/to/ssrEgHZ1"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:14px 32px;font-size:12px;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">
+      <span style="color:#F7F3EA !important;">Share Your Feedback</span>
+    </a>
+    <p style="font-size:14px;color:#5D0F17;font-family:Georgia,serif;line-height:1.8;margin:40px 0 0;">
+      Thank you for being part of this,<br/>
+      <strong>Hana</strong><br/>
+      <span style="font-size:12px;color:rgba(93,15,23,0.6);">Founder of VYA</span>
+    </p>
+  `;
+
+  for (const email of emails) {
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject: "We'd love your feedback 💌",
+        html: viaShell("Help us build VYA.", content),
+      });
+      sent++;
+    } catch (err) {
+      console.error(`[FeedbackEmail] Failed to send to ${email}:`, err);
+      failed++;
+    }
+    // Small delay to avoid rate limits
+    await new Promise((r) => setTimeout(r, 100));
+  }
+
+  return { sent, failed };
+}
+
 export async function sendWaitlistConfirmationEmail(
   email: string,
   firstName?: string

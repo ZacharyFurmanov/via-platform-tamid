@@ -56,6 +56,67 @@ function NewArrivalsPanel() {
   );
 }
 
+function FeedbackEmailPanel() {
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function callRoute(body: object) {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch("/api/admin/send-feedback-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      setStatus(JSON.stringify(data, null, 2));
+    } catch {
+      setStatus("Request failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "24px", marginBottom: 32 }}>
+      <h2 className="font-serif" style={{ fontSize: 20, color: "#5D0F17", marginBottom: 8 }}>Feedback Form Email</h2>
+      <p style={{ fontSize: 13, color: "rgba(93,15,23,0.5)", marginBottom: 16 }}>
+        Send a feedback request to all active users (everyone who has created an account). Links to the Typeform survey.
+      </p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => callRoute({ preview: true })}
+          disabled={loading}
+          style={{ padding: "10px 20px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+        >
+          Preview
+        </button>
+        <button
+          onClick={() => {
+            const test = prompt("Test email address (leave blank to send to all):");
+            if (test === null) return;
+            if (test.trim()) {
+              callRoute({ testEmail: test.trim() });
+            } else if (confirm("Send feedback email to ALL active users?")) {
+              callRoute({ send: true });
+            }
+          }}
+          disabled={loading}
+          style={{ padding: "10px 20px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+        >
+          {loading ? "Sending…" : "Send"}
+        </button>
+      </div>
+      {status && (
+        <pre style={{ marginTop: 16, padding: 12, background: "#F7F3EA", fontSize: 12, color: "#5D0F17", overflowX: "auto", whiteSpace: "pre-wrap" }}>
+          {status}
+        </pre>
+      )}
+    </div>
+  );
+}
+
 type EmailEntry = {
   email: string;
   signupDate: string;
@@ -133,9 +194,10 @@ export default function EmailsAdminPage() {
         </div>
       </section>
 
-      {/* New Arrivals Send Panel */}
+      {/* Email Send Panels */}
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px 0" }}>
         <NewArrivalsPanel />
+        <FeedbackEmailPanel />
       </div>
 
       {/* Stats & Actions */}

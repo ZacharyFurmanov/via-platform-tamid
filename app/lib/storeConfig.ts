@@ -111,7 +111,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
-    name: "So Lxury",
+    name: "Solxury Vintage",
     slug: "so-lxury",
     storeDomain: "solxuryvintage.com",
   },

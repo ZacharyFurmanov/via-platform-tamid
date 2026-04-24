@@ -181,6 +181,16 @@ export async function getApprovedPilotEmails(): Promise<string[]> {
   return rows.map((r) => r.email as string);
 }
 
+/** Returns emails of all users who have created an account (active users, all time). */
+export async function getActiveUserEmails(): Promise<string[]> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT LOWER(email) AS email FROM users
+    WHERE email IS NOT NULL AND email != ''
+  `;
+  return rows.map((r) => r.email as string);
+}
+
 export async function isEmailInWaitlist(email: string): Promise<boolean> {
   const sql = getDb();
   try {

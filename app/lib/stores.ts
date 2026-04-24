@@ -574,10 +574,10 @@ export const stores = [
   {
     slug: "so-lxury",
     dashboardToken: "slx-5a3c9e1f7b2d",
-    name: "So Lxury",
+    name: "Solxury Vintage",
     location: "Tampa, FL",
     description:
-      "So Lxury is a curated vintage designer platform inspired by a universal love for timeless fashion and the stories behind each piece. Rooted in the belief that luxury is more than just a label — it's about history, craftsmanship, and individuality — every bag is carefully sourced and authenticated, bringing you pieces that feel unique, meaningful, and impossible to replicate.",
+      "Solxury Vintage is a curated vintage designer platform inspired by a universal love for timeless fashion and the stories behind each piece. Rooted in the belief that luxury is more than just a label — it's about history, craftsmanship, and individuality — every bag is carefully sourced and authenticated, bringing you pieces that feel unique, meaningful, and impossible to replicate.",
     website: "https://solxuryvintage.com",
     dataSource: "so-lxury",
     image: "/stores/placeholder.svg",
@@ -588,7 +588,7 @@ export const stores = [
     affiliatePath: "VYA",
     collabsStoreId: "237155",
     authenticityPolicy:
-      "Every bag at So Lxury is carefully sourced and authenticated before listing. Each piece is chosen for its history, craftsmanship, and individuality — accurately described so you can shop with confidence.",
+      "Every bag at Solxury Vintage is carefully sourced and authenticated before listing. Each piece is chosen for its history, craftsmanship, and individuality — accurately described so you can shop with confidence.",
     shippingPolicy:
       "Ships from Tampa, FL. Shipping rates are calculated at checkout.",
     returnPolicy:
