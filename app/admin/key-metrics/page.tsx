@@ -145,6 +145,7 @@ type Metrics = {
   revenuePerUser: { value: number; buyingUsers: number };
   gmvByWeek: { week: string; gmv: number }[];
   users: { registered: number; waitlist: number };
+  waitlistByMonth: { month: string; signups: number; approved: number }[];
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
   period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
 };
@@ -324,6 +325,100 @@ export default function KeyMetricsPage() {
                 />
               </div>
             </section>
+
+            {/* ── Waitlist Growth ─────────────────────────────────── */}
+            {data.waitlistByMonth.length > 0 && (
+              <section>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Waitlist Growth</h2>
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
+                  {(() => {
+                    // Filter months to match selected period
+                    const visibleMonths = data.period?.isMonth
+                      ? data.waitlistByMonth.filter((m) => m.month === selectedMonth)
+                      : data.waitlistByMonth;
+
+                    const currentMonthData = visibleMonths[visibleMonths.length - 1];
+                    const prevMonthData = data.period?.isMonth
+                      ? data.waitlistByMonth[data.waitlistByMonth.findIndex((m) => m.month === selectedMonth) - 1]
+                      : visibleMonths[visibleMonths.length - 2];
+
+                    const totalApproved = data.waitlistByMonth.reduce((s, m) => s + m.approved, 0);
+                    const totalPending = data.users.waitlist - totalApproved;
+
+                    return (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+                          {data.period?.isMonth ? (
+                            <>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Signups — {data.period.label}</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
+                                {prevMonthData && <TrendBadge current={currentMonthData?.signups ?? 0} prev={prevMonthData.signups} fmtFn={fmtNum} />}
+                              </div>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Approved — {data.period.label}</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.approved ?? 0)}</p>
+                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>of {fmtNum(currentMonthData?.signups ?? 0)} signups</p>
+                              </div>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>All-Time Waitlist</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
+                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Total on Waitlist</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
+                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
+                              </div>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>This Month</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
+                                {prevMonthData && <TrendBadge current={currentMonthData?.signups ?? 0} prev={prevMonthData.signups} fmtFn={fmtNum} />}
+                              </div>
+                              <div>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Avg / Month</p>
+                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
+                                  {fmtNum(Math.round(data.users.waitlist / Math.max(data.waitlistByMonth.length, 1)))}
+                                </p>
+                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>across {data.waitlistByMonth.length} month{data.waitlistByMonth.length !== 1 ? "s" : ""}</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Bar chart — only show when not filtered to a single month */}
+                        {!data.period?.isMonth && (
+                          <div style={{ overflowX: "auto" }}>
+                            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, minWidth: visibleMonths.length * 56, height: 80 }}>
+                              {(() => {
+                                const maxVal = Math.max(...visibleMonths.map((m) => m.signups), 1);
+                                return visibleMonths.map((m) => {
+                                  const barH = Math.max((m.signups / maxVal) * 64, 4);
+                                  const label = new Date(m.month + "-02").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+                                  return (
+                                    <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                                      <span style={{ fontSize: 10, color: MUTED, fontWeight: 600 }}>{m.signups}</span>
+                                      <div style={{ width: "100%", height: barH, background: MAROON, borderRadius: "3px 3px 0 0", opacity: 0.8 }} title={`${label}: ${m.signups} signups, ${m.approved} approved`} />
+                                      <span style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap" }}>{label}</span>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                        <p style={{ fontSize: 11, color: "#9ca3af", margin: "12px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
+                          {data.period?.isMonth ? `Waitlist activity for ${data.period.label}.` : "Signups per month since launch. Hover bars for approved count."}
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+              </section>
+            )}
 
             {/* ── Engagement ──────────────────────────────────────── */}
             <section>

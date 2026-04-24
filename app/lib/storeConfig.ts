@@ -56,6 +56,12 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
     slug: "montrose-edit",
     shopUrl: "https://www.montroseedit.com/shop",
   },
+  {
+    type: "squarespace",
+    name: "Sassy So What",
+    slug: "sassy-so-what",
+    shopUrl: "https://www.sassysowhat.com/shopall/available-1",
+  },
 ];
 
 // Shopify stores (Storefront API)
@@ -102,6 +108,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "lover-girl-vintage",
     storeDomain: "lovergirlvintage.com",
     excludeKeywords: ["trucker hat"],
+  },
+  {
+    type: "shopify",
+    name: "So Lxury",
+    slug: "so-lxury",
+    storeDomain: "solxuryvintage.com",
   },
   {
     type: "shopify",

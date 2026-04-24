@@ -503,6 +503,27 @@ export const stores = [
       "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, use the form below within 2 business days of delivery.",
   },
   {
+    slug: "sassy-so-what",
+    dashboardToken: "ssw-2e1a9c4f7b3d",
+    name: "Sassy So What",
+    location: "Dallas, TX",
+    description:
+      "Sassy So What is a Dallas-based pre-loved designer boutique specializing in luxury shoes, bags, accessories, clothing, and jewelry. Each piece is hand-selected for quality, character, and lasting style — bringing elevated vintage and secondhand finds to those who love fashion with a story.",
+    website: "https://www.sassysowhat.com",
+    dataSource: "sassy-so-what",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "squarespace-manual" as const,
+    authenticityPolicy:
+      "Every piece at Sassy So What is personally sourced and inspected before listing. Items are accurately described with full condition details so you can shop with confidence.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "scarz-vintage",
     dashboardToken: "sv-8a2c4b9d1e7f",
     name: "Scarz Vintage",
@@ -549,6 +570,29 @@ export const stores = [
       "Ships from Calgary, Canada. Shipping rates are calculated at checkout. International customers may be responsible for customs duties and taxes.",
     returnPolicy:
       "All sales are final. Due to the delicate and one-of-a-kind nature of vintage items, returns are not accepted. If there is an issue with your order, use the form below and the store will do everything possible to resolve it.",
+  },
+  {
+    slug: "so-lxury",
+    dashboardToken: "slx-5a3c9e1f7b2d",
+    name: "So Lxury",
+    location: "Tampa, FL",
+    description:
+      "So Lxury is a curated vintage designer platform inspired by a universal love for timeless fashion and the stories behind each piece. Rooted in the belief that luxury is more than just a label — it's about history, craftsmanship, and individuality — every bag is carefully sourced and authenticated, bringing you pieces that feel unique, meaningful, and impossible to replicate.",
+    website: "https://solxuryvintage.com",
+    dataSource: "so-lxury",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "237155",
+    authenticityPolicy:
+      "Every bag at So Lxury is carefully sourced and authenticated before listing. Each piece is chosen for its history, craftsmanship, and individuality — accurately described so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from Tampa, FL. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
     slug: "source-twenty-four",
@@ -889,6 +933,8 @@ export const storeContactEmails: Record<string, string> = {
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "chomp-chomp-vintage": "chompchompvintage@gmail.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
+  "sassy-so-what": "hello@sassysowhat.com",
+  "so-lxury": "solxuryvintage@gmail.com",
   "other-matters-atelier": "othermattersatelier@gmail.com",
   "tess-elizabeth-vintage": "hello@tesselizabeth.com",
   "west-village-vintage": "info@westvillagevintage.com",

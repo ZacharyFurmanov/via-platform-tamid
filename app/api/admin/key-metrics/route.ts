@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
     gmvByWeekRows,
     registeredUsersRows,
     waitlistRows,
+    waitlistByMonthRows,
     activityBreakdownRows,
     churnRows,
     returningUsersRows,
@@ -208,6 +209,17 @@ export async function GET(request: NextRequest) {
     sql`SELECT COUNT(*)::int AS total FROM users`,
     sql`SELECT COUNT(*)::int AS total FROM pilot_access`,
 
+    // Waitlist growth by month
+    sql`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
+        COUNT(*)::int AS signups,
+        COUNT(*) FILTER (WHERE status = 'approved')::int AS approved
+      FROM pilot_access
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `,
+
     // Activity breakdown — for the selected period
     sql`
       SELECT
@@ -300,6 +312,11 @@ export async function GET(request: NextRequest) {
 
   const totalRegisteredUsers = registeredUsersRows[0]?.total ?? 0;
   const totalWaitlist = waitlistRows[0]?.total ?? 0;
+  const waitlistByMonth = (waitlistByMonthRows as { month: string; signups: number; approved: number }[]).map((r) => ({
+    month: r.month,
+    signups: r.signups,
+    approved: r.approved,
+  }));
   const ab = activityBreakdownRows?.[0];
   const activityBreakdown = ab ? {
     clickers: (ab.clickers as number) ?? 0,
@@ -351,6 +368,7 @@ export async function GET(request: NextRequest) {
     },
     gmvByWeek: gmvByWeekRows,
     users: { registered: totalRegisteredUsers, waitlist: totalWaitlist },
+    waitlistByMonth,
     activityBreakdown,
     returningUsers: {
       last7d: (returningUsersRows[0]?.returning_7d as number) ?? 0,
