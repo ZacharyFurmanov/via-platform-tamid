@@ -188,14 +188,11 @@ export async function getActiveUserEmails(): Promise<string[]> {
     SELECT LOWER(u.email) AS email
     FROM users u
     WHERE u.email IS NOT NULL AND u.email != ''
-      AND EXISTS (
-        SELECT 1 FROM clicks          WHERE user_id = u.id AND user_id IS NOT NULL
-        UNION ALL
-        SELECT 1 FROM product_favorites WHERE user_id = u.id AND user_id IS NOT NULL
-        UNION ALL
-        SELECT 1 FROM store_favorites   WHERE user_id = u.id AND user_id IS NOT NULL
-        UNION ALL
-        SELECT 1 FROM conversions       WHERE user_id = u.id AND user_id IS NOT NULL
+      AND (
+        EXISTS (SELECT 1 FROM clicks            WHERE user_id::text = u.id::text)
+        OR EXISTS (SELECT 1 FROM product_favorites WHERE user_id::text = u.id::text)
+        OR EXISTS (SELECT 1 FROM store_favorites   WHERE user_id::text = u.id::text)
+        OR EXISTS (SELECT 1 FROM conversions       WHERE user_id::text = u.id::text)
       )
   `;
   return rows.map((r) => r.email as string);
