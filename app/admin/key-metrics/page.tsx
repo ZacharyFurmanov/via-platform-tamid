@@ -144,7 +144,8 @@ type Metrics = {
   saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
   revenuePerUser: { value: number; buyingUsers: number };
   gmvByWeek: { week: string; gmv: number }[];
-  users: { registered: number; waitlist: number };
+  totalCommission: number;
+  users: { registered: number; waitlist: number; approved: number };
   waitlistByMonth: { month: string; signups: number; approved: number }[];
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
   period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
@@ -241,7 +242,7 @@ export default function KeyMetricsPage() {
             {/* ── GMV ─────────────────────────────────────────────── */}
             <section>
               <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Gross Merchandise Value</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                 <Link href="/admin/analytics" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px", gridColumn: "span 1", textDecoration: "none", display: "block", transition: "box-shadow 0.15s" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)")} onMouseLeave={e => (e.currentTarget.style.boxShadow = "")}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>
@@ -268,6 +269,13 @@ export default function KeyMetricsPage() {
                   trend={data.period?.isMonth ? undefined : <TrendBadge current={data.gmv.last30d} prev={data.gmv.prev30d} fmtFn={fmt$} />}
                   note={data.period?.isMonth ? `${data.period.label} total: ${fmt$(data.gmv.last30d)}` : `Previous 30 days: ${fmt$(data.gmv.prev30d)}`}
                   href="/admin/analytics"
+                />
+                <MetricCard
+                  label="Total Commission"
+                  value={fmt$(data.totalCommission)}
+                  sub="All time · 7/5/3% tiers"
+                  note="VYA earnings on attributed orders, excluding returns"
+                  href="/admin/conversions"
                 />
               </div>
             </section>
@@ -419,6 +427,43 @@ export default function KeyMetricsPage() {
                 </div>
               </section>
             )}
+
+            {/* ── Waitlist Funnel ─────────────────────────────────── */}
+            <section>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Waitlist Funnel</h2>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
+                {(() => {
+                  const steps = [
+                    { label: "Waitlist Signups", value: data.users.waitlist, note: "Total entries in pilot_access" },
+                    { label: "Approved", value: data.users.approved, note: "Granted platform access" },
+                    { label: "Registered Accounts", value: data.users.registered, note: "Created a VYA account" },
+                    { label: "Ever Active", value: data.mau.totalEverActive, note: "Clicked, saved, or ordered at least once" },
+                  ];
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${steps.length}, 1fr)`, gap: 0 }}>
+                      {steps.map((step, i) => {
+                        const prev = i > 0 ? steps[i - 1].value : null;
+                        const pct = prev && prev > 0 ? ((step.value / prev) * 100).toFixed(0) : null;
+                        return (
+                          <div key={step.label} style={{ display: "flex", alignItems: "stretch" }}>
+                            <div style={{ flex: 1, padding: "0 20px", borderRight: i < steps.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{step.label}</p>
+                              <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(step.value)}</p>
+                              {pct !== null && (
+                                <span style={{ fontSize: 11, background: "#f0fdf4", color: "#15803d", padding: "2px 7px", borderRadius: 20, fontWeight: 600 }}>
+                                  {pct}% of prev
+                                </span>
+                              )}
+                              <p style={{ fontSize: 11, color: "#9ca3af", margin: "8px 0 0" }}>{step.note}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </section>
 
             {/* ── Engagement ──────────────────────────────────────── */}
             <section>

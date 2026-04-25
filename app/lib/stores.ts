@@ -238,7 +238,7 @@ export const stores = [
     image: "/stores/jade-vintage.jpg",
     logo: "/stores/jade-vintage.jpg",
     logoBg: "#ffffff",
-    currency: "USD",
+    currency: "CAD",
     commissionType: "shopify-collabs" as const,
     affiliatePath: "VYA",
     collabsStoreId: "233878",
@@ -508,7 +508,7 @@ export const stores = [
     name: "Sassy So What",
     location: "Dallas, TX",
     description:
-      "Sassy So What is a Dallas-based pre-loved designer boutique specializing in luxury shoes, bags, accessories, clothing, and jewelry. Each piece is hand-selected for quality, character, and lasting style — bringing elevated vintage and secondhand finds to those who love fashion with a story.",
+      "Sassysowhat is based in Dallas, TX. Our niche is fun & fancy vintage, focused on luxury brand heels from the early 90s and 00s. Our meticulous attention to detail sets us apart from other vintage designer shops; we only add lasting quality items to the next girl's wardrobe.",
     website: "https://www.sassysowhat.com",
     dataSource: "sassy-so-what",
     image: "/stores/placeholder.svg",

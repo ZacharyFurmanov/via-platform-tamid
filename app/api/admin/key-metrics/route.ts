@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
     gmvByWeekRows,
     registeredUsersRows,
     waitlistRows,
+    commissionRows,
     waitlistByMonthRows,
     activityBreakdownRows,
     churnRows,
@@ -207,7 +208,9 @@ export async function GET(request: NextRequest) {
     `,
 
     sql`SELECT COUNT(*)::int AS total FROM users`,
-    sql`SELECT COUNT(*)::int AS total FROM pilot_access`,
+    sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'approved')::int AS approved FROM pilot_access`,
+    // Total commission — tiered, excluding returned orders
+    sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)`,
 
     // Waitlist growth by month
     sql`
@@ -312,6 +315,8 @@ export async function GET(request: NextRequest) {
 
   const totalRegisteredUsers = registeredUsersRows[0]?.total ?? 0;
   const totalWaitlist = waitlistRows[0]?.total ?? 0;
+  const totalApproved = waitlistRows[0]?.approved ?? 0;
+  const totalCommission = Math.round(((commissionRows[0]?.commission as number) ?? 0) * 100) / 100;
   const waitlistByMonth = (waitlistByMonthRows as { month: string; signups: number; approved: number }[]).map((r) => ({
     month: r.month,
     signups: r.signups,
@@ -367,7 +372,8 @@ export async function GET(request: NextRequest) {
       buyingUsers: rev.buying_users,
     },
     gmvByWeek: gmvByWeekRows,
-    users: { registered: totalRegisteredUsers, waitlist: totalWaitlist },
+    totalCommission,
+    users: { registered: totalRegisteredUsers, waitlist: totalWaitlist, approved: totalApproved },
     waitlistByMonth,
     activityBreakdown,
     returningUsers: {

@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
         ? sql`SELECT COUNT(*)::int AS total FROM product_views WHERE timestamp >= ${cutoffIso}`
         : sql`SELECT COUNT(*)::int AS total FROM product_views`,
 
-      // totalRevenue + totalConversions + matched breakdown — always all-time
-      sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0`,
+      // totalRevenue + totalConversions + matched breakdown — always all-time, excluding returned orders
+      sql`SELECT COALESCE(SUM(order_total), 0)::float AS revenue, COUNT(*)::int AS conversions, COUNT(*) FILTER (WHERE matched = true)::int AS matched, COUNT(*) FILTER (WHERE matched = false OR matched IS NULL)::int AS unmatched FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)`,
 
       // totalCustomers — registered accounts (users table) + pilot/waitlist breakdown
       sql`
@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
             ) AS combined
           `,
 
-      // totalCommission — tiered commission on all conversions, always all-time
-      sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0`,
+      // totalCommission — tiered commission on all conversions, always all-time, excluding returned orders
+      sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)`,
 
       // topProductsByClicks
       cutoffIso
