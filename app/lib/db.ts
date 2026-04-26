@@ -188,7 +188,8 @@ export async function syncProducts(
     shopifyProductId?: string;
     size?: string;
     compareAtPrice?: number | null;
-  }>
+  }>,
+  options?: { excludeKeywords?: string[]; excludeTitles?: string[] }
 ): Promise<{ count: number; priceDrops: PriceDrop[] }> {
   const sql = neon(getDatabaseUrl());
 
@@ -218,6 +219,22 @@ export async function syncProducts(
         OR title ILIKE '%authentification%'
       )
   `;
+
+  // Remove store-specific excluded products that may already be in the DB
+  const excludeKws = (options?.excludeKeywords ?? []).map((k) => k.toLowerCase());
+  const excludeTitles = new Set((options?.excludeTitles ?? []).map((t) => t.toLowerCase()));
+  if (excludeKws.length > 0 || excludeTitles.size > 0) {
+    const existing = await sql`SELECT title FROM products WHERE store_slug = ${storeSlug}`;
+    const toDelete = (existing as { title: string }[])
+      .map((r) => r.title)
+      .filter((t) => {
+        const lower = t.toLowerCase();
+        return excludeTitles.has(lower) || excludeKws.some((kw) => lower.includes(kw));
+      });
+    for (const t of toDelete) {
+      await sql`DELETE FROM products WHERE store_slug = ${storeSlug} AND lower(title) = lower(${t})`;
+    }
+  }
 
   // Snapshot current prices so we can detect drops after upsert
   const oldRows = await sql`

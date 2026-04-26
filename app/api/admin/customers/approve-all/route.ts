@@ -23,13 +23,23 @@ export async function POST(request: NextRequest) {
   // Ensure approval_email_sent column exists
   await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS approval_email_sent BOOLEAN DEFAULT false`;
 
-  // Bulk approve all pending, marking email as not yet sent
-  const result = await sql`
+  // Insert waitlist-only users (not yet in pilot_access) as approved
+  const migrated = await sql`
+    INSERT INTO pilot_access (email, status, approved_at, approval_email_sent)
+    SELECT LOWER(w.email), 'approved', NOW(), false
+    FROM waitlist w
+    WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
+    ON CONFLICT (email) DO NOTHING
+    RETURNING email
+  `;
+
+  // Approve existing pending users in pilot_access
+  const updated = await sql`
     UPDATE pilot_access
     SET status = 'approved', approved_at = NOW(), approval_email_sent = false
     WHERE status = 'pending'
     RETURNING email
   `;
 
-  return NextResponse.json({ ok: true, approved: result.length });
+  return NextResponse.json({ ok: true, approved: migrated.length + updated.length });
 }

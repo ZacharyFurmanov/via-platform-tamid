@@ -20,6 +20,8 @@ type Conversion = {
   userName: string | null;
   matchedClickData: { clickId?: string; productName?: string; source?: string } | null;
   items: { productName: string; quantity: number; price: number }[];
+  returned: boolean;
+  returnedAt: string | null;
 };
 
 type CandidateClick = {
@@ -191,6 +193,31 @@ export default function AdminConversionsPage() {
             ))}
           </div>
         </div>
+
+        {!loading && conversions.length > 0 && (() => {
+          const realOrders = conversions.filter(c => c.orderTotal > 0 && !c.returned);
+          const matched = realOrders.filter(c => c.userId != null || c.viaClickId != null);
+          const unmatched = realOrders.filter(c => c.userId == null && c.viaClickId == null);
+          const missingAmount = conversions.filter(c => c.orderTotal === 0 && !c.returned);
+          const returned = conversions.filter(c => c.returned);
+          return (
+            <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+              {[
+                { label: "Real orders", value: realOrders.length, note: "(analytics count)", highlight: true },
+                { label: "Matched", value: matched.length, note: null, highlight: false },
+                { label: "Unmatched", value: unmatched.length, note: null, highlight: false },
+                ...(missingAmount.length > 0 ? [{ label: "Missing amount", value: missingAmount.length, note: null, highlight: false }] : []),
+                ...(returned.length > 0 ? [{ label: "Returned", value: returned.length, note: null, highlight: false }] : []),
+              ].map((s) => (
+                <div key={s.label} style={{ background: "#fff", border: `1px solid ${s.highlight ? MAROON : "#e5e7eb"}`, borderRadius: 8, padding: "10px 16px", minWidth: 110 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: s.highlight ? MAROON : "#111827" }}>{s.value}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>{s.label}</div>
+                  {s.note && <div style={{ fontSize: 10, color: "#9ca3af" }}>{s.note}</div>}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {loading ? (
           <p style={{ color: "#9ca3af", fontSize: 14 }}>Loading…</p>

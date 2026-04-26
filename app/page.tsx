@@ -203,12 +203,13 @@ export default function HomePage() {
           </div>
 
           <div className="overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
-            <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6">
+            <div className="flex gap-4 pl-6 pr-6 sm:px-6 sm:grid sm:grid-cols-2 lg:grid-cols-5 md:grid-cols-3 sm:gap-6">
               {[
                 { label: "Clothing", slug: "clothing", image: "/categories/clothes.jpg", position: "object-center" },
                 { label: "Bags", slug: "bags", image: "/categories/bags-v2.jpg", position: "object-bottom" },
                 { label: "Shoes", slug: "shoes", image: "/categories/shoes-v2.jpg", position: "object-center" },
                 { label: "Accessories", slug: "accessories", image: "/categories/accessories-v3.jpg", position: "object-center" },
+                { label: "Home", slug: "home", image: "/categories/home.jpg", position: "object-center" },
               ].map((category) => (
                 <Link
                   key={category.slug}
@@ -220,7 +221,7 @@ export default function HomePage() {
                       src={category.image}
                       alt={category.label}
                       fill
-                      sizes="(min-width: 768px) 25vw, 72vw"
+                      sizes="(min-width: 1024px) 20vw, (min-width: 768px) 33vw, 72vw"
                       className={`object-cover ${category.position} transition-transform duration-700 ease-out group-hover:scale-105`}
                       loading="lazy"
                     />

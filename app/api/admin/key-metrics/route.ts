@@ -349,6 +349,13 @@ export async function GET(request: NextRequest) {
       last30d: g.gmv_30d,
       prev30d: g.gmv_prev_30d,
     },
+    totalOrders: {
+      allTime: co.total_conversions,
+      last7d: co.conversions_7d,
+      prev7d: co.conversions_prev_7d,
+      last30d: co.conversions_30d,
+      prev30d: co.conversions_prev_30d,
+    },
     conversionRate: {
       allTime: convRate,
       last7d: convRate7d,

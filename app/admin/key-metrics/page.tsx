@@ -135,6 +135,7 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
 
 type Metrics = {
   gmv: { total: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
+  totalOrders: { allTime: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
   conversionRate: { allTime: number; last7d: number; prev7d: number; totalClicks: number; totalConversions: number; periodClicks: number; periodConversions: number; periodRate: number };
   wau: { current: number; prev: number };
   mau: { current: number; prev: number; totalEverActive: number };
@@ -279,6 +280,35 @@ export default function KeyMetricsPage() {
                 />
               </div>
             </section>
+
+            {/* ── Total Orders ─────────────────────────────────────── */}
+            {data.totalOrders && (
+              <section>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Total Orders</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                  <MetricCard
+                    label={data.period?.isAllTime ? "All-Time Orders" : data.period?.isMonth ? `Orders — ${data.period.label}` : "All-Time Orders"}
+                    value={fmtNum(data.period?.isMonth ? data.totalOrders.last30d : data.totalOrders.allTime)}
+                    note="Total orders placed through VYA, excluding returns"
+                    href="/admin/conversions"
+                  />
+                  <MetricCard
+                    label="Orders — Last 7 Days"
+                    value={fmtNum(data.totalOrders.last7d)}
+                    trend={<TrendBadge current={data.totalOrders.last7d} prev={data.totalOrders.prev7d} fmtFn={fmtNum} />}
+                    note={`Previous 7 days: ${fmtNum(data.totalOrders.prev7d)}`}
+                    href="/admin/conversions"
+                  />
+                  <MetricCard
+                    label={data.period?.isMonth ? `vs Previous Month` : "Orders — Last 30 Days"}
+                    value={data.period?.isMonth ? fmtNum(data.totalOrders.prev30d) : fmtNum(data.totalOrders.last30d)}
+                    trend={data.period?.isMonth ? undefined : <TrendBadge current={data.totalOrders.last30d} prev={data.totalOrders.prev30d} fmtFn={fmtNum} />}
+                    note={data.period?.isMonth ? `${data.period.label} orders: ${fmtNum(data.totalOrders.last30d)}` : `Previous 30 days: ${fmtNum(data.totalOrders.prev30d)}`}
+                    href="/admin/conversions"
+                  />
+                </div>
+              </section>
+            )}
 
             {/* ── Conversion & Revenue ────────────────────────────── */}
             <section>

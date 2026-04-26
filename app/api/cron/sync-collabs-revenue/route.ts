@@ -66,7 +66,8 @@ async function saveCollabsConversions(
   deltaOrders: number,
   deltaCommission: number,
   now: string,
-  lastSyncedAt: string | null
+  lastSyncedAt: string | null,
+  prevOrderCount: number
 ) {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!dbUrl) return;
@@ -97,7 +98,9 @@ async function saveCollabsConversions(
   // Create one conversion row per order, matched to a click where possible
   for (let i = 0; i < deltaOrders; i++) {
     const click = recentClicks[i] ?? null;
-    const orderId = `collabs-${partnershipId}-${Date.now()}-${i}`;
+    // Deterministic ID based on partnership + cumulative order index so ON CONFLICT
+    // correctly deduplicates if this batch is retried after a partial failure.
+    const orderId = `collabs-${partnershipId}-order-${prevOrderCount + i}`;
     const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
 
     await sql`
@@ -299,7 +302,7 @@ export async function GET(request: Request) {
 
     if (deltaOrders > 0 && deltaCommission > 0) {
       try {
-        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, now, lastSyncedAt);
+        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, now, lastSyncedAt, prevOrders);
         newOrdersRecorded += deltaOrders;
         console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +$${deltaCommission.toFixed(2)} commission`);
       } catch (err) {

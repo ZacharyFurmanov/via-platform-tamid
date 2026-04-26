@@ -354,6 +354,7 @@ export default function HeaderClient({
                         { slug: "bags", label: "Bags" },
                         { slug: "shoes", label: "Shoes" },
                         { slug: "accessories", label: "Accessories" },
+                        { slug: "home", label: "Home" },
                       ].map((cat) => (
                         <Link
                           key={cat.slug}
@@ -575,6 +576,8 @@ export default function HeaderClient({
                         { slug: "clothing", label: "Clothing" },
                         { slug: "bags", label: "Bags" },
                         { slug: "shoes", label: "Shoes" },
+                        { slug: "accessories", label: "Accessories" },
+                        { slug: "home", label: "Home" },
                       ].map((cat) => (
                         <Link
                           key={cat.slug}
@@ -585,14 +588,6 @@ export default function HeaderClient({
                           {cat.label}
                         </Link>
                       ))}
-
-                        <Link
-                        href="/categories/accessories"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors"
-                      >
-                        Accessories
-                      </Link>
 
                       <Link
                         href="/categories"

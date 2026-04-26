@@ -142,9 +142,9 @@ export async function approvePilotUser(email: string) {
 }
 
 /**
- * Returns the next 20 pending users to approve.
- * Priority: most referrals first, then longest on the waitlist (oldest created_at).
- * Called by the Monday 11 AM EST cron.
+ * Returns the next 10 users to approve.
+ * Includes both pilot_access rows with status='pending' AND waitlist-only users
+ * (those not yet in pilot_access). Priority: most referrals first, then oldest signup.
  */
 export async function getPendingUsersToApprove(): Promise<
   { email: string; first_name: string | null }[]
@@ -152,19 +152,35 @@ export async function getPendingUsersToApprove(): Promise<
   await ensureTable();
   const sql = getDb();
   const rows = await sql`
-    SELECT pa.email, pa.first_name
-    FROM pilot_access pa
-    LEFT JOIN (
-      SELECT referred_by, COUNT(*) AS ref_count
-      FROM pilot_access
-      WHERE referred_by IS NOT NULL
-      GROUP BY referred_by
-    ) refs ON refs.referred_by = pa.referral_code
-    WHERE pa.status = 'pending'
-    ORDER BY COALESCE(refs.ref_count, 0) DESC, pa.created_at ASC
+    SELECT email, first_name FROM (
+      SELECT pa.email, pa.first_name, pa.created_at,
+        COALESCE(refs.ref_count, 0) AS ref_count
+      FROM pilot_access pa
+      LEFT JOIN (
+        SELECT referred_by, COUNT(*) AS ref_count
+        FROM pilot_access
+        WHERE referred_by IS NOT NULL
+        GROUP BY referred_by
+      ) refs ON refs.referred_by = pa.referral_code
+      WHERE pa.status = 'pending'
+
+      UNION ALL
+
+      SELECT w.email, NULL AS first_name, w.signup_date AS created_at, 0 AS ref_count
+      FROM waitlist w
+      WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
+    ) combined
+    ORDER BY ref_count DESC, created_at ASC
     LIMIT 10
   `;
   return rows as { email: string; first_name: string | null }[];
+}
+
+export async function markApprovalEmailSent(email: string): Promise<void> {
+  const sql = getDb();
+  await sql`
+    UPDATE pilot_access SET approval_email_sent = true WHERE email = ${email.toLowerCase().trim()}
+  `;
 }
 
 /**

@@ -79,6 +79,17 @@ const categoryKeywords: [CategorySlug, string[]][] = [
   // not jeans. "jeans" (plural only) avoids matching designer first names
   // like "Jean Paul Gaultier".
   ["jeans", ["jeans", "denim"]],
+  // Home & lifestyle — checked before accessories so "vase", "candle", etc. don't fall through
+  ["home", [
+    "book", "plate", "dish", "cup", "mug", "bowl", "vase", "candle", "candlestick",
+    "pitcher", "jug", "teapot", "tea set", "coffee set", "carafe",
+    "tablecloth", "napkin", "placemat", "tray", "serving bowl", "salad bowl",
+    "wine glass", "champagne flute", "tumbler", "decanter",
+    "ornament", "figurine", "sculpture", "picture frame", "photo frame",
+    "lamp", "lantern", "cushion", "throw pillow", "blanket",
+    "cutting board", "cheese board", "soap dish", "diffuser",
+    "trinket", "trinket dish", "ashtray",
+  ]],
   // Accessories checked last so clothing keywords always win
   ["accessories", [
     // Jewelry (earring/necklace/bracelet/ring/pendant/brooch/bangle/choker/locket/anklet/cuff bracelet handled above)
@@ -125,8 +136,18 @@ const compiledCategories: [CategorySlug, Array<RegExp | string>][] =
     keywords.map(buildPattern),
   ]);
 
+// Specific product title overrides — for items whose titles don't contain matchable keywords.
+// Uses case-insensitive substring matching (title must contain the phrase).
+const TITLE_OVERRIDES: Array<[string, CategorySlug]> = [
+  ["coastal charm", "home"],
+];
+
 export const inferCategoryFromTitle = (title: string | null | undefined): CategorySlug => {
   if (!title) return "other-clothing";
+  const lower = title.toLowerCase();
+  for (const [phrase, cat] of TITLE_OVERRIDES) {
+    if (lower.includes(phrase)) return cat;
+  }
   for (const [category, patterns] of compiledCategories) {
     if (patterns.some((p) =>
       typeof p === "string" ? title.toLowerCase().includes(p) : p.test(title)

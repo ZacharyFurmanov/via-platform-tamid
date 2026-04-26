@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPendingUsersToApprove, approvePilotUser } from "@/app/lib/pilot-db";
+import { getPendingUsersToApprove, approvePilotUser, markApprovalEmailSent } from "@/app/lib/pilot-db";
 import { sendPilotApprovalEmail } from "@/app/lib/email";
 
 export async function GET() {
@@ -20,6 +20,7 @@ export async function GET() {
         try {
           await sendPilotApprovalEmail(user.email, user.first_name ?? undefined);
           emailed = true;
+          await markApprovalEmailSent(user.email);
           console.log(`[PilotApproval] Approved + emailed ${user.email}`);
         } catch (emailErr) {
           console.error(`[PilotApproval] Email failed for ${user.email}:`, emailErr);

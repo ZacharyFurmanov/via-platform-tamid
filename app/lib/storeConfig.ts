@@ -107,7 +107,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     name: "Lover Girl Vintage",
     slug: "lover-girl-vintage",
     storeDomain: "lovergirlvintage.com",
-    excludeKeywords: ["trucker hat"],
+    excludeKeywords: ["trucker hat", "jewelry box"],
   },
   {
     type: "shopify",

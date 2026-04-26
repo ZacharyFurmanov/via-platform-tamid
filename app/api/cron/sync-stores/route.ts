@@ -101,7 +101,10 @@ export async function GET(request: Request) {
             };
           });
 
-        const { count: productCount } = await syncProducts(storeSlug, store.name, products);
+        const { count: productCount } = await syncProducts(storeSlug, store.name, products, {
+          excludeKeywords: store.excludeKeywords,
+          excludeTitles: store.excludeTitles,
+        });
         results.push({ store: store.name, success: true, productCount });
       } else if (store.type === "bigcartel") {
         const { products: rawProducts } = await parseBigCartelJSON(

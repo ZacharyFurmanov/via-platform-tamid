@@ -13,6 +13,7 @@ export const categoryMap = {
   bags: "Bags",
   shoes: "Shoes",
   accessories: "Accessories",
+  home: "Home",
 } as const;
 
 export type CategorySlug = keyof typeof categoryMap;
@@ -32,6 +33,7 @@ export const displayCategories = [
   { slug: "bags", label: "Bags", image: "/categories/bags.jpg" },
   { slug: "shoes", label: "Shoes", image: "/categories/shoes.jpg" },
   { slug: "accessories", label: "Accessories", image: "/categories/accessories.jpg" },
+  { slug: "home", label: "Home", image: "/categories/home.jpg" },
 ] as const;
 
 export type DisplayCategorySlug = (typeof displayCategories)[number]["slug"];
