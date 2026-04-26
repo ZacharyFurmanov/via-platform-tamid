@@ -669,7 +669,7 @@ export const stores = [
     name: "The Objects of Affection",
     location: "New Hope, Pennsylvania",
     description:
-      "The Objects of Affection is a curated archive of vintage heels, handbags, and rare designer finds, centered around pieces that hold both history and lasting value.",
+      "Founded by Mackenzie and based in New Hope, Pennsylvania, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras.\n\nWith an archival mindset and an editorial eye, Mackenzie sources pieces not for trend, but for reverence — hand-selecting objects defined by craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives. These are pieces worth longing for, chosen for those who build their wardrobes slowly and with intention, collecting for today to be passed on as heirlooms.\n\nAt The Objects of Affection, our clients are celebrated just as thoughtfully as the pieces themselves. Every object is authenticated, transparently presented, and sent off with the care and white-glove attention of buying it brand new. We serve our collectors like family, because devotion to the object should always be matched by devotion to the experience.",
     website: "https://theobjectsofaffection.com",
     dataSource: "the-objects-of-affection",
     image: "/stores/the-objects-of-affection-3.jpg",
