@@ -1635,3 +1635,207 @@ export async function sendStoreSaleEmail({
     html,
   });
 }
+
+export async function sendMonthlyReportEmail({
+  monthLabel,
+  gmvCur, gmvPrev, ordersCur, ordersPrev,
+  newUsersCur, newUsersPrev, activeUsersCur, activeUsersPrev,
+  clicksCur, clicksPrev, convRate, convRatePrev,
+  repeatBuyers,
+  topStores, topCategories, priceRanges, topProducts, dayOfWeek,
+}: {
+  monthLabel: string;
+  gmvCur: number; gmvPrev: number; ordersCur: number; ordersPrev: number;
+  newUsersCur: number; newUsersPrev: number; activeUsersCur: number; activeUsersPrev: number;
+  clicksCur: number; clicksPrev: number; convRate: number; convRatePrev: number;
+  repeatBuyers: number;
+  topStores: { store_name: string; store_slug: string; gmv: number; orders: number }[];
+  topCategories: { category: string; clicks: number }[];
+  priceRanges: { range: string; orders: number; gmv: number }[];
+  topProducts: { product_name: string; store_slug: string; clicks: number; unique_users: number }[];
+  dayOfWeek: { label: string; clicks: number; pct: number }[];
+}): Promise<void> {
+  const resend = getResend();
+  const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+  const delta = (cur: number, prev: number) => prev === 0 ? null : ((cur - prev) / prev) * 100;
+  const arrow = (d: number | null) => d === null ? "" : d >= 0
+    ? `<span style="color:#059669;font-size:11px;font-weight:600;"> ▲ ${pct(d)}</span>`
+    : `<span style="color:#dc2626;font-size:11px;font-weight:600;"> ▼ ${pct(Math.abs(d))}</span>`;
+
+  const statCard = (label: string, value: string, trend: number | null) => `
+    <td style="width:25%;padding:0 8px 0 0;vertical-align:top;">
+      <div style="background:#F7F3EA;border:1px solid rgba(93,15,23,0.12);padding:18px 16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(93,15,23,0.5);margin-bottom:6px;font-family:Georgia,serif;">${label}</div>
+        <div style="font-size:22px;font-weight:700;color:#5D0F17;font-family:Georgia,serif;">${value}</div>
+        ${trend !== null ? `<div style="margin-top:4px;">${arrow(trend)}<span style="font-size:10px;color:rgba(93,15,23,0.4);margin-left:4px;">vs prior month</span></div>` : ""}
+      </div>
+    </td>
+  `;
+
+  const sectionHeader = (title: string) => `
+    <div style="margin:36px 0 14px;border-bottom:1px solid rgba(93,15,23,0.15);padding-bottom:8px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(93,15,23,0.5);font-family:Georgia,serif;">${title}</span>
+    </div>
+  `;
+
+  const maxStoreGmv = Math.max(...topStores.map((s) => s.gmv), 1);
+  const maxCatClicks = Math.max(...topCategories.map((c) => c.clicks), 1);
+  const maxProductClicks = Math.max(...topProducts.map((p) => p.clicks), 1);
+
+  const storeRows = topStores.map((s, i) => `
+    <tr>
+      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;">
+        <span style="color:rgba(93,15,23,0.35);margin-right:8px;font-size:11px;">${i + 1}</span>
+        ${s.store_name}
+      </td>
+      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;font-weight:600;color:#5D0F17;font-family:Georgia,serif;">${fmt(s.gmv)}</td>
+      <td style="padding:9px 12px;border-bottom:1px solid rgba(93,15,23,0.07);vertical-align:middle;">
+        <div style="background:rgba(93,15,23,0.08);height:6px;border-radius:3px;width:100%;">
+          <div style="background:#5D0F17;height:6px;border-radius:3px;width:${Math.round((s.gmv / maxStoreGmv) * 100)}%;"></div>
+        </div>
+      </td>
+      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:11px;color:rgba(93,15,23,0.5);font-family:Georgia,serif;">${s.orders} order${s.orders === 1 ? "" : "s"}</td>
+    </tr>
+  `).join("");
+
+  const categoryRows = topCategories.map((c) => `
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;text-transform:capitalize;">${c.category}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(93,15,23,0.07);vertical-align:middle;width:55%;">
+        <div style="background:rgba(93,15,23,0.08);height:6px;border-radius:3px;">
+          <div style="background:#5D0F17;height:6px;border-radius:3px;width:${Math.round((c.clicks / maxCatClicks) * 100)}%;"></div>
+        </div>
+      </td>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:12px;color:rgba(93,15,23,0.6);font-family:Georgia,serif;">${c.clicks.toLocaleString()} clicks</td>
+    </tr>
+  `).join("");
+
+  const priceRows = priceRanges.map((r) => `
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;">${r.range}</td>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;font-weight:600;color:#5D0F17;font-family:Georgia,serif;">${r.orders} orders</td>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;color:rgba(93,15,23,0.6);font-family:Georgia,serif;">${fmt(r.gmv)}</td>
+    </tr>
+  `).join("");
+
+  const productRows = topProducts.slice(0, 10).map((p, i) => `
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:11px;color:rgba(93,15,23,0.35);font-family:Georgia,serif;">${i + 1}</td>
+      <td style="padding:8px 8px;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;">${p.product_name}</td>
+      <td style="padding:8px 8px;border-bottom:1px solid rgba(93,15,23,0.07);font-size:11px;color:rgba(93,15,23,0.5);font-family:Georgia,serif;">${p.store_slug.replace(/-/g, " ")}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(93,15,23,0.07);vertical-align:middle;width:30%;">
+        <div style="background:rgba(93,15,23,0.08);height:5px;border-radius:3px;">
+          <div style="background:#5D0F17;height:5px;border-radius:3px;width:${Math.round((p.clicks / maxProductClicks) * 100)}%;"></div>
+        </div>
+      </td>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:11px;color:rgba(93,15,23,0.5);font-family:Georgia,serif;">${p.clicks} clicks</td>
+    </tr>
+  `).join("");
+
+  const dowBars = dayOfWeek.map((d) => `
+    <td style="text-align:center;padding:0 4px;vertical-align:bottom;">
+      <div style="background:rgba(93,15,23,0.08);height:60px;display:flex;align-items:flex-end;">
+        <div style="background:#5D0F17;width:100%;height:${d.pct}%;min-height:2px;"></div>
+      </div>
+      <div style="font-size:10px;color:rgba(93,15,23,0.5);margin-top:4px;font-family:Georgia,serif;">${d.label}</div>
+      <div style="font-size:10px;color:#5D0F17;font-family:Georgia,serif;">${d.clicks.toLocaleString()}</div>
+    </td>
+  `).join("");
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;line-height:1.7;margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;">
+      Here's your platform summary for <strong>${monthLabel}</strong>.
+    </p>
+    <p style="font-size:13px;color:rgba(93,15,23,0.55);line-height:1.6;margin:0 0 32px;font-family:Georgia,'Times New Roman',serif;">
+      All figures cover ${monthLabel} vs the prior calendar month.
+    </p>
+
+    <!-- Top-line stats -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px;">
+      <tr>
+        ${statCard("GMV", fmt(gmvCur), delta(gmvCur, gmvPrev))}
+        ${statCard("Orders", String(ordersCur), delta(ordersCur, ordersPrev))}
+        ${statCard("New Members", String(newUsersCur), delta(newUsersCur, newUsersPrev))}
+        ${statCard("Active Members", String(activeUsersCur), delta(activeUsersCur, activeUsersPrev))}
+      </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
+      <tr>
+        ${statCard("Total Clicks", clicksCur.toLocaleString(), delta(clicksCur, clicksPrev))}
+        ${statCard("Conv. Rate", `${convRate.toFixed(2)}%`, delta(convRate, convRatePrev))}
+        ${statCard("Avg. Order", ordersCur > 0 ? fmt(gmvCur / ordersCur) : "$0", null)}
+        ${statCard("Repeat Buyers", String(repeatBuyers), null)}
+      </tr>
+    </table>
+
+    ${sectionHeader("Top Stores by Revenue")}
+    ${topStores.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No orders this month.</p>` : `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Store</th>
+          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Revenue</th>
+          <th style="width:30%;padding-bottom:8px;"></th>
+          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Orders</th>
+        </tr>
+      </thead>
+      <tbody>${storeRows}</tbody>
+    </table>`}
+
+    ${sectionHeader("What Members Are Browsing — Top Categories")}
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tbody>${categoryRows}</tbody>
+    </table>
+
+    ${sectionHeader("Price Range Breakdown")}
+    ${priceRanges.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No orders this month.</p>` : `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Range</th>
+          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Orders</th>
+          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">GMV</th>
+        </tr>
+      </thead>
+      <tbody>${priceRows}</tbody>
+    </table>`}
+
+    ${sectionHeader("Most-Wanted Products — Top Clicked")}
+    ${topProducts.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No click data this month.</p>` : `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <thead>
+        <tr>
+          <th style="width:20px;"></th>
+          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Product</th>
+          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Store</th>
+          <th style="width:30%;"></th>
+          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Clicks</th>
+        </tr>
+      </thead>
+      <tbody>${productRows}</tbody>
+    </table>`}
+
+    ${dayOfWeek.length > 0 ? `
+    ${sectionHeader("Click Activity by Day of Week")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+      <tr>${dowBars}</tr>
+    </table>` : ""}
+
+    <div style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(93,15,23,0.12);">
+      <a href="https://vyaplatform.com/admin/analytics"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 32px;
+                text-decoration:none;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">View Full Analytics →</a>
+    </div>
+  `;
+
+  const html = viaShell(`${monthLabel} · Platform Report`, content);
+
+  await resend.emails.send({
+    from: "VYA Platform <hana@vyaplatform.com>",
+    to: "hana@vyaplatform.com",
+    subject: `VYA Monthly Report — ${monthLabel}`,
+    html,
+  });
+}
