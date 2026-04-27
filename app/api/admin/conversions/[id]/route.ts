@@ -131,6 +131,7 @@ export async function POST(
 
   // Send store sale notification email (only if not already sent for this conversion)
   try {
+    await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS sale_email_sent BOOLEAN DEFAULT FALSE`.catch(() => {});
     const convRows = await sql`
       SELECT store_slug, store_name, order_total, currency, order_id, timestamp, matched_click_data, sale_email_sent
       FROM conversions WHERE conversion_id = ${id} LIMIT 1
