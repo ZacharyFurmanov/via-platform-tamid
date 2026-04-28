@@ -149,6 +149,7 @@ type Metrics = {
   users: { registered: number; waitlist: number; approved: number };
   waitlistByMonth: { month: string; signups: number; approved: number }[];
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
+  emailCtr?: { opens7d: number; clicks7d: number; ctr7d: number; opensPrev7d: number; clicksPrev7d: number; ctrPrev7d: number; opensPeriod: number; clicksPeriod: number; ctrPeriod: number; opensAll: number; clicksAll: number; ctrAll: number };
   period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
 };
 
@@ -313,7 +314,7 @@ export default function KeyMetricsPage() {
             {/* ── Conversion & Revenue ────────────────────────────── */}
             <section>
               <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Conversion & Revenue</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                 <MetricCard
                   label={data.period?.isMonth || data.period?.isAllTime ? `Conversion Rate — ${data.period.label}` : "Conversion Rate (7d)"}
                   value={data.period?.isMonth || data.period?.isAllTime ? fmtPct(data.conversionRate.periodRate) : fmtPct(data.conversionRate.last7d)}
@@ -323,6 +324,20 @@ export default function KeyMetricsPage() {
                   trend={data.period?.isMonth ? <TrendBadge current={data.conversionRate.periodRate} prev={data.conversionRate.prev7d} fmtFn={fmtPct} /> : <TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
                   note="Clicks that resulted in an attributed purchase"
                   href="/admin/conversions"
+                />
+                <MetricCard
+                  label={data.period?.isMonth || data.period?.isAllTime ? `Email CTR — ${data.period.label}` : "Email CTR (7d)"}
+                  value={data.period?.isMonth || data.period?.isAllTime
+                    ? fmtPct(data.emailCtr?.ctrPeriod ?? 0)
+                    : fmtPct(data.emailCtr?.ctr7d ?? 0)}
+                  sub={data.period?.isMonth || data.period?.isAllTime
+                    ? `${fmtNum(data.emailCtr?.clicksPeriod ?? 0)} clicks from ${fmtNum(data.emailCtr?.opensPeriod ?? 0)} opens`
+                    : `${fmtNum(data.emailCtr?.clicks7d ?? 0)} clicks from ${fmtNum(data.emailCtr?.opens7d ?? 0)} opens`}
+                  trend={data.period?.isMonth
+                    ? undefined
+                    : <TrendBadge current={data.emailCtr?.ctr7d ?? 0} prev={data.emailCtr?.ctrPrev7d ?? 0} fmtFn={fmtPct} />}
+                  note="Of members who opened an email, % who clicked through to the site"
+                  href="/admin/emails"
                 />
                 <MetricCard
                   label="Revenue per Buying User"

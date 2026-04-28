@@ -26,36 +26,56 @@ export async function GET(request: NextRequest) {
   const filter = request.nextUrl.searchParams.get("filter") ?? "unmatched";
   const storeSlug = request.nextUrl.searchParams.get("store");
 
+  const utmJoin = sql`
+    LEFT JOIN LATERAL (
+      SELECT utm_source, utm_campaign
+      FROM utm_visits
+      WHERE user_id = c.user_id
+        AND timestamp <= c.timestamp
+        AND timestamp >= c.timestamp - INTERVAL '30 days'
+      ORDER BY timestamp DESC
+      LIMIT 1
+    ) uv ON c.user_id IS NOT NULL
+  `;
+
   const rows = filter === "all"
     ? storeSlug
       ? await sql`
-          SELECT c.*, u.email AS user_email, u.name AS user_name
+          SELECT c.*, u.email AS user_email, u.name AS user_name,
+            uv.utm_source, uv.utm_campaign
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
+          ${utmJoin}
           WHERE c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
           LIMIT 10000
         `
       : await sql`
-          SELECT c.*, u.email AS user_email, u.name AS user_name
+          SELECT c.*, u.email AS user_email, u.name AS user_name,
+            uv.utm_source, uv.utm_campaign
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
+          ${utmJoin}
           ORDER BY c.timestamp DESC
           LIMIT 10000
         `
     : storeSlug
       ? await sql`
-          SELECT c.*, u.email AS user_email, u.name AS user_name
+          SELECT c.*, u.email AS user_email, u.name AS user_name,
+            uv.utm_source, uv.utm_campaign
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
+          ${utmJoin}
           WHERE (c.matched = false OR c.matched IS NULL) AND c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
           LIMIT 10000
         `
       : await sql`
-          SELECT c.*, u.email AS user_email, u.name AS user_name
+          SELECT c.*, u.email AS user_email, u.name AS user_name,
+            uv.utm_source, uv.utm_campaign
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
+          ${utmJoin}
           WHERE (c.matched = false OR c.matched IS NULL)
           ORDER BY c.timestamp DESC
           LIMIT 10000
@@ -79,6 +99,8 @@ export async function GET(request: NextRequest) {
       items: r.items ?? [],
       returned: r.returned ?? false,
       returnedAt: r.returned_at ?? null,
+      utmSource: r.utm_source ?? null,
+      utmCampaign: r.utm_campaign ?? null,
     })),
   });
 }

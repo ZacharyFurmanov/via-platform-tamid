@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         VALUES ('new_arrivals_last_sent_at', NOW()::text, NOW())
         ON CONFLICT (key) DO UPDATE
           SET value = NOW()::text, updated_at = NOW()
-          WHERE app_settings.value::timestamptz < NOW() - INTERVAL '144 hours'
+          WHERE app_settings.value::timestamptz < NOW() - INTERVAL '120 hours'
         RETURNING key
       `;
       if (claimed.length === 0) {
@@ -47,8 +47,10 @@ export async function GET(request: Request) {
           : 0;
         return NextResponse.json({
           ok: true,
-          message: `New arrivals email already sent ${hoursSince}h ago — skipping.`,
+          message: `New arrivals email already sent ${hoursSince}h ago — needs 120h to reset.`,
           skipped: true,
+          lastSentAt: lastSentRaw,
+          hoursSince,
         });
       }
     }

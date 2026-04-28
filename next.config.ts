@@ -2,12 +2,31 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async redirects() {
+    const socialSources = [
+      { path: "instagram", source: "instagram", campaign: "instagram_bio" },
+      { path: "ig",        source: "instagram", campaign: "instagram_bio" },
+      { path: "tiktok",   source: "tiktok",    campaign: "tiktok_bio" },
+      { path: "tt",        source: "tiktok",    campaign: "tiktok_bio" },
+      { path: "linkedin",  source: "linkedin",  campaign: "linkedin_bio" },
+      { path: "li",        source: "linkedin",  campaign: "linkedin_bio" },
+      { path: "pinterest", source: "pinterest", campaign: "pinterest_bio" },
+      { path: "threads",   source: "threads",   campaign: "threads_bio" },
+      { path: "facebook",  source: "facebook",  campaign: "facebook_bio" },
+      { path: "youtube",   source: "youtube",   campaign: "youtube_bio" },
+      { path: "substack",  source: "substack",  campaign: "substack_bio" },
+    ];
+
     return [
       {
         source: "/categories/clothes",
         destination: "/categories/clothing",
         permanent: true,
       },
+      ...socialSources.map(({ path, source, campaign }) => ({
+        source: `/${path}`,
+        destination: `/?utm_source=${source}&utm_medium=social&utm_campaign=${campaign}`,
+        permanent: false,
+      })),
     ];
   },
   images: {

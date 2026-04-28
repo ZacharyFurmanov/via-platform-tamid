@@ -23,14 +23,12 @@ export default function GlobalPageTracker() {
   const { data: session, status } = useSession();
   const utmTracked = useRef(false);
 
-  // Capture UTM params (or infer source from referrer) once per session on first load
+  // Step 1: Capture UTM/referrer data into sessionStorage on first page load.
+  // We don't send it yet because the session hasn't resolved — user_id would be null.
   useEffect(() => {
-    if (utmTracked.current) return;
     if (typeof window === "undefined") return;
-
-    // Check sessionStorage so we only fire once per browser session
     try {
-      if (sessionStorage.getItem("via_utm_tracked")) return;
+      if (sessionStorage.getItem("via_utm_data")) return; // already captured this session
     } catch {}
 
     const params = new URLSearchParams(window.location.search);
@@ -40,7 +38,6 @@ export default function GlobalPageTracker() {
     const utmContent = params.get("utm_content");
     const utmTerm = params.get("utm_term");
 
-    // If no explicit UTM params, try to infer source from the HTTP referrer
     if (!utmSource) {
       const ref = document.referrer;
       if (ref) {
@@ -80,24 +77,46 @@ export default function GlobalPageTracker() {
 
     if (!utmSource) return;
 
-    utmTracked.current = true;
     try {
-      sessionStorage.setItem("via_utm_tracked", "1");
+      sessionStorage.setItem("via_utm_data", JSON.stringify({
+        utm_source: utmSource,
+        utm_medium: utmMedium ?? null,
+        utm_campaign: utmCampaign ?? null,
+        utm_content: utmContent ?? null,
+        utm_term: utmTerm ?? null,
+        landing_path: window.location.pathname,
+      }));
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Step 2: Once auth resolves, send the stored UTM data with the real user_id.
+  // This fires when status changes from "loading" → "authenticated"/"unauthenticated".
+  useEffect(() => {
+    if (status === "loading") return;
+    if (utmTracked.current) return;
+
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem("via_utm_data");
+    } catch {}
+    if (!stored) return;
+
+    // Only send once with a user_id — if unauthenticated, skip (no way to attribute)
     const userId = status === "authenticated"
       ? ((session?.user as { id?: string } | undefined)?.id ?? null)
       : null;
+    if (!userId) return;
 
-    const payload = JSON.stringify({
-      utm_source: utmSource,
-      utm_medium: utmMedium ?? undefined,
-      utm_campaign: utmCampaign ?? undefined,
-      utm_content: utmContent ?? undefined,
-      utm_term: utmTerm ?? undefined,
-      landing_path: window.location.pathname,
-      user_id: userId,
-    });
+    utmTracked.current = true;
+    try {
+      sessionStorage.removeItem("via_utm_data");
+    } catch {}
+
+    let data: Record<string, string | null> = {};
+    try { data = JSON.parse(stored); } catch {}
+
+    const payload = JSON.stringify({ ...data, user_id: userId });
 
     if (navigator.sendBeacon) {
       navigator.sendBeacon("/api/track-utm", new Blob([payload], { type: "application/json" }));
@@ -109,9 +128,8 @@ export default function GlobalPageTracker() {
         keepalive: true,
       }).catch(() => {});
     }
-  // Run once on mount — intentionally no dependencies so it fires exactly once
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     // Wait until session has resolved — never fire with a null user_id

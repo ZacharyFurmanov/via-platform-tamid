@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
     waitlistByMonthRows,
     activityBreakdownRows,
     churnRows,
+    emailCtrRows,
     returningUsersRows,
   ] = await Promise.all([
     // GMV — all time + period windows
@@ -278,6 +279,21 @@ export async function GET(request: NextRequest) {
       LEFT JOIN repeat_buyers   rep ON rep.uid = pb.uid
     `,
 
+    // Email click-to-open rate — from email_events table (created by Resend webhook)
+    sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${shortStart}  AND created_at < ${shortEnd})::int   AS opens_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${shortStart} AND created_at < ${shortEnd})::int   AS clicks_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${shortPrevStart}  AND created_at < ${shortPrevEnd})::int AS opens_prev_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int AS clicks_prev_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${pStart}  AND created_at < ${pEnd})::int   AS opens_period,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${pStart} AND created_at < ${pEnd})::int   AS clicks_period,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened')::int  AS opens_all,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked')::int AS clicks_all
+      FROM email_events
+      WHERE category NOT IN ('magic_link', 'internal_alert')
+    `.catch(() => [{ opens_7d: 0, clicks_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, opens_period: 0, clicks_period: 0, opens_all: 0, clicks_all: 0 }]),
+
     // Returning users — scoped to the selected period
     sql`
       SELECT
@@ -341,6 +357,8 @@ export async function GET(request: NextRequest) {
     ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
     : 0;
 
+  const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; opens_prev_7d: number; clicks_prev_7d: number; opens_period: number; clicks_period: number; opens_all: number; clicks_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, opens_period: 0, clicks_period: 0, opens_all: 0, clicks_all: 0 };
+
   return NextResponse.json({
     gmv: {
       total: g.total_gmv,
@@ -397,6 +415,20 @@ export async function GET(request: NextRequest) {
       repeatPurchaseRate: (churnRows[0]?.total_buyers as number) > 0
         ? (churnRows[0]?.bought_again as number) / (churnRows[0]?.total_buyers as number)
         : null,
+    },
+    emailCtr: {
+      opens7d: ec.opens_7d,
+      clicks7d: ec.clicks_7d,
+      ctr7d: ec.opens_7d > 0 ? ec.clicks_7d / ec.opens_7d : 0,
+      opensPrev7d: ec.opens_prev_7d,
+      clicksPrev7d: ec.clicks_prev_7d,
+      ctrPrev7d: ec.opens_prev_7d > 0 ? ec.clicks_prev_7d / ec.opens_prev_7d : 0,
+      opensPeriod: ec.opens_period,
+      clicksPeriod: ec.clicks_period,
+      ctrPeriod: ec.opens_period > 0 ? ec.clicks_period / ec.opens_period : 0,
+      opensAll: ec.opens_all,
+      clicksAll: ec.clicks_all,
+      ctrAll: ec.opens_all > 0 ? ec.clicks_all / ec.opens_all : 0,
     },
     period: {
       start: pStart.toISOString(),

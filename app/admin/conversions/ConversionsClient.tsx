@@ -22,6 +22,8 @@ type Conversion = {
   items: { productName: string; quantity: number; price: number }[];
   returned: boolean;
   returnedAt: string | null;
+  utmSource: string | null;
+  utmCampaign: string | null;
 };
 
 type CandidateClick = {
@@ -45,6 +47,20 @@ function fmtDate(ts: string) {
 }
 function minsApart(a: string, b: string) {
   return Math.round(Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 60000);
+}
+
+function acquisitionLabel(c: Conversion): { label: string; color: string; bg: string } {
+  const collabsSource = (c.matchedClickData as { source?: string } | null)?.source;
+  if (collabsSource === "shopify-collabs") return { label: "Shopify Collabs", color: "#065f46", bg: "rgba(16,185,129,0.08)" };
+  if (c.utmSource === "email") {
+    const campaign = c.utmCampaign ? c.utmCampaign.replace(/_/g, " ") : "email";
+    return { label: `Email · ${campaign}`, color: "#1e40af", bg: "rgba(59,130,246,0.08)" };
+  }
+  if (c.utmSource === "instagram") return { label: "Instagram", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" };
+  if (c.utmSource === "google") return { label: "Google", color: "#92400e", bg: "rgba(245,158,11,0.08)" };
+  if (c.utmSource) return { label: c.utmSource, color: "#374151", bg: "#f3f4f6" };
+  if (c.userId) return { label: "Browsing", color: "#374151", bg: "#f3f4f6" };
+  return { label: "Unknown", color: "#9ca3af", bg: "#f9fafb" };
 }
 
 export default function AdminConversionsPage() {
@@ -228,7 +244,7 @@ export default function AdminConversionsPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}>
                 <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                  {["Date", "Store", "Order ID", "Amount", "Customer", "Status", ""].map((h) => (
+                  {["Date", "Store", "Order ID", "Amount", "Customer", "Via", "Status", ""].map((h) => (
                     <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
@@ -251,6 +267,11 @@ export default function AdminConversionsPage() {
                       ) : (
                         <span style={{ color: "#9ca3af" }}>Unknown</span>
                       )}
+                    </td>
+                    <td style={{ padding: "11px 16px" }}>
+                      {(() => { const a = acquisitionLabel(c); return (
+                        <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 4, background: a.bg, color: a.color, whiteSpace: "nowrap" }}>{a.label}</span>
+                      ); })()}
                     </td>
                     <td style={{ padding: "11px 16px" }}>
                       {c.matched ? (

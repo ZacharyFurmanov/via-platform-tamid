@@ -64,6 +64,47 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     1
                   </span>
+                  <h3 className="text-lg font-medium">Create Your Commission Tier Collections</h3>
+                </div>
+                <div className="text-[#5D0F17]/60 space-y-4">
+                  <p>
+                    Do this first — before installing Collabs — so your collections are ready to assign commission rates to right away.
+                    Shopify Collabs sets commission rates <strong className="text-[#5D0F17]">per product collection</strong>, so you&apos;ll
+                    create three collections organized by price tier.
+                  </p>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>In your Shopify Admin, go to <strong>Products → Collections</strong></li>
+                    <li>Click <strong>Create collection</strong> and name it <strong>TIER 1</strong></li>
+                    <li>Add all products priced <strong>under $1,000</strong> to this collection</li>
+                    <li>Repeat to create <strong>TIER 2</strong> (products $1,000–$5,000) and <strong>TIER 3</strong> (products above $5,000)</li>
+                  </ol>
+
+                  <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-4">
+                    <p className="text-sm font-medium text-[#5D0F17] mb-3">Commission rate reference:</p>
+                    <div className="space-y-0">
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
+                        <span className="text-sm"><strong>TIER 1</strong> — products under $1,000</span>
+                        <span className="text-sm font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">7%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
+                        <span className="text-sm"><strong>TIER 2</strong> — products $1,000–$5,000</span>
+                        <span className="text-sm font-medium bg-[#5D0F17]/50 text-white px-3 py-1">5%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm"><strong>TIER 3</strong> — products above $5,000</span>
+                        <span className="text-sm font-medium bg-[#5D0F17]/40 text-[#F7F3EA] px-3 py-1">3%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="border-l-2 border-[#5D0F17] pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
+                    2
+                  </span>
                   <h3 className="text-lg font-medium">Install Shopify Collabs</h3>
                 </div>
                 <div className="text-[#5D0F17]/60 space-y-3">
@@ -88,11 +129,40 @@ export default function ShopifySetupPage() {
                 </div>
               </div>
 
-              {/* Step 2 */}
+              {/* Step 3 */}
               <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
-                    2
+                    3
+                  </span>
+                  <h3 className="text-lg font-medium">Set Commission Rates per Collection</h3>
+                </div>
+                <div className="text-[#5D0F17]/60 space-y-3">
+                  <p>With your collections already created, assign the rates in Collabs:</p>
+                  <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
+                    <li>Click <strong>Create program</strong> (or open your existing one)</li>
+                    <li>Under <strong>Commission</strong>, click <strong>Add rate</strong> and select <strong>TIER 1</strong> → enter <strong>7%</strong></li>
+                    <li>Click <strong>Add rate</strong> again, select <strong>TIER 2</strong> → enter <strong>5%</strong></li>
+                    <li>Click <strong>Add rate</strong> again, select <strong>TIER 3</strong> → enter <strong>3%</strong></li>
+                    <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
+                    <li>Click <strong>Save</strong></li>
+                  </ol>
+                  <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
+                    <p className="text-amber-800">
+                      <strong>Why 30 days?</strong> This captures customers who browse VYA but
+                      come back to buy later. Most vintage purchases happen within a week, but
+                      the extra window means you won&apos;t miss delayed sales.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="border-l-2 border-[#5D0F17] pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
+                    4
                   </span>
                   <h3 className="text-lg font-medium">Add VYA as a Collaborator</h3>
                 </div>
@@ -110,11 +180,11 @@ export default function ShopifySetupPage() {
                 </div>
               </div>
 
-              {/* Step 3 */}
+              {/* Step 5 */}
               <div className="border-l-2 border-[#5D0F17] pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
-                    3
+                    5
                   </span>
                   <h3 className="text-lg font-medium">We Generate the Affiliate Links</h3>
                 </div>
@@ -137,81 +207,11 @@ export default function ShopifySetupPage() {
                 </div>
               </div>
 
-              {/* Step 4 */}
-              <div className="border-l-2 border-[#5D0F17] pl-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
-                    4
-                  </span>
-                  <h3 className="text-lg font-medium">Set Tiered Commission Rates</h3>
-                </div>
-                <div className="text-[#5D0F17]/60 space-y-4">
-                  <p>
-                    Shopify Collabs sets commission rates <strong className="text-[#5D0F17]">per product collection</strong>,
-                    not per order total. To set up tiers, you&apos;ll create three collections in your
-                    Shopify store — one for each tier — assign your products to them by price, and
-                    then set a different commission rate for each collection in Collabs.
-                  </p>
-
-                  {/* Part A */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-[#5D0F17]">Part A — Create three collections in Shopify</p>
-                    <ol className="list-decimal list-inside space-y-2 text-sm">
-                      <li>In your Shopify Admin, go to <strong>Products → Collections</strong></li>
-                      <li>Click <strong>Create collection</strong> and name it <strong>TIER 1</strong></li>
-                      <li>Add all products priced <strong>under $1,000</strong> to this collection</li>
-                      <li>Repeat to create <strong>TIER 2</strong> (products $1,000–$5,000) and <strong>TIER 3</strong> (products above $5,000)</li>
-                    </ol>
-                  </div>
-
-                  {/* Part B */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-[#5D0F17]">Part B — Set commission rates per collection in Collabs</p>
-                    <ol className="list-decimal list-inside space-y-2 text-sm">
-                      <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
-                      <li>Click <strong>Create program</strong> (or open your existing one)</li>
-                      <li>Under <strong>Commission</strong>, click <strong>Add rate</strong> and select <strong>TIER 1</strong> → enter <strong>7%</strong></li>
-                      <li>Click <strong>Add rate</strong> again, select <strong>TIER 2</strong> → enter <strong>5%</strong></li>
-                      <li>Click <strong>Add rate</strong> again, select <strong>TIER 3</strong> → enter <strong>3%</strong></li>
-                      <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
-                      <li>Click <strong>Save</strong></li>
-                    </ol>
-                  </div>
-
-                  {/* Tier reference */}
-                  <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-4">
-                    <p className="text-sm font-medium text-[#5D0F17] mb-3">Commission rate reference:</p>
-                    <div className="space-y-0">
-                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
-                        <span className="text-sm"><strong>TIER 1</strong> — products under $1,000</span>
-                        <span className="text-sm font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">7%</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
-                        <span className="text-sm"><strong>TIER 2</strong> — products $1,000–$5,000</span>
-                        <span className="text-sm font-medium bg-[#5D0F17]/50 text-white px-3 py-1">5%</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm"><strong>TIER 3</strong> — products above $5,000</span>
-                        <span className="text-sm font-medium bg-[#5D0F17]/40 text-[#F7F3EA] px-3 py-1">3%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
-                    <p className="text-amber-800">
-                      <strong>Why 30 days?</strong> This captures customers who browse VYA but
-                      come back to buy later. Most vintage purchases happen within a week, but
-                      the extra window means you won&apos;t miss delayed sales.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 5 */}
+              {/* Step 6 */}
               <div className="border-l-2 border-[#5D0F17]/20 pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-[#5D0F17]/15 text-[#5D0F17]/60 flex items-center justify-center text-sm font-medium">
-                    5
+                    6
                   </span>
                   <h3 className="text-lg font-medium text-[#5D0F17]/60">Done!</h3>
                 </div>
