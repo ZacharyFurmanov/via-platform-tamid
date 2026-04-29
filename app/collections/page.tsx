@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { getAllCollectionPicks, COLLECTIONS } from "@/app/lib/editors-picks-db";
