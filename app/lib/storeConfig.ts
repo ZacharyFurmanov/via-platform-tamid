@@ -40,7 +40,17 @@ export type SquareStore = {
   accessTokenEnvVar?: string;
 };
 
-export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore;
+export type StripeStore = {
+  type: "stripe";
+  name: string;
+  slug: string;
+  /** Name of the env var holding this store's Stripe secret key */
+  secretKeyEnvVar: string;
+  /** Store's public website URL — used to construct product page links */
+  websiteUrl: string;
+};
+
+export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore | StripeStore;
 
 // Squarespace stores (RSS-based)
 export const SQUARESPACE_STORES: SquarespaceStore[] = [
@@ -274,6 +284,12 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "tess-elizabeth-vintage",
     storeDomain: "tesselizabethvintage.com",
   },
+  {
+    type: "shopify",
+    name: "Dear Muse",
+    slug: "dear-muse",
+    storeDomain: "shopdearmuse.com",
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
@@ -290,9 +306,20 @@ export const SQUARE_STORES: SquareStore[] = [
   },
 ];
 
+export const STRIPE_STORES: StripeStore[] = [
+  {
+    type: "stripe",
+    name: "Carroll Street Vintage",
+    slug: "carroll-street-vintage",
+    secretKeyEnvVar: "STRIPE_SECRET_KEY_CARROLL",
+    websiteUrl: "https://carrollstreetvintage.com",
+  },
+];
+
 export const ALL_STORES: Store[] = [
   ...SQUARESPACE_STORES,
   ...SHOPIFY_STORES,
   ...BIGCARTEL_STORES,
   ...SQUARE_STORES,
+  ...STRIPE_STORES,
 ];

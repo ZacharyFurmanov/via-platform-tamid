@@ -351,14 +351,19 @@ export async function GET(request: NextRequest) {
 
 /**
  * DELETE /api/admin/generate-collabs-links
- * Purges products that predate Collabs support (created_at IS NULL) and have
- * never received a collabs_link. These are permanently stuck and invisible on VYA.
+ * Purges stuck products invisible on VYA (have shopify_product_id but no collabs_link).
+ * ?minDaysStuck=14 also purges products stuck for 14+ days (likely sold-out in Collabs).
  */
 export async function DELETE(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const deleted = await deletePermanentlyStuckProducts();
+  const { searchParams } = new URL(request.url);
+  const minDaysStuck = searchParams.get("minDaysStuck")
+    ? parseInt(searchParams.get("minDaysStuck")!, 10)
+    : undefined;
+
+  const deleted = await deletePermanentlyStuckProducts(undefined, minDaysStuck);
   return NextResponse.json({ deleted });
 }

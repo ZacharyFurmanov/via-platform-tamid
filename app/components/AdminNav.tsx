@@ -13,10 +13,10 @@ const NAV_ITEMS = [
   { label: "Collections", href: "/admin/collections" },
   { label: "Sync", href: "/admin/sync" },
   { label: "Collabs", href: "/admin/collabs-links" },
+  { label: "Market Data", href: "/admin/market-data" },
   { label: "Referral Board", href: "/admin/giveaway" },
   { label: "Returns", href: "/admin/returns" },
   { label: "Sourcing", href: "/admin/sourcing" },
-  { label: "Social Links", href: "/admin/social-links" },
   { label: "Stores", href: "/admin/stores" },
 ];
 

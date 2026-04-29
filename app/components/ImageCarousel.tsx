@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { resizeImage } from "@/app/lib/imageUtils";
+import NextImage from "next/image";
 
 type ImageCarouselProps = {
   images: string[];
@@ -19,7 +19,7 @@ export default function ImageCarousel({
   onAllImagesFailed,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const [failedCount, setFailedCount] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const mouseStartX = useRef<number | null>(null);
@@ -36,10 +36,10 @@ export default function ImageCarousel({
 
   // Report when every image URL has failed to load
   useEffect(() => {
-    if (validImages.length > 0 && failedCount >= validImages.length) {
+    if (validImages.length > 0 && failedImages.size >= validImages.length) {
       onAllImagesFailed?.();
     }
-  }, [failedCount, validImages.length, onAllImagesFailed]);
+  }, [failedImages, validImages.length, onAllImagesFailed]);
   const hasMultiple = safeImages.length > 1;
 
   const goTo = useCallback(
@@ -124,7 +124,7 @@ export default function ImageCarousel({
   );
 
   // Pre-render current + adjacent images with instant opacity swap
-  const renderImages = (sizeHint: number, objectPosition = "object-top") =>
+  const renderImages = (sizes: string, objectPosition = "object-top") =>
     safeImages.map((src, idx) => {
       const isAdjacentOrCurrent =
         idx === current ||
@@ -132,20 +132,27 @@ export default function ImageCarousel({
         idx === (current - 1 + safeImages.length) % safeImages.length;
       if (!isAdjacentOrCurrent) return null;
       return (
-        <img
+        <div
           key={idx}
-          src={resizeImage(src, sizeHint)}
-          alt={alt}
-          className={`absolute inset-0 w-full h-full object-cover ${objectPosition} transition-opacity duration-150 ${
+          className={`absolute inset-0 transition-opacity duration-150 ${
             idx === current ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
-          loading="lazy"
-          decoding="async"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/placeholder.jpg";
-            setFailedCount((c) => c + 1);
-          }}
-        />
+        >
+          <NextImage
+            src={failedImages.has(idx) ? "/placeholder.jpg" : src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            className={`object-cover ${objectPosition}`}
+            onError={() =>
+              setFailedImages((prev) => {
+                const next = new Set(prev);
+                next.add(idx);
+                return next;
+              })
+            }
+          />
+        </div>
       );
     });
 
@@ -161,7 +168,7 @@ export default function ImageCarousel({
         onMouseMove={hasMultiple ? onMouseMove : undefined}
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {renderImages(600, "object-center")}
+        {renderImages("(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px", "object-center")}
 
         {isEditorsPick && (
           <div className="hidden sm:block absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">
@@ -228,7 +235,7 @@ export default function ImageCarousel({
         onMouseMove={hasMultiple ? onMouseMove : undefined}
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {renderImages(1200, "object-center")}
+        {renderImages("(max-width: 768px) 100vw, 600px", "object-center")}
 
         {safeImages[0] === "/placeholder.jpg" && (
           <div className="absolute inset-0 bg-[#D8CABD]/50" />
@@ -265,20 +272,19 @@ export default function ImageCarousel({
             <button
               key={idx}
               onClick={() => setCurrent(idx)}
-              className={`flex-shrink-0 w-16 h-20 overflow-hidden rounded transition-all ${
+              className={`relative flex-shrink-0 w-16 h-20 overflow-hidden rounded transition-all ${
                 idx === current
                   ? "ring-2 ring-black opacity-100"
                   : "opacity-50 hover:opacity-80"
               }`}
               aria-label={`View image ${idx + 1}`}
             >
-              <img
-                src={resizeImage(src, 200)}
+              <NextImage
+                src={src}
                 alt={`${alt} ${idx + 1}`}
-                className="w-full h-full object-cover object-center"
-                loading="eager"
-                decoding="async"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
+                fill
+                sizes="64px"
+                className="object-cover object-center"
               />
             </button>
           ))}

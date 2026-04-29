@@ -616,32 +616,27 @@ export async function fetchShopifyProductsPublic(
 
       const variants = product.variants || [];
 
-      // CONSERVATIVE sold-out detection:
-      // Only skip if we have EXPLICIT evidence the product is unavailable.
-      //
-      // Check 1: product.available === false (explicitly unavailable)
-      // Check 2: ALL variants have available === false
-      //
-      // If data is null/undefined, assume product IS available (conservative)
-
       let isSoldOut = false;
 
-      // If product.available is explicitly false, it's sold out
       if (product.available === false) {
         isSoldOut = true;
         console.log(`[Shopify] Skipping "${product.title}" - product.available is false`);
-      }
-      // If product.available is null/undefined, check variant availability
-      else if (product.available === null || product.available === undefined) {
-        // Check if ALL variants are explicitly unavailable
+      } else {
         const hasVariants = variants.length > 0;
+        // All variants explicitly unavailable
         const allVariantsUnavailable = hasVariants && variants.every(
           (v: { available?: boolean }) => v.available === false
         );
+        // Shopify tracks inventory and every variant is at 0 — Collabs will exclude
+        // these even if product.available is true (overselling allowed but nothing in stock)
+        const allVariantsZeroInventory = hasVariants && variants.every(
+          (v: { inventory_management?: string | null; inventory_quantity?: number }) =>
+            v.inventory_management === "shopify" && (v.inventory_quantity ?? 0) <= 0
+        );
 
-        if (allVariantsUnavailable) {
+        if (allVariantsUnavailable || allVariantsZeroInventory) {
           isSoldOut = true;
-          console.log(`[Shopify] Skipping "${product.title}" - all variants unavailable`);
+          console.log(`[Shopify] Skipping "${product.title}" - ${allVariantsZeroInventory ? "zero inventory" : "all variants unavailable"}`);
         }
       }
 
@@ -857,6 +852,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   variantId: string | null;
   shopifyProductId: string | null;
   size: string | null;
+  productType: string | null;
 } {
   return {
     title: product.title,
@@ -871,5 +867,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     variantId: product.variantId,
     shopifyProductId: product.shopifyProductId,
     size: product.size,
+    productType: product.productType,
   };
 }

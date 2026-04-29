@@ -90,6 +90,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
     GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url, p.created_at
     ORDER BY ep.added_at DESC, ep.id DESC
+    LIMIT 500
   `;
 
   return rows.map((r) => ({

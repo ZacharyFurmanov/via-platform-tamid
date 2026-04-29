@@ -10,6 +10,7 @@ import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
+import { fetchStripeProducts } from "@/app/lib/stripeClient";
 import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 
@@ -95,6 +96,7 @@ export async function GET(request: Request) {
               variantId: p.variantId ?? undefined,
               shopifyProductId: p.shopifyProductId ?? undefined,
               size: p.size ?? undefined,
+              productType: p.productType ?? undefined,
               compareAtPrice: p.compareAtPrice != null
                 ? convertCurrencyToUSD(p.compareAtPrice as number, storeCurrency)
                 : undefined,
@@ -150,6 +152,26 @@ export async function GET(request: Request) {
           }));
         const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
         console.log(`[Sync Stores] Square: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
+        results.push({ store: store.name, success: true, productCount });
+      } else if (store.type === "stripe") {
+        const { products: rawProducts, skippedCount } = await fetchStripeProducts(
+          store.secretKeyEnvVar,
+          store.websiteUrl,
+        );
+        const mappedProducts = rawProducts
+          .filter((p) => p.price > 0)
+          .map((p) => ({
+            title: p.title,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice ?? undefined,
+            image: p.image ?? undefined,
+            images: p.images,
+            externalUrl: p.externalUrl,
+            description: p.description ?? undefined,
+            variantId: p.variantId ?? undefined,
+          }));
+        const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
+        console.log(`[Sync Stores] Stripe: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
         results.push({ store: store.name, success: true, productCount });
       } else {
         // Squarespace

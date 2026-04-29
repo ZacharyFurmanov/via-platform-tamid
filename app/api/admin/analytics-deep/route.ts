@@ -167,51 +167,61 @@ export async function GET(request: NextRequest) {
           `,
 
       // topStores — product views on VYA + conversions + revenue joined by store slug
+      // sorted by revenue DESC so highest-earning stores appear first
       cutoffIso
         ? sql`
-            WITH click_counts AS (
-              SELECT p.store_slug, COUNT(*)::int AS views
+            WITH view_counts AS (
+              SELECT p.store_slug, MAX(p.store_name) AS store_name, COUNT(*)::int AS views
               FROM product_views pv
               JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
               WHERE pv.timestamp >= ${cutoffIso}
               GROUP BY p.store_slug
             ),
             conv_stats AS (
-              SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue
+              SELECT store_slug, MAX(store_name) AS store_name,
+                COUNT(*)::int AS conversions,
+                COALESCE(SUM(order_total), 0)::float AS revenue
               FROM conversions
-              WHERE order_total > 0 AND timestamp >= ${cutoffIso}
+              WHERE order_total > 0
+                AND (returned IS NULL OR returned = false)
+                AND timestamp >= ${cutoffIso}
               GROUP BY store_slug
             )
             SELECT
-              COALESCE(c.store_slug, v.store_slug) AS store,
-              COALESCE(c.views, 0) AS clicks,
-              COALESCE(v.conversions, 0) AS conversions,
-              COALESCE(v.revenue, 0) AS revenue
-            FROM click_counts c
-            FULL OUTER JOIN conv_stats v ON c.store_slug = v.store_slug
-            ORDER BY clicks DESC
+              COALESCE(v.store_slug, c.store_slug) AS store,
+              COALESCE(v.store_name, c.store_name, v.store_slug, c.store_slug) AS store_display,
+              COALESCE(v.views, 0) AS clicks,
+              COALESCE(c.conversions, 0) AS conversions,
+              COALESCE(c.revenue, 0) AS revenue
+            FROM conv_stats c
+            FULL OUTER JOIN view_counts v ON v.store_slug = c.store_slug
+            ORDER BY revenue DESC, clicks DESC
           `
         : sql`
-            WITH click_counts AS (
-              SELECT p.store_slug, COUNT(*)::int AS views
+            WITH view_counts AS (
+              SELECT p.store_slug, MAX(p.store_name) AS store_name, COUNT(*)::int AS views
               FROM product_views pv
               JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
               GROUP BY p.store_slug
             ),
             conv_stats AS (
-              SELECT store_slug, COUNT(*)::int AS conversions, COALESCE(SUM(order_total), 0)::float AS revenue
+              SELECT store_slug, MAX(store_name) AS store_name,
+                COUNT(*)::int AS conversions,
+                COALESCE(SUM(order_total), 0)::float AS revenue
               FROM conversions
               WHERE order_total > 0
+                AND (returned IS NULL OR returned = false)
               GROUP BY store_slug
             )
             SELECT
-              COALESCE(c.store_slug, v.store_slug) AS store,
-              COALESCE(c.views, 0) AS clicks,
-              COALESCE(v.conversions, 0) AS conversions,
-              COALESCE(v.revenue, 0) AS revenue
-            FROM click_counts c
-            FULL OUTER JOIN conv_stats v ON c.store_slug = v.store_slug
-            ORDER BY clicks DESC
+              COALESCE(v.store_slug, c.store_slug) AS store,
+              COALESCE(v.store_name, c.store_name, v.store_slug, c.store_slug) AS store_display,
+              COALESCE(v.views, 0) AS clicks,
+              COALESCE(c.conversions, 0) AS conversions,
+              COALESCE(c.revenue, 0) AS revenue
+            FROM conv_stats c
+            FULL OUTER JOIN view_counts v ON v.store_slug = c.store_slug
+            ORDER BY revenue DESC, clicks DESC
           `,
 
       // signupsByDay — for "all" use last 60 days, otherwise use cutoff
@@ -532,7 +542,12 @@ export async function GET(request: NextRequest) {
       kpis,
       topProductsByClicks: topClicksResult,
       topProductsByViews: topViewsResult,
-      topStores: topStoresResult,
+      topStores: (topStoresResult as { store: string; store_display: string; clicks: number; conversions: number; revenue: number }[]).map((r) => ({
+        store: r.store_display || r.store,
+        clicks: r.clicks,
+        conversions: r.conversions,
+        revenue: r.revenue,
+      })),
       signupsByDay: signupsByDayResult,
       referralLeaderboard: referralResult.map((r) => ({
         name: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || r.email,

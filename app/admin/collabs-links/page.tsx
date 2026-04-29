@@ -64,12 +64,18 @@ export default function CollabsLinksPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handlePurge() {
-    if (!confirm("Delete all pre-Collabs stuck products from the DB? They'll be re-added automatically once the store enrolls them in Collabs.")) return;
+  async function handlePurge(minDaysStuck?: number) {
+    const label = minDaysStuck
+      ? `Delete all products stuck without a collabs link for ${minDaysStuck}+ days? These are likely sold-out items that Collabs excludes. They'll be re-added automatically when the store re-lists them.`
+      : "Delete all pre-Collabs stuck products from the DB? They'll be re-added automatically once the store enrolls them in Collabs.";
+    if (!confirm(label)) return;
     setPurging(true);
     setPurgeResult(null);
     try {
-      const res = await fetch("/api/admin/generate-collabs-links", { method: "DELETE" });
+      const url = minDaysStuck
+        ? `/api/admin/generate-collabs-links?minDaysStuck=${minDaysStuck}`
+        : "/api/admin/generate-collabs-links";
+      const res = await fetch(url, { method: "DELETE" });
       if (res.ok) {
         const data = await res.json();
         setPurgeResult(data);
@@ -246,19 +252,26 @@ export default function CollabsLinksPage() {
                   <summary className="text-xs text-neutral-400 cursor-pointer hover:text-black">
                     Show stuck products ({missing.total} total — not in Collabs catalog)
                   </summary>
-                  <div className="mt-3 mb-2 flex items-center gap-3">
+                  <div className="mt-3 mb-2 flex flex-wrap items-center gap-3">
                     <button
-                      onClick={handlePurge}
+                      onClick={() => handlePurge(14)}
                       disabled={purging}
                       className="text-xs px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
                     >
-                      {purging ? "Purging…" : "Purge pre-Collabs stuck products"}
+                      {purging ? "Purging…" : "Purge sold-out stuck products (14+ days)"}
+                    </button>
+                    <button
+                      onClick={() => handlePurge()}
+                      disabled={purging}
+                      className="text-xs px-3 py-1.5 bg-neutral-600 text-white hover:bg-neutral-700 transition-colors disabled:opacity-50"
+                    >
+                      {purging ? "Purging…" : "Purge pre-Collabs only"}
                     </button>
                     {purgeResult && (
                       <span className="text-xs text-neutral-500">{purgeResult.deleted} products deleted</span>
                     )}
-                    <span className="text-xs text-neutral-400">(orange = pre-Collabs era, will be re-added by sync once store enrolls them)</span>
                   </div>
+                  <p className="text-xs text-neutral-400 mb-2">Red button: removes all stuck products 14+ days old (sold-out items Collabs excludes — re-added automatically when relisted). Grey: only removes pre-Collabs era products.</p>
                   <div className="mt-3 space-y-4">
                     {Object.entries(missing.stuckByStore).map(([slug, prods]) => (
                       <div key={slug}>

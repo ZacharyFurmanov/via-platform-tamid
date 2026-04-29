@@ -46,6 +46,27 @@ export const stores = [
       "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
   },
   {
+    slug: "carroll-street-vintage",
+    dashboardToken: "csw-9f2a4c8e1b7d",
+    name: "Carroll Street Vintage",
+    location: "Brooklyn, NY",
+    description:
+      "Carroll Street Vintage is a Brooklyn-based vintage shop offering a thoughtfully curated selection of pre-loved clothing and accessories. Each piece is hand-selected with an eye for quality, character, and timeless style.",
+    website: "https://carrollstreetvintage.com",
+    dataSource: "carroll-street-vintage",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "custom-webhook" as const,
+    authenticityPolicy:
+      "Every piece at Carroll Street Vintage is personally sourced and inspected before listing. Items are accurately described with full condition details so you can shop with confidence.",
+    shippingPolicy:
+      "Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "chill-boutique",
     dashboardToken: "cb-3f1a9d6e2c8b",
     name: "Chill Boutique",
@@ -135,6 +156,30 @@ export const stores = [
       "Ships from Connecticut. Shipping rates are calculated at checkout.",
     returnPolicy:
       "All sales are final. If your item arrives significantly different from its description, contact jacquelyne.rankin@gmail.com within 48 hours of delivery with photos.",
+  },
+  {
+    slug: "dear-muse",
+    dashboardToken: "dm-5a9c2e7f1b4d",
+    name: "Dear Muse",
+    location: "Los Angeles, CA",
+    contactEmail: "rachel.dearmuse@gmail.com",
+    description:
+      "Dear Muse is built on the belief that fashion should feel personal, not mass-produced. With over 15 years in the industry, she curates rare, era-defining handbags. Every handbag is sourced with intention for their craftsmanship, history, and emotional impact. Dear Muse invites you to move beyond trends and find pieces that feel like you — distinct, expressive, and entirely your own.",
+    website: "https://shopdearmuse.com",
+    dataSource: "dear-muse",
+    image: "/stores/dear-muse.jpg",
+    logo: "/stores/dear-muse.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "1111",
+    collabsStoreId: "237672",
+    authenticityPolicy:
+      "Every handbag at Dear Muse is personally sourced and selected for its craftsmanship, history, and emotional resonance. With over 15 years of industry expertise, each piece is carefully authenticated and accurately described before listing.",
+    shippingPolicy:
+      "Ships from Los Angeles, CA. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. As a curated vintage handbag boutique, every piece is one-of-a-kind. Please review all item details and photos carefully before purchasing. Contact rachel.dearmuse@gmail.com with any pre-purchase questions.",
   },
   {
     slug: "for-the-globe",
@@ -921,6 +966,7 @@ export const storeContactEmails: Record<string, string> = {
   "honey-bear-vintage": "honeybearvintagenyc@gmail.com",
   "jade-vintage": "hello@jadevintage.ca",
   "blodas-choice": "annabloda@gmail.com",
+  "carroll-street-vintage": "",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
   "porters-preloved": "porterspreloved@gmail.com",

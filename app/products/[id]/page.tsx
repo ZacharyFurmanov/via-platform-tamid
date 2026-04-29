@@ -347,10 +347,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     productImages = [product.image];
   }
 
-  // Build direct cart URL. The /api/track route handles attribution (collabs.shop
-  // redirect for single items, dt_id for multi-item carts).
+  // Build direct cart URL for Shopify stores only (variant IDs are numeric).
+  // Square/Squarespace stores use their own URL format — use external_url as-is.
   let checkoutUrl = product.external_url || "";
-  if (product.variant_id && product.external_url) {
+  if (product.variant_id && product.external_url && (store as any).commissionType === "shopify-collabs") {
     try {
       const productUrl = new URL(product.external_url);
       checkoutUrl = `${productUrl.origin}/cart/${product.variant_id}:1`;

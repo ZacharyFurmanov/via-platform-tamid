@@ -1392,18 +1392,18 @@ function StoresTable({ stores }: { stores: TopStore[] }) {
         <thead>
           <tr>
             <th style={headerStyle}>Store</th>
-            <th style={{ ...headerStyle, textAlign: "right" }}>Views on VYA</th>
-            <th style={{ ...headerStyle, textAlign: "right" }}>Conversions</th>
             <th style={{ ...headerStyle, textAlign: "right" }}>Revenue</th>
+            <th style={{ ...headerStyle, textAlign: "right" }}>Orders</th>
+            <th style={{ ...headerStyle, textAlign: "right" }}>Views on VYA</th>
           </tr>
         </thead>
         <tbody>
           {stores.map((s, i) => (
             <tr key={s.store ?? i} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7" }}>
               <td style={{ ...cellStyle, fontWeight: 600 }}>{s.store ?? "—"}</td>
-              <td style={{ ...cellStyle, textAlign: "right" }}>{s.clicks.toLocaleString()}</td>
+              <td style={{ ...cellStyle, textAlign: "right", fontWeight: 600, color: MAROON }}>{formatRevenueShort(s.revenue)}</td>
               <td style={{ ...cellStyle, textAlign: "right" }}>{s.conversions.toLocaleString()}</td>
-              <td style={{ ...cellStyle, textAlign: "right" }}>{formatRevenueShort(s.revenue)}</td>
+              <td style={{ ...cellStyle, textAlign: "right" }}>{s.clicks.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

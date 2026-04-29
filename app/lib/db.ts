@@ -35,6 +35,7 @@ export type DBProduct = {
   collabs_link: string | null;
   size: string | null;
   compare_at_price: number | null;
+  product_type: string | null;
   insider_notified: boolean;
   synced_at: Date;
   created_at: Date;
@@ -111,10 +112,58 @@ export async function initDatabase() {
     ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price DECIMAL(10, 2)
   `;
 
+  // designer/product type from Shopify (e.g. "Chanel", "Louis Vuitton")
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type TEXT
+  `;
+
   // Index for new arrivals queries
   await sql`
     CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC)
   `;
+
+  // Market data: log every price change detected at sync time
+  await sql`
+    CREATE TABLE IF NOT EXISTS price_history (
+      id           SERIAL PRIMARY KEY,
+      product_id   INTEGER,
+      store_slug   TEXT NOT NULL,
+      title        TEXT NOT NULL,
+      designer     TEXT,
+      old_price    NUMERIC(10,2) NOT NULL,
+      new_price    NUMERIC(10,2) NOT NULL,
+      currency     TEXT NOT NULL DEFAULT 'USD',
+      changed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_price_history_store ON price_history(store_slug, changed_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_price_history_designer ON price_history(designer, changed_at DESC)`;
+
+  // Market data: capture sold items at the moment they fall off the sync feed
+  await sql`
+    CREATE TABLE IF NOT EXISTS sold_items (
+      id                SERIAL PRIMARY KEY,
+      store_slug        TEXT NOT NULL,
+      store_name        TEXT NOT NULL,
+      title             TEXT NOT NULL,
+      designer          TEXT,
+      final_price       NUMERIC(10,2) NOT NULL,
+      original_price    NUMERIC(10,2),
+      currency          TEXT NOT NULL DEFAULT 'USD',
+      image             TEXT,
+      size              TEXT,
+      shopify_product_id TEXT,
+      collabs_link      TEXT,
+      click_count       INTEGER NOT NULL DEFAULT 0,
+      favorite_count    INTEGER NOT NULL DEFAULT 0,
+      days_listed       INTEGER,
+      first_seen_at     TIMESTAMPTZ,
+      sold_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sold_items_sold_at ON sold_items(sold_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sold_items_designer ON sold_items(designer, sold_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_sold_items_store ON sold_items(store_slug, sold_at DESC)`;
 
   // Remove products synced under the old computed slug for Bloda's Choice
   // (computed: "bloda-s-choice", correct: "blodas-choice")
@@ -188,6 +237,7 @@ export async function syncProducts(
     shopifyProductId?: string;
     size?: string;
     compareAtPrice?: number | null;
+    productType?: string;
   }>,
   options?: { excludeKeywords?: string[]; excludeTitles?: string[] }
 ): Promise<{ count: number; priceDrops: PriceDrop[] }> {
@@ -265,7 +315,7 @@ export async function syncProducts(
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     const wasSeenOnInsider = prevSeenTitles.has(product.title);
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, insider_notified, synced_at, created_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, product_type, insider_notified, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -280,6 +330,7 @@ export async function syncProducts(
         ${product.shopifyProductId || null},
         ${product.size || null},
         ${product.compareAtPrice ?? null},
+        ${product.productType || null},
         ${wasSeenOnInsider},
         NOW(),
         NOW()
@@ -296,26 +347,76 @@ export async function syncProducts(
         shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
         size = COALESCE(EXCLUDED.size, products.size),
         compare_at_price = EXCLUDED.compare_at_price,
+        product_type = COALESCE(EXCLUDED.product_type, products.product_type),
         synced_at = NOW()
     `;
   }
 
-  // Detect price drops for products that existed before this sync
+  // Detect price changes and log to price_history; build price drop list for notifications
   const priceDrops: PriceDrop[] = [];
   for (const product of products) {
     if (isBlocked(product.title)) continue;
     const old = oldByTitle.get(product.title);
-    if (old && product.price < old.price) {
-      priceDrops.push({
-        productId: old.id,
-        title: product.title,
-        image: product.image || old.image || null,
-        oldPrice: old.price,
-        newPrice: product.price,
-        storeSlug,
-        storeName,
-      });
+    if (old && product.price !== old.price) {
+      // Log every price change (up or down) for market data
+      await sql`
+        INSERT INTO price_history (product_id, store_slug, title, designer, old_price, new_price, currency)
+        VALUES (
+          ${old.id},
+          ${storeSlug},
+          ${product.title},
+          ${product.productType || null},
+          ${old.price},
+          ${product.price},
+          ${product.currency || "USD"}
+        )
+      `.catch(() => {}); // non-fatal: table may not exist on first run before initDatabase
+      if (product.price < old.price) {
+        priceDrops.push({
+          productId: old.id,
+          title: product.title,
+          image: product.image || old.image || null,
+          oldPrice: old.price,
+          newPrice: product.price,
+          storeSlug,
+          storeName,
+        });
+      }
     }
+  }
+
+  // Capture sold items (products dropping off the feed) before deleting them
+  if (titles.length > 0) {
+    await sql`
+      INSERT INTO sold_items
+        (store_slug, store_name, title, designer, final_price, original_price, currency,
+         image, size, shopify_product_id, collabs_link, click_count, favorite_count,
+         days_listed, first_seen_at, sold_at)
+      SELECT
+        p.store_slug,
+        p.store_name,
+        p.title,
+        p.product_type,
+        p.price,
+        COALESCE(p.compare_at_price, p.price),
+        p.currency,
+        p.image,
+        p.size,
+        p.shopify_product_id,
+        p.collabs_link,
+        COALESCE((SELECT COUNT(*) FROM clicks c WHERE c.product_id = p.store_slug || '-' || p.id::text), 0)::integer,
+        COALESCE((SELECT COUNT(*) FROM product_favorites pf WHERE pf.product_id = p.id), 0)::integer,
+        CASE WHEN p.created_at IS NOT NULL
+          THEN GREATEST(0, EXTRACT(day FROM (NOW() - p.created_at))::integer)
+          ELSE NULL
+        END,
+        p.created_at,
+        NOW()
+      FROM products p
+      WHERE p.store_slug = ${storeSlug}
+        AND p.title != ALL(${titles})
+        AND p.price > 0
+    `.catch(() => {}); // non-fatal on first run
   }
 
   // Remove products that are no longer in the feed
@@ -580,8 +681,35 @@ export async function getProductsMissingCollabsLink(storeSlug?: string): Promise
  * visible on VYA). Safe to remove — they'll be re-added by the next sync
  * if the store enrolls them in Collabs.
  */
-export async function deletePermanentlyStuckProducts(storeSlug?: string): Promise<number> {
+export async function deletePermanentlyStuckProducts(storeSlug?: string, minDaysStuck?: number): Promise<number> {
   const sql = neon(getDatabaseUrl());
+  // minDaysStuck: also purge products stuck without a collabs link for this many days
+  // (likely sold-out items Shopify still lists as available but Collabs excludes)
+  if (minDaysStuck) {
+    const result = storeSlug
+      ? await sql`
+          DELETE FROM products
+          WHERE store_slug = ${storeSlug}
+            AND shopify_product_id IS NOT NULL
+            AND collabs_link IS NULL
+            AND (
+              created_at IS NULL
+              OR created_at < NOW() - (${minDaysStuck} || ' days')::interval
+            )
+          RETURNING id
+        `
+      : await sql`
+          DELETE FROM products
+          WHERE shopify_product_id IS NOT NULL
+            AND collabs_link IS NULL
+            AND (
+              created_at IS NULL
+              OR created_at < NOW() - (${minDaysStuck} || ' days')::interval
+            )
+          RETURNING id
+        `;
+    return result.length;
+  }
   const result = storeSlug
     ? await sql`
         DELETE FROM products

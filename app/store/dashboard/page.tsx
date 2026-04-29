@@ -13,7 +13,7 @@ type StoreInfo = {
   website: string;
   logo: string;
   logoBg: string;
-  commissionType: "shopify-collabs" | "squarespace-manual";
+  commissionType: "shopify-collabs" | "squarespace-manual" | "square-manual" | "custom-webhook";
   totalInventoryValue: number;
   viaCommissionPotential: number;
   storeFollowers: number;
@@ -417,7 +417,11 @@ export default function StoreDashboardPage() {
                   Payout Method
                 </p>
                 <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.4)" }}>
-                  {store.commissionType === "shopify-collabs" ? "Via Shopify Collabs" : "Via Squarespace Invoice"}
+                  {store.commissionType === "shopify-collabs"
+                    ? "Via Shopify Collabs"
+                    : store.commissionType === "squarespace-manual"
+                    ? "Via Squarespace Invoice"
+                    : "Via Invoice"}
                 </p>
               </div>
             </div>
