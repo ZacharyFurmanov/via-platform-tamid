@@ -1,4 +1,4 @@
-export const revalidate = 300; // Cache for 5 minutes; revalidates in background
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { getInventory } from "@/app/lib/inventory";
