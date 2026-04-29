@@ -66,9 +66,15 @@ export async function fetchSquareProducts(
     for (const item of data.objects ?? []) {
       if (item.type !== "ITEM" || !item.item_data) continue;
 
+      // Skip archived catalog items (typically sold/removed)
+      if (item.is_archived) { skippedCount++; continue; }
+
       const itemData = item.item_data;
       const title = itemData.name;
       if (!title) { skippedCount++; continue; }
+
+      // Skip items hidden from the Square Online storefront
+      if (itemData.ecom_visibility === "HIDDEN") { skippedCount++; continue; }
 
       // Skip gift cards
       if (title.toLowerCase().includes("gift card")) { skippedCount++; continue; }
@@ -134,12 +140,14 @@ export async function fetchSquareProducts(
 type SquareCatalogObject = {
   type: string;
   id: string;
+  is_archived?: boolean;
   item_data?: {
     name?: string;
     description?: string;
     image_ids?: string[];
     variations?: SquareCatalogObject[];
     ecom_uri?: string;
+    ecom_visibility?: "VISIBLE" | "UNINDEXED" | "HIDDEN";
   };
   item_variation_data?: {
     name?: string;

@@ -984,6 +984,7 @@ export const storeContactEmails: Record<string, string> = {
   "other-matters-atelier": "othermattersatelier@gmail.com",
   "tess-elizabeth-vintage": "hello@tesselizabeth.com",
   "west-village-vintage": "info@westvillagevintage.com",
+  "dear-muse": "rachel.dearmuse@gmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@vyaplatform.com",
 };
