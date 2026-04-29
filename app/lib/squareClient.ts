@@ -109,13 +109,11 @@ export async function fetchSquareProducts(
         // Size from variant name
         const size = variantName && variantName.toLowerCase() !== "regular" ? variantName : null;
 
-        // Construct Square Online URL: {store}/product/{name-slug}/{item-id}
-        const nameSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-        const baseUrl = storeWebsiteUrl.replace(/\/$/, "");
-        const constructedUrl = `${baseUrl}/product/${nameSlug}/${item.id}`;
-        // Only use ecom_uri if it's a real product URL (contains /product/), not a homepage redirect
+        // Only include items published on the Square Online store (ecom_uri present).
+        // Items without ecom_uri are POS-only and have no valid online product URL.
         const ecomUri = itemData.ecom_uri;
-        const externalUrl = (ecomUri && ecomUri.includes("/product/")) ? ecomUri : constructedUrl;
+        if (!ecomUri || !ecomUri.includes("/product/")) { skippedCount++; continue; }
+        const externalUrl = ecomUri;
 
         products.push({
           title: fullTitle,
