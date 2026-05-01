@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import AdminNav from "@/app/components/AdminNav";
 
 type Customer = {
   email: string;
@@ -96,11 +95,11 @@ function ClickMatchRow({ click, userId, orders, onMatchSuccess }: { click: Activ
     <div style={{ marginBottom: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
         <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{click.product_name}</p>
-          <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{click.store}</p>
+          <p style={{ fontSize: 13, color: "#09090b", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{click.product_name}</p>
+          <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{click.store}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <p style={{ fontSize: 11, color: "rgba(93,15,23,0.35)", whiteSpace: "nowrap" }}>{fmtTime(click.timestamp)}</p>
+          <p style={{ fontSize: 11, color: "#a1a1aa", whiteSpace: "nowrap" }}>{fmtTime(click.timestamp)}</p>
           {linkedOrder ? (
             <span style={{ fontSize: 10, padding: "2px 8px", background: "rgba(16,185,129,0.1)", color: "#065f46", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 4, whiteSpace: "nowrap", fontWeight: 600 }}>
               Order ${Number(linkedOrder.order_total).toFixed(0)} ✓
@@ -108,7 +107,7 @@ function ClickMatchRow({ click, userId, orders, onMatchSuccess }: { click: Activ
           ) : (
             <button
               onClick={toggle}
-              style={{ fontSize: 10, padding: "2px 8px", background: expanded ? "#5D0F17" : "transparent", color: expanded ? "#fff" : "#5D0F17", border: "1px solid rgba(93,15,23,0.3)", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}
+              style={{ fontSize: 10, padding: "2px 8px", background: "transparent", color: "#09090b", border: "1px solid #e4e4e7", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}
             >
               {expanded ? "Hide" : "Match order"}
             </button>
@@ -116,19 +115,19 @@ function ClickMatchRow({ click, userId, orders, onMatchSuccess }: { click: Activ
         </div>
       </div>
       {expanded && (
-        <div style={{ marginTop: 6, marginLeft: 0, borderLeft: "2px solid rgba(93,15,23,0.15)", paddingLeft: 10 }}>
+        <div style={{ marginTop: 6, marginLeft: 0, borderLeft: "2px solid #e4e4e7", paddingLeft: 10 }}>
           {loadingConv ? (
-            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>Loading orders…</p>
+            <p style={{ fontSize: 12, color: "#a1a1aa" }}>Loading orders…</p>
           ) : conversions.length === 0 ? (
-            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>No unmatched orders for this store.</p>
+            <p style={{ fontSize: 12, color: "#a1a1aa" }}>No unmatched orders for this store.</p>
           ) : (
             conversions.map((conv) => (
-              <div key={conv.conversionId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6, padding: "6px 8px", background: "#faf9f7", border: "1px solid #e5e7eb", borderRadius: 4 }}>
+              <div key={conv.conversionId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6, padding: "6px 8px", background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: 6 }}>
                 <div>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#09090b", margin: 0 }}>
                     {new Intl.NumberFormat("en-US", { style: "currency", currency: conv.currency || "USD", maximumFractionDigits: 0 }).format(conv.orderTotal)}
                   </p>
-                  <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{fmtTime(conv.timestamp)} · <span style={{ fontFamily: "monospace" }}>{conv.orderId.slice(0, 20)}</span></p>
+                  <p style={{ fontSize: 11, color: "#a1a1aa", margin: 0 }}>{fmtTime(conv.timestamp)} · <span style={{ fontFamily: "monospace" }}>{conv.orderId.slice(0, 20)}</span></p>
                 </div>
                 {matched === conv.conversionId ? (
                   <span style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>Matched ✓</span>
@@ -136,7 +135,7 @@ function ClickMatchRow({ click, userId, orders, onMatchSuccess }: { click: Activ
                   <button
                     onClick={() => matchConversion(conv.conversionId)}
                     disabled={matching === conv.conversionId}
-                    style={{ fontSize: 11, padding: "3px 10px", background: "#5D0F17", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap", opacity: matching === conv.conversionId ? 0.6 : 1 }}
+                    style={{ fontSize: 11, padding: "3px 10px", background: "#18181b", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap", opacity: matching === conv.conversionId ? 0.6 : 1 }}
                   >
                     {matching === conv.conversionId ? "…" : "Match"}
                   </button>
@@ -165,8 +164,8 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
   useEffect(() => { loadActivity(); }, [customer.email]);
 
   const section = (title: string, count: number) => (
-    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "24px 0 10px" }}>
-      {title} <span style={{ color: "#5D0F17" }}>({count})</span>
+    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 600, margin: "24px 0 10px" }}>
+      {title} <span style={{ color: "#09090b" }}>({count})</span>
     </p>
   );
 
@@ -176,62 +175,62 @@ function ActivityPanel({ customer, onClose }: { customer: Customer; onClose: () 
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }} />
 
       {/* Panel */}
-      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 420, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" }}>
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 420, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 32px rgba(0,0,0,0.1)" }}>
         {/* Header */}
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e4e4e7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <p style={{ fontWeight: 600, color: "#5D0F17", fontSize: 15, margin: 0 }}>{customer.name || "—"}</p>
-            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", margin: "2px 0 0" }}>{customer.email}</p>
+            <p style={{ fontWeight: 600, color: "#09090b", fontSize: 15, margin: 0 }}>{customer.name || "—"}</p>
+            <p style={{ fontSize: 12, color: "#71717a", margin: "2px 0 0" }}>{customer.email}</p>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "rgba(93,15,23,0.4)", lineHeight: 1, padding: 0 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#a1a1aa", lineHeight: 1, padding: 0 }}>×</button>
         </div>
 
         <div style={{ padding: "0 24px 32px" }}>
           {loading ? (
-            <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)", marginTop: 24 }}>Loading…</p>
+            <p style={{ fontSize: 13, color: "#a1a1aa", marginTop: 24 }}>Loading…</p>
           ) : !data?.userId ? (
-            <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)", marginTop: 24 }}>No account activity yet — user hasn&apos;t signed in.</p>
+            <p style={{ fontSize: 13, color: "#a1a1aa", marginTop: 24 }}>No account activity yet — user hasn&apos;t signed in.</p>
           ) : (
             <>
               {/* Favorites */}
               {section("Liked Items", data.favorites.length)}
-              {data.favorites.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.favorites.map((f, i) => (
+              {data.favorites.length === 0 ? <p style={{ fontSize: 13, color: "#a1a1aa" }}>None</p> : data.favorites.map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  {f.image ? <img src={f.image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#F7F3EA", flexShrink: 0 }} />}
+                  {f.image ? <img src={f.image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#f4f4f5", flexShrink: 0 }} />}
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.title || "Unknown"}</p>
-                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{f.store_name} {f.price ? `· $${f.price}` : ""}</p>
+                    <p style={{ fontSize: 13, color: "#09090b", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.title || "Unknown"}</p>
+                    <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{f.store_name} {f.price ? `· $${f.price}` : ""}</p>
                   </div>
                 </div>
               ))}
 
               {/* Cart */}
               {section("In Cart", data.cart.length)}
-              {data.cart.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.cart.map((c, i) => (
+              {data.cart.length === 0 ? <p style={{ fontSize: 13, color: "#a1a1aa" }}>None</p> : data.cart.map((c, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  {c.product_image ? <img src={c.product_image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#F7F3EA", flexShrink: 0 }} />}
+                  {c.product_image ? <img src={c.product_image} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 40, height: 40, background: "#f4f4f5", flexShrink: 0 }} />}
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.product_title}</p>
-                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.store_name} · ${c.price}</p>
+                    <p style={{ fontSize: 13, color: "#09090b", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.product_title}</p>
+                    <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{c.store_name} · ${c.price}</p>
                   </div>
                 </div>
               ))}
 
               {/* Clicks */}
               {section("Clicked Through to Store", data.clicks.length)}
-              {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.clicks.map((c, i) => (
+              {data.clicks.length === 0 ? <p style={{ fontSize: 13, color: "#a1a1aa" }}>None</p> : data.clicks.map((c, i) => (
                 <ClickMatchRow key={i} click={c} userId={data.userId!} orders={data.orders} onMatchSuccess={loadActivity} />
               ))}
 
               {/* Orders */}
               {section("Orders", data.orders.length)}
-              {data.orders.length === 0 ? <p style={{ fontSize: 13, color: "rgba(93,15,23,0.35)" }}>None</p> : data.orders.map((o, i) => (
+              {data.orders.length === 0 ? <p style={{ fontSize: 13, color: "#a1a1aa" }}>None</p> : data.orders.map((o, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div>
-                    <p style={{ fontSize: 13, color: "#5D0F17", margin: 0 }}>{o.store_name}</p>
-                    <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{fmtTime(o.timestamp)}</p>
+                    <p style={{ fontSize: 13, color: "#09090b", margin: 0 }}>{o.store_name}</p>
+                    <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{fmtTime(o.timestamp)}</p>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#5D0F17" }}>${Number(o.order_total).toFixed(2)}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#09090b" }}>${Number(o.order_total).toFixed(2)}</p>
                 </div>
               ))}
             </>
@@ -401,18 +400,17 @@ export default function CustomersClient() {
 
   return (
     <>
-    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
-      <AdminNav />
+    <main style={{ background: "#f8f9fa", minHeight: "100vh" }}>
 
       {/* Page title */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
-          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
+      <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 32px" }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 6 }}>
             Customers
           </h1>
-          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+          <p style={{ fontSize: 13, color: "#71717a" }}>
             Everyone who has signed up for the VYA pilot.{" "}
-            <Link href="/admin/analytics" style={{ color: "#5D0F17", textDecoration: "underline" }}>
+            <Link href="/admin/analytics" style={{ color: "#18181b", textDecoration: "underline" }}>
               View click &amp; purchase analytics →
             </Link>
           </p>
@@ -435,9 +433,9 @@ export default function CustomersClient() {
               onMouseEnter={e => { if (s.filterVal) (e.currentTarget as HTMLElement).style.opacity = "1"; }}
               onMouseLeave={e => { if (s.filterVal && filter !== s.filterVal) (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
             >
-              <p className="font-serif" style={{ fontSize: 28, color: "#5D0F17", lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>
-                {s.label}{s.filterVal && filter === s.filterVal ? " ●" : ""}
+              <p style={{ fontSize: 24, fontWeight: 600, color: "#09090b", lineHeight: 1, textDecoration: s.filterVal && filter === s.filterVal ? "underline" : "none" }}>{s.value}</p>
+              <p style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>
+                {s.label}
               </p>
             </div>
           ))}
@@ -448,12 +446,12 @@ export default function CustomersClient() {
               <button
                 onClick={handleApproveAll}
                 disabled={approvingAll}
-                style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: approvingAll ? "not-allowed" : "pointer", opacity: approvingAll ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+                style={{ padding: "8px 16px", border: "none", background: "#18181b", color: "#fff", cursor: approvingAll ? "not-allowed" : "pointer", opacity: approvingAll ? 0.6 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
               >
                 {approvingAll ? "Working…" : `Approve All (${pending})`}
               </button>
               {emailProgress && (
-                <p style={{ fontSize: 11, color: "rgba(93,15,23,0.6)", margin: 0 }}>{emailProgress}</p>
+                <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{emailProgress}</p>
               )}
             </div>
           )}
@@ -461,18 +459,18 @@ export default function CustomersClient() {
             <button
               onClick={handleSendNewArrivals}
               disabled={sendingNewArrivals}
-              style={{ padding: "10px 24px", border: "none", background: "#5D0F17", color: "#F7F3EA", cursor: sendingNewArrivals ? "not-allowed" : "pointer", opacity: sendingNewArrivals ? 0.6 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+              style={{ padding: "8px 16px", border: "none", background: "#18181b", color: "#fff", cursor: sendingNewArrivals ? "not-allowed" : "pointer", opacity: sendingNewArrivals ? 0.6 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
             >
               {sendingNewArrivals ? "Sending…" : "Send New Arrivals Email"}
             </button>
             {newArrivalsResult && (
-              <p style={{ fontSize: 11, color: "rgba(93,15,23,0.6)", margin: 0 }}>{newArrivalsResult}</p>
+              <p style={{ fontSize: 11, color: "#71717a", margin: 0 }}>{newArrivalsResult}</p>
             )}
           </div>
           <button
             onClick={exportCSV}
             disabled={filtered.length === 0}
-            style={{ padding: "10px 24px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: filtered.length === 0 ? "not-allowed" : "pointer", opacity: filtered.length === 0 ? 0.4 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+            style={{ padding: "8px 16px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: filtered.length === 0 ? "not-allowed" : "pointer", opacity: filtered.length === 0 ? 0.4 : 1, fontSize: 12, borderRadius: 6 }}
           >
             Export CSV
           </button>
@@ -481,23 +479,21 @@ export default function CustomersClient() {
 
       {/* Filters */}
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 16px" }}>
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "12px 20px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+        <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: "12px 16px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
           <div style={{ display: "flex", gap: 8 }}>
             {(["all", "approved", "pending"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 style={{
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  padding: "5px 14px",
-                  border: "1px solid",
+                  fontSize: 12,
+                  padding: "4px 12px",
+                  border: filter === f ? "none" : "1px solid #e4e4e7",
                   cursor: "pointer",
                   transition: "all 0.15s",
-                  background: filter === f ? "#5D0F17" : "transparent",
-                  color: filter === f ? "#F7F3EA" : "#5D0F17",
-                  borderColor: filter === f ? "#5D0F17" : "rgba(93,15,23,0.3)",
+                  background: filter === f ? "#18181b" : "transparent",
+                  color: filter === f ? "#fff" : "#71717a",
+                  borderRadius: 5,
                 }}
               >
                 {f}
@@ -509,7 +505,9 @@ export default function CustomersClient() {
             placeholder="Search by email or name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ marginLeft: "auto", border: "1px solid rgba(93,15,23,0.3)", padding: "6px 12px", fontSize: 13, color: "#5D0F17", outline: "none", width: 256 }}
+            style={{ marginLeft: "auto", border: "1px solid #e4e4e7", borderRadius: 6, padding: "7px 12px", fontSize: 13, color: "#09090b", outline: "none", width: 256, boxShadow: "none" }}
+            onFocus={e => (e.currentTarget.style.boxShadow = "0 0 0 2px rgba(24,24,27,0.08)")}
+            onBlur={e => (e.currentTarget.style.boxShadow = "none")}
           />
         </div>
       </div>
@@ -517,42 +515,42 @@ export default function CustomersClient() {
       {/* Content */}
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 48px" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "64px 0", color: "rgba(93,15,23,0.4)", fontSize: 14 }}>Loading…</div>
+          <div style={{ textAlign: "center", padding: "64px 0", color: "#a1a1aa", fontSize: 14 }}>Loading…</div>
         ) : error ? (
           <div style={{ textAlign: "center", padding: "64px 0", color: "#b91c1c", fontSize: 14 }}>{error}</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "64px 0", color: "rgba(93,15,23,0.4)", fontSize: 14 }}>No customers found.</div>
+          <div style={{ textAlign: "center", padding: "64px 0", color: "#a1a1aa", fontSize: 14 }}>No customers found.</div>
         ) : (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb", overflowX: "auto" }}>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#F7F3EA" }}>
+                <tr style={{ borderBottom: "1px solid #e4e4e7", background: "#fafafa" }}>
                   {["#", "Name / Email", "Status", "Login", "Last Active", "Signed Up", "Referral Code", "Referred By", ""].map((h) => (
-                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(93,15,23,0.5)", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a1a1aa", fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((c, i) => (
-                  <tr key={c.email} onClick={() => router.push(`/admin/customers/${encodeURIComponent(c.email)}`)} style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf9f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                    <td style={{ padding: "12px 16px", color: "rgba(93,15,23,0.3)" }}>{i + 1}</td>
+                  <tr key={c.email} onClick={() => router.push(`/admin/customers/${encodeURIComponent(c.email)}`)} style={{ borderBottom: "1px solid #f4f4f5", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                    <td style={{ padding: "12px 16px", color: "#d4d4d8" }}>{i + 1}</td>
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                        <p style={{ fontWeight: 500, color: "#5D0F17", margin: 0 }}>{c.name || "—"}</p>
+                        <p style={{ fontWeight: 500, color: "#09090b", margin: 0 }}>{c.name || "—"}</p>
                         {c.viewCount > 0 && (
-                          <span title={`${c.viewCount} product views`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#5D0F17", background: "rgba(93,15,23,0.06)", padding: "1px 5px", borderRadius: 4 }}>
+                          <span title={`${c.viewCount} product views`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#71717a", background: "#f4f4f5", padding: "1px 5px", borderRadius: 4 }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             {c.viewCount}
                           </span>
                         )}
                         {c.clickCount > 0 && (
-                          <span title={`${c.clickCount} store click-throughs`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#5D0F17", background: "rgba(93,15,23,0.08)", padding: "1px 5px", borderRadius: 4 }}>
+                          <span title={`${c.clickCount} store click-throughs`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#71717a", background: "#f4f4f5", padding: "1px 5px", borderRadius: 4 }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
                             {c.clickCount}
                           </span>
                         )}
                         {c.favoriteCount > 0 && (
-                          <span title={`${c.favoriteCount} saved`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#5D0F17", background: "rgba(93,15,23,0.08)", padding: "1px 5px", borderRadius: 4 }}>
+                          <span title={`${c.favoriteCount} saved`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#71717a", background: "#f4f4f5", padding: "1px 5px", borderRadius: 4 }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             {c.favoriteCount}
                           </span>
@@ -564,25 +562,24 @@ export default function CustomersClient() {
                           </span>
                         )}
                       </div>
-                      <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.email}</p>
-                      {c.phone && <p style={{ fontSize: 11, color: "rgba(93,15,23,0.5)", margin: 0 }}>{c.phone}</p>}
+                      <p style={{ fontSize: 12, color: "#71717a", margin: 0 }}>{c.email}</p>
+                      {c.phone && <p style={{ fontSize: 12, color: "#71717a", margin: 0 }}>{c.phone}</p>}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <span style={{
                         display: "inline-block",
-                        fontSize: 10,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
+                        fontSize: 11,
                         padding: "2px 8px",
-                        fontWeight: 600,
-                        background: c.status === "approved" ? "#dcfce7" : c.status === "waitlist" ? "#f3f4f6" : "#fffbeb",
-                        color: c.status === "approved" ? "#166534" : c.status === "waitlist" ? "#6b7280" : "#92400e",
+                        fontWeight: 500,
+                        borderRadius: 99,
+                        background: c.status === "approved" ? "#dcfce7" : c.status === "waitlist" ? "#f4f4f5" : "#fef9c3",
+                        color: c.status === "approved" ? "#15803d" : c.status === "waitlist" ? "#71717a" : "#854d0e",
                       }}>
                         {c.status}
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: c.loginMethod === "Google" ? "#2563eb" : "rgba(93,15,23,0.5)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: c.loginMethod === "Google" ? "#2563eb" : "#a1a1aa" }}>
                         {c.loginMethod === "Google" ? (
                           <svg style={{ width: 12, height: 12 }} viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -600,20 +597,20 @@ export default function CustomersClient() {
                     </td>
                     <td style={{ padding: "12px 16px", fontSize: 12 }}>
                       {c.lastActiveAt ? (
-                        <span style={{ color: "#5D0F17", fontWeight: 500 }}>{fmt(c.lastActiveAt)}</span>
+                        <span style={{ color: "#09090b", fontWeight: 500 }}>{fmt(c.lastActiveAt)}</span>
                       ) : (
-                        <span style={{ color: "rgba(93,15,23,0.3)" }}>—</span>
+                        <span style={{ color: "#d4d4d8" }}>—</span>
                       )}
                     </td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: "rgba(93,15,23,0.5)" }}>{fmt(c.signedUpAt)}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#71717a" }}>{fmt(c.signedUpAt)}</td>
                     <td style={{ padding: "12px 16px" }}>
                       {c.referralCode ? (
-                        <code style={{ fontSize: 11, background: "#F7F3EA", padding: "2px 6px", color: "#5D0F17", fontFamily: "monospace" }}>{c.referralCode}</code>
+                        <code style={{ fontSize: 11, background: "#f4f4f5", padding: "1px 6px", color: "#09090b", fontFamily: "monospace", borderRadius: 4 }}>{c.referralCode}</code>
                       ) : "—"}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       {c.referredBy ? (
-                        <code style={{ fontSize: 11, background: "#fffbeb", color: "#92400e", padding: "2px 6px", fontFamily: "monospace" }}>{c.referredBy}</code>
+                        <code style={{ fontSize: 11, background: "#fef9c3", color: "#854d0e", padding: "1px 6px", fontFamily: "monospace", borderRadius: 4 }}>{c.referredBy}</code>
                       ) : "—"}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
@@ -623,14 +620,13 @@ export default function CustomersClient() {
                           disabled={approving === c.email}
                           style={{
                             fontSize: 11,
-                            padding: "4px 12px",
-                            background: "#5D0F17",
-                            color: "#F7F3EA",
+                            padding: "3px 10px",
+                            background: "#18181b",
+                            color: "#fff",
                             border: "none",
+                            borderRadius: 5,
                             cursor: approving === c.email ? "not-allowed" : "pointer",
                             opacity: approving === c.email ? 0.6 : 1,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -642,7 +638,7 @@ export default function CustomersClient() {
                 ))}
               </tbody>
             </table>
-            <p style={{ fontSize: 11, color: "rgba(93,15,23,0.4)", padding: "10px 16px" }}>
+            <p style={{ fontSize: 12, color: "#a1a1aa", padding: "10px 16px" }}>
               Showing {filtered.length} of {customers.length} customers
             </p>
           </div>

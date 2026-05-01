@@ -73,6 +73,9 @@ export async function fetchSquareProducts(
       const title = itemData.name;
       if (!title) { skippedCount++; continue; }
 
+      // Temporary: log each item's online store state so we can debug stale products
+      console.log(`[square-sync] item="${title}" is_archived=${item.is_archived ?? false} ecom_visibility=${itemData.ecom_visibility ?? "unset"} ecom_uri=${itemData.ecom_uri ?? "none"}`);
+
       // Skip items hidden from the Square Online storefront
       if (itemData.ecom_visibility === "HIDDEN") { skippedCount++; continue; }
 
@@ -145,7 +148,7 @@ type SquareCatalogObject = {
     image_ids?: string[];
     variations?: SquareCatalogObject[];
     ecom_uri?: string;
-    ecom_visibility?: "VISIBLE" | "UNINDEXED" | "HIDDEN";
+    ecom_visibility?: "VISIBLE" | "UNINDEXED" | "HIDDEN" | string;
   };
   item_variation_data?: {
     name?: string;

@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { stores } from "@/app/lib/stores";
-import AdminNav from "@/app/components/AdminNav";
 import { COLLECTIONS } from "@/app/lib/collections-config";
 
 type Collection = (typeof COLLECTIONS)[number];
@@ -173,28 +172,27 @@ export default function CollectionsAdminPage() {
   };
 
   return (
-    <main style={{ minHeight: "100vh", background: "#F7F3EA" }}>
-      <AdminNav />
+    <main style={{ minHeight: "100vh", background: "#f8f9fa" }}>
 
       {/* Page title */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+      <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
-              <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 4 }}>
+              <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>
                 Collections
               </h1>
-              <p style={{ fontSize: 14, color: "rgba(93,15,23,0.5)" }}>
+              <p style={{ fontSize: 14, color: "#71717a" }}>
                 Curate picks for each collection shown on the homepage.
               </p>
             </div>
-            <span style={{ fontSize: 14, color: "#5D0F17", fontWeight: 600 }}>
+            <span style={{ fontSize: 14, color: "#09090b", fontWeight: 600 }}>
               {loadingPicks ? "…" : picks.length} selected
             </span>
           </div>
 
           {/* Collection tabs — only show collections with items, plus the last one (newest) */}
-          <div style={{ display: "flex", gap: 0, borderTop: "1px solid #e5e7eb", overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 0, borderTop: "1px solid #e4e4e7", overflowX: "auto" }}>
             {COLLECTIONS.filter((col, i) =>
               activeSlugs === null || // still loading — show all
               activeSlugs.has(col.slug) ||
@@ -210,8 +208,8 @@ export default function CollectionsAdminPage() {
                   letterSpacing: "0.1em",
                   background: "none",
                   border: "none",
-                  borderBottom: activeCollection.slug === col.slug ? "2px solid #5D0F17" : "2px solid transparent",
-                  color: activeCollection.slug === col.slug ? "#5D0F17" : "rgba(93,15,23,0.45)",
+                  borderBottom: activeCollection.slug === col.slug ? "2px solid #09090b" : "2px solid transparent",
+                  color: activeCollection.slug === col.slug ? "#09090b" : "#71717a",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   transition: "all 0.15s",
@@ -219,7 +217,7 @@ export default function CollectionsAdminPage() {
               >
                 {col.name}
                 {col.curatedBy && (
-                  <span style={{ fontSize: 9, marginLeft: 6, color: "rgba(93,15,23,0.35)", textTransform: "none", letterSpacing: 0 }}>
+                  <span style={{ fontSize: 9, marginLeft: 6, color: "#a1a1aa", textTransform: "none", letterSpacing: 0 }}>
                     by {col.curatedBy}
                   </span>
                 )}
@@ -234,8 +232,8 @@ export default function CollectionsAdminPage() {
 
         {/* Selected strip */}
         {!loadingPicks && picks.length > 0 && (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
-            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(93,15,23,0.4)", marginBottom: 12 }}>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 12 }}>
               Current Selections — {activeCollection.name} · click any item to remove
             </p>
             <div className="flex flex-wrap gap-2">
@@ -248,7 +246,7 @@ export default function CollectionsAdminPage() {
                     onClick={() => handleToggle(pick.product)}
                     title={`Remove: ${pick.product.title}`}
                   >
-                    <div className={`w-16 h-20 bg-[#D8CABD]/30 overflow-hidden transition-opacity ${isRemoving ? "opacity-40" : ""}`}>
+                    <div className={`w-16 h-20 bg-[#f4f4f5] overflow-hidden transition-opacity ${isRemoving ? "opacity-40" : ""}`}>
                       {pick.product.image
                         ? <img src={pick.product.image} alt="" className="w-full h-full object-cover" />
                         : <div className="w-full h-full" />
@@ -256,23 +254,23 @@ export default function CollectionsAdminPage() {
                     </div>
                     {/* Always-visible × button */}
                     <button
-                      className="absolute top-1 right-1 w-5 h-5 bg-[#5D0F17] text-[#F7F3EA] text-[11px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      className="absolute top-1 right-1 w-5 h-5 bg-[#18181b] text-white text-[11px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
                       onClick={(e) => { e.stopPropagation(); handleToggle(pick.product); }}
                       tabIndex={-1}
                     >
                       ×
                     </button>
                     {/* Position badge */}
-                    <div className="absolute top-1 left-1 w-4 h-4 bg-[#5D0F17] flex items-center justify-center group-hover:opacity-0 transition-opacity">
-                      <span className="text-[#F7F3EA] text-[9px] leading-none">{pick.position + 1}</span>
+                    <div className="absolute top-1 left-1 w-4 h-4 bg-[#18181b] flex items-center justify-center group-hover:opacity-0 transition-opacity">
+                      <span className="text-white text-[9px] leading-none">{pick.position + 1}</span>
                     </div>
                     {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-[#5D0F17]/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                      <span className="text-[#F7F3EA] text-[10px] uppercase tracking-wide">Remove</span>
+                    <div className="absolute inset-0 bg-[#09090b]/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <span className="text-white text-[10px] uppercase tracking-wide">Remove</span>
                     </div>
                     {isRemoving && (
-                      <div className="absolute inset-0 bg-[#F7F3EA]/60 flex items-center justify-center">
-                        <div className="w-3 h-3 border-2 border-[#5D0F17] border-t-transparent rounded-full animate-spin" />
+                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <div className="w-3 h-3 border-2 border-[#18181b] border-t-transparent rounded-full animate-spin" />
                       </div>
                     )}
                   </div>
@@ -283,8 +281,8 @@ export default function CollectionsAdminPage() {
         )}
 
         {/* From User Likes */}
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
-          <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(93,15,23,0.4)", marginBottom: 12 }}>
+        <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
+          <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 12 }}>
             From User Likes
           </p>
           <div className="flex gap-3 mb-3">
@@ -294,14 +292,14 @@ export default function CollectionsAdminPage() {
               onChange={(e) => { setLikesEmail(e.target.value); setLikesProducts([]); setLikesError(null); }}
               onKeyDown={(e) => e.key === "Enter" && handleLikesLoad()}
               placeholder="user@example.com"
-              className="flex-1 border px-4 py-2.5 text-sm outline-none"
-              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+              className="flex-1 px-4 py-2.5 text-sm outline-none"
+              style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
             />
             <button
               onClick={handleLikesLoad}
               disabled={likesLoading || !likesEmail.trim()}
               className="px-5 py-2.5 text-sm uppercase tracking-wider transition-colors"
-              style={{ background: "#5D0F17", color: "#F7F3EA", opacity: likesLoading || !likesEmail.trim() ? 0.5 : 1, border: "none", cursor: "pointer" }}
+              style={{ background: "#18181b", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 500, opacity: likesLoading || !likesEmail.trim() ? 0.5 : 1, border: "none", cursor: "pointer" }}
             >
               {likesLoading ? "Loading…" : "Load"}
             </button>
@@ -310,14 +308,14 @@ export default function CollectionsAdminPage() {
           {likesProducts.length > 0 && (
             <>
               <div className="flex items-center justify-between mb-3">
-                <p style={{ fontSize: 12, color: "rgba(93,15,23,0.6)" }}>
+                <p style={{ fontSize: 12, color: "#71717a" }}>
                   {likesProducts.length} saved item{likesProducts.length !== 1 ? "s" : ""} · {likesProducts.filter(p => !pickedIds.has(p.id)).length} not yet in collection
                 </p>
                 <button
                   onClick={handleBulkAdd}
                   disabled={bulkAdding || likesProducts.every(p => pickedIds.has(p.id))}
                   className="px-4 py-1.5 text-xs uppercase tracking-wider transition-colors"
-                  style={{ background: "#5D0F17", color: "#F7F3EA", opacity: bulkAdding || likesProducts.every(p => pickedIds.has(p.id)) ? 0.5 : 1, border: "none", cursor: "pointer" }}
+                  style={{ background: "#18181b", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 500, opacity: bulkAdding || likesProducts.every(p => pickedIds.has(p.id)) ? 0.5 : 1, border: "none", cursor: "pointer" }}
                 >
                   {bulkAdding ? "Adding…" : `Add All (${likesProducts.filter(p => !pickedIds.has(p.id)).length})`}
                 </button>
@@ -333,31 +331,31 @@ export default function CollectionsAdminPage() {
                       disabled={isToggling}
                       className="relative text-left group transition cursor-pointer"
                     >
-                      <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#5D0F17]" : ""}`}>
+                      <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#18181b]" : ""}`}>
                         {product.image
                           ? <img src={product.image} alt="" className="w-full h-full object-cover" />
-                          : <div className="w-full h-full bg-[#D8CABD]/30" />
+                          : <div className="w-full h-full bg-[#f4f4f5]" />
                         }
                         {isPicked && (
-                          <div className="absolute inset-0 bg-[#5D0F17]/10 group-hover:bg-[#5D0F17]/30 transition-colors flex items-center justify-center">
-                            <div className="w-5 h-5 bg-[#5D0F17] flex items-center justify-center opacity-80 group-hover:hidden">
-                              <span className="text-[#F7F3EA] text-xs">✓</span>
+                          <div className="absolute inset-0 bg-[#09090b]/10 group-hover:bg-[#09090b]/30 transition-colors flex items-center justify-center">
+                            <div className="w-5 h-5 bg-[#18181b] flex items-center justify-center opacity-80 group-hover:hidden">
+                              <span className="text-white text-xs">✓</span>
                             </div>
-                            <span className="hidden group-hover:inline text-[#F7F3EA] text-[9px] uppercase tracking-wide bg-[#5D0F17] px-1.5 py-0.5">Remove</span>
+                            <span className="hidden group-hover:inline text-white text-[9px] uppercase tracking-wide bg-[#18181b] px-1.5 py-0.5">Remove</span>
                           </div>
                         )}
                         {!isPicked && (
-                          <div className="absolute inset-0 bg-[#5D0F17]/0 group-hover:bg-[#5D0F17]/20 transition-colors flex items-center justify-center">
-                            <span className="opacity-0 group-hover:opacity-100 text-[#F7F3EA] text-[9px] uppercase tracking-wide bg-[#5D0F17] px-1.5 py-0.5 transition-opacity">+ Add</span>
+                          <div className="absolute inset-0 bg-[#09090b]/0 group-hover:bg-[#09090b]/20 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 text-white text-[9px] uppercase tracking-wide bg-[#18181b] px-1.5 py-0.5 transition-opacity">+ Add</span>
                           </div>
                         )}
                         {isToggling && (
-                          <div className="absolute inset-0 bg-[#F7F3EA]/60 flex items-center justify-center">
-                            <div className="w-3 h-3 border-2 border-[#5D0F17] border-t-transparent rounded-full animate-spin" />
+                          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                            <div className="w-3 h-3 border-2 border-[#18181b] border-t-transparent rounded-full animate-spin" />
                           </div>
                         )}
                       </div>
-                      <p className="text-[9px] leading-snug text-[#5D0F17] mt-1 line-clamp-1">{product.title}</p>
+                      <p className="text-[9px] leading-snug text-[#09090b] mt-1 line-clamp-1">{product.title}</p>
                     </button>
                   );
                 })}
@@ -367,13 +365,13 @@ export default function CollectionsAdminPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: 20, marginBottom: 24 }}>
+        <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
           <div className="flex gap-3">
             <select
               value={storeFilter}
               onChange={(e) => { setStoreFilter(e.target.value); setQuery(""); }}
-              className="border px-4 py-2.5 text-sm outline-none"
-              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+              className="px-4 py-2.5 text-sm outline-none"
+              style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
             >
               <option value="">All Stores</option>
               {stores.map((s) => (
@@ -385,17 +383,17 @@ export default function CollectionsAdminPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter by name…"
-              className="flex-1 border px-4 py-2.5 text-sm outline-none"
-              style={{ borderColor: "rgba(93,15,23,0.3)", background: "#fff", color: "#5D0F17" }}
+              className="flex-1 px-4 py-2.5 text-sm outline-none"
+              style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
             />
           </div>
         </div>
 
         {/* Product grid */}
         {loadingProducts ? (
-          <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>Loading products…</p>
+          <p style={{ fontSize: 13, color: "#a1a1aa" }}>Loading products…</p>
         ) : products.length === 0 ? (
-          <p style={{ fontSize: 13, color: "rgba(93,15,23,0.4)" }}>No products found.</p>
+          <p style={{ fontSize: 13, color: "#a1a1aa" }}>No products found.</p>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
             {products.map((product) => {
@@ -409,41 +407,41 @@ export default function CollectionsAdminPage() {
                   disabled={isToggling}
                   className="relative text-left group transition cursor-pointer"
                 >
-                  <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#5D0F17]" : ""}`}>
+                  <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#18181b]" : ""}`}>
                     {product.image
                       ? <img src={product.image} alt="" className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-[#D8CABD]/30" />
+                      : <div className="w-full h-full bg-[#f4f4f5]" />
                     }
 
                     {!isPicked && (
-                      <div className="absolute inset-0 bg-[#5D0F17]/0 group-hover:bg-[#5D0F17]/20 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 text-[#F7F3EA] text-[10px] uppercase tracking-wide transition-opacity bg-[#5D0F17] px-2 py-1">
+                      <div className="absolute inset-0 bg-[#09090b]/0 group-hover:bg-[#09090b]/20 transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 text-white text-[10px] uppercase tracking-wide transition-opacity bg-[#18181b] px-2 py-1">
                           + Pick
                         </span>
                       </div>
                     )}
 
                     {isPicked && (
-                      <div className="absolute inset-0 bg-[#5D0F17]/10 group-hover:bg-[#5D0F17]/30 transition-colors flex items-center justify-center">
-                        <div className="w-7 h-7 bg-[#5D0F17] flex items-center justify-center opacity-80 group-hover:hidden">
-                          <span className="text-[#F7F3EA] text-sm">✓</span>
+                      <div className="absolute inset-0 bg-[#09090b]/10 group-hover:bg-[#09090b]/30 transition-colors flex items-center justify-center">
+                        <div className="w-7 h-7 bg-[#18181b] flex items-center justify-center opacity-80 group-hover:hidden">
+                          <span className="text-white text-sm">✓</span>
                         </div>
-                        <span className="hidden group-hover:inline text-[#F7F3EA] text-[10px] uppercase tracking-wide bg-[#5D0F17] px-2 py-1">
+                        <span className="hidden group-hover:inline text-white text-[10px] uppercase tracking-wide bg-[#18181b] px-2 py-1">
                           Remove
                         </span>
                       </div>
                     )}
 
                     {isToggling && (
-                      <div className="absolute inset-0 bg-[#F7F3EA]/60 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-[#5D0F17] border-t-transparent rounded-full animate-spin" />
+                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-[#18181b] border-t-transparent rounded-full animate-spin" />
                       </div>
                     )}
                   </div>
 
                   <div className="pt-1.5">
-                    <p className="text-[10px] leading-snug text-[#5D0F17] line-clamp-2">{product.title}</p>
-                    <p className="text-[9px] text-[#5D0F17]/50 mt-0.5">${Math.round(product.price)}</p>
+                    <p className="text-[10px] leading-snug text-[#09090b] line-clamp-2">{product.title}</p>
+                    <p className="text-[9px] text-[#71717a] mt-0.5">${Math.round(product.price)}</p>
                   </div>
                 </button>
               );

@@ -5,6 +5,7 @@ import {
   fetchShopifyProductsByCollections,
   testShopifyConnection,
   toRSSProductFormat,
+  scrapeProductPageSections,
 } from "@/app/lib/shopifyClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 import { convertCurrencyToUSD, refreshExchangeRates, stores } from "@/app/lib/stores";
@@ -12,55 +13,6 @@ import { ALL_STORES } from "@/app/lib/storeConfig";
 import { getPriceDropCandidates, recordPriceDropNotificationsSent } from "@/app/lib/notification-db";
 import { sendPriceDropEmails } from "@/app/lib/email";
 
-/**
- * Fetches a Shopify product page and extracts metafield sections (h2/p pairs)
- * that aren't in the body_html, such as Condition and Dimensions.
- * Returns appended HTML in a format compatible with splitDescription parsing.
- */
-async function scrapeProductPageSections(url: string): Promise<string> {
-  try {
-    const res = await fetch(url, {
-      headers: { Accept: "text/html" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return "";
-    const html = await res.text();
-
-    // Convert to plain text — strip scripts/styles then all tags
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const sections: string[] = [];
-    // Boundary: the next recognizable section heading stops the capture
-    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic)";
-
-    // Extract "Dimensions" or "Measurements" value
-    const dimResult = new RegExp(`\\b(?:Dimensions?|Measurements?)\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
-    if (dimResult) {
-      const val = dimResult[1].trim();
-      if (val.length >= 3 && val.length <= 400) {
-        sections.push(`<p>Measurements: ${val}</p>`);
-      }
-    }
-
-    // Extract "Condition [value]"
-    const condResult = new RegExp(`\\bCondition\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
-    if (condResult) {
-      const val = condResult[1].trim();
-      if (val.length >= 3 && val.length <= 300) {
-        sections.push(`<p>Condition: ${val}</p>`);
-      }
-    }
-
-    return sections.join("");
-  } catch {
-    return "";
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {

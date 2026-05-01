@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const PRIMARY_CODE = process.env.VIA_ACCESS_CODE || "vyainsider";
-const VALID_CODES = new Set([PRIMARY_CODE.toLowerCase(), "lisa", "sophia"]);
+const VALID_CODES = new Set([PRIMARY_CODE.toLowerCase(), "lisa", "sophia", "matty"]);
 
 export async function POST(request: Request) {
   const { code } = await request.json();

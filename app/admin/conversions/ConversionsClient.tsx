@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import AdminNav from "@/app/components/AdminNav";
 
 type Conversion = {
   conversionId: string;
@@ -37,8 +36,6 @@ type CandidateClick = {
   productSoldOut?: boolean;
 };
 
-const MAROON = "#5D0F17";
-
 function fmt(n: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
 }
@@ -58,9 +55,9 @@ function acquisitionLabel(c: Conversion): { label: string; color: string; bg: st
   }
   if (c.utmSource === "instagram") return { label: "Instagram", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" };
   if (c.utmSource === "google") return { label: "Google", color: "#92400e", bg: "rgba(245,158,11,0.08)" };
-  if (c.utmSource) return { label: c.utmSource, color: "#374151", bg: "#f3f4f6" };
-  if (c.userId) return { label: "Browsing", color: "#374151", bg: "#f3f4f6" };
-  return { label: "Unknown", color: "#9ca3af", bg: "#f9fafb" };
+  if (c.utmSource) return { label: c.utmSource, color: "#71717a", bg: "#f4f4f5" };
+  if (c.userId) return { label: "Browsing", color: "#71717a", bg: "#f4f4f5" };
+  return { label: "Unknown", color: "#71717a", bg: "#f4f4f5" };
 }
 
 export default function AdminConversionsPage() {
@@ -177,32 +174,31 @@ export default function AdminConversionsPage() {
   }
 
   return (
-    <div style={{ background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
-      <AdminNav />
+    <div style={{ background: "#f8f9fa", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>Conversions</h1>
-            <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", margin: "0 0 4px" }}>Conversions</h1>
+            <p style={{ fontSize: 14, color: "#71717a", margin: 0 }}>
               Match purchases to VYA clicks and customers.{" "}
-              <Link href="/admin/analytics" style={{ color: MAROON, textDecoration: "underline" }}>View revenue in Analytics →</Link>
+              <Link href="/admin/analytics" style={{ color: "#09090b", textDecoration: "underline" }}>View revenue in Analytics →</Link>
               {" · "}
-              <Link href="/admin/key-metrics" style={{ color: MAROON, textDecoration: "underline" }}>Key Metrics →</Link>
+              <Link href="/admin/key-metrics" style={{ color: "#09090b", textDecoration: "underline" }}>Key Metrics →</Link>
             </p>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button
               onClick={() => setAddingOrder(true)}
-              style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: `1px solid ${MAROON}`, background: MAROON, color: "#fff", cursor: "pointer", fontWeight: 600 }}
+              style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "none", background: "#18181b", color: "#fff", cursor: "pointer", fontWeight: 500 }}
             >
               + Record Order
             </button>
             {(["unmatched", "all"] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)} style={{
                 padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "1px solid",
-                borderColor: filter === f ? MAROON : "#e5e7eb",
-                background: filter === f ? MAROON : "#fff",
-                color: filter === f ? "#fff" : "#374151", cursor: "pointer", fontWeight: filter === f ? 600 : 400,
+                borderColor: filter === f ? "#18181b" : "#e4e4e7",
+                background: filter === f ? "#18181b" : "#fff",
+                color: filter === f ? "#fff" : "#71717a", cursor: "pointer", fontWeight: filter === f ? 500 : 400,
               }}>
                 {f === "unmatched" ? "Unmatched" : "All"}
               </button>
@@ -225,10 +221,10 @@ export default function AdminConversionsPage() {
                 ...(missingAmount.length > 0 ? [{ label: "Missing amount", value: missingAmount.length, note: null, highlight: false }] : []),
                 ...(returned.length > 0 ? [{ label: "Returned", value: returned.length, note: null, highlight: false }] : []),
               ].map((s) => (
-                <div key={s.label} style={{ background: "#fff", border: `1px solid ${s.highlight ? MAROON : "#e5e7eb"}`, borderRadius: 8, padding: "10px 16px", minWidth: 110 }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: s.highlight ? MAROON : "#111827" }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>{s.label}</div>
-                  {s.note && <div style={{ fontSize: 10, color: "#9ca3af" }}>{s.note}</div>}
+                <div key={s.label} style={{ background: "#fff", border: `1px solid ${s.highlight ? "#09090b" : "#e4e4e7"}`, borderRadius: 8, padding: "10px 16px", minWidth: 110 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: "#09090b" }}>{s.value}</div>
+                  <div style={{ fontSize: 11, color: "#71717a", marginTop: 1 }}>{s.label}</div>
+                  {s.note && <div style={{ fontSize: 10, color: "#a1a1aa" }}>{s.note}</div>}
                 </div>
               ))}
             </div>
@@ -236,81 +232,90 @@ export default function AdminConversionsPage() {
         })()}
 
         {loading ? (
-          <p style={{ color: "#9ca3af", fontSize: 14 }}>Loading…</p>
+          <p style={{ color: "#a1a1aa", fontSize: 14 }}>Loading…</p>
         ) : conversions.length === 0 ? (
-          <p style={{ color: "#9ca3af", fontSize: 14 }}>No {filter === "unmatched" ? "unmatched " : ""}conversions found.</p>
+          <p style={{ color: "#a1a1aa", fontSize: 14 }}>No {filter === "unmatched" ? "unmatched " : ""}conversions found.</p>
         ) : (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, height: "calc(100vh - 220px)", overflowY: "scroll" }}>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, height: "calc(100vh - 220px)", overflowY: "scroll" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}>
-                <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+              <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fafafa" }}>
+                <tr style={{ borderBottom: "1px solid #e4e4e7" }}>
                   {["Date", "Store", "Order ID", "Amount", "Customer", "Via", "Status", ""].map((h) => (
-                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {conversions.map((c, i) => (
-                  <tr key={c.conversionId} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                    <td style={{ padding: "11px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmtDate(c.timestamp)}</td>
-                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.storeName || c.storeSlug}</td>
-                    <td style={{ padding: "11px 16px", fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{c.orderId}</td>
-                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: c.orderTotal === 0 ? "#ef4444" : "#111827" }}>
+                {conversions.map((c) => (
+                  <tr key={c.conversionId} style={{ borderBottom: "1px solid #f4f4f5" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                  >
+                    <td style={{ padding: "11px 16px", fontSize: 12, color: "#71717a", whiteSpace: "nowrap" }}>{fmtDate(c.timestamp)}</td>
+                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: "#09090b" }}>{c.storeName || c.storeSlug}</td>
+                    <td style={{ padding: "11px 16px", fontSize: 11, color: "#09090b", fontFamily: "monospace", background: "transparent" }}>
+                      <span style={{ background: "#f4f4f5", color: "#09090b", borderRadius: 4, padding: "1px 5px" }}>{c.orderId}</span>
+                    </td>
+                    <td style={{ padding: "11px 16px", fontSize: 13, fontWeight: 600, color: c.orderTotal === 0 ? "#dc2626" : "#09090b" }}>
                       {c.orderTotal === 0 ? "—  (missing)" : fmt(c.orderTotal, c.currency)}
                     </td>
-                    <td style={{ padding: "11px 16px", fontSize: 12, color: "#374151" }}>
+                    <td style={{ padding: "11px 16px", fontSize: 12, color: "#09090b" }}>
                       {c.userEmail ? (
                         <div>
                           <div>{c.userName || c.userEmail}</div>
-                          <div style={{ color: "#9ca3af", fontSize: 11 }}>{c.userEmail}</div>
+                          <div style={{ color: "#a1a1aa", fontSize: 11 }}>{c.userEmail}</div>
                         </div>
                       ) : (
-                        <span style={{ color: "#9ca3af" }}>Unknown</span>
+                        <span style={{ color: "#a1a1aa" }}>Unknown</span>
                       )}
                     </td>
                     <td style={{ padding: "11px 16px" }}>
                       {(() => { const a = acquisitionLabel(c); return (
-                        <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 4, background: a.bg, color: a.color, whiteSpace: "nowrap" }}>{a.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 99, background: a.bg, color: a.color, whiteSpace: "nowrap" }}>{a.label}</span>
                       ); })()}
                     </td>
                     <td style={{ padding: "11px 16px" }}>
                       {c.matched ? (
                         <div>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: "rgba(16,185,129,0.1)", color: "#065f46" }}>
+                          <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 99, background: "#dcfce7", color: "#15803d" }}>
                             {c.matchedClickData?.source === "admin-manual" || c.matchedClickData?.source?.startsWith("admin") ? "Manually matched" : "Matched"}
                           </span>
-                          {c.matchedClickData?.productName && (
-                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{c.matchedClickData.productName}</div>
-                          )}
+                          {(c.items?.length > 0 ? c.items : null)?.map((it) => it.productName).filter(Boolean).join(", ") ? (
+                            <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>
+                              {c.items.map((it) => it.productName).join(", ")}
+                            </div>
+                          ) : c.matchedClickData?.productName ? (
+                            <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>{c.matchedClickData.productName}</div>
+                          ) : null}
                         </div>
                       ) : (
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: "rgba(245,158,11,0.1)", color: "#92400e" }}>Unmatched</span>
+                        <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 99, background: "#fef9c3", color: "#854d0e" }}>Unmatched</span>
                       )}
                     </td>
                     <td style={{ padding: "11px 16px", whiteSpace: "nowrap" }}>
                       <button
                         onClick={() => openPanel(c)}
-                        style={{ fontSize: 12, color: MAROON, border: `1px solid rgba(93,15,23,0.3)`, background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", fontWeight: 600, marginRight: 6 }}
+                        style={{ fontSize: 12, color: "#09090b", border: "1px solid #e4e4e7", background: "#fff", padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontWeight: 500, marginRight: 6 }}
                       >
                         {c.matched ? "Re-match" : "Match"}
                       </button>
                       {c.matched && (
                         <button
                           onClick={() => unmatch(c.conversionId)}
-                          style={{ fontSize: 11, color: "#9ca3af", border: "1px solid #e5e7eb", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", marginRight: 6 }}
+                          style={{ fontSize: 11, color: "#71717a", border: "1px solid #e4e4e7", background: "#fff", padding: "4px 10px", borderRadius: 6, cursor: "pointer", marginRight: 6 }}
                         >
                           Unmatch
                         </button>
                       )}
                       <button
                         onClick={() => editAmount(c.conversionId, c.orderTotal)}
-                        style={{ fontSize: 11, color: "#6b7280", border: "1px solid #e5e7eb", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer", marginRight: 6 }}
+                        style={{ fontSize: 11, color: "#71717a", border: "1px solid #e4e4e7", background: "#fff", padding: "4px 10px", borderRadius: 6, cursor: "pointer", marginRight: 6 }}
                       >
                         Edit $
                       </button>
                       <button
                         onClick={() => deleteConversion(c.conversionId)}
-                        style={{ fontSize: 11, color: "#dc2626", border: "1px solid #fca5a5", background: "none", padding: "4px 10px", borderRadius: 4, cursor: "pointer" }}
+                        style={{ fontSize: 11, color: "#dc2626", border: "1px solid #fca5a5", background: "none", padding: "4px 10px", borderRadius: 6, cursor: "pointer" }}
                       >
                         Delete
                       </button>
@@ -328,83 +333,85 @@ export default function AdminConversionsPage() {
         <>
           <div onClick={() => setSelected(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }} />
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 520, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 24px rgba(0,0,0,0.12)" }}>
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e4e4e7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Match Conversion</p>
-                <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 3, margin: 0 }}>{selected.storeName} · {fmt(selected.orderTotal, selected.currency)} · {fmtDate(selected.timestamp)}</p>
+                <p style={{ fontSize: 15, fontWeight: 600, color: "#09090b", margin: 0 }}>Match Conversion</p>
+                <p style={{ fontSize: 12, color: "#a1a1aa", marginTop: 3, margin: 0 }}>{selected.storeName} · {fmt(selected.orderTotal, selected.currency)} · {fmtDate(selected.timestamp)}</p>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#a1a1aa" }}>×</button>
             </div>
 
             <div style={{ padding: "20px 24px" }}>
               {/* Order details */}
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>Order Details</p>
-              <div style={{ fontSize: 12, color: "#374151", marginBottom: 4 }}>Order ID: <span style={{ fontFamily: "monospace" }}>{selected.orderId}</span></div>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "0 0 8px" }}>Order Details</p>
+              <div style={{ fontSize: 12, color: "#09090b", marginBottom: 4 }}>
+                Order ID: <span style={{ background: "#f4f4f5", color: "#09090b", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>{selected.orderId}</span>
+              </div>
               {selected.items.length > 0 && (
-                <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: "#71717a", marginBottom: 16 }}>
                   Items: {selected.items.map((it) => it.productName).join(", ")}
                 </div>
               )}
 
               {/* Manual user match */}
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "16px 0 8px" }}>Match to Customer</p>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 8px" }}>Match to Customer</p>
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
                 <input
                   type="text"
                   value={manualUserInput}
                   onChange={(e) => setManualUserInput(e.target.value)}
                   placeholder="Email or user ID"
-                  style={{ flex: 1, padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13 }}
+                  style={{ flex: 1, padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13 }}
                 />
                 <button
                   onClick={matchToUser}
                   disabled={!manualUserInput.trim() || matching === "user"}
-                  style={{ padding: "7px 14px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !manualUserInput.trim() ? 0.4 : 1 }}
+                  style={{ padding: "7px 14px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", opacity: !manualUserInput.trim() ? 0.4 : 1 }}
                 >
                   {matching === "user" ? "Saving…" : "Set User"}
                 </button>
               </div>
 
               {/* Candidate clicks */}
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 4px" }}>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "0 0 4px" }}>
                 Candidate Clicks (same store, ±48h)
               </p>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 12px" }}>
+              <p style={{ fontSize: 11, color: "#a1a1aa", margin: "0 0 12px" }}>
                 🔴 = product now sold out — strong match signal
               </p>
               {candidatesLoading ? (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading clicks…</p>
+                <p style={{ fontSize: 13, color: "#a1a1aa" }}>Loading clicks…</p>
               ) : candidates.length === 0 ? (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>No clicks found in this window.</p>
+                <p style={{ fontSize: 13, color: "#a1a1aa" }}>No clicks found in this window.</p>
               ) : (
                 candidates.map((click) => (
                   <div key={click.clickId} style={{
-                    border: click.productSoldOut ? `1px solid ${MAROON}` : "1px solid #e5e7eb",
+                    border: click.productSoldOut ? "1px solid #09090b" : "1px solid #e4e4e7",
                     borderRadius: 6,
                     padding: "10px 14px",
                     marginBottom: 8,
-                    background: click.productSoldOut ? "rgba(93,15,23,0.03)" : "#fff",
+                    background: click.productSoldOut ? "#fafafa" : "#fff",
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#09090b", display: "flex", alignItems: "center", gap: 6 }}>
                           {click.productSoldOut && <span title="Product is now sold out — likely purchased">🔴</span>}
                           {click.productName || "—"}
                         </div>
-                        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                        <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>
                           {fmtDate(click.timestamp)} · {minsApart(click.timestamp, selected.timestamp)}m from order
                         </div>
                         {click.userEmail && (
-                          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: "#71717a", marginTop: 2 }}>
                             {click.userName || click.userEmail}
                           </div>
                         )}
-                        <div style={{ fontSize: 10, color: "#d1d5db", fontFamily: "monospace", marginTop: 2 }}>{click.clickId}</div>
+                        <div style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "monospace", marginTop: 2 }}>{click.clickId}</div>
                       </div>
                       <button
                         onClick={() => matchToClick(click.clickId)}
                         disabled={matching === click.clickId}
-                        style={{ marginLeft: 10, padding: "5px 12px", background: MAROON, color: "#fff", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                        style={{ marginLeft: 10, padding: "5px 12px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}
                       >
                         {matching === click.clickId ? "Saving…" : "Use this"}
                       </button>
@@ -421,51 +428,51 @@ export default function AdminConversionsPage() {
       {addingOrder && (
         <>
           <div onClick={() => setAddingOrder(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 200 }} />
-          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 460, background: "#fff", zIndex: 201, borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "24px 28px" }}>
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 460, background: "#fff", zIndex: 201, borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "24px 28px", border: "1px solid #e4e4e7" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Record Order Manually</p>
-              <button onClick={() => setAddingOrder(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#09090b", margin: 0 }}>Record Order Manually</p>
+              <button onClick={() => setAddingOrder(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#a1a1aa" }}>×</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Store Slug *</label>
-                  <input value={newOrder.storeSlug} onChange={(e) => setNewOrder({ ...newOrder, storeSlug: e.target.value })} placeholder="e.g. porters-preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Store Slug *</label>
+                  <input value={newOrder.storeSlug} onChange={(e) => setNewOrder({ ...newOrder, storeSlug: e.target.value })} placeholder="e.g. porters-preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Store Name</label>
-                  <input value={newOrder.storeName} onChange={(e) => setNewOrder({ ...newOrder, storeName: e.target.value })} placeholder="e.g. Porter's Preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Order ID *</label>
-                  <input value={newOrder.orderId} onChange={(e) => setNewOrder({ ...newOrder, orderId: e.target.value })} placeholder="Order number" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount *</label>
-                  <input type="number" value={newOrder.orderTotal} onChange={(e) => setNewOrder({ ...newOrder, orderTotal: e.target.value })} placeholder="0.00" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Store Name</label>
+                  <input value={newOrder.storeName} onChange={(e) => setNewOrder({ ...newOrder, storeName: e.target.value })} placeholder="e.g. Porter's Preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Currency</label>
-                  <input value={newOrder.currency} onChange={(e) => setNewOrder({ ...newOrder, currency: e.target.value })} placeholder="USD" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Order ID *</label>
+                  <input value={newOrder.orderId} onChange={(e) => setNewOrder({ ...newOrder, orderId: e.target.value })} placeholder="Order number" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Order Date</label>
-                  <input type="datetime-local" value={newOrder.timestamp} onChange={(e) => setNewOrder({ ...newOrder, timestamp: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Amount *</label>
+                  <input type="number" value={newOrder.orderTotal} onChange={(e) => setNewOrder({ ...newOrder, orderTotal: e.target.value })} placeholder="0.00" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Currency</label>
+                  <input value={newOrder.currency} onChange={(e) => setNewOrder({ ...newOrder, currency: e.target.value })} placeholder="USD" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Order Date</label>
+                  <input type="datetime-local" value={newOrder.timestamp} onChange={(e) => setNewOrder({ ...newOrder, timestamp: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Customer Email (optional)</label>
-                <input value={newOrder.userEmail} onChange={(e) => setNewOrder({ ...newOrder, userEmail: e.target.value })} placeholder="Links to a VYA account" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                <label style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em" }}>Customer Email (optional)</label>
+                <input value={newOrder.userEmail} onChange={(e) => setNewOrder({ ...newOrder, userEmail: e.target.value })} placeholder="Links to a VYA account" style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
               </div>
               {saveOrderError && <p style={{ fontSize: 12, color: "#dc2626", margin: 0 }}>{saveOrderError}</p>}
               <button
                 onClick={saveManualOrder}
                 disabled={savingOrder || !newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal}
-                style={{ padding: "9px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) ? 0.5 : 1 }}
+                style={{ padding: "9px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", opacity: (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) ? 0.5 : 1 }}
               >
                 {savingOrder ? "Saving…" : "Save Order"}
               </button>

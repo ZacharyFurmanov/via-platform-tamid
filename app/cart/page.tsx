@@ -41,10 +41,21 @@ function buildGroupCheckoutUrl(items: CartItem[]): string {
 }
 
 export default function CartPage() {
-  const { items, removeItem, clearCart, itemCount } = useCart();
+  const { items, removeItem, removeItems, clearCart, itemCount } = useCart();
   const { data: session, status } = useSession();
   const { openModal } = useSignUp();
   const [soldOutIds, setSoldOutIds] = useState<Set<number>>(new Set());
+
+  // Remove items that were purchased (matched by a conversion event)
+  useEffect(() => {
+    if (status !== "authenticated" || itemCount === 0) return;
+    fetch("/api/cart/purchased")
+      .then((r) => r.json())
+      .then(({ compositeIds }: { compositeIds: string[] }) => {
+        compositeIds.forEach((id) => removeItems([id]));
+      })
+      .catch(() => {});
+  }, [status, itemCount, removeItems]);
 
   // Auto-open the sign-in modal for unauthenticated users with items in cart
   const needsAuth = status !== "loading" && !session && itemCount > 0;
@@ -294,6 +305,11 @@ export default function CartPage() {
                           ss: firstItem.storeSlug,
                           url: multiCartUrl,
                         });
+                        if (availableItems.length > 1) {
+                          params.set("items", JSON.stringify(
+                            availableItems.map((i) => ({ id: i.compositeId, name: i.title, price: i.price }))
+                          ));
+                        }
                         return `/api/track?${params.toString()}`;
                       })()}
                       onClick={() => {
@@ -321,6 +337,7 @@ export default function CartPage() {
                             storeName: group.storeName,
                           }
                         );
+
                       }}
                       target="_blank"
                       rel="noopener noreferrer"

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveConversion, getConversionAnalytics, getClickByClickId } from "@/app/lib/analytics-db";
+import { markCartItemsPurchased } from "@/app/lib/cart-db";
 import { stores } from "@/app/lib/stores";
 
 const ALLOWED_ORIGINS = new Set([
@@ -84,6 +85,10 @@ export async function POST(request: NextRequest) {
       userId,
       matchedClickData,
     });
+
+    if (matched && userId) {
+      markCartItemsPurchased(userId, storeSlug).catch(() => {});
+    }
 
     if (result.duplicate) {
       const response = NextResponse.json(

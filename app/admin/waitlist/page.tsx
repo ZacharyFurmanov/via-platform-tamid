@@ -88,27 +88,38 @@ export default function AdminWaitlistPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-black">
-      <div className="max-w-4xl mx-auto px-6 py-12">
+    <main style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+      <div style={{ maxWidth: 896, margin: "0 auto", padding: "48px 24px" }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
           <div>
-            <h1 className="text-3xl font-serif mb-1">Waitlist</h1>
-            <p className="text-neutral-500 text-sm">
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>Waitlist</h1>
+            <p style={{ fontSize: 14, color: "#71717a" }}>
               {loading ? "Loading..." : `${emails.length} email${emails.length !== 1 ? "s" : ""}`}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button
               onClick={handleExportCSV}
               disabled={emails.length === 0}
-              className="px-4 py-2 border border-black text-sm uppercase tracking-wide hover:bg-black hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{
+                padding: "8px 16px",
+                fontSize: 12,
+                fontWeight: 500,
+                background: "#fff",
+                color: "#09090b",
+                border: "1px solid #e4e4e7",
+                borderRadius: 6,
+                cursor: emails.length === 0 ? "not-allowed" : "pointer",
+                opacity: emails.length === 0 ? 0.3 : 1,
+              }}
             >
               Export CSV
             </button>
             <Link
               href="/admin/sync"
-              className="px-4 py-2 text-sm text-neutral-500 hover:text-black transition"
+              style={{ padding: "8px 16px", fontSize: 12, color: "#71717a", textDecoration: "none", border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff" }}
             >
               Admin Home
             </Link>
@@ -116,11 +127,11 @@ export default function AdminWaitlistPage() {
         </div>
 
         {/* Add Email Form */}
-        <div className="mb-8 p-6 bg-neutral-50 border border-neutral-200">
-          <h2 className="text-sm uppercase tracking-wide text-neutral-500 mb-4">
+        <div style={{ marginBottom: 32, padding: 24, background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: 8 }}>
+          <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 16 }}>
             Add Email Manually
           </h2>
-          <form onSubmit={handleAddEmail} className="flex gap-3">
+          <form onSubmit={handleAddEmail} style={{ display: "flex", gap: 12 }}>
             <input
               type="email"
               value={newEmail}
@@ -130,18 +141,37 @@ export default function AdminWaitlistPage() {
               }}
               placeholder="email@example.com"
               required
-              className="flex-1 px-4 py-3 border border-neutral-200 text-sm outline-none focus:border-black transition-colors"
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                border: "1px solid #e4e4e7",
+                borderRadius: 6,
+                fontSize: 13,
+                color: "#09090b",
+                outline: "none",
+                background: "#fff",
+              }}
             />
             <button
               type="submit"
               disabled={addStatus === "loading" || !newEmail.trim()}
-              className="px-6 py-3 bg-black text-white text-sm uppercase tracking-wide hover:bg-neutral-800 transition disabled:opacity-50"
+              style={{
+                padding: "10px 24px",
+                background: "#18181b",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                opacity: addStatus === "loading" || !newEmail.trim() ? 0.5 : 1,
+              }}
             >
               {addStatus === "loading" ? "Adding..." : "Add"}
             </button>
           </form>
           {addMessage && (
-            <p className={`text-sm mt-2 ${addStatus === "error" ? "text-red-600" : "text-green-600"}`}>
+            <p style={{ fontSize: 13, marginTop: 8, color: addStatus === "error" ? "#dc2626" : "#15803d" }}>
               {addMessage}
             </p>
           )}
@@ -149,40 +179,49 @@ export default function AdminWaitlistPage() {
 
         {/* Email Table */}
         {loading ? (
-          <p className="text-neutral-500 text-center py-12">Loading...</p>
+          <p style={{ color: "#a1a1aa", textAlign: "center", padding: "48px 0", fontSize: 14 }}>Loading...</p>
         ) : emails.length === 0 ? (
-          <p className="text-neutral-500 text-center py-12">No emails yet.</p>
+          <p style={{ color: "#a1a1aa", textAlign: "center", padding: "48px 0", fontSize: 14 }}>No emails yet.</p>
         ) : (
-          <div className="border border-neutral-200 overflow-hidden">
-            <table className="w-full text-sm">
+          <div style={{ border: "1px solid #e4e4e7", borderRadius: 8, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
-                <tr className="bg-neutral-50 border-b border-neutral-200">
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 font-normal">
-                    #
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 font-normal">
-                    Email
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 font-normal">
-                    Date
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 font-normal">
-                    Source
-                  </th>
+                <tr style={{ background: "#fafafa", borderBottom: "1px solid #e4e4e7" }}>
+                  {["#", "Email", "Date", "Source"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "10px 16px",
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: "#a1a1aa",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {emails.map((entry, i) => (
                   <tr
                     key={entry.email}
-                    className="border-b border-neutral-100 last:border-b-0"
+                    style={{
+                      borderBottom: i < emails.length - 1 ? "1px solid #e4e4e7" : "none",
+                      background: "#fff",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
                   >
-                    <td className="px-4 py-3 text-neutral-400">{i + 1}</td>
-                    <td className="px-4 py-3">{entry.email}</td>
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td style={{ padding: "10px 16px", color: "#a1a1aa", fontSize: 12 }}>{i + 1}</td>
+                    <td style={{ padding: "10px 16px", color: "#09090b" }}>{entry.email}</td>
+                    <td style={{ padding: "10px 16px", color: "#71717a" }}>
                       {new Date(entry.signupDate).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td style={{ padding: "10px 16px", color: "#71717a" }}>
                       {entry.source || "waitlist"}
                     </td>
                   </tr>

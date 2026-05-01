@@ -31,11 +31,13 @@ async function ensureUserCartTable() {
       store_slug TEXT,
       added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       email_sent_at TIMESTAMP WITH TIME ZONE,
+      purchased_at TIMESTAMP WITH TIME ZONE,
       UNIQUE(user_id, product_id)
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_user_cart_added_at ON user_cart_items(added_at)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_user_cart_user ON user_cart_items(user_id)`;
+  await sql`ALTER TABLE user_cart_items ADD COLUMN IF NOT EXISTS purchased_at TIMESTAMP WITH TIME ZONE`;
 }
 
 export async function getProductCartCount(productId: number): Promise<number> {
@@ -106,6 +108,13 @@ export async function getAbandonedCartItems(): Promise<AbandonedCartItem[]> {
     WHERE uc.email_sent_at IS NULL
       AND uc.added_at < NOW() - INTERVAL '5 hours'
       AND u.email IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM conversions c
+        WHERE c.user_id = uc.user_id::text
+          AND c.store_slug = uc.store_slug
+          AND c.timestamp >= uc.added_at
+          AND (c.returned IS NULL OR c.returned = false)
+      )
   `;
   return rows as AbandonedCartItem[];
 }
@@ -116,6 +125,30 @@ export async function markAbandonedCartEmailSent(userId: string, productId: numb
     UPDATE user_cart_items SET email_sent_at = NOW()
     WHERE user_id = ${userId} AND product_id = ${productId}
   `;
+}
+
+export async function markCartItemsPurchased(userId: string, storeSlug: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`
+    UPDATE user_cart_items SET purchased_at = NOW()
+    WHERE user_id = ${userId}::uuid AND store_slug = ${storeSlug} AND purchased_at IS NULL
+  `;
+}
+
+export async function getPurchasedCartCompositeIds(userId: string): Promise<string[]> {
+  const sql = neon(getDatabaseUrl());
+  const rows = await sql`
+    SELECT store_slug, product_id FROM user_cart_items
+    WHERE user_id = ${userId}::uuid AND purchased_at IS NOT NULL
+  `;
+  return (rows as { store_slug: string; product_id: number }[]).map(
+    (r) => `${r.store_slug}-${r.product_id}`
+  );
+}
+
+export async function deletePurchasedCartItems(userId: string): Promise<void> {
+  const sql = neon(getDatabaseUrl());
+  await sql`DELETE FROM user_cart_items WHERE user_id = ${userId}::uuid AND purchased_at IS NOT NULL`;
 }
 
 export async function markAbandonedCartEmailSentForUser(userId: string): Promise<void> {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { saveSetting, getSetting } from "@/app/lib/settings-db";
-import { stores } from "@/app/lib/stores";
+import { stores, convertCurrencyToUSD } from "@/app/lib/stores";
 
 export const maxDuration = 60;
 
@@ -65,6 +65,7 @@ async function saveCollabsConversions(
   brandName: string,
   deltaOrders: number,
   deltaCommission: number,
+  currency: string,
   now: string,
   lastSyncedAt: string | null,
   prevOrderCount: number
@@ -74,14 +75,16 @@ async function saveCollabsConversions(
   const sql = neon(dbUrl);
 
   const storeSlug = resolveStoreSlug(brandName);
-  const perOrderTotal = estimateRevenue(deltaCommission) / deltaOrders;
+  // Convert commission to USD before estimating revenue so non-USD stores get correct totals
+  const commissionUSD = convertCurrencyToUSD(deltaCommission, currency);
+  const perOrderTotal = estimateRevenue(commissionUSD) / deltaOrders;
 
   // Look for unmatched clicks to this store since the last sync
   // (fall back to 24h window if this is the first sync)
   const windowStart = lastSyncedAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const recentClicks = await sql`
-    SELECT click_id, user_id, timestamp, product_name
+    SELECT click_id, user_id, timestamp, product_name, cart_items
     FROM clicks
     WHERE store_slug = ${storeSlug}
       AND user_id IS NOT NULL
@@ -110,7 +113,18 @@ async function saveCollabsConversions(
       )
       VALUES (
         ${conversionId}, ${now}, ${orderId}, ${perOrderTotal}, 'USD',
-        ${JSON.stringify([{ productName: click ? (click.product_name as string) : `Order via Shopify Collabs`, quantity: 1, price: perOrderTotal }])},
+        ${(() => {
+          if (click?.cart_items && Array.isArray(click.cart_items) && click.cart_items.length > 1) {
+            return JSON.stringify(
+              (click.cart_items as { id: string; name: string; price: number }[]).map((ci) => ({
+                productName: ci.name,
+                quantity: 1,
+                price: ci.price,
+              }))
+            );
+          }
+          return JSON.stringify([{ productName: click ? (click.product_name as string) : `Order via Shopify Collabs`, quantity: 1, price: perOrderTotal }]);
+        })()},
         ${click ? (click.click_id as string) : null},
         ${storeSlug}, ${brandName}, true,
         ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission })},
@@ -302,9 +316,9 @@ export async function GET(request: Request) {
 
     if (deltaOrders > 0 && deltaCommission > 0) {
       try {
-        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, now, lastSyncedAt, prevOrders);
+        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders);
         newOrdersRecorded += deltaOrders;
-        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +$${deltaCommission.toFixed(2)} commission`);
+        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +${deltaCommission.toFixed(2)} ${p.currency ?? "USD"} commission`);
       } catch (err) {
         dbWriteFailed = true;
         console.error(`[Sync Collabs Revenue] DB write failed for ${p.name}:`, err);

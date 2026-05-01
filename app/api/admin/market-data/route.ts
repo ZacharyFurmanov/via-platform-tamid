@@ -3,6 +3,8 @@ import { neon } from "@neondatabase/serverless";
 import {
   getMarketSummary,
   getTopDesigners,
+  getTopBrands,
+  getTopCategories,
   getPriceTierBreakdown,
   getStoreVelocity,
   getWeeklyTrend,
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
     const weeksBack = Math.min(Math.ceil(days / 7), 52);
 
     const [
-      summary, designers, tiers, storeVelocity, weeklyTrend, recentSales, priceChanges, totalAllTime,
+      summary, designers, topBrands, topCategories, tiers, storeVelocity, weeklyTrend, recentSales, priceChanges, totalAllTime,
       // Platform
       platformGmvRows, topStoresByGmv,
       userGrowthRows, activeUsersRows, repeatBuyersRows,
@@ -97,6 +99,8 @@ export async function GET(request: NextRequest) {
       // Sell-through
       getMarketSummary(days),
       getTopDesigners(days, 25),
+      getTopBrands(50),
+      getTopCategories(50),
       getPriceTierBreakdown(days),
       getStoreVelocity(days),
       getWeeklyTrend(weeksBack),
@@ -235,15 +239,15 @@ export async function GET(request: NextRequest) {
       // Demand: top designers by product views (join product_views -> products)
       sql`
         SELECT
-          COALESCE(NULLIF(p.product_type, ''), p.brand) AS designer,
+          COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, '')) AS designer,
           COUNT(pv.id)::int AS clicks,
           COUNT(DISTINCT pv.user_id) FILTER (WHERE pv.user_id IS NOT NULL)::int AS unique_users,
           COUNT(DISTINCT pv.product_id)::int AS unique_products
         FROM product_views pv
         JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
         WHERE pv.timestamp >= ${periodStart} AND pv.timestamp < ${now}
-          AND COALESCE(NULLIF(p.product_type, ''), p.brand) IS NOT NULL
-        GROUP BY COALESCE(NULLIF(p.product_type, ''), p.brand)
+          AND COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, '')) IS NOT NULL
+        GROUP BY COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, ''))
         ORDER BY clicks DESC
         LIMIT 20
       `,
@@ -350,7 +354,7 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      summary, designers, tiers, storeVelocity, weeklyTrend, recentSales, priceChanges, totalAllTime,
+      summary, designers, topBrands, topCategories, tiers, storeVelocity, weeklyTrend, recentSales, priceChanges, totalAllTime,
       platform: {
         gmvCur: gmvRow.gmv_cur as number,
         gmvPrev: gmvRow.gmv_prev as number,

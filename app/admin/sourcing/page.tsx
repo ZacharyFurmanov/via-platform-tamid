@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminNav from "@/app/components/AdminNav";
 
 type Offer = {
   id: string;
@@ -41,11 +40,11 @@ function fmt(date: string | null) {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pending_payment: "#9ca3af",
-  paid: "#f59e0b",
-  matched: "#10b981",
-  refunded: "#6b7280",
+const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
+  pending_payment: { color: "#71717a", bg: "#f4f4f5" },
+  paid: { color: "#854d0e", bg: "#fef9c3" },
+  matched: { color: "#15803d", bg: "#dcfce7" },
+  refunded: { color: "#71717a", bg: "#f4f4f5" },
 };
 
 function RequestRow({
@@ -57,43 +56,44 @@ function RequestRow({
   onClick: () => void;
   selected: boolean;
 }) {
+  const statusStyle = STATUS_COLORS[req.status] ?? { color: "#71717a", bg: "#f4f4f5" };
   return (
     <tr
       onClick={onClick}
       style={{
         cursor: "pointer",
-        background: selected ? "rgba(93,15,23,0.05)" : undefined,
-        borderBottom: "1px solid #f3f4f6",
+        background: selected ? "#fafafa" : undefined,
+        borderBottom: "1px solid #f4f4f5",
       }}
+      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = "#fafafa"; }}
+      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = ""; }}
     >
-      <td style={{ padding: "12px 16px", fontSize: 13, color: "#111827" }}>
+      <td style={{ padding: "12px 16px", fontSize: 13, color: "#09090b" }}>
         {req.userName || "—"}
-        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{req.userEmail}</div>
+        <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>{req.userEmail}</div>
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 13, color: "#374151", maxWidth: 240 }}>
+      <td style={{ padding: "12px 16px", fontSize: 13, color: "#71717a", maxWidth: 240 }}>
         <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{req.description}</div>
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 13, color: "#374151", whiteSpace: "nowrap" }}>
+      <td style={{ padding: "12px 16px", fontSize: 13, color: "#71717a", whiteSpace: "nowrap" }}>
         ${req.priceMin}–${req.priceMax}
       </td>
       <td style={{ padding: "12px 16px" }}>
         <span style={{
           fontSize: 11,
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: STATUS_COLORS[req.status] ?? "#374151",
-          background: "rgba(0,0,0,0.04)",
-          borderRadius: 4,
+          fontWeight: 500,
+          color: statusStyle.color,
+          background: statusStyle.bg,
+          borderRadius: 99,
           padding: "2px 8px",
         }}>
           {req.status.replace("_", " ")}
         </span>
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>
+      <td style={{ padding: "12px 16px", fontSize: 12, color: "#a1a1aa", whiteSpace: "nowrap" }}>
         {req.offers.length} offer{req.offers.length !== 1 ? "s" : ""}
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>
+      <td style={{ padding: "12px 16px", fontSize: 12, color: "#a1a1aa", whiteSpace: "nowrap" }}>
         {fmt(req.createdAt)}
       </td>
     </tr>
@@ -138,16 +138,16 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
         background: "#fff", zIndex: 101, overflowY: "auto",
         boxShadow: "-4px 0 24px rgba(0,0,0,0.12)",
       }}>
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e4e4e7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <p style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#09090b", margin: 0 }}>
               {req.userName || req.userEmail}
             </p>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{req.userEmail}</p>
+            <p style={{ fontSize: 12, color: "#a1a1aa", marginTop: 2 }}>{req.userEmail}</p>
           </div>
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af", padding: 0 }}
+            style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#a1a1aa", padding: 0 }}
           >
             ×
           </button>
@@ -158,7 +158,7 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
             <img
               src={req.imageUrl}
               alt="Request"
-              style={{ width: "100%", maxHeight: 240, objectFit: "contain", marginBottom: 20, border: "1px solid #e5e7eb" }}
+              style={{ width: "100%", maxHeight: 240, objectFit: "contain", marginBottom: 20, border: "1px solid #e4e4e7", borderRadius: 8 }}
             />
           )}
 
@@ -181,34 +181,36 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
 
           <Section title={`Offers (${req.offers.length})`} />
           {req.offers.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9ca3af" }}>No offers yet.</p>
+            <p style={{ fontSize: 13, color: "#a1a1aa" }}>No offers yet.</p>
           ) : (
             req.offers.map((offer) => (
               <div
                 key={offer.id}
                 style={{
                   border: "1px solid",
-                  borderColor: offer.status === "accepted" ? "#10b981" : offer.status === "declined" ? "#e5e7eb" : "#d1d5db",
+                  borderColor: offer.status === "accepted" ? "#16a34a" : offer.status === "declined" ? "#e4e4e7" : "#e4e4e7",
                   borderRadius: 6,
                   padding: "12px 14px",
                   marginBottom: 10,
-                  background: offer.status === "accepted" ? "rgba(16,185,129,0.05)" : undefined,
+                  background: offer.status === "accepted" ? "#dcfce7" : undefined,
                   opacity: offer.status === "declined" ? 0.5 : 1,
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{offer.storeName}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#09090b" }}>{offer.storeName}</span>
                   <span style={{
-                    fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-                    color: offer.status === "accepted" ? "#10b981" : offer.status === "declined" ? "#9ca3af" : "#f59e0b",
+                    fontSize: 11, fontWeight: 500, borderRadius: 99,
+                    padding: "2px 7px",
+                    background: offer.status === "accepted" ? "#dcfce7" : offer.status === "declined" ? "#f4f4f5" : "#fef9c3",
+                    color: offer.status === "accepted" ? "#15803d" : offer.status === "declined" ? "#71717a" : "#854d0e",
                   }}>
                     {offer.status}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: "#6b7280" }}>
+                <div style={{ fontSize: 12, color: "#71717a" }}>
                   ${offer.fee} fee · {offer.timeline}
-                  {offer.notes && <div style={{ marginTop: 4, color: "#374151" }}>{offer.notes}</div>}
-                  <div style={{ marginTop: 4, color: "#9ca3af" }}>Submitted {fmt(offer.createdAt)}</div>
+                  {offer.notes && <div style={{ marginTop: 4, color: "#09090b" }}>{offer.notes}</div>}
+                  <div style={{ marginTop: 4, color: "#a1a1aa" }}>Submitted {fmt(offer.createdAt)}</div>
                 </div>
               </div>
             ))
@@ -228,11 +230,11 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
 
           <Section title="Admin Actions" />
           <div style={{ marginTop: 8 }}>
-            <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Status</label>
+            <label style={{ fontSize: 12, color: "#71717a", display: "block", marginBottom: 4 }}>Status</label>
             <select
               value={editStatus}
               onChange={(e) => setEditStatus(e.target.value)}
-              style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, marginBottom: 10 }}
+              style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, marginBottom: 10 }}
             >
               <option value="pending_payment">Pending Payment</option>
               <option value="paid">Paid</option>
@@ -242,13 +244,13 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
 
             {editStatus === "matched" && (
               <div style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Matched Store Slug</label>
+                <label style={{ fontSize: 12, color: "#71717a", display: "block", marginBottom: 4 }}>Matched Store Slug</label>
                 <input
                   type="text"
                   value={editStore}
                   onChange={(e) => setEditStore(e.target.value)}
                   placeholder="e.g. house-on-a-chain"
-                  style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }}
                 />
               </div>
             )}
@@ -260,12 +262,12 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
               disabled={saving || editStatus === req.status}
               style={{
                 padding: "8px 16px",
-                background: saving || editStatus === req.status ? "#e5e7eb" : "#5D0F17",
-                color: saving || editStatus === req.status ? "#9ca3af" : "#fff",
+                background: saving || editStatus === req.status ? "#f4f4f5" : "#18181b",
+                color: saving || editStatus === req.status ? "#a1a1aa" : "#fff",
                 border: "none",
                 borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 12,
+                fontWeight: 500,
                 cursor: saving || editStatus === req.status ? "default" : "pointer",
               }}
             >
@@ -280,7 +282,7 @@ function DetailPanel({ req, onClose, onUpdate }: { req: SourcingRequest; onClose
 
 function Section({ title }: { title: string }) {
   return (
-    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "20px 0 8px" }}>
+    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "20px 0 8px" }}>
       {title}
     </p>
   );
@@ -288,9 +290,9 @@ function Section({ title }: { title: string }) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", borderBottom: "1px solid #f3f4f6", padding: "7px 0", gap: 12 }}>
-      <span style={{ fontSize: 12, color: "#9ca3af", minWidth: 120, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 13, color: "#111827", wordBreak: "break-word" }}>{value}</span>
+    <div style={{ display: "flex", borderBottom: "1px solid #f4f4f5", padding: "7px 0", gap: 12 }}>
+      <span style={{ fontSize: 12, color: "#a1a1aa", minWidth: 120, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#09090b", wordBreak: "break-word" }}>{value}</span>
     </div>
   );
 }
@@ -332,16 +334,15 @@ export default function AdminSourcingPage() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
-      <AdminNav />
+    <div style={{ minHeight: "100vh", background: "#f8f9fa", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>Sourcing Requests</h1>
-          <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>{requests.length} total requests</p>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", margin: "0 0 4px" }}>Sourcing Requests</h1>
+          <p style={{ fontSize: 14, color: "#71717a", margin: 0 }}>{requests.length} total requests</p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -350,12 +351,12 @@ export default function AdminSourcingPage() {
                 padding: "6px 14px",
                 borderRadius: 6,
                 border: "1px solid",
-                borderColor: tab === t.key ? "#5D0F17" : "#e5e7eb",
-                background: tab === t.key ? "#5D0F17" : "#fff",
-                color: tab === t.key ? "#fff" : "#374151",
-                fontSize: 13,
+                borderColor: tab === t.key ? "#18181b" : "#e4e4e7",
+                background: tab === t.key ? "#18181b" : "#fff",
+                color: tab === t.key ? "#fff" : "#71717a",
+                fontSize: 12,
                 cursor: "pointer",
-                fontWeight: tab === t.key ? 600 : 400,
+                fontWeight: tab === t.key ? 500 : 400,
               }}
             >
               {t.label} <span style={{ opacity: 0.7 }}>({counts[t.key]})</span>
@@ -364,16 +365,16 @@ export default function AdminSourcingPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: "#9ca3af", fontSize: 14 }}>Loading…</p>
+          <p style={{ color: "#a1a1aa", fontSize: 14 }}>Loading…</p>
         ) : filtered.length === 0 ? (
-          <p style={{ color: "#9ca3af", fontSize: 14 }}>No requests in this category.</p>
+          <p style={{ color: "#a1a1aa", fontSize: 14 }}>No requests in this category.</p>
         ) : (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                <tr style={{ background: "#fafafa", borderBottom: "1px solid #e4e4e7" }}>
                   {["Customer", "Description", "Budget", "Status", "Offers", "Date"].map((h) => (
-                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", fontWeight: 600 }}>
+                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500 }}>
                       {h}
                     </th>
                   ))}

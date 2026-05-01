@@ -3,21 +3,60 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import {
+  BarChart3,
+  TrendingUp,
+  LineChart,
+  RotateCcw,
+  ShoppingBag,
+  Package,
+  Users,
+  Mail,
+  Layers,
+  RefreshCw,
+  Link2,
+  Store,
+  LogOut,
+} from "lucide-react";
 
-const NAV_ITEMS = [
-  { label: "Analytics", href: "/admin/analytics" },
-  { label: "Key Metrics", href: "/admin/key-metrics" },
-  { label: "Conversions", href: "/admin/conversions" },
-  { label: "Customers", href: "/admin/customers" },
-  { label: "Emails", href: "/admin/emails" },
-  { label: "Collections", href: "/admin/collections" },
-  { label: "Sync", href: "/admin/sync" },
-  { label: "Collabs", href: "/admin/collabs-links" },
-  { label: "Market Data", href: "/admin/market-data" },
-  { label: "Referral Board", href: "/admin/giveaway" },
-  { label: "Returns", href: "/admin/returns" },
-  { label: "Sourcing", href: "/admin/sourcing" },
-  { label: "Stores", href: "/admin/stores" },
+const NAV_SECTIONS = [
+  {
+    label: "Analytics",
+    items: [
+      { label: "Overview", href: "/admin/key-metrics", icon: BarChart3 },
+      { label: "Analytics", href: "/admin/analytics", icon: LineChart },
+      { label: "Market Data", href: "/admin/market-data", icon: TrendingUp },
+      { label: "Returns", href: "/admin/returns", icon: RotateCcw },
+    ],
+  },
+  {
+    label: "Commerce",
+    items: [
+      { label: "Conversions", href: "/admin/conversions", icon: ShoppingBag },
+      { label: "Sourcing", href: "/admin/sourcing", icon: Package },
+    ],
+  },
+  {
+    label: "Users",
+    items: [
+      { label: "Customers", href: "/admin/customers", icon: Users },
+      { label: "Emails", href: "/admin/emails", icon: Mail },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { label: "Collections", href: "/admin/collections", icon: Layers },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Sync", href: "/admin/sync", icon: RefreshCw },
+      { label: "Collabs", href: "/admin/collabs-links", icon: Link2 },
+      { label: "Stores", href: "/admin/stores", icon: Store },
+    ],
+  },
 ];
 
 export default function AdminNav() {
@@ -31,42 +70,103 @@ export default function AdminNav() {
   }
 
   return (
-    <header style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, zIndex: 50 }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", gap: 24, height: 56 }}>
-        <Link href="/admin/analytics" style={{ flexShrink: 0 }}>
-          <Image src="/vya-logo.png" alt="VYA" width={36} height={36} style={{ objectFit: "contain" }} />
+    <aside
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: 220,
+        height: "100vh",
+        background: "#0d0f12",
+        display: "flex",
+        flexDirection: "column",
+        borderRight: "1px solid rgba(255,255,255,0.05)",
+        zIndex: 50,
+        overflowY: "auto",
+      }}
+    >
+      {/* Logo */}
+      <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <Link href="/admin/analytics" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Image src="/vya-logo.png" alt="VYA" width={28} height={28} style={{ objectFit: "contain" }} />
+          <span style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 600, letterSpacing: "0.05em" }}>
+            VYA Admin
+          </span>
         </Link>
-        <nav style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, overflowX: "auto" }}>
-          {NAV_ITEMS.map((item) => {
-            const active = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  whiteSpace: "nowrap",
-                  padding: "6px 12px",
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  textDecoration: "none",
-                  background: active ? "#5D0F17" : "transparent",
-                  color: active ? "#F7F3EA" : "rgba(93,15,23,0.5)",
-                  transition: "all 0.15s",
-                }}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+      </div>
+
+      {/* Nav sections */}
+      <nav style={{ flex: 1, padding: "12px 8px" }}>
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label} style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.25)",
+                padding: "0 8px",
+                marginBottom: 4,
+              }}
+            >
+              {section.label}
+            </div>
+            {section.items.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    padding: "7px 8px",
+                    borderRadius: 6,
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: active ? 500 : 400,
+                    color: active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.5)",
+                    background: active ? "rgba(255,255,255,0.07)" : "transparent",
+                    borderLeft: active ? "2px solid #c9a96e" : "2px solid transparent",
+                    transition: "all 0.12s",
+                    marginBottom: 1,
+                  }}
+                >
+                  <Icon size={14} strokeWidth={1.75} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <button
           onClick={handleLogout}
-          style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.4)", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            padding: "7px 8px",
+            borderRadius: 6,
+            fontSize: 13,
+            color: "rgba(255,255,255,0.35)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            width: "100%",
+            transition: "color 0.12s",
+          }}
         >
-          Logout
+          <LogOut size={14} strokeWidth={1.75} />
+          Log out
         </button>
       </div>
-    </header>
+    </aside>
   );
 }

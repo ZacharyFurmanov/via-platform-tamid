@@ -18,6 +18,7 @@ type CartContextType = {
   items: CartItem[];
   addItem: (item: CartItem) => void;
   removeItem: (compositeId: string) => void;
+  removeItems: (compositeIds: string[]) => void;
   clearCart: () => void;
   itemCount: number;
 };
@@ -26,6 +27,7 @@ const CartContext = createContext<CartContextType>({
   items: [],
   addItem: () => {},
   removeItem: () => {},
+  removeItems: () => {},
   clearCart: () => {},
   itemCount: 0,
 });
@@ -72,13 +74,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.filter((i) => i.compositeId !== compositeId));
   }, []);
 
+  const removeItems = useCallback((compositeIds: string[]) => {
+    const ids = new Set(compositeIds);
+    setItems((prev) => prev.filter((i) => !ids.has(i.compositeId)));
+  }, []);
+
   const clearCart = useCallback(() => {
     setItems([]);
   }, []);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, clearCart, itemCount: items.length }}
+      value={{ items, addItem, removeItem, removeItems, clearCart, itemCount: items.length }}
     >
       {children}
     </CartContext.Provider>

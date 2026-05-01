@@ -215,6 +215,11 @@ export async function PATCH(
       UPDATE conversions SET returned = false, returned_at = NULL
       WHERE conversion_id = ${id}
     `;
+  } else if (body.action === "update_items" && Array.isArray(body.items)) {
+    await sql`
+      UPDATE conversions SET items = ${JSON.stringify(body.items)}
+      WHERE conversion_id = ${id}
+    `;
   } else {
     await sql`
       UPDATE conversions SET

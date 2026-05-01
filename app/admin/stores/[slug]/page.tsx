@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import AdminNav from "@/app/components/AdminNav";
 
 type StorePortalData = {
   store: { slug: string; name: string; location: string; currency: string; website: string; commissionType: string };
@@ -54,12 +53,10 @@ export default function AdminStorePortalPage() {
       .catch(() => { setError("Failed to load"); setLoading(false); });
   }, [slug, range]);
 
-  const MAROON = "#5D0F17";
-  const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "16px 20px" };
+  const card = { background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: "16px 20px" };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
-      <AdminNav />
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
         <Link href="/admin/stores" style={{ fontSize: 12, color: "#9ca3af", textDecoration: "none", display: "inline-block", marginBottom: 16 }}>
           ← All Stores
@@ -74,15 +71,15 @@ export default function AdminStorePortalPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div>
                 <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{data.store.name}</h1>
-                <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>{data.store.location} · <a href={data.store.website} target="_blank" rel="noreferrer" style={{ color: MAROON }}>{data.store.website}</a></p>
+                <p style={{ fontSize: 13, color: "#71717a", margin: 0 }}>{data.store.location} · <a href={data.store.website} target="_blank" rel="noreferrer" style={{ color: "#09090b" }}>{data.store.website}</a></p>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
                 {(["7d", "30d", "all"] as Range[]).map((r) => (
                   <button key={r} onClick={() => setRange(r)} style={{
                     padding: "5px 12px", fontSize: 12, borderRadius: 6, border: "1px solid",
-                    borderColor: range === r ? MAROON : "#e5e7eb",
-                    background: range === r ? MAROON : "#fff",
-                    color: range === r ? "#fff" : "#374151",
+                    borderColor: range === r ? "#18181b" : "#e4e4e7",
+                    background: range === r ? "#18181b" : "#fff",
+                    color: range === r ? "#fff" : "#71717a",
                     cursor: "pointer",
                   }}>{r === "all" ? "All time" : r}</button>
                 ))}
@@ -109,7 +106,7 @@ export default function AdminStorePortalPage() {
             {/* Revenue */}
             <div style={{ ...card, marginBottom: 24 }}>
               <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af", margin: "0 0 4px" }}>Total Revenue</p>
-              <p style={{ fontSize: 28, fontWeight: 700, color: MAROON, margin: 0 }}>{fmt(data.analytics.totalRevenue, data.store.currency)}</p>
+              <p style={{ fontSize: 28, fontWeight: 600, color: "#09090b", margin: 0 }}>{fmt(data.analytics.totalRevenue, data.store.currency)}</p>
             </div>
 
             {/* Orders table */}

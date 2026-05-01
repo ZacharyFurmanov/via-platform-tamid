@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AdminNav from "@/app/components/AdminNav";
 
 type Entry = {
   rank: number;
@@ -55,15 +54,14 @@ export default function ReferralBoardPage() {
   ) ?? [];
 
   return (
-    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
-      <AdminNav />
+    <main style={{ background: "#f8f9fa", minHeight: "100vh" }}>
 
-      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+      <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
-          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 8 }}>
             Referral Board
           </h1>
-          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+          <p style={{ fontSize: 15, color: "#71717a" }}>
             Waitlist members ranked by referrals — more referrals means a shorter wait.
           </p>
         </div>
@@ -72,11 +70,11 @@ export default function ReferralBoardPage() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 48px" }}>
 
         {loading && (
-          <p style={{ color: "rgba(93,15,23,0.5)", fontSize: 14 }}>Loading...</p>
+          <p style={{ color: "#a1a1aa", fontSize: 14 }}>Loading...</p>
         )}
 
         {error && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: 16, color: "#b91c1c", fontSize: 13 }}>
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 16, color: "#b91c1c", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -91,9 +89,9 @@ export default function ReferralBoardPage() {
                 { label: "Pending", value: data.stats.pending, color: "#d97706" },
                 { label: "Have referrals", value: data.stats.withReferrals },
               ].map((s) => (
-                <div key={s.label} style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "20px 28px" }}>
-                  <p className="font-serif" style={{ fontSize: 32, color: s.color || "#5D0F17", lineHeight: 1 }}>{s.value}</p>
-                  <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 6 }}>{s.label}</p>
+                <div key={s.label} style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: "20px 28px" }}>
+                  <p style={{ fontSize: 32, fontWeight: 700, color: s.color || "#09090b", lineHeight: 1 }}>{s.value}</p>
+                  <p style={{ fontSize: 12, color: "#a1a1aa", marginTop: 6 }}>{s.label}</p>
                 </div>
               ))}
             </div>
@@ -109,10 +107,12 @@ export default function ReferralBoardPage() {
                     fontSize: 11,
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
-                    border: "1px solid #5D0F17",
-                    background: filter === f ? "#5D0F17" : "transparent",
-                    color: filter === f ? "#F7F3EA" : "#5D0F17",
+                    border: filter === f ? "none" : "1px solid #e4e4e7",
+                    borderBottom: filter === f ? "2px solid #09090b" : "1px solid #e4e4e7",
+                    background: "transparent",
+                    color: filter === f ? "#09090b" : "#71717a",
                     cursor: "pointer",
+                    borderRadius: filter === f ? 0 : 6,
                   }}
                 >
                   {f === "all" ? `All (${data.stats.total})` : f === "pending" ? `Pending (${data.stats.pending})` : `Approved (${data.stats.approved})`}
@@ -121,7 +121,7 @@ export default function ReferralBoardPage() {
             </div>
 
             {/* Leaderboard table */}
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb" }}>
+            <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, overflow: "hidden" }}>
               {/* Header */}
               <div
                 style={{
@@ -129,12 +129,13 @@ export default function ReferralBoardPage() {
                   gridTemplateColumns: "56px 1fr 100px 110px 110px",
                   gap: 12,
                   padding: "12px 24px",
-                  background: "#F7F3EA",
-                  borderBottom: "1px solid #e5e7eb",
+                  background: "#fafafa",
+                  borderBottom: "1px solid #e4e4e7",
                   fontSize: 11,
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "rgba(93,15,23,0.5)",
+                  letterSpacing: "0.1em",
+                  color: "#a1a1aa",
+                  fontWeight: 500,
                 }}
                 className="hidden sm:grid"
               >
@@ -147,7 +148,7 @@ export default function ReferralBoardPage() {
 
               <div style={{ maxHeight: 700, overflowY: "auto" }}>
                 {filtered.length === 0 && (
-                  <div style={{ padding: "32px 24px", textAlign: "center", color: "rgba(93,15,23,0.4)", fontSize: 14 }}>
+                  <div style={{ padding: "32px 24px", textAlign: "center", color: "#a1a1aa", fontSize: 14 }}>
                     No entries.
                   </div>
                 )}
@@ -156,27 +157,28 @@ export default function ReferralBoardPage() {
                     key={e.email}
                     style={{
                       padding: "14px 24px",
-                      borderBottom: "1px solid #e5e7eb",
+                      borderBottom: "1px solid #e4e4e7",
                       background: e.status === "approved" ? "rgba(21,128,61,0.04)" : undefined,
                     }}
                   >
                     {/* Mobile */}
                     <div className="sm:hidden">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontWeight: 600, color: "#5D0F17", fontSize: 13 }}>#{e.rank}</span>
+                        <span style={{ fontWeight: 600, color: "#09090b", fontSize: 13 }}>#{e.rank}</span>
                         <span style={{
                           fontSize: 11,
                           padding: "2px 8px",
-                          background: e.status === "approved" ? "rgba(21,128,61,0.1)" : "rgba(217,119,6,0.1)",
-                          color: e.status === "approved" ? "#15803d" : "#d97706",
+                          borderRadius: 99,
+                          background: e.status === "approved" ? "#dcfce7" : "#fef9c3",
+                          color: e.status === "approved" ? "#15803d" : "#854d0e",
                         }}>
                           {e.status}
                         </span>
                       </div>
-                      <p style={{ color: "#5D0F17", fontSize: 13, marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p style={{ color: "#09090b", fontSize: 13, marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {e.email}
                       </p>
-                      <p style={{ color: "rgba(93,15,23,0.5)", fontSize: 12, marginTop: 2 }}>
+                      <p style={{ color: "#71717a", fontSize: 12, marginTop: 2 }}>
                         {e.referralCount} referral{e.referralCount !== 1 ? "s" : ""}
                       </p>
                     </div>
@@ -192,24 +194,25 @@ export default function ReferralBoardPage() {
                         alignItems: "center",
                       }}
                     >
-                      <div style={{ color: "rgba(93,15,23,0.4)", fontWeight: 600 }}>#{e.rank}</div>
-                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>
+                      <div style={{ color: "#a1a1aa", fontWeight: 600 }}>#{e.rank}</div>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#09090b" }}>
                         {e.email}
                       </div>
-                      <div style={{ color: e.referralCount > 0 ? "#5D0F17" : "rgba(93,15,23,0.35)", fontWeight: e.referralCount > 0 ? 600 : 400 }}>
+                      <div style={{ color: e.referralCount > 0 ? "#09090b" : "#a1a1aa", fontWeight: e.referralCount > 0 ? 600 : 400 }}>
                         {e.referralCount}
                       </div>
                       <div>
                         <span style={{
                           fontSize: 11,
                           padding: "2px 8px",
-                          background: e.status === "approved" ? "rgba(21,128,61,0.1)" : "rgba(217,119,6,0.1)",
-                          color: e.status === "approved" ? "#15803d" : "#d97706",
+                          borderRadius: 99,
+                          background: e.status === "approved" ? "#dcfce7" : "#fef9c3",
+                          color: e.status === "approved" ? "#15803d" : "#854d0e",
                         }}>
                           {e.status}
                         </span>
                       </div>
-                      <div style={{ color: "rgba(93,15,23,0.5)" }}>{formatDate(e.createdAt)}</div>
+                      <div style={{ color: "#71717a" }}>{formatDate(e.createdAt)}</div>
                     </div>
                   </div>
                 ))}

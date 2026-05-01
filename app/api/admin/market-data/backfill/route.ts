@@ -55,15 +55,27 @@ export async function POST(request: NextRequest) {
         AND LENGTH(item->>'productName') > 3
     `;
 
-    // Enrich with designer from products table where title matches
+    // Enrich designer for backfill rows — prefer brand (vendor = designer) over product_type (category)
     await sql`
       UPDATE sold_items si
-      SET designer = COALESCE(NULLIF(p.product_type, ''), p.brand)
+      SET designer = COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, ''))
       FROM products p
       WHERE si.source_id LIKE 'conv_%'
         AND si.designer IS NULL
-        AND COALESCE(NULLIF(p.product_type, ''), p.brand) IS NOT NULL
-        AND LOWER(si.title) = LOWER(p.title)
+        AND COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, '')) IS NOT NULL
+        AND LOWER(TRIM(si.title)) = LOWER(TRIM(p.title))
+        AND si.store_slug = p.store_slug
+    `;
+
+    // Also enrich any existing sold_items (from feed drops) that are missing designer
+    await sql`
+      UPDATE sold_items si
+      SET designer = COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, ''))
+      FROM products p
+      WHERE (si.source_id IS NULL OR si.source_id NOT LIKE 'conv_%')
+        AND si.designer IS NULL
+        AND COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, '')) IS NOT NULL
+        AND LOWER(TRIM(si.title)) = LOWER(TRIM(p.title))
         AND si.store_slug = p.store_slug
     `;
 

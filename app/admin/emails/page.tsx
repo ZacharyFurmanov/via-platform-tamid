@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminNav from "@/app/components/AdminNav";
 
 function NewArrivalsPanel() {
   const [status, setStatus] = useState<string | null>(null);
@@ -26,29 +25,29 @@ function NewArrivalsPanel() {
   }
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "24px", marginBottom: 32 }}>
-      <h2 className="font-serif" style={{ fontSize: 20, color: "#5D0F17", marginBottom: 8 }}>New Arrivals Email</h2>
-      <p style={{ fontSize: 13, color: "rgba(93,15,23,0.5)", marginBottom: 16 }}>
+    <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: "24px", marginBottom: 32 }}>
+      <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 8 }}>New Arrivals Email</h2>
+      <p style={{ fontSize: 13, color: "#71717a", marginBottom: 16 }}>
         Preview how many products are in the current window, then send to all approved pilot users.
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button
           onClick={() => callRoute({ preview: true })}
           disabled={loading}
-          style={{ padding: "10px 20px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          style={{ padding: "8px 16px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
         >
           Preview
         </button>
         <button
           onClick={() => { if (confirm("Send new arrivals email to all approved users?")) callRoute({ send: true }); }}
           disabled={loading}
-          style={{ padding: "10px 20px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          style={{ padding: "8px 16px", background: "#18181b", border: "none", color: "#fff", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
         >
           {loading ? "Sending…" : "Send to Everyone"}
         </button>
       </div>
       {status && (
-        <pre style={{ marginTop: 16, padding: 12, background: "#F7F3EA", fontSize: 12, color: "#5D0F17", overflowX: "auto", whiteSpace: "pre-wrap" }}>
+        <pre style={{ marginTop: 16, padding: 12, background: "#f4f4f5", fontSize: 12, color: "#09090b", borderRadius: 4, overflowX: "auto", whiteSpace: "pre-wrap" }}>
           {status}
         </pre>
       )}
@@ -80,15 +79,15 @@ function FeedbackEmailPanel() {
   }
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", padding: "24px", marginBottom: 32 }}>
-      <h2 className="font-serif" style={{ fontSize: 20, color: "#5D0F17", marginBottom: 8 }}>Feedback Form Email</h2>
-      <p style={{ fontSize: 13, color: "rgba(93,15,23,0.5)", marginBottom: 16 }}>
+    <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: "24px", marginBottom: 32 }}>
+      <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 8 }}>Feedback Form Email</h2>
+      <p style={{ fontSize: 13, color: "#71717a", marginBottom: 16 }}>
         Send a feedback request to active users (users who have clicked, saved, or ordered at least once). Links to the Typeform survey.
       </p>
 
       {/* Test email input */}
       <div style={{ marginBottom: 16 }}>
-        <label style={{ fontSize: 12, color: "rgba(93,15,23,0.6)", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <label style={{ fontSize: 11, color: "#a1a1aa", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 500 }}>
           Send test to a single email
         </label>
         <div style={{ display: "flex", gap: 8 }}>
@@ -97,12 +96,12 @@ function FeedbackEmailPanel() {
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
             placeholder="email@example.com"
-            style={{ flex: 1, maxWidth: 300, padding: "8px 12px", border: "1px solid #e5e7eb", fontSize: 13, color: "#5D0F17", outline: "none" }}
+            style={{ flex: 1, maxWidth: 300, padding: "8px 12px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, color: "#09090b", outline: "none" }}
           />
           <button
             onClick={() => { if (testEmail.trim()) callRoute({ testEmail: testEmail.trim() }); }}
             disabled={loading || !testEmail.trim()}
-            style={{ padding: "8px 18px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading || !testEmail.trim() ? "not-allowed" : "pointer", opacity: loading || !testEmail.trim() ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+            style={{ padding: "8px 16px", background: "#18181b", border: "none", color: "#fff", cursor: loading || !testEmail.trim() ? "not-allowed" : "pointer", opacity: loading || !testEmail.trim() ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
           >
             Send Test
           </button>
@@ -113,20 +112,20 @@ function FeedbackEmailPanel() {
         <button
           onClick={() => callRoute({ preview: true })}
           disabled={loading}
-          style={{ padding: "10px 20px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          style={{ padding: "8px 16px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
         >
           Preview
         </button>
         <button
           onClick={() => { if (confirm("Send feedback email to ALL active users?")) callRoute({ send: true }); }}
           disabled={loading}
-          style={{ padding: "10px 20px", background: "#5D0F17", border: "none", color: "#F7F3EA", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          style={{ padding: "8px 16px", background: "#18181b", border: "none", color: "#fff", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
         >
           {loading ? "Sending…" : "Send to Everyone"}
         </button>
       </div>
       {status && (
-        <pre style={{ marginTop: 16, padding: 12, background: "#F7F3EA", fontSize: 12, color: "#5D0F17", overflowX: "auto", whiteSpace: "pre-wrap" }}>
+        <pre style={{ marginTop: 16, padding: 12, background: "#f4f4f5", fontSize: 12, color: "#09090b", borderRadius: 4, overflowX: "auto", whiteSpace: "pre-wrap" }}>
           {status}
         </pre>
       )}
@@ -196,16 +195,15 @@ export default function EmailsAdminPage() {
   };
 
   return (
-    <main style={{ background: "#F7F3EA", minHeight: "100vh" }}>
-      <AdminNav />
+    <main style={{ background: "#f8f9fa", minHeight: "100vh" }}>
 
       {/* Page title */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px" }}>
-          <h1 className="font-serif" style={{ fontSize: 28, color: "#5D0F17", marginBottom: 8 }}>
+      <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 8 }}>
             Emails
           </h1>
-          <p style={{ fontSize: 15, color: "rgba(93,15,23,0.6)" }}>
+          <p style={{ fontSize: 14, color: "#71717a" }}>
             All waitlist signups from the Neon database.
           </p>
         </div>
@@ -221,22 +219,22 @@ export default function EmailsAdminPage() {
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
           <div>
-            <p className="font-serif" style={{ fontSize: 28, color: "#5D0F17", lineHeight: 1 }}>{emails.length}</p>
-            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>Total signups</p>
+            <p style={{ fontSize: 28, fontWeight: 600, color: "#09090b", lineHeight: 1 }}>{emails.length}</p>
+            <p style={{ fontSize: 12, color: "#71717a", marginTop: 4 }}>Total signups</p>
           </div>
           {emails.length > 0 && (
             <div className="hidden sm:block">
-              <p className="font-serif" style={{ fontSize: 18, color: "#5D0F17", lineHeight: 1 }}>
+              <p style={{ fontSize: 18, fontWeight: 600, color: "#09090b", lineHeight: 1 }}>
                 {formatDate(emails[0]?.signupDate)}
               </p>
-              <p style={{ fontSize: 12, color: "rgba(93,15,23,0.5)", marginTop: 4 }}>Latest signup</p>
+              <p style={{ fontSize: 12, color: "#71717a", marginTop: 4 }}>Latest signup</p>
             </div>
           )}
         </div>
         <button
           onClick={exportToCSV}
           disabled={emails.length === 0}
-          style={{ padding: "10px 24px", border: "1px solid #5D0F17", background: "transparent", color: "#5D0F17", cursor: emails.length === 0 ? "not-allowed" : "pointer", opacity: emails.length === 0 ? 0.5 : 1, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}
+          style={{ padding: "8px 16px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: emails.length === 0 ? "not-allowed" : "pointer", opacity: emails.length === 0 ? 0.5 : 1, fontSize: 12, fontWeight: 500, borderRadius: 6 }}
         >
           Export CSV
         </button>
@@ -245,24 +243,24 @@ export default function EmailsAdminPage() {
       {/* Content */}
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px 48px" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "64px 0", color: "rgba(93,15,23,0.4)", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "64px 0", color: "#a1a1aa", fontSize: 14 }}>
             Loading emails...
           </div>
         ) : error ? (
-          <div style={{ textAlign: "center", padding: "64px 0", color: "#b91c1c", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "64px 0", color: "#dc2626", fontSize: 14 }}>
             {error}
           </div>
         ) : emails.length === 0 ? (
-          <div style={{ background: "#fff", border: "1px dashed #e5e7eb", padding: "32px 24px", textAlign: "center" }}>
-            <p style={{ color: "rgba(93,15,23,0.5)", marginBottom: 8 }}>No waitlist signups yet.</p>
-            <p style={{ fontSize: 12, color: "rgba(93,15,23,0.4)" }}>
+          <div style={{ background: "#fff", border: "1px dashed #e4e4e7", borderRadius: 8, padding: "32px 24px", textAlign: "center" }}>
+            <p style={{ color: "#71717a", marginBottom: 8 }}>No waitlist signups yet.</p>
+            <p style={{ fontSize: 12, color: "#a1a1aa" }}>
               Signups will appear here once visitors join the waitlist.
             </p>
           </div>
         ) : (
-          <div style={{ background: "#fff", border: "1px solid #e5e7eb" }}>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, overflow: "hidden" }}>
             {/* Desktop Header */}
-            <div className="hidden sm:grid grid-cols-12 gap-4" style={{ padding: "12px 24px", background: "#F7F3EA", borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(93,15,23,0.5)" }}>
+            <div className="hidden sm:grid grid-cols-12 gap-4" style={{ padding: "10px 24px", background: "#fafafa", borderBottom: "1px solid #e4e4e7", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500 }}>
               <div className="col-span-1">#</div>
               <div className="col-span-5">Email</div>
               <div className="col-span-3">Signup Date</div>
@@ -273,22 +271,24 @@ export default function EmailsAdminPage() {
               {emails.map((entry, index) => (
                 <div
                   key={entry.email}
-                  style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}
+                  style={{ padding: "14px 24px", borderBottom: "1px solid #f4f4f5" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "")}
                 >
                   {/* Mobile Layout */}
                   <div className="sm:hidden">
-                    <p style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>{entry.email}</p>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 11, color: "rgba(93,15,23,0.5)" }}>
+                    <p style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#09090b" }}>{entry.email}</p>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 11, color: "#71717a" }}>
                       <span>{formatDate(entry.signupDate)}</span>
                       <span>{entry.source || "waitlist"}</span>
                     </div>
                   </div>
                   {/* Desktop Layout */}
                   <div className="hidden sm:grid grid-cols-12 gap-4" style={{ fontSize: 13 }}>
-                    <div className="col-span-1" style={{ color: "rgba(93,15,23,0.3)" }}>{index + 1}</div>
-                    <div className="col-span-5" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#5D0F17" }}>{entry.email}</div>
-                    <div className="col-span-3" style={{ color: "rgba(93,15,23,0.5)" }}>{formatDate(entry.signupDate)}</div>
-                    <div className="col-span-3" style={{ color: "rgba(93,15,23,0.5)" }}>{entry.source || "waitlist"}</div>
+                    <div className="col-span-1" style={{ color: "#a1a1aa" }}>{index + 1}</div>
+                    <div className="col-span-5" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#09090b" }}>{entry.email}</div>
+                    <div className="col-span-3" style={{ color: "#71717a" }}>{formatDate(entry.signupDate)}</div>
+                    <div className="col-span-3" style={{ color: "#71717a" }}>{entry.source || "waitlist"}</div>
                   </div>
                 </div>
               ))}

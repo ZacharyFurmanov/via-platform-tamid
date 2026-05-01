@@ -237,6 +237,7 @@ export async function syncProducts(
     shopifyProductId?: string;
     size?: string;
     compareAtPrice?: number | null;
+    brand?: string;
     productType?: string;
   }>,
   options?: { excludeKeywords?: string[]; excludeTitles?: string[] }
@@ -315,7 +316,7 @@ export async function syncProducts(
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     const wasSeenOnInsider = prevSeenTitles.has(product.title);
     await sql`
-      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, product_type, insider_notified, synced_at, created_at)
+      INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, product_type, brand, insider_notified, synced_at, created_at)
       VALUES (
         ${storeSlug},
         ${storeName},
@@ -331,6 +332,7 @@ export async function syncProducts(
         ${product.size || null},
         ${product.compareAtPrice ?? null},
         ${product.productType || null},
+        ${product.brand || null},
         ${wasSeenOnInsider},
         NOW(),
         NOW()
@@ -348,6 +350,7 @@ export async function syncProducts(
         size = COALESCE(EXCLUDED.size, products.size),
         compare_at_price = EXCLUDED.compare_at_price,
         product_type = COALESCE(EXCLUDED.product_type, products.product_type),
+        brand = COALESCE(EXCLUDED.brand, products.brand),
         synced_at = NOW()
     `;
   }
@@ -396,7 +399,7 @@ export async function syncProducts(
         p.store_slug,
         p.store_name,
         p.title,
-        p.product_type,
+        COALESCE(NULLIF(p.brand, ''), NULLIF(p.product_type, '')),
         p.price,
         COALESCE(p.compare_at_price, p.price),
         p.currency,

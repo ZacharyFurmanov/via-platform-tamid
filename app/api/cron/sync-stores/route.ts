@@ -5,6 +5,7 @@ import {
   fetchShopifyProductsPublic,
   fetchShopifyProductsByCollections,
   toRSSProductFormat,
+  scrapeProductPageSections,
 } from "@/app/lib/shopifyClient";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
 import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
@@ -78,8 +79,32 @@ export async function GET(request: Request) {
           (store.excludeTitles ?? []).map((t) => t.toLowerCase())
         );
         const excludedKeywords = (store.excludeKeywords ?? []).map((k) => k.toLowerCase());
-        const products = fetchResult.products
-          .map(toRSSProductFormat)
+        const rawProducts = fetchResult.products.map(toRSSProductFormat);
+
+        // Scrape product pages to pull condition/measurements from tab sections not in body_html.
+        // Only scrape products whose body_html is sparse (< 600 plain-text chars) — stores that
+        // already write rich descriptions won't be hit, keeping sync time reasonable.
+        if (store.scrapeProductPage) {
+          const toScrape = rawProducts.filter((p) => {
+            const plain = (p.description || "").replace(/<[^>]+>/g, "").trim();
+            return plain.length < 600;
+          });
+          const CONCURRENCY = 5;
+          for (let i = 0; i < toScrape.length; i += CONCURRENCY) {
+            const batch = toScrape.slice(i, i + CONCURRENCY);
+            await Promise.all(
+              batch.map(async (p) => {
+                const extra = await scrapeProductPageSections(p.externalUrl);
+                if (extra) p.description = (p.description || "") + extra;
+              })
+            );
+          }
+          if (toScrape.length > 0) {
+            console.log(`[Sync Stores] Scraped ${toScrape.length} product pages for ${store.name}`);
+          }
+        }
+
+        const products = rawProducts
           .filter((p) => p.price !== null)
           .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
           .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
@@ -97,6 +122,7 @@ export async function GET(request: Request) {
               shopifyProductId: p.shopifyProductId ?? undefined,
               size: p.size ?? undefined,
               productType: p.productType ?? undefined,
+              brand: (p as any).vendor ?? undefined,
               compareAtPrice: p.compareAtPrice != null
                 ? convertCurrencyToUSD(p.compareAtPrice as number, storeCurrency)
                 : undefined,

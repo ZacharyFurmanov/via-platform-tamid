@@ -836,6 +836,60 @@ export async function fetchShopifyProductsByCollections(
 }
 
 /**
+ * Fetches a Shopify product page and extracts metafield sections (h2/p pairs)
+ * that aren't in the body_html, such as Condition and Dimensions.
+ * Returns appended HTML in a format compatible with splitDescription parsing.
+ */
+export async function scrapeProductPageSections(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "text/html" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return "";
+    const html = await res.text();
+
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const sections: string[] = [];
+    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic|Details|Shipping|Returns)";
+
+    const dimResult = new RegExp(`\\b(?:Dimensions?|Measurements?)\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
+    if (dimResult) {
+      let val = dimResult[1].trim();
+      // Deduplicate: if the text repeats itself, take only the first half
+      const half = Math.ceil(val.length / 2);
+      const firstHalf = val.slice(0, half);
+      if (val.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))) val = firstHalf.trim();
+      if (val.length >= 3 && val.length <= 400) {
+        sections.push(`<p>Measurements: ${val}</p>`);
+      }
+    }
+
+    const condResult = new RegExp(`\\bCondition\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
+    if (condResult) {
+      let val = condResult[1].trim();
+      // Deduplicate
+      const half = Math.ceil(val.length / 2);
+      const firstHalf = val.slice(0, half);
+      if (val.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))) val = firstHalf.trim();
+      if (val.length >= 3 && val.length <= 500) {
+        sections.push(`<p>Condition: ${val}</p>`);
+      }
+    }
+
+    return sections.join("");
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Converts ShopifyProduct to the standard RSSProduct format
  * for compatibility with existing product storage
  */
@@ -853,6 +907,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
   shopifyProductId: string | null;
   size: string | null;
   productType: string | null;
+  vendor: string | null;
 } {
   return {
     title: product.title,
@@ -868,5 +923,6 @@ export function toRSSProductFormat(product: ShopifyProduct): {
     shopifyProductId: product.shopifyProductId,
     size: product.size,
     productType: product.productType,
+    vendor: product.vendor ?? null,
   };
 }

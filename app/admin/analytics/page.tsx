@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import AdminNav from "@/app/components/AdminNav";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -155,8 +154,14 @@ function dayLabel(dateStr: string): string {
 
 // ── Colour tokens ─────────────────────────────────────────────────────────────
 
-const MAROON = "#5D0F17";
-const CREAM = "#F7F3EA";
+const DARK = "#09090b";
+const GRAY = "#71717a";
+const MUTED = "#a1a1aa";
+const BORDER = "#e4e4e7";
+const BG_PAGE = "#f8f9fa";
+const BG_CARD = "#ffffff";
+const BG_HOVER = "#fafafa";
+const PRIMARY = "#18181b";
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -164,28 +169,28 @@ function StatCard({ label, value, sub, href }: { label: string; value: string | 
   const inner = (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <p style={{ fontSize: 11, color: MAROON, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px" }}>
+        <p style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px", fontWeight: 500 }}>
           {label}
         </p>
-        {href && <span style={{ fontSize: 11, color: MAROON, opacity: 0.4 }}>→</span>}
+        {href && <span style={{ fontSize: 11, color: MUTED }}>→</span>}
       </div>
-      <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
+      <p style={{ fontSize: 24, fontWeight: 700, color: DARK, margin: 0, lineHeight: 1 }}>
         {value}
       </p>
       {sub && (
-        <p style={{ fontSize: 10, color: MAROON, opacity: 0.4, margin: "4px 0 0" }}>{sub}</p>
+        <p style={{ fontSize: 10, color: MUTED, margin: "4px 0 0" }}>{sub}</p>
       )}
     </>
   );
   if (href) {
     return (
-      <Link href={href} style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px", textDecoration: "none", display: "block", transition: "opacity 0.15s" }} onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")} onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+      <Link href={href} style={{ backgroundColor: BG_HOVER, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px", textDecoration: "none", display: "block", transition: "opacity 0.15s", border: `1px solid ${BORDER}` }} onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")} onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
         {inner}
       </Link>
     );
   }
   return (
-    <div style={{ backgroundColor: CREAM, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px" }}>
+    <div style={{ backgroundColor: BG_HOVER, borderRadius: 8, padding: "16px 20px", minWidth: 120, flex: "1 1 140px", border: `1px solid ${BORDER}` }}>
       {inner}
     </div>
   );
@@ -193,7 +198,7 @@ function StatCard({ label, value, sub, href }: { label: string; value: string | 
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontSize: 13, fontWeight: 700, color: MAROON, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px" }}>
+    <h2 style={{ fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px" }}>
       {children}
     </h2>
   );
@@ -214,11 +219,11 @@ function RangeButton({
       style={{
         padding: "5px 14px",
         fontSize: 12,
-        fontWeight: 600,
-        borderRadius: 4,
-        border: `1.5px solid ${MAROON}`,
-        backgroundColor: active ? MAROON : "white",
-        color: active ? "white" : MAROON,
+        fontWeight: 500,
+        borderRadius: 6,
+        border: `1px solid ${BORDER}`,
+        backgroundColor: active ? PRIMARY : BG_CARD,
+        color: active ? "#fff" : DARK,
         cursor: "pointer",
         letterSpacing: "0.04em",
       }}
@@ -289,13 +294,12 @@ export default function DeepAnalyticsPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: CREAM, color: MAROON, fontFamily: "Georgia, 'Times New Roman', serif" }}>
-      <AdminNav />
+    <div style={{ minHeight: "100vh", backgroundColor: BG_PAGE, color: DARK, fontFamily: "system-ui, -apple-system, sans-serif" }}>
 
       {/* Page title + tabs + range picker */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
+      <div style={{ background: BG_CARD, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px 0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: MAROON }}>Analytics</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0, color: DARK }}>Analytics</h1>
           <div style={{ display: "flex", gap: 8 }}>
             {(["7d", "30d", "all"] as DateRange[]).map((r) => (
               <RangeButton key={r} label={r.toUpperCase()} active={range === r} onClick={() => setRange(r)} />
@@ -310,11 +314,11 @@ export default function DeepAnalyticsPage() {
               style={{
                 padding: "12px 20px",
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 500,
                 border: "none",
-                borderBottom: tab === t ? `2px solid ${MAROON}` : "2px solid transparent",
+                borderBottom: tab === t ? `2px solid ${DARK}` : "2px solid transparent",
                 background: "transparent",
-                color: tab === t ? MAROON : `${MAROON}88`,
+                color: tab === t ? DARK : GRAY,
                 cursor: "pointer",
                 textTransform: "capitalize",
                 letterSpacing: "0.04em",
@@ -350,7 +354,7 @@ export default function DeepAnalyticsPage() {
           <>
             {/* ── KPI Bar ─────────────────────────────────────────────────── */}
             {/* Signups group */}
-            <p style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Signups</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Signups</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
               <StatCard label="Registered Accounts" value={data.kpis.totalCustomers.toLocaleString()} href="/admin/customers" />
 <StatCard label="Pilot Users" value={data.kpis.pilotTotal.toLocaleString()} href="/admin/customers" />
@@ -363,7 +367,7 @@ export default function DeepAnalyticsPage() {
               />
             </div>
             {/* Activity group */}
-            <p style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Activity</p>
+            <p style={{ fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>Activity</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 36 }}>
               <StatCard label="Store Click-throughs" value={data.kpis.totalClicks.toLocaleString()} sub="clicks out to store pages" />
               <StatCard label="Product Views" value={data.kpis.totalViews.toLocaleString()} />
@@ -393,9 +397,9 @@ export default function DeepAnalyticsPage() {
               <div style={{ marginBottom: 36 }}>
                 <SectionTitle>Traffic Sources</SectionTitle>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${CREAM}` }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${BORDER}` }}>
                     {["Source", "Medium", "Campaign", "Visits", "Known Users"].map((h) => (
-                      <span key={h} style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: MAROON, opacity: 0.45 }}>{h}</span>
+                      <span key={h} style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED }}>{h}</span>
                     ))}
                   </div>
                   {data.trafficSources.map((row, i) => {
@@ -403,18 +407,18 @@ export default function DeepAnalyticsPage() {
                     return (
                       <div
                         key={i}
-                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? CREAM : "transparent", borderRadius: 6, alignItems: "center" }}
+                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? BG_HOVER : "transparent", borderRadius: 6, alignItems: "center" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: MAROON, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.source}</span>
-                          <div style={{ flex: 1, height: 4, backgroundColor: "#e5e7eb", borderRadius: 2 }}>
-                            <div style={{ height: "100%", backgroundColor: MAROON, borderRadius: 2, width: `${(row.visits / maxVisits) * 100}%`, opacity: 0.6 }} />
+                          <span style={{ fontSize: 13, fontWeight: 600, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.source}</span>
+                          <div style={{ flex: 1, height: 4, backgroundColor: BORDER, borderRadius: 2 }}>
+                            <div style={{ height: "100%", backgroundColor: DARK, borderRadius: 2, width: `${(row.visits / maxVisits) * 100}%`, opacity: 0.5 }} />
                           </div>
                         </div>
-                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.7 }}>{row.medium ?? "—"}</span>
-                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.campaign ?? "—"}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: MAROON }}>{row.visits.toLocaleString()}</span>
-                        <span style={{ fontSize: 12, color: MAROON, opacity: 0.6 }}>{row.knownUsers > 0 ? row.knownUsers.toLocaleString() : "—"}</span>
+                        <span style={{ fontSize: 12, color: GRAY }}>{row.medium ?? "—"}</span>
+                        <span style={{ fontSize: 12, color: GRAY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.campaign ?? "—"}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: DARK }}>{row.visits.toLocaleString()}</span>
+                        <span style={{ fontSize: 12, color: MUTED }}>{row.knownUsers > 0 ? row.knownUsers.toLocaleString() : "—"}</span>
                       </div>
                     );
                   })}
@@ -457,26 +461,26 @@ export default function DeepAnalyticsPage() {
             <div style={{ marginBottom: 36 }}>
               <SectionTitle>Top Searches</SectionTitle>
               {data.topSearches.length === 0 ? (
-                <p style={{ fontSize: 13, color: MAROON, opacity: 0.45 }}>No searches recorded yet.</p>
+                <p style={{ fontSize: 13, color: MUTED }}>No searches recorded yet.</p>
               ) : (
                 <>
                   {/* #1 highlight */}
-                  <div style={{ backgroundColor: CREAM, borderRadius: 8, padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: MAROON, opacity: 0.4 }}>#1</span>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: MAROON }}>{data.topSearches[0].query}</span>
-                    <span style={{ fontSize: 12, color: MAROON, opacity: 0.5, marginLeft: "auto" }}>{data.topSearches[0].count} searches</span>
+                  <div style={{ backgroundColor: BG_HOVER, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED }}>#1</span>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: DARK }}>{data.topSearches[0].query}</span>
+                    <span style={{ fontSize: 12, color: MUTED, marginLeft: "auto" }}>{data.topSearches[0].count} searches</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {data.topSearches.slice(1).map((s, i) => (
                       <div key={s.query} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 11, color: MAROON, opacity: 0.35, width: 20, textAlign: "right", flexShrink: 0 }}>{i + 2}</span>
+                        <span style={{ fontSize: 11, color: MUTED, width: 20, textAlign: "right", flexShrink: 0 }}>{i + 2}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ margin: "0 0 3px", fontSize: 13, color: MAROON, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.query}</p>
-                          <div style={{ height: 4, backgroundColor: CREAM, borderRadius: 2 }}>
-                            <div style={{ height: "100%", backgroundColor: MAROON, borderRadius: 2, width: `${(s.count / data.topSearches[0].count) * 100}%`, opacity: 0.6 }} />
+                          <p style={{ margin: "0 0 3px", fontSize: 13, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.query}</p>
+                          <div style={{ height: 4, backgroundColor: BORDER, borderRadius: 2 }}>
+                            <div style={{ height: "100%", backgroundColor: DARK, borderRadius: 2, width: `${(s.count / data.topSearches[0].count) * 100}%`, opacity: 0.4 }} />
                           </div>
                         </div>
-                        <span style={{ fontSize: 11, color: MAROON, opacity: 0.45, flexShrink: 0 }}>{s.count}</span>
+                        <span style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{s.count}</span>
                       </div>
                     ))}
                   </div>
@@ -506,23 +510,24 @@ export default function DeepAnalyticsPage() {
                     href={s.href}
                     style={{
                       flex: "1 1 140px",
-                      background: s.sub === "matched" ? "#dcfce7" : s.sub === "unmatched" ? "#fef9c3" : CREAM,
+                      background: s.sub === "matched" ? "#dcfce7" : s.sub === "unmatched" ? "#fef9c3" : BG_HOVER,
                       borderRadius: 8,
                       padding: "14px 18px",
                       textDecoration: "none",
                       display: "block",
                       transition: "opacity 0.15s",
+                      border: `1px solid ${BORDER}`,
                     }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
                     onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <p style={{ fontSize: 24, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
+                      <p style={{ fontSize: 24, fontWeight: 700, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>
                         {s.value}
                       </p>
-                      <span style={{ fontSize: 11, color: MAROON, opacity: 0.4 }}>→</span>
+                      <span style={{ fontSize: 11, color: MUTED }}>→</span>
                     </div>
-                    <p style={{ fontSize: 11, color: MAROON, opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+                    <p style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0, fontWeight: 500 }}>
                       {s.label}
                     </p>
                   </Link>
@@ -538,7 +543,7 @@ export default function DeepAnalyticsPage() {
             <div style={{ marginBottom: 36 }}>
               <SectionTitle>Recent Activity</SectionTitle>
               {data.recentActivity.length === 0 ? (
-                <p style={{ fontSize: 13, opacity: 0.5 }}>No recent activity.</p>
+                <p style={{ fontSize: 13, color: MUTED }}>No recent activity.</p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {data.recentActivity.map((item, i) => (
@@ -549,19 +554,20 @@ export default function DeepAnalyticsPage() {
                         alignItems: "center",
                         gap: 12,
                         padding: "9px 14px",
-                        border: `1px solid ${CREAM}`,
+                        border: `1px solid ${BORDER}`,
                         borderRadius: 6,
                         fontSize: 13,
+                        background: BG_CARD,
                       }}
                     >
                       <span
                         style={{
                           fontSize: 10,
-                          fontWeight: 700,
+                          fontWeight: 500,
                           textTransform: "uppercase",
                           letterSpacing: "0.06em",
-                          backgroundColor: CREAM,
-                          color: MAROON,
+                          backgroundColor: "#f4f4f5",
+                          color: DARK,
                           padding: "2px 7px",
                           borderRadius: 4,
                           whiteSpace: "nowrap",
@@ -569,15 +575,15 @@ export default function DeepAnalyticsPage() {
                       >
                         VIEW
                       </span>
-                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, color: MAROON }}>
+                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500, color: DARK }}>
                         {item.productName ?? item.productId ?? "Unknown product"}
                       </span>
                       {item.store && (
-                        <span style={{ fontSize: 11, color: MAROON, opacity: 0.55, whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 11, color: GRAY, whiteSpace: "nowrap" }}>
                           {item.store}
                         </span>
                       )}
-                      <span style={{ fontSize: 11, color: MAROON, opacity: 0.4, whiteSpace: "nowrap" }}>
+                      <span style={{ fontSize: 11, color: MUTED, whiteSpace: "nowrap" }}>
                         {relativeTime(item.timestamp)}
                       </span>
                     </div>
@@ -680,7 +686,7 @@ function CollabsTab() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           {syncedAt && (
-            <p style={{ fontSize: 12, color: MAROON, opacity: 0.45 }}>
+            <p style={{ fontSize: 12, color: MUTED }}>
               Last synced {relativeTime(syncedAt)}
             </p>
           )}
@@ -688,14 +694,14 @@ function CollabsTab() {
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => setShowCreds((v) => !v)}
-            style={{ padding: "7px 16px", fontSize: 12, border: `1px solid ${MAROON}`, background: "transparent", color: MAROON, cursor: "pointer", opacity: 0.7 }}
+            style={{ padding: "7px 16px", fontSize: 12, fontWeight: 500, border: `1px solid ${BORDER}`, background: "#fff", color: DARK, cursor: "pointer", borderRadius: 6 }}
           >
             Update Credentials
           </button>
           <button
             onClick={handleSync}
             disabled={syncing}
-            style={{ padding: "7px 16px", fontSize: 12, border: "none", background: MAROON, color: "#F7F3EA", cursor: syncing ? "not-allowed" : "pointer", opacity: syncing ? 0.6 : 1 }}
+            style={{ padding: "7px 16px", fontSize: 12, fontWeight: 500, border: "none", background: PRIMARY, color: "#fff", cursor: syncing ? "not-allowed" : "pointer", opacity: syncing ? 0.6 : 1, borderRadius: 6 }}
           >
             {syncing ? "Syncing…" : "Sync Now"}
           </button>
@@ -704,10 +710,10 @@ function CollabsTab() {
 
       {/* Credentials form */}
       {showCreds && (
-        <div style={{ background: "#fff", border: `1px solid ${CREAM}`, borderRadius: 8, padding: 20, marginBottom: 24 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: MAROON, marginBottom: 12 }}>Update Shopify Collabs Session</p>
-          <p style={{ fontSize: 12, color: MAROON, opacity: 0.55, marginBottom: 16, lineHeight: 1.6 }}>
-            Go to <strong>collabs.shopify.com</strong>, open DevTools → Network, click any request, and copy the <code style={{ background: CREAM, padding: "1px 4px" }}>cookie</code> and <code style={{ background: CREAM, padding: "1px 4px" }}>x-csrf-token</code> headers.
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 20, marginBottom: 24 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: DARK, marginBottom: 12 }}>Update Shopify Collabs Session</p>
+          <p style={{ fontSize: 12, color: GRAY, marginBottom: 16, lineHeight: 1.6 }}>
+            Go to <strong>collabs.shopify.com</strong>, open DevTools → Network, click any request, and copy the <code style={{ background: "#f4f4f5", color: DARK, padding: "1px 4px", borderRadius: 4 }}>cookie</code> and <code style={{ background: "#f4f4f5", color: DARK, padding: "1px 4px", borderRadius: 4 }}>x-csrf-token</code> headers.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <textarea
@@ -715,22 +721,22 @@ function CollabsTab() {
               value={cookie}
               onChange={(e) => setCookie(e.target.value)}
               rows={3}
-              style={{ width: "100%", border: `1px solid rgba(93,15,23,0.2)`, padding: "8px 12px", fontSize: 12, color: MAROON, fontFamily: "monospace", resize: "vertical" }}
+              style={{ width: "100%", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: DARK, fontFamily: "monospace", resize: "vertical" }}
             />
             <input
               placeholder="x-csrf-token"
               value={csrfToken}
               onChange={(e) => setCsrfToken(e.target.value)}
-              style={{ border: `1px solid rgba(93,15,23,0.2)`, padding: "8px 12px", fontSize: 12, color: MAROON, fontFamily: "monospace" }}
+              style={{ border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: DARK, fontFamily: "monospace" }}
             />
             <button
               onClick={handleSaveCreds}
               disabled={savingCreds || !cookie.trim() || !csrfToken.trim()}
-              style={{ alignSelf: "flex-start", padding: "8px 20px", fontSize: 12, background: MAROON, color: "#F7F3EA", border: "none", cursor: "pointer", opacity: savingCreds ? 0.6 : 1 }}
+              style={{ alignSelf: "flex-start", padding: "8px 20px", fontSize: 12, fontWeight: 500, background: PRIMARY, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", opacity: savingCreds ? 0.6 : 1 }}
             >
               {savingCreds ? "Saving…" : "Save & Sync"}
             </button>
-            {credsMsg && <p style={{ fontSize: 12, color: MAROON, opacity: 0.7 }}>{credsMsg}</p>}
+            {credsMsg && <p style={{ fontSize: 12, color: GRAY }}>{credsMsg}</p>}
           </div>
         </div>
       )}
@@ -747,9 +753,9 @@ function CollabsTab() {
       )}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "60px 0", opacity: 0.4, fontSize: 14 }}>Loading…</div>
+        <div style={{ textAlign: "center", padding: "60px 0", color: MUTED, fontSize: 14 }}>Loading…</div>
       ) : partnerships.length === 0 && !error ? (
-        <div style={{ textAlign: "center", padding: "60px 0", opacity: 0.4, fontSize: 14 }}>
+        <div style={{ textAlign: "center", padding: "60px 0", color: MUTED, fontSize: 14 }}>
           No partnerships found. Try syncing or updating your credentials.
         </div>
       ) : (
@@ -763,12 +769,12 @@ function CollabsTab() {
           </div>
 
           {/* Partnerships table */}
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
-                <tr>
+                <tr style={{ background: BG_HOVER }}>
                   {["Store", "Link Visits", "Orders", "Commission Earned"].map((h) => (
-                    <th key={h} style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.07em", padding: "8px 12px", textAlign: h === "Store" ? "left" : "right", borderBottom: `2px solid ${CREAM}` }}>
+                    <th key={h} style={{ fontSize: 11, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.07em", padding: "8px 12px", textAlign: h === "Store" ? "left" : "right", borderBottom: `1px solid ${BORDER}` }}>
                       {h}
                     </th>
                   ))}
@@ -783,8 +789,8 @@ function CollabsTab() {
                     return bv - av;
                   })
                   .map((p, i) => (
-                  <tr key={p.id} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7", borderBottom: `1px solid ${CREAM}` }}>
-                    <td style={{ padding: "10px 12px", fontWeight: 600, color: MAROON }}>
+                  <tr key={p.id} style={{ backgroundColor: i % 2 === 0 ? BG_CARD : BG_HOVER, borderBottom: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 600, color: DARK }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {p.logoUrl && (
                           <img src={p.logoUrl} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} />
@@ -792,9 +798,9 @@ function CollabsTab() {
                         {p.name}
                       </div>
                     </td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: MAROON, opacity: 0.7 }}>{p.totalLinkVisits.toLocaleString()}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: MAROON, opacity: 0.7 }}>{p.totalOrders.toLocaleString()}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>{p.totalCommissionEarned}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: GRAY }}>{p.totalLinkVisits.toLocaleString()}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: GRAY }}>{p.totalOrders.toLocaleString()}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: DARK }}>{p.totalCommissionEarned}</td>
                   </tr>
                 ))}
               </tbody>
@@ -833,17 +839,17 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
             <div
               key={tier.label}
               style={{
-                background: "#fff",
-                border: `1px solid ${CREAM}`,
+                background: BG_CARD,
+                border: `1px solid ${BORDER}`,
                 borderRadius: 8,
                 padding: "16px 24px",
                 flex: "1 1 160px",
               }}
             >
-              <p style={{ fontSize: 28, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
+              <p style={{ fontSize: 28, fontWeight: 700, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>
                 {tier.count.toLocaleString()}
               </p>
-              <p style={{ fontSize: 11, color: MAROON, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+              <p style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0, fontWeight: 500 }}>
                 {tier.label}
               </p>
             </div>
@@ -855,25 +861,24 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
       <div style={{ marginBottom: 36 }}>
         <SectionTitle>Inventory by Store</SectionTitle>
         {inv.byStore.length === 0 ? (
-          <p style={{ fontSize: 13, opacity: 0.5 }}>No inventory data.</p>
+          <p style={{ fontSize: 13, color: MUTED }}>No inventory data.</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr>
+                <tr style={{ background: BG_HOVER }}>
                   {["Store", "Products", "Inventory Value", "Potential Commission"].map((h) => (
                     <th
                       key={h}
                       style={{
                         fontSize: 11,
-                        fontWeight: 700,
-                        color: MAROON,
-                        opacity: 0.55,
+                        fontWeight: 500,
+                        color: MUTED,
                         textTransform: "uppercase",
                         letterSpacing: "0.07em",
                         padding: "8px 12px",
                         textAlign: h === "Store" ? "left" : "right",
-                        borderBottom: `2px solid ${CREAM}`,
+                        borderBottom: `1px solid ${BORDER}`,
                       }}
                     >
                       {h}
@@ -883,17 +888,17 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
               </thead>
               <tbody>
                 {inv.byStore.map((row, i) => (
-                  <tr key={row.storeSlug} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7" }}>
-                    <td style={{ fontSize: 13, color: MAROON, padding: "9px 12px", fontWeight: 600, borderBottom: `1px solid ${CREAM}` }}>
+                  <tr key={row.storeSlug} style={{ backgroundColor: i % 2 === 0 ? BG_CARD : BG_HOVER }}>
+                    <td style={{ fontSize: 13, color: DARK, padding: "9px 12px", fontWeight: 600, borderBottom: `1px solid ${BORDER}` }}>
                       {row.storeSlug}
                     </td>
-                    <td style={{ fontSize: 13, color: MAROON, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${CREAM}` }}>
+                    <td style={{ fontSize: 13, color: DARK, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${BORDER}` }}>
                       {row.productCount.toLocaleString()}
                     </td>
-                    <td style={{ fontSize: 13, color: MAROON, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${CREAM}` }}>
+                    <td style={{ fontSize: 13, color: DARK, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${BORDER}` }}>
                       {fmt(row.inventoryValue)}
                     </td>
-                    <td style={{ fontSize: 13, color: MAROON, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${CREAM}` }}>
+                    <td style={{ fontSize: 13, color: DARK, padding: "9px 12px", textAlign: "right", borderBottom: `1px solid ${BORDER}` }}>
                       {fmt(row.potentialCommission)}
                     </td>
                   </tr>
@@ -943,15 +948,15 @@ function SignupBarChart({ days }: { days: SignupDay[] }) {
               title={`${b.label}: ${b.count} signup${b.count === 1 ? "" : "s"}`}
             >
               {b.count > 0 && barH > 20 && (
-                <span style={{ fontSize: 9, color: MAROON, opacity: 0.6, marginBottom: 2 }}>{b.count}</span>
+                <span style={{ fontSize: 9, color: MUTED, marginBottom: 2 }}>{b.count}</span>
               )}
               <div
                 style={{
                   width: "100%",
                   height: barH,
-                  backgroundColor: MAROON,
+                  backgroundColor: DARK,
                   borderRadius: "2px 2px 0 0",
-                  opacity: 0.85,
+                  opacity: 0.75,
                 }}
               />
             </div>
@@ -959,14 +964,13 @@ function SignupBarChart({ days }: { days: SignupDay[] }) {
         })}
       </div>
       {/* Labels */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 4, minWidth: bars.length * 28, marginTop: 4, borderTop: `1px solid ${CREAM}`, paddingTop: 6 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 4, minWidth: bars.length * 28, marginTop: 4, borderTop: `1px solid ${BORDER}`, paddingTop: 6 }}>
         {bars.map((b, i) => (
           <div key={i} style={{ flex: "0 0 auto", width: 22, overflow: "visible" }}>
             <span
               style={{
                 fontSize: 9,
-                color: MAROON,
-                opacity: 0.5,
+                color: MUTED,
                 whiteSpace: "nowrap",
                 display: "block",
                 transform: "rotate(-40deg)",
@@ -994,7 +998,7 @@ type ProductListItem = {
 
 function ProductList({ items }: { items: ProductListItem[] }) {
   if (items.length === 0) {
-    return <p style={{ fontSize: 13, opacity: 0.5 }}>No data for this period.</p>;
+    return <p style={{ fontSize: 13, color: MUTED }}>No data for this period.</p>;
   }
 
   return (
@@ -1012,12 +1016,12 @@ function ProductList({ items }: { items: ProductListItem[] }) {
               alignItems: "center",
               gap: 10,
               padding: "8px 12px",
-              backgroundColor: i === 0 ? CREAM : "white",
-              border: `1px solid ${CREAM}`,
+              backgroundColor: i === 0 ? BG_HOVER : BG_CARD,
+              border: `1px solid ${BORDER}`,
               borderRadius: 6,
             }}
           >
-            <span style={{ fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.35, width: 18, textAlign: "right", flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 500, color: MUTED, width: 18, textAlign: "right", flexShrink: 0 }}>
               {i + 1}
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1026,7 +1030,7 @@ function ProductList({ items }: { items: ProductListItem[] }) {
                   href={linkHref}
                   style={{
                     fontSize: 13,
-                    color: MAROON,
+                    color: DARK,
                     fontWeight: 500,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -1042,7 +1046,7 @@ function ProductList({ items }: { items: ProductListItem[] }) {
                 <span
                   style={{
                     fontSize: 13,
-                    color: MAROON,
+                    color: DARK,
                     fontWeight: 500,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -1055,15 +1059,15 @@ function ProductList({ items }: { items: ProductListItem[] }) {
                 </span>
               )}
               {item.store && (
-                <span style={{ fontSize: 11, color: MAROON, opacity: 0.5 }}>{item.store}</span>
+                <span style={{ fontSize: 11, color: MUTED }}>{item.store}</span>
               )}
             </div>
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: MAROON,
-                backgroundColor: CREAM,
+                color: DARK,
+                backgroundColor: "#f4f4f5",
                 borderRadius: 999,
                 padding: "2px 9px",
                 whiteSpace: "nowrap",
@@ -1177,9 +1181,10 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
   }
 
   const hStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 700, color: MAROON, opacity: 0.55,
+    fontSize: 11, fontWeight: 500, color: MUTED,
     textTransform: "uppercase", letterSpacing: "0.07em",
-    padding: "8px 12px", textAlign: "left", borderBottom: `2px solid ${CREAM}`,
+    padding: "8px 12px", textAlign: "left", borderBottom: `1px solid ${BORDER}`,
+    background: BG_HOVER,
   };
 
   return (
@@ -1187,18 +1192,18 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
         <button
           onClick={() => setAddingOrder(true)}
-          style={{ fontSize: 11, padding: "5px 14px", background: MAROON, color: "#F7F3EA", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}
+          style={{ fontSize: 11, padding: "5px 14px", background: PRIMARY, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}
         >
           + Record Order
         </button>
       </div>
 
       {rows.length === 0 ? (
-        <p style={{ fontSize: 13, opacity: 0.5 }}>No orders in this period.</p>
+        <p style={{ fontSize: 13, color: MUTED }}>No orders in this period.</p>
       ) : (
-        <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 600, border: `1px solid ${CREAM}`, borderRadius: 8 }}>
+        <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 600, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead style={{ position: "sticky", top: 0, zIndex: 1, background: "#fff" }}>
+            <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
               <tr>
                 <th style={hStyle}>Time</th>
                 <th style={hStyle}>Store</th>
@@ -1211,51 +1216,51 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={r.conversionId} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7", borderBottom: `1px solid ${CREAM}` }}>
-                  <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.6, whiteSpace: "nowrap" }}>{relativeTime(r.timestamp)}</td>
-                  <td style={{ padding: "9px 12px", fontWeight: 600, color: MAROON }}>{r.storeName}</td>
-                  <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: MAROON }}>
+                <tr key={r.conversionId} style={{ backgroundColor: i % 2 === 0 ? BG_CARD : BG_HOVER, borderBottom: `1px solid ${BORDER}` }}>
+                  <td style={{ padding: "9px 12px", color: GRAY, whiteSpace: "nowrap" }}>{relativeTime(r.timestamp)}</td>
+                  <td style={{ padding: "9px 12px", fontWeight: 600, color: DARK }}>{r.storeName}</td>
+                  <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 700, color: DARK }}>
                     <span style={{ textDecoration: r.returned ? "line-through" : "none", opacity: r.returned ? 0.4 : 1 }}>{formatRevenue(r.orderTotal)}</span>
                     {r.returned && <span style={{ display: "block", fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#dc2626", letterSpacing: "0.08em" }}>Returned</span>}
                   </td>
-                  <td style={{ padding: "9px 12px", color: MAROON, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: "9px 12px", color: DARK, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {r.buyerEmail ? (
                       <span title={r.buyerEmail} style={{ fontSize: 12 }}>
                         {r.buyerName || r.buyerEmail}
-                        {r.buyerName && <span style={{ display: "block", fontSize: 10, opacity: 0.5 }}>{r.buyerEmail}</span>}
+                        {r.buyerName && <span style={{ display: "block", fontSize: 10, color: MUTED }}>{r.buyerEmail}</span>}
                       </span>
-                    ) : <span style={{ opacity: 0.35, fontSize: 11 }}>—</span>}
+                    ) : <span style={{ color: MUTED, fontSize: 11 }}>—</span>}
                   </td>
                   <td style={{ padding: "9px 12px" }}>
-                    <span style={{ display: "inline-block", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 8px", borderRadius: 4, background: r.matched ? "#dcfce7" : "#fef9c3", color: r.matched ? "#166534" : "#854d0e" }}>
+                    <span style={{ display: "inline-block", fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 8px", borderRadius: 99, background: r.matched ? "#dcfce7" : "#fef9c3", color: r.matched ? "#15803d" : "#854d0e" }}>
                       {r.matched ? "Matched" : "Unmatched"}
                     </span>
                   </td>
-                  <td style={{ padding: "9px 12px", color: MAROON, opacity: 0.7, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {r.clickedProduct ?? (r.matched ? "—" : <span style={{ opacity: 0.4 }}>no click recorded</span>)}
+                  <td style={{ padding: "9px 12px", color: GRAY, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.clickedProduct ?? (r.matched ? "—" : <span style={{ color: MUTED }}>no click recorded</span>)}
                   </td>
                   <td style={{ padding: "9px 12px", whiteSpace: "nowrap" }}>
                     <button
                       onClick={() => openMatch(r)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid rgba(93,15,23,0.3)`, borderRadius: 4, color: MAROON, cursor: "pointer", fontWeight: 600, marginRight: 6 }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, color: DARK, cursor: "pointer", fontWeight: 500, marginRight: 6 }}
                     >
                       {r.matched ? "Re-match" : "Match"}
                     </button>
                     <button
                       onClick={() => editAmount(r.conversionId, r.orderTotal)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer", marginRight: 6 }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 4, color: GRAY, cursor: "pointer", marginRight: 6 }}
                     >
                       Edit $
                     </button>
                     <button
                       onClick={() => markReturned(r.conversionId, r.returned)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: `1px solid ${r.returned ? "#d1d5db" : "#fca5a5"}`, borderRadius: 4, color: r.returned ? "#6b7280" : "#dc2626", cursor: "pointer", marginRight: 6 }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "#fff", border: `1px solid ${r.returned ? BORDER : "#fca5a5"}`, borderRadius: 4, color: r.returned ? GRAY : "#dc2626", cursor: "pointer", marginRight: 6 }}
                     >
                       {r.returned ? "Undo Return" : "Return"}
                     </button>
                     <button
                       onClick={() => deleteConversion(r.conversionId)}
-                      style={{ fontSize: 11, padding: "3px 10px", background: "none", border: "1px solid #fca5a5", borderRadius: 4, color: "#dc2626", cursor: "pointer" }}
+                      style={{ fontSize: 11, padding: "3px 10px", background: "#fff", border: "1px solid #fca5a5", borderRadius: 4, color: "#dc2626", cursor: "pointer" }}
                     >
                       Delete
                     </button>
@@ -1272,41 +1277,41 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
         <>
           <div onClick={() => setSelected(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }} />
           <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 500, background: "#fff", zIndex: 101, overflowY: "auto", boxShadow: "-4px 0 24px rgba(0,0,0,0.12)", fontFamily: "system-ui, sans-serif" }}>
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Match Order</p>
-                <p style={{ fontSize: 12, color: "#9ca3af", margin: "3px 0 0" }}>{selected.storeName} · {formatRevenue(selected.orderTotal)} · {relativeTime(selected.timestamp)}</p>
+                <p style={{ fontSize: 15, fontWeight: 600, color: DARK, margin: 0 }}>Match Order</p>
+                <p style={{ fontSize: 12, color: MUTED, margin: "3px 0 0" }}>{selected.storeName} · {formatRevenue(selected.orderTotal)} · {relativeTime(selected.timestamp)}</p>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+              <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: MUTED }}>×</button>
             </div>
             <div style={{ padding: "20px 24px" }}>
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>Match to Customer</p>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, fontWeight: 500, margin: "0 0 8px" }}>Match to Customer</p>
               <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                 <input
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   placeholder="Email address"
-                  style={{ flex: 1, padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13 }}
+                  style={{ flex: 1, padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK }}
                 />
                 <button
                   onClick={matchToUser}
                   disabled={!userInput.trim() || matching === "user"}
-                  style={{ padding: "7px 14px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !userInput.trim() ? 0.4 : 1 }}
+                  style={{ padding: "7px 14px", background: PRIMARY, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer", opacity: !userInput.trim() ? 0.4 : 1 }}
                 >
                   {matching === "user" ? "Saving…" : "Set"}
                 </button>
               </div>
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(93,15,23,0.5)", fontWeight: 600, margin: "0 0 8px" }}>Candidate Clicks (same store, ±48h)</p>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, fontWeight: 500, margin: "0 0 8px" }}>Candidate Clicks (same store, ±48h)</p>
               {candidatesLoading ? (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>Loading…</p>
+                <p style={{ fontSize: 13, color: MUTED }}>Loading…</p>
               ) : candidates.length === 0 ? (
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>No clicks found in this window.</p>
+                <p style={{ fontSize: 13, color: MUTED }}>No clicks found in this window.</p>
               ) : candidates.map((click) => (
-                <div key={click.clickId} style={{ border: "1px solid #e5e7eb", borderRadius: 6, padding: "10px 14px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div key={click.clickId} style={{ border: `1px solid ${BORDER}`, borderRadius: 6, padding: "10px 14px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>{click.productName || "—"}</p>
-                    <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: DARK, margin: 0 }}>{click.productName || "—"}</p>
+                    <p style={{ fontSize: 11, color: MUTED, margin: "2px 0 0" }}>
                       {new Date(click.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       {click.userEmail && ` · ${click.userName || click.userEmail}`}
                     </p>
@@ -1314,7 +1319,7 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
                   <button
                     onClick={() => matchToClick(click.clickId)}
                     disabled={matching === click.clickId}
-                    style={{ padding: "5px 12px", background: MAROON, color: "#fff", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                    style={{ padding: "5px 12px", background: PRIMARY, color: "#fff", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}
                   >
                     {matching === click.clickId ? "Saving…" : "Use this"}
                   </button>
@@ -1331,25 +1336,25 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
           <div onClick={() => setAddingOrder(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 200 }} />
           <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 460, background: "#fff", zIndex: 201, borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "24px 28px", fontFamily: "system-ui, sans-serif" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Record Order Manually</p>
-              <button onClick={() => setAddingOrder(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}>×</button>
+              <p style={{ fontSize: 15, fontWeight: 600, color: DARK, margin: 0 }}>Record Order Manually</p>
+              <button onClick={() => setAddingOrder(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: MUTED }}>×</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Store Slug *</label><input value={newOrder.storeSlug} onChange={(e) => setNewOrder({ ...newOrder, storeSlug: e.target.value })} placeholder="porters-preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Store Name</label><input value={newOrder.storeName} onChange={(e) => setNewOrder({ ...newOrder, storeName: e.target.value })} placeholder="Porter's Preloved" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Store Slug *</label><input value={newOrder.storeSlug} onChange={(e) => setNewOrder({ ...newOrder, storeSlug: e.target.value })} placeholder="porters-preloved" style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Store Name</label><input value={newOrder.storeName} onChange={(e) => setNewOrder({ ...newOrder, storeName: e.target.value })} placeholder="Porter's Preloved" style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Order ID *</label><input value={newOrder.orderId} onChange={(e) => setNewOrder({ ...newOrder, orderId: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Amount *</label><input type="number" value={newOrder.orderTotal} onChange={(e) => setNewOrder({ ...newOrder, orderTotal: e.target.value })} placeholder="0.00" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Order ID *</label><input value={newOrder.orderId} onChange={(e) => setNewOrder({ ...newOrder, orderId: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Amount *</label><input type="number" value={newOrder.orderTotal} onChange={(e) => setNewOrder({ ...newOrder, orderTotal: e.target.value })} placeholder="0.00" style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Currency</label><input value={newOrder.currency} onChange={(e) => setNewOrder({ ...newOrder, currency: e.target.value })} placeholder="USD" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
-                <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Order Date</label><input type="datetime-local" value={newOrder.timestamp} onChange={(e) => setNewOrder({ ...newOrder, timestamp: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Currency</label><input value={newOrder.currency} onChange={(e) => setNewOrder({ ...newOrder, currency: e.target.value })} placeholder="USD" style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Order Date</label><input type="datetime-local" value={newOrder.timestamp} onChange={(e) => setNewOrder({ ...newOrder, timestamp: e.target.value })} style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
               </div>
-              <div><label style={{ fontSize: 11, color: "#6b7280", display: "block", marginBottom: 3 }}>Customer Email (optional)</label><input value={newOrder.userEmail} onChange={(e) => setNewOrder({ ...newOrder, userEmail: e.target.value })} placeholder="Links to a VYA account" style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} /></div>
+              <div><label style={{ fontSize: 11, color: GRAY, display: "block", marginBottom: 3 }}>Customer Email (optional)</label><input value={newOrder.userEmail} onChange={(e) => setNewOrder({ ...newOrder, userEmail: e.target.value })} placeholder="Links to a VYA account" style={{ width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 13, color: DARK, boxSizing: "border-box" }} /></div>
               {saveOrderError && <p style={{ fontSize: 12, color: "#dc2626", margin: 0 }}>{saveOrderError}</p>}
-              <button onClick={saveManualOrder} disabled={savingOrder || !newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal} style={{ padding: "9px", background: MAROON, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) ? 0.5 : 1 }}>
+              <button onClick={saveManualOrder} disabled={savingOrder || !newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal} style={{ padding: "9px", background: PRIMARY, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer", opacity: (!newOrder.storeSlug || !newOrder.orderId || !newOrder.orderTotal) ? 0.5 : 1 }}>
                 {savingOrder ? "Saving…" : "Save Order"}
               </button>
             </div>
@@ -1364,30 +1369,30 @@ function ConversionsTable({ rows, onRefresh }: { rows: ConversionRow[]; onRefres
 
 function StoresTable({ stores }: { stores: TopStore[] }) {
   if (stores.length === 0) {
-    return <p style={{ fontSize: 13, opacity: 0.5 }}>No store data for this period.</p>;
+    return <p style={{ fontSize: 13, color: MUTED }}>No store data for this period.</p>;
   }
 
   const headerStyle: React.CSSProperties = {
     fontSize: 11,
-    fontWeight: 700,
-    color: MAROON,
-    opacity: 0.55,
+    fontWeight: 500,
+    color: MUTED,
     textTransform: "uppercase",
     letterSpacing: "0.07em",
     padding: "8px 12px",
     textAlign: "left",
-    borderBottom: `2px solid ${CREAM}`,
+    borderBottom: `1px solid ${BORDER}`,
+    background: BG_HOVER,
   };
 
   const cellStyle: React.CSSProperties = {
     fontSize: 13,
-    color: MAROON,
+    color: DARK,
     padding: "9px 12px",
-    borderBottom: `1px solid ${CREAM}`,
+    borderBottom: `1px solid ${BORDER}`,
   };
 
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div style={{ overflowX: "auto", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
@@ -1399,9 +1404,9 @@ function StoresTable({ stores }: { stores: TopStore[] }) {
         </thead>
         <tbody>
           {stores.map((s, i) => (
-            <tr key={s.store ?? i} style={{ backgroundColor: i % 2 === 0 ? "white" : "#fdfbf7" }}>
+            <tr key={s.store ?? i} style={{ backgroundColor: i % 2 === 0 ? BG_CARD : BG_HOVER }}>
               <td style={{ ...cellStyle, fontWeight: 600 }}>{s.store ?? "—"}</td>
-              <td style={{ ...cellStyle, textAlign: "right", fontWeight: 600, color: MAROON }}>{formatRevenueShort(s.revenue)}</td>
+              <td style={{ ...cellStyle, textAlign: "right", fontWeight: 600 }}>{formatRevenueShort(s.revenue)}</td>
               <td style={{ ...cellStyle, textAlign: "right" }}>{s.conversions.toLocaleString()}</td>
               <td style={{ ...cellStyle, textAlign: "right" }}>{s.clicks.toLocaleString()}</td>
             </tr>

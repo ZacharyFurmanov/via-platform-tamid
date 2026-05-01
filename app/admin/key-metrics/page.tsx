@@ -2,11 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import AdminNav from "@/app/components/AdminNav";
 
-const MAROON = "#5D0F17";
-const CREAM = "#F7F3EA";
-const MUTED = "rgba(93,15,23,0.45)";
+const DARK       = "#09090b";
+const GRAY       = "#71717a";
+const MUTED_TEXT = "#a1a1aa";
+const BORDER     = "#e4e4e7";
+const BG_CARD    = "#ffffff";
+const UP_COLOR   = "#16a34a";
+const UP_BG      = "#f0fdf4";
+const DN_COLOR   = "#dc2626";
+const DN_BG      = "#fef2f2";
+const PRIMARY_BTN = "#18181b";
 
 function fmt$(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
@@ -40,11 +46,11 @@ function TrendBadge({ current, prev, fmtFn }: { current: number; prev: number; f
   const t = trend(current, prev);
   if (t === "flat" || prev === 0) return null;
   const label = trendLabel(current, prev, fmtFn);
-  const color = t === "up" ? "#15803d" : "#b91c1c";
-  const bg = t === "up" ? "#f0fdf4" : "#fef2f2";
+  const color = t === "up" ? UP_COLOR : DN_COLOR;
+  const bg = t === "up" ? UP_BG : DN_BG;
   const arrow = t === "up" ? "↑" : "↓";
   return (
-    <span style={{ fontSize: 11, background: bg, color, padding: "2px 7px", borderRadius: 20, fontWeight: 600 }}>
+    <span style={{ fontSize: 11, background: bg, color, padding: "2px 7px", borderRadius: 4, fontWeight: 500 }}>
       {arrow} {label}
     </span>
   );
@@ -70,23 +76,23 @@ function MetricCard({
   const inner = (
     <>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: 0 }}>{label}</p>
-        {href && <span style={{ fontSize: 11, color: MUTED, opacity: 0.6 }}>→</span>}
+        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: 0 }}>{label}</p>
+        {href && <span style={{ fontSize: 11, color: MUTED_TEXT }}>→</span>}
       </div>
-      <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>{value}</p>
-      {sub && <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>{sub}</p>}
+      <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: 0, lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ fontSize: 12, color: GRAY, margin: 0 }}>{sub}</p>}
       {trendEl && <div style={{ marginTop: 2 }}>{trendEl}</div>}
-      {note && <p style={{ fontSize: 11, color: "#9ca3af", margin: 0, marginTop: 4, borderTop: "1px solid #f3f4f6", paddingTop: 8 }}>{note}</p>}
+      {note && <p style={{ fontSize: 11, color: MUTED_TEXT, margin: 0, marginTop: 4, borderTop: `1px solid #f4f4f5`, paddingTop: 8 }}>{note}</p>}
     </>
   );
   const cardStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
+    background: BG_CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 8,
     padding: "24px 28px",
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: 6,
     gridColumn: wide ? "span 2" : undefined,
     textDecoration: "none",
     color: "inherit",
@@ -95,7 +101,7 @@ function MetricCard({
   };
   if (href) {
     return (
-      <Link href={href} style={cardStyle} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)"; (e.currentTarget as HTMLElement).style.borderColor = "#d1d5db"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ""; (e.currentTarget as HTMLElement).style.borderColor = "#e5e7eb"; }}>
+      <Link href={href} style={cardStyle} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 8px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "#d4d4d8"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = ""; (e.currentTarget as HTMLElement).style.borderColor = BORDER; }}>
         {inner}
       </Link>
     );
@@ -118,7 +124,7 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
       <polyline
         points={pts.join(" ")}
         fill="none"
-        stroke={MAROON}
+        stroke={PRIMARY_BTN}
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -127,7 +133,7 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
       {data.map((d, i) => {
         const x = (i / (data.length - 1)) * w;
         const y = h - (d.gmv / max) * (h - 6) - 3;
-        return <circle key={i} cx={x} cy={y} r={3} fill={MAROON} opacity={0.6} />;
+        return <circle key={i} cx={x} cy={y} r={3} fill={PRIMARY_BTN} opacity={0.6} />;
       })}
     </svg>
   );
@@ -201,26 +207,24 @@ export default function KeyMetricsPage() {
   }, [selectedMonth]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
-      <AdminNav />
+    <div style={{ minHeight: "100vh", background: "#f8f9fa", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: MAROON, margin: 0 }}>Key Metrics</h1>
-          <p style={{ fontSize: 14, color: MUTED, margin: "6px 0 16px" }}>Platform health at a glance. Trends compare to the previous equivalent period.</p>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: DARK, margin: 0 }}>Key Metrics</h1>
+          <p style={{ fontSize: 13, color: GRAY, margin: "6px 0 16px" }}>Platform health at a glance. Trends compare to the previous equivalent period.</p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {monthOptions.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setSelectedMonth(opt.value)}
                 style={{
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  border: "1px solid",
-                  borderColor: selectedMonth === opt.value ? MAROON : "#e5e7eb",
-                  background: selectedMonth === opt.value ? MAROON : "#fff",
-                  color: selectedMonth === opt.value ? "#fff" : "#6b7280",
+                  padding: "5px 12px",
+                  borderRadius: 6,
+                  border: `1px solid ${selectedMonth === opt.value ? PRIMARY_BTN : BORDER}`,
+                  background: selectedMonth === opt.value ? PRIMARY_BTN : "#fff",
+                  color: selectedMonth === opt.value ? "#fff" : GRAY,
                   fontSize: 12,
-                  fontWeight: selectedMonth === opt.value ? 600 : 400,
+                  fontWeight: selectedMonth === opt.value ? 500 : 400,
                   cursor: "pointer",
                   transition: "all 0.15s",
                 }}
@@ -232,10 +236,10 @@ export default function KeyMetricsPage() {
         </div>
 
         {loading && (
-          <div style={{ textAlign: "center", padding: 80, color: MUTED }}>Loading…</div>
+          <div style={{ textAlign: "center", padding: 80, color: MUTED_TEXT }}>Loading…</div>
         )}
         {error && !loading && (
-          <div style={{ textAlign: "center", padding: 80, color: "#b91c1c" }}>{error}</div>
+          <div style={{ textAlign: "center", padding: 80, color: DN_COLOR }}>{error}</div>
         )}
 
         {data && (
@@ -243,20 +247,20 @@ export default function KeyMetricsPage() {
 
             {/* ── GMV ─────────────────────────────────────────────── */}
             <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Gross Merchandise Value</h2>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Gross Merchandise Value</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-                <Link href="/admin/analytics" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px", gridColumn: "span 1", textDecoration: "none", display: "block", transition: "box-shadow 0.15s" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 12px rgba(93,15,23,0.10)")} onMouseLeave={e => (e.currentTarget.style.boxShadow = "")}>
+                <Link href="/admin/analytics" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px", gridColumn: "span 1", textDecoration: "none", display: "block", transition: "box-shadow 0.15s, border-color 0.15s" }} onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 1px 8px rgba(0,0,0,0.06)"; e.currentTarget.style.borderColor = "#d4d4d8"; }} onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.borderColor = BORDER; }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>
+                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 8px" }}>
                       {data.period?.isAllTime ? "All-Time GMV" : data.period?.isMonth ? `GMV — ${data.period.label}` : "All-Time GMV"}
                     </p>
-                    <span style={{ fontSize: 11, color: MUTED, opacity: 0.6 }}>→</span>
+                    <span style={{ fontSize: 11, color: MUTED_TEXT }}>→</span>
                   </div>
-                  <p style={{ fontSize: 40, fontWeight: 700, color: MAROON, margin: "0 0 12px", lineHeight: 1 }}>
+                  <p style={{ fontSize: 40, fontWeight: 600, color: DARK, margin: "0 0 12px", lineHeight: 1 }}>
                     {data.period?.isMonth ? fmt$(data.gmv.last30d) : fmt$(data.gmv.total)}
                   </p>
                   <MiniSparkline data={data.gmvByWeek} />
-                  <p style={{ fontSize: 11, color: "#9ca3af", margin: "10px 0 0" }}>Weekly GMV — last 10 weeks</p>
+                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "10px 0 0" }}>Weekly GMV — last 10 weeks</p>
                 </Link>
                 <MetricCard
                   label={data.period?.isMonth ? `Last Week of ${data.period.label}` : data.period?.isAllTime ? "GMV — Last 7 Days" : "GMV — Last 7 Days"}
@@ -285,7 +289,7 @@ export default function KeyMetricsPage() {
             {/* ── Total Orders ─────────────────────────────────────── */}
             {data.totalOrders && (
               <section>
-                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Total Orders</h2>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Total Orders</h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                   <MetricCard
                     label={data.period?.isAllTime ? "All-Time Orders" : data.period?.isMonth ? `Orders — ${data.period.label}` : "All-Time Orders"}
@@ -313,7 +317,7 @@ export default function KeyMetricsPage() {
 
             {/* ── Conversion & Revenue ────────────────────────────── */}
             <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Conversion & Revenue</h2>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Conversion & Revenue</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                 <MetricCard
                   label={data.period?.isMonth || data.period?.isAllTime ? `Conversion Rate — ${data.period.label}` : "Conversion Rate (7d)"}
@@ -362,7 +366,7 @@ export default function KeyMetricsPage() {
 
             {/* ── Users ───────────────────────────────────────────── */}
             <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Users</h2>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Users</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
                 <MetricCard
                   label="Registered Accounts"
@@ -382,8 +386,8 @@ export default function KeyMetricsPage() {
             {/* ── Waitlist Growth ─────────────────────────────────── */}
             {data.waitlistByMonth.length > 0 && (
               <section>
-                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Waitlist Growth</h2>
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Waitlist Growth</h2>
+                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
                   {(() => {
                     // Filter months to match selected period
                     const visibleMonths = data.period?.isMonth
@@ -404,39 +408,39 @@ export default function KeyMetricsPage() {
                           {data.period?.isMonth ? (
                             <>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Signups — {data.period.label}</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>Signups — {data.period.label}</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
                                 {prevMonthData && <TrendBadge current={currentMonthData?.signups ?? 0} prev={prevMonthData.signups} fmtFn={fmtNum} />}
                               </div>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Approved — {data.period.label}</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.approved ?? 0)}</p>
-                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>of {fmtNum(currentMonthData?.signups ?? 0)} signups</p>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>Approved — {data.period.label}</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.approved ?? 0)}</p>
+                                <p style={{ fontSize: 12, color: GRAY, margin: 0 }}>of {fmtNum(currentMonthData?.signups ?? 0)} signups</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>All-Time Waitlist</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
-                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>All-Time Waitlist</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
+                                <p style={{ fontSize: 12, color: GRAY, margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
                               </div>
                             </>
                           ) : (
                             <>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Total on Waitlist</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
-                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>Total on Waitlist</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(data.users.waitlist)}</p>
+                                <p style={{ fontSize: 12, color: GRAY, margin: 0 }}>{fmtNum(totalApproved)} approved · {fmtNum(totalPending)} pending</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>This Month</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>This Month</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(currentMonthData?.signups ?? 0)}</p>
                                 {prevMonthData && <TrendBadge current={currentMonthData?.signups ?? 0} prev={prevMonthData.signups} fmtFn={fmtNum} />}
                               </div>
                               <div>
-                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>Avg / Month</p>
-                                <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>
+                                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>Avg / Month</p>
+                                <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>
                                   {fmtNum(Math.round(data.users.waitlist / Math.max(data.waitlistByMonth.length, 1)))}
                                 </p>
-                                <p style={{ fontSize: 12, color: "#6b7280", margin: 0 }}>across {data.waitlistByMonth.length} month{data.waitlistByMonth.length !== 1 ? "s" : ""}</p>
+                                <p style={{ fontSize: 12, color: GRAY, margin: 0 }}>across {data.waitlistByMonth.length} month{data.waitlistByMonth.length !== 1 ? "s" : ""}</p>
                               </div>
                             </>
                           )}
@@ -453,9 +457,9 @@ export default function KeyMetricsPage() {
                                   const label = new Date(m.month + "-02").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
                                   return (
                                     <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                                      <span style={{ fontSize: 10, color: MUTED, fontWeight: 600 }}>{m.signups}</span>
-                                      <div style={{ width: "100%", height: barH, background: MAROON, borderRadius: "3px 3px 0 0", opacity: 0.8 }} title={`${label}: ${m.signups} signups, ${m.approved} approved`} />
-                                      <span style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap" }}>{label}</span>
+                                      <span style={{ fontSize: 10, color: MUTED_TEXT, fontWeight: 600 }}>{m.signups}</span>
+                                      <div style={{ width: "100%", height: barH, background: PRIMARY_BTN, borderRadius: "3px 3px 0 0", opacity: 0.8 }} title={`${label}: ${m.signups} signups, ${m.approved} approved`} />
+                                      <span style={{ fontSize: 9, color: MUTED_TEXT, whiteSpace: "nowrap" }}>{label}</span>
                                     </div>
                                   );
                                 });
@@ -463,7 +467,7 @@ export default function KeyMetricsPage() {
                             </div>
                           </div>
                         )}
-                        <p style={{ fontSize: 11, color: "#9ca3af", margin: "12px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
+                        <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "12px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 10 }}>
                           {data.period?.isMonth ? `Waitlist activity for ${data.period.label}.` : "Signups per month since launch. Hover bars for approved count."}
                         </p>
                       </>
@@ -475,8 +479,8 @@ export default function KeyMetricsPage() {
 
             {/* ── Waitlist Funnel ─────────────────────────────────── */}
             <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Waitlist Funnel</h2>
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Waitlist Funnel</h2>
+              <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
                 {(() => {
                   const steps = [
                     { label: "Waitlist Signups", value: data.users.waitlist, note: "Total entries in pilot_access" },
@@ -491,15 +495,15 @@ export default function KeyMetricsPage() {
                         const pct = prev && prev > 0 ? ((step.value / prev) * 100).toFixed(0) : null;
                         return (
                           <div key={step.label} style={{ display: "flex", alignItems: "stretch" }}>
-                            <div style={{ flex: 1, padding: "0 20px", borderRight: i < steps.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 6px" }}>{step.label}</p>
-                              <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(step.value)}</p>
+                            <div style={{ flex: 1, padding: "0 20px", borderRight: i < steps.length - 1 ? "1px solid #f4f4f5" : "none" }}>
+                              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 6px" }}>{step.label}</p>
+                              <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtNum(step.value)}</p>
                               {pct !== null && (
-                                <span style={{ fontSize: 11, background: "#f0fdf4", color: "#15803d", padding: "2px 7px", borderRadius: 20, fontWeight: 600 }}>
+                                <span style={{ fontSize: 11, background: UP_BG, color: UP_COLOR, padding: "2px 7px", borderRadius: 4, fontWeight: 500 }}>
                                   {pct}% of prev
                                 </span>
                               )}
-                              <p style={{ fontSize: 11, color: "#9ca3af", margin: "8px 0 0" }}>{step.note}</p>
+                              <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "8px 0 0" }}>{step.note}</p>
                             </div>
                           </div>
                         );
@@ -512,7 +516,7 @@ export default function KeyMetricsPage() {
 
             {/* ── Engagement ──────────────────────────────────────── */}
             <section>
-              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>Engagement & Retention</h2>
+              <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Engagement & Retention</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
                 <MetricCard
                   label="Weekly Active Users"
@@ -538,80 +542,80 @@ export default function KeyMetricsPage() {
                 />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 16 }}>
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
-                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 8px" }}>Stickiness (WAU/MAU)</p>
-                  <p style={{ fontSize: 36, fontWeight: 700, color: MAROON, margin: "0 0 6px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
+                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 8px" }}>Stickiness (WAU/MAU)</p>
+                  <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 6px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
                   <TrendBadge current={data.stickiness.current} prev={data.stickiness.prev} fmtFn={fmtPct} />
-                  <div style={{ marginTop: 16, background: "#f9fafb", borderRadius: 8, padding: "10px 14px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280" }}>
+                  <div style={{ marginTop: 16, background: "#f4f4f5", borderRadius: 8, padding: "10px 14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: GRAY }}>
                       <span>Below 10%</span><span style={{ color: "#b91c1c" }}>Needs work</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: GRAY, marginTop: 2 }}>
                       <span>10–25%</span><span style={{ color: "#92400e" }}>Okay</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: GRAY, marginTop: 2 }}>
                       <span>Above 25%</span><span style={{ color: "#15803d" }}>Healthy</span>
                     </div>
                   </div>
-                  <p style={{ fontSize: 11, color: "#9ca3af", margin: "10px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 8 }}>How often monthly users come back weekly</p>
+                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "10px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 8 }}>How often monthly users come back weekly</p>
                 </div>
 
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 28px" }}>
-                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: "0 0 16px" }}>
+                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 16px" }}>
                     Buyer Retention — {data.period?.label ?? "Last 30 Days"}
                   </p>
 
                   {/* Came back after purchase */}
                   <div style={{ marginBottom: 14 }}>
-                    <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 4px" }}>Came back after buying</p>
+                    <p style={{ fontSize: 12, color: GRAY, margin: "0 0 4px" }}>Came back after buying</p>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
-                      <p style={{ fontSize: 30, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
+                      <p style={{ fontSize: 30, fontWeight: 600, color: DARK, margin: 0, lineHeight: 1 }}>
                         {data.buyerRetention.returnRate === null ? "—" : fmtPct(data.buyerRetention.returnRate)}
                       </p>
-                      <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                      <p style={{ fontSize: 12, color: MUTED_TEXT, margin: 0 }}>
                         {fmtNum(data.buyerRetention.returnedAfterPurchase)} of {fmtNum(data.buyerRetention.totalBuyers)} buyers
                       </p>
                     </div>
-                    <div style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}>
+                    <div style={{ background: "#f4f4f5", borderRadius: 6, padding: "8px 12px" }}>
                       {[
                         { label: "Below 30%", verdict: "Needs work", color: "#b91c1c", threshold: null },
                         { label: "30–60%",    verdict: "Okay",       color: "#92400e", threshold: null },
                         { label: "Above 60%", verdict: "Healthy",    color: "#15803d", threshold: null },
                       ].map((row) => (
-                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6b7280", marginBottom: 2 }}>
+                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: GRAY, marginBottom: 2 }}>
                           <span>{row.label}</span><span style={{ color: row.color, fontWeight: 600 }}>{row.verdict}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 14px" }} />
+                  <div style={{ height: 1, background: "#f4f4f5", margin: "0 0 14px" }} />
 
                   {/* Bought again */}
                   <div>
-                    <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 4px" }}>Bought again</p>
+                    <p style={{ fontSize: 12, color: GRAY, margin: "0 0 4px" }}>Bought again</p>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
-                      <p style={{ fontSize: 30, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1 }}>
+                      <p style={{ fontSize: 30, fontWeight: 600, color: DARK, margin: 0, lineHeight: 1 }}>
                         {data.buyerRetention.repeatPurchaseRate === null ? "—" : fmtPct(data.buyerRetention.repeatPurchaseRate)}
                       </p>
-                      <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+                      <p style={{ fontSize: 12, color: MUTED_TEXT, margin: 0 }}>
                         {fmtNum(data.buyerRetention.boughtAgain)} of {fmtNum(data.buyerRetention.totalBuyers)} buyers
                       </p>
                     </div>
-                    <div style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px" }}>
+                    <div style={{ background: "#f4f4f5", borderRadius: 6, padding: "8px 12px" }}>
                       {[
                         { label: "Below 5%",  verdict: "Needs work", color: "#b91c1c" },
                         { label: "5–15%",     verdict: "Okay",       color: "#92400e" },
                         { label: "Above 15%", verdict: "Healthy",    color: "#15803d" },
                       ].map((row) => (
-                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6b7280", marginBottom: 2 }}>
+                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: GRAY, marginBottom: 2 }}>
                           <span>{row.label}</span><span style={{ color: row.color, fontWeight: 600 }}>{row.verdict}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <p style={{ fontSize: 11, color: "#9ca3af", margin: "12px 0 0", borderTop: "1px solid #f3f4f6", paddingTop: 10 }}>
+                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "12px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 10 }}>
                     Of buyers in this period. Higher is better.
                   </p>
                 </div>
@@ -621,11 +625,11 @@ export default function KeyMetricsPage() {
             {/* ── Activity breakdown ──────────────────────────────── */}
             {data.activityBreakdown && (
               <section>
-                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: MUTED, margin: "0 0 14px" }}>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>
                   Active User Breakdown — {data.period?.label ?? "Last 30 Days"}
                 </h2>
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 28px" }}>
-                  <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 16px" }}>
+                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "20px 28px" }}>
+                  <p style={{ fontSize: 12, color: MUTED_TEXT, margin: "0 0 16px" }}>
                     Distinct logged-in users who took each action during this period. A user can appear in multiple categories. "Clicked a product link" = tapped through to a store; "Favorited" = saved to their wishlist.
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
@@ -635,9 +639,9 @@ export default function KeyMetricsPage() {
                       { label: "Favorited a store", value: data.activityBreakdown.storeSavers, href: "/admin/customers" },
                       { label: "Placed an order", value: data.activityBreakdown.buyers, href: "/admin/conversions" },
                     ].map((s) => (
-                      <Link key={s.label} href={s.href} style={{ textDecoration: "none", display: "block", padding: "8px", borderRadius: 8, transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                        <p style={{ fontSize: 28, fontWeight: 700, color: MAROON, lineHeight: 1, margin: "0 0 4px" }}>{fmtNum(s.value)}</p>
-                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{s.label} →</p>
+                      <Link key={s.label} href={s.href} style={{ textDecoration: "none", display: "block", padding: "8px", borderRadius: 8, transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#f4f4f5")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                        <p style={{ fontSize: 28, fontWeight: 600, color: DARK, lineHeight: 1, margin: "0 0 4px" }}>{fmtNum(s.value)}</p>
+                        <p style={{ fontSize: 12, color: MUTED_TEXT, margin: 0 }}>{s.label} →</p>
                       </Link>
                     ))}
                   </div>

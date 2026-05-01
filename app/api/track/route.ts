@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
   const store = searchParams.get("s");
   const storeSlug = searchParams.get("ss");
   const externalUrl = searchParams.get("url");
+  const itemsParam = searchParams.get("items");
 
   // Validate required params
   if (!externalUrl) {
@@ -88,6 +89,11 @@ export async function GET(request: NextRequest) {
 
   // Save click to database — must await before returning redirect so the
   // serverless function doesn't terminate before the DB write completes.
+  let cartItems: import("@/app/lib/analytics-db").CartItemSnapshot[] | undefined;
+  if (itemsParam) {
+    try { cartItems = JSON.parse(itemsParam); } catch {}
+  }
+
   await saveClick({
     clickId,
     timestamp: new Date().toISOString(),
@@ -98,6 +104,7 @@ export async function GET(request: NextRequest) {
     externalUrl,
     userAgent: request.headers.get("user-agent") || undefined,
     userId,
+    cartItems,
   }).catch(console.error);
 
   // ---- Cart URLs: only route through product's own collabs.shop link ----
