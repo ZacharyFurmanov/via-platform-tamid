@@ -39,7 +39,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="fixed top-0 z-50 w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden px-4">
+    <div className="fixed top-0 z-[60] w-full h-8 bg-[#F7F3EA] flex items-center justify-center text-[11px] text-[#5D0F17] tracking-[0.15em] uppercase overflow-hidden px-4">
       <div className="relative h-full flex items-center w-full justify-center">
         {ANNOUNCEMENTS.map((item, i) => {
           const isActive = i === index;
@@ -260,7 +260,7 @@ export default function HeaderClient({
       <AnnouncementBar />
 
       {/* Header */}
-      <header className="fixed top-8 z-50 w-full bg-[#D8CABD]">
+      <header className="fixed top-8 z-[60] w-full bg-[#D8CABD]">
         <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
           {/* LOGO */}

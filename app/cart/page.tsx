@@ -157,12 +157,30 @@ export default function CartPage() {
                 {itemCount} {itemCount === 1 ? "item" : "items"}
               </p>
             </div>
+            <div className="flex items-center gap-4">
+              {soldOutIds.size > 0 && (
+                <button
+                  onClick={() => {
+                    items.forEach((item) => {
+                      const dbId = (() => {
+                        const match = item.compositeId.match(/-(\d+)$/);
+                        return match ? parseInt(match[1], 10) : null;
+                      })();
+                      if (dbId != null && soldOutIds.has(dbId)) removeItem(item.compositeId);
+                    });
+                  }}
+                  className="text-xs uppercase tracking-wide text-[#5D0F17]/40 hover:text-[#5D0F17] transition underline"
+                >
+                  Remove Sold Out
+                </button>
+              )}
             <button
               onClick={clearCart}
               className="text-xs uppercase tracking-wide text-[#5D0F17]/50 hover:text-[#5D0F17] transition underline"
             >
               Clear Cart
             </button>
+            </div>
           </div>
         </div>
       </section>

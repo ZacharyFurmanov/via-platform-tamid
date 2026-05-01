@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { sendMonthlyReportEmail } from "@/app/lib/email";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -14,6 +14,8 @@ export async function GET(request: Request) {
   if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
 
   const sql = neon(dbUrl);
+
+  try {
 
   // Report covers the previous full calendar month
   const now = new Date();
@@ -60,14 +62,16 @@ export async function GET(request: Request) {
       LIMIT 10
     `,
 
-    // Top categories by clicks this month
+    // Top categories by clicks this month (join clicks → products for product_type)
     sql`
       SELECT
-        COALESCE(category, 'uncategorized') AS category,
+        COALESCE(NULLIF(p.product_type, ''), 'Other') AS category,
         COUNT(*)::int AS clicks
-      FROM clicks
-      WHERE timestamp >= ${monthStart} AND timestamp < ${monthEnd}
-      GROUP BY category
+      FROM clicks cl
+      LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = cl.product_id
+      WHERE cl.timestamp >= ${monthStart} AND cl.timestamp < ${monthEnd}
+        AND COALESCE(NULLIF(p.product_type, ''), 'Other') != 'Other'
+      GROUP BY COALESCE(NULLIF(p.product_type, ''), 'Other')
       ORDER BY clicks DESC
       LIMIT 8
     `,
@@ -198,4 +202,10 @@ export async function GET(request: Request) {
 
   console.log(`[Monthly Report] Sent ${monthLabel} report`);
   return NextResponse.json({ ok: true, month: monthLabel });
+
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[Monthly Report] Failed:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
