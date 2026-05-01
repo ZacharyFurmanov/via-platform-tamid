@@ -588,24 +588,28 @@ export async function fetchShopifyProductsPublic(
   while (products.length < maxProducts) {
     const url = `https://${normalizedDomain}/products.json?limit=${limit}&page=${page}`;
 
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    let response: Response | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (response.status !== 429) break;
+      const retryAfter = parseInt(response.headers.get("Retry-After") ?? "5", 10);
+      const waitMs = Math.min(retryAfter * 1000, 30_000);
+      console.log(`[Shopify] Rate limited on ${storeDomain} page ${page}, waiting ${waitMs}ms`);
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
+    if (!response!.ok) {
+      if (response!.status === 401 || response!.status === 403) {
         throw new Error(
           "Store requires authentication. Please provide a Storefront Access Token."
         );
       }
       throw new Error(
-        `Failed to fetch products: ${response.status} ${response.statusText}`
+        `Failed to fetch products: ${response!.status} ${response!.statusText}`
       );
     }
 
-    const data = await response.json();
+    const data = await response!.json();
 
     if (!data.products || data.products.length === 0) {
       break;
