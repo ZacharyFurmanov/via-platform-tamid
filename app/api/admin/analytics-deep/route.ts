@@ -92,22 +92,10 @@ export async function GET(request: NextRequest) {
             WHERE LOWER(email) NOT IN (SELECT LOWER(email) FROM pilot_access))::int AS waitlist_only
       `,
 
-      // newSignupsInPeriod (respects the selected range)
+      // newSignupsInPeriod — new registered accounts from the users table
       cutoffIso
-        ? sql`
-            SELECT COUNT(*)::int AS total FROM (
-              SELECT email FROM pilot_access WHERE created_at >= ${cutoffIso}
-              UNION
-              SELECT email FROM waitlist WHERE signup_date >= ${cutoffIso}
-            ) AS combined
-          `
-        : sql`
-            SELECT COUNT(*)::int AS total FROM (
-              SELECT email FROM pilot_access
-              UNION
-              SELECT email FROM waitlist
-            ) AS combined
-          `,
+        ? sql`SELECT COUNT(*)::int AS total FROM users WHERE created_at >= ${cutoffIso}`
+        : sql`SELECT COUNT(*)::int AS total FROM users`,
 
       // totalCommission — tiered commission on all conversions, always all-time, excluding returned orders
       sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)`,
