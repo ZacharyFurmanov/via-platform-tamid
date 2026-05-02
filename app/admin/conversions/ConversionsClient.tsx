@@ -78,6 +78,7 @@ export default function AdminConversionsPage() {
   const [settingProduct, setSettingProduct] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"sent" | "error" | null>(null);
+  const [emailErrorMsg, setEmailErrorMsg] = useState<string | null>(null);
   const [addingOrder, setAddingOrder] = useState(false);
   const [newOrder, setNewOrder] = useState({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
   const [savingOrder, setSavingOrder] = useState(false);
@@ -101,6 +102,7 @@ export default function AdminConversionsPage() {
     setCandidates([]);
     setUserClicks([]);
     setEmailStatus(null);
+    setEmailErrorMsg(null);
     setCandidatesLoading(true);
     setProductSearchLoading(true);
 
@@ -222,8 +224,10 @@ export default function AdminConversionsPage() {
       });
       const d = await res.json();
       setEmailStatus(d.emailSent ? "sent" : "error");
-    } catch {
+      setEmailErrorMsg(d.emailError ?? (d.emailSent ? null : "No matching store config — check store slug"));
+    } catch (err) {
       setEmailStatus("error");
+      setEmailErrorMsg(String(err));
     }
     setSendingEmail(false);
   }
@@ -429,7 +433,7 @@ export default function AdminConversionsPage() {
                   {sendingEmail ? "Sending…" : "Send store notification"}
                 </button>
                 {emailStatus === "sent" && <span style={{ fontSize: 12, color: "#15803d" }}>✓ Email sent</span>}
-                {emailStatus === "error" && <span style={{ fontSize: 12, color: "#dc2626" }}>Failed — check store email config</span>}
+                {emailStatus === "error" && <span style={{ fontSize: 12, color: "#dc2626" }}>{emailErrorMsg ?? "Failed"}</span>}
               </div>
 
               {/* Manual user match */}
