@@ -34,17 +34,20 @@ async function trySendStoreSaleEmail(
   if (!conv) return false;
   if (!force && conv.sale_email_sent) return false;
 
-  const storeConfig = stores.find((s) => s.slug === conv.store_slug);
-  const storeEmail = storeContactEmails[conv.store_slug as string];
+  // Normalize slug in case DB has trailing punctuation (e.g. "dear-muse," from Collabs API)
+  const rawSlug = (conv.store_slug as string) ?? "";
+  const storeSlug = rawSlug.replace(/[^a-z0-9-]+$/i, "");
+  const storeConfig = stores.find((s) => s.slug === storeSlug);
+  const storeEmail = storeContactEmails[storeSlug];
   if (!storeConfig || !storeEmail) {
-    throw new Error(`No email config for store_slug="${conv.store_slug}" (storeConfig=${!!storeConfig}, storeEmail=${!!storeEmail})`);
+    throw new Error(`No email config for store_slug="${rawSlug}" (normalized="${storeSlug}", storeConfig=${!!storeConfig}, storeEmail=${!!storeEmail})`);
   }
 
   const productName = (conv.matched_click_data as { productName?: string } | null)?.productName ?? null;
   await sendStoreSaleEmail({
     storeEmail,
-    storeName: conv.store_name as string,
-    storeSlug: conv.store_slug as string,
+    storeName: storeConfig.name,
+    storeSlug,
     dashboardToken: storeConfig.dashboardToken,
     orderTotal: Number(conv.order_total),
     currency: (conv.currency as string) || "USD",

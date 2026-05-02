@@ -24,7 +24,8 @@ const collabsHandleOverrides: Record<string, string> = {
 };
 
 function resolveStoreSlug(brandName: string): string {
-  const key = brandName.toLowerCase();
+  // Strip leading/trailing punctuation and whitespace the Collabs API sometimes appends
+  const key = brandName.toLowerCase().replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "").trim();
 
   // 1. Exact name match
   if (storeNameToSlug.has(key)) return storeNameToSlug.get(key)!;
