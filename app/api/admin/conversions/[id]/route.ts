@@ -20,16 +20,17 @@ function isAuthorized(request: NextRequest): boolean {
  *  Returns true if the email was sent, false if skipped (already sent or no config),
  *  throws if Resend fails. */
 async function trySendStoreSaleEmail(
-  sql: ReturnType<typeof neon>,
+  dbUrl: string,
   conversionId: string,
   { force = false }: { force?: boolean } = {}
 ): Promise<boolean> {
+  const sql = neon(dbUrl);
   await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS sale_email_sent BOOLEAN DEFAULT FALSE`.catch(() => {});
   const rows = await sql`
     SELECT store_slug, store_name, order_total, currency, order_id, timestamp, matched_click_data, sale_email_sent
     FROM conversions WHERE conversion_id = ${conversionId} LIMIT 1
   `;
-  const conv = rows[0];
+  const conv = rows[0] as Record<string, unknown> | undefined;
   if (!conv) return false;
   if (!force && conv.sale_email_sent) return false;
 
@@ -47,7 +48,7 @@ async function trySendStoreSaleEmail(
     currency: (conv.currency as string) || "USD",
     productName,
     orderId: conv.order_id as string,
-    timestamp: conv.timestamp instanceof Date ? conv.timestamp.toISOString() : conv.timestamp as string,
+    timestamp: conv.timestamp instanceof Date ? (conv.timestamp as Date).toISOString() : conv.timestamp as string,
   });
   await sql`UPDATE conversions SET sale_email_sent = true WHERE conversion_id = ${conversionId}`.catch(() => {});
   return true;
@@ -193,7 +194,7 @@ export async function POST(
   let emailSent = false;
   let emailError: string | null = null;
   try {
-    emailSent = await trySendStoreSaleEmail(sql, id);
+    emailSent = await trySendStoreSaleEmail(dbUrl, id);
   } catch (err) {
     emailError = String(err);
     console.error("[match] Failed to send store sale email:", err);
@@ -267,7 +268,7 @@ export async function PATCH(
     let emailSent = false;
     let emailError: string | null = null;
     try {
-      emailSent = await trySendStoreSaleEmail(sql, id);
+      emailSent = await trySendStoreSaleEmail(dbUrl, id);
     } catch (err) {
       emailError = String(err);
       console.error("[set_product] Failed to send store sale email:", err);
@@ -278,7 +279,7 @@ export async function PATCH(
     let emailSent = false;
     let emailError: string | null = null;
     try {
-      emailSent = await trySendStoreSaleEmail(sql, id, { force: true });
+      emailSent = await trySendStoreSaleEmail(dbUrl, id, { force: true });
     } catch (err) {
       emailError = String(err);
       console.error("[send_email] Failed to send store sale email:", err);
