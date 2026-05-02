@@ -26,7 +26,8 @@ const collabsHandleOverrides: Record<string, string> = {
 };
 
 function resolveStoreSlug(brandName: string): string | null {
-  const key = brandName.toLowerCase();
+  // Strip leading/trailing punctuation (e.g. "Dear Muse," → "dear muse")
+  const key = brandName.toLowerCase().replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "").trim();
   if (storeNameToSlug.has(key)) return storeNameToSlug.get(key)!;
   if (collabsHandleOverrides[key]) return collabsHandleOverrides[key];
   const normalized = key.replace(/[^a-z0-9]/g, "");

@@ -419,11 +419,11 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
       ? sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} AND timestamp >= ${cutoff} ORDER BY timestamp DESC LIMIT 20`
       : sql`SELECT * FROM clicks WHERE store_slug = ${storeSlug} ORDER BY timestamp DESC LIMIT 20`,
     cutoff
-      ? sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
-      : sql`SELECT * FROM conversions WHERE store_slug = ${storeSlug} AND order_total > 0 ORDER BY timestamp DESC`,
+      ? sql`SELECT * FROM conversions WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} ORDER BY timestamp DESC`
+      : sql`SELECT * FROM conversions WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 ORDER BY timestamp DESC`,
     cutoff
-      ? sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE store_slug = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`
-      : sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE store_slug = ${storeSlug} AND order_total > 0 GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`,
+      ? sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`
+      : sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`,
     // Top searches are site-wide — useful context for stores regardless of range
     cutoff
       ? sql`SELECT query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoff} GROUP BY query ORDER BY count DESC LIMIT 20`.catch(() => [])

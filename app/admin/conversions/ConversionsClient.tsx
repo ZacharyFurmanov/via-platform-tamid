@@ -258,6 +258,16 @@ export default function AdminConversionsPage() {
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button
+              onClick={async () => {
+                const r = await fetch("/api/admin/fix-collabs-slugs", { method: "POST" }).then(r => r.json());
+                alert(`Fixed ${r.fixed} conversions.${r.unresolvable?.length ? ` Unresolvable: ${r.unresolvable.join(", ")}` : ""}`);
+                load();
+              }}
+              style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: "pointer", fontWeight: 500 }}
+            >
+              Fix store slugs
+            </button>
+            <button
               onClick={() => setAddingOrder(true)}
               style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "none", background: "#18181b", color: "#fff", cursor: "pointer", fontWeight: 500 }}
             >
