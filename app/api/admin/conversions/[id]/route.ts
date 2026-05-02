@@ -36,7 +36,9 @@ async function trySendStoreSaleEmail(
 
   const storeConfig = stores.find((s) => s.slug === conv.store_slug);
   const storeEmail = storeContactEmails[conv.store_slug as string];
-  if (!storeConfig || !storeEmail) return false;
+  if (!storeConfig || !storeEmail) {
+    throw new Error(`No email config for store_slug="${conv.store_slug}" (storeConfig=${!!storeConfig}, storeEmail=${!!storeEmail})`);
+  }
 
   const productName = (conv.matched_click_data as { productName?: string } | null)?.productName ?? null;
   await sendStoreSaleEmail({
