@@ -15,6 +15,52 @@ export type SquareResult = {
   skippedCount: number;
 };
 
+// Fetch inventory counts from Square and return a set of sold-out variant IDs.
+// Only marks a variant as sold out when inventory tracking is enabled AND quantity = 0.
+// If a variant has no count entry (tracking disabled), it's kept as available.
+async function fetchSoldOutVariantIds(
+  variantIds: string[],
+  locationId: string | undefined,
+  accessToken: string,
+): Promise<Set<string>> {
+  const soldOut = new Set<string>();
+  if (variantIds.length === 0) return soldOut;
+
+  const CHUNK = 500;
+  for (let i = 0; i < variantIds.length; i += CHUNK) {
+    const chunk = variantIds.slice(i, i + CHUNK);
+    const body: Record<string, unknown> = { catalog_object_ids: chunk };
+    if (locationId) body.location_ids = [locationId];
+
+    const res = await fetch("https://connect.squareup.com/v2/inventory/batch-retrieve-counts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Square-Version": "2024-01-18",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      console.warn(`[square-inventory] error ${res.status} — skipping inventory filter`);
+      continue;
+    }
+
+    const data = await res.json() as {
+      counts?: Array<{ catalog_object_id: string; state: string; quantity?: string }>;
+    };
+
+    for (const count of data.counts ?? []) {
+      if (count.state === "IN_STOCK" && parseFloat(count.quantity ?? "1") <= 0) {
+        soldOut.add(count.catalog_object_id);
+      }
+    }
+  }
+
+  return soldOut;
+}
+
 export async function fetchSquareProducts(
   locationId: string | undefined,
   storeName: string,
@@ -25,16 +71,19 @@ export async function fetchSquareProducts(
   const accessToken = process.env[envVar];
   if (!accessToken) throw new Error(`${envVar} env var not set`);
 
-  const products: SquareProduct[] = [];
+  const candidates: SquareProduct[] = [];
   let skippedCount = 0;
   let cursor: string | undefined;
 
   do {
+    // Omit location_ids from catalog search — it can exclude newly-added items
+    // that haven't been explicitly linked to a location yet. We rely on ecom_uri
+    // to confirm the item exists on the online store, and inventory counts (below)
+    // to filter sold-out items per location.
     const body: Record<string, unknown> = {
       object_types: ["ITEM"],
       include_related_objects: true,
     };
-    if (locationId) body.location_ids = [locationId];
     if (cursor) body.cursor = cursor;
 
     const res = await fetch("https://connect.squareup.com/v2/catalog/search", {
@@ -66,21 +115,22 @@ export async function fetchSquareProducts(
     for (const item of data.objects ?? []) {
       if (item.type !== "ITEM" || !item.item_data) continue;
 
-      // Skip archived catalog items (typically sold/removed)
+      // Skip archived catalog items
       if (item.is_archived) { skippedCount++; continue; }
 
       const itemData = item.item_data;
       const title = itemData.name;
       if (!title) { skippedCount++; continue; }
 
-      // Temporary: log each item's online store state so we can debug stale products
-      console.log(`[square-sync] item="${title}" is_archived=${item.is_archived ?? false} ecom_visibility=${itemData.ecom_visibility ?? "unset"} ecom_uri=${itemData.ecom_uri ?? "none"}`);
-
       // Skip items hidden from the Square Online storefront
       if (itemData.ecom_visibility === "HIDDEN") { skippedCount++; continue; }
 
       // Skip gift cards
       if (title.toLowerCase().includes("gift card")) { skippedCount++; continue; }
+
+      // Only include items published on the Square Online store (ecom_uri present)
+      const ecomUri = itemData.ecom_uri;
+      if (!ecomUri || !ecomUri.includes("/product/")) { skippedCount++; continue; }
 
       // Images
       const images: string[] = [];
@@ -91,17 +141,14 @@ export async function fetchSquareProducts(
       const image = images[0] ?? null;
 
       // Variants
-      const variants = itemData.variations ?? [];
-      for (const variant of variants) {
+      for (const variant of itemData.variations ?? []) {
         if (variant.type !== "ITEM_VARIATION" || !variant.item_variation_data) continue;
 
         const vData = variant.item_variation_data;
-
-        // Check inventory / availability
         const priceMoney = vData.price_money;
         if (!priceMoney) { skippedCount++; continue; }
 
-        const priceUsd = priceMoney.amount / 100; // Square stores in cents
+        const priceUsd = priceMoney.amount / 100;
         if (priceUsd <= 0) { skippedCount++; continue; }
 
         const variantName = vData.name ?? "";
@@ -109,22 +156,15 @@ export async function fetchSquareProducts(
           ? `${title} — ${variantName}`
           : title;
 
-        // Size from variant name
         const size = variantName && variantName.toLowerCase() !== "regular" ? variantName : null;
 
-        // Only include items published on the Square Online store (ecom_uri present).
-        // Items without ecom_uri are POS-only and have no valid online product URL.
-        const ecomUri = itemData.ecom_uri;
-        if (!ecomUri || !ecomUri.includes("/product/")) { skippedCount++; continue; }
-        const externalUrl = ecomUri;
-
-        products.push({
+        candidates.push({
           title: fullTitle,
           price: priceUsd,
           compareAtPrice: null,
           image,
           images,
-          externalUrl,
+          externalUrl: ecomUri,
           description: itemData.description ?? null,
           size,
           variantId: variant.id,
@@ -134,6 +174,15 @@ export async function fetchSquareProducts(
 
     cursor = data.cursor;
   } while (cursor);
+
+  // Filter sold-out variants using Square inventory counts
+  const variantIds = candidates.map((p) => p.variantId).filter((id): id is string => id != null);
+  const soldOutIds = await fetchSoldOutVariantIds(variantIds, locationId, accessToken);
+
+  const products = candidates.filter((p) => !p.variantId || !soldOutIds.has(p.variantId));
+  skippedCount += candidates.length - products.length;
+
+  console.log(`[square-sync] ${storeName}: ${products.length} available, ${skippedCount} skipped (${soldOutIds.size} sold out by inventory)`);
 
   return { products, skippedCount };
 }

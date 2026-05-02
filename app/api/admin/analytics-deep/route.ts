@@ -126,30 +126,40 @@ export async function GET(request: NextRequest) {
             LIMIT 15
           `,
 
-      // topProductsByViews
+      // topProductsByViews — falls back to clicks table for name/store when product is sold out/removed
       cutoffIso
         ? sql`
             SELECT
               pv.product_id AS "productId",
-              p.title AS name,
-              p.store_name AS store,
+              COALESCE(p.title, lc.product_name) AS name,
+              COALESCE(p.store_name, lc.store) AS store,
               COUNT(*)::int AS views
             FROM product_views pv
             LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
+            LEFT JOIN LATERAL (
+              SELECT product_name, store FROM clicks
+              WHERE product_id = pv.product_id
+              ORDER BY timestamp DESC LIMIT 1
+            ) lc ON true
             WHERE pv.timestamp >= ${cutoffIso}
-            GROUP BY pv.product_id, p.title, p.store_name
+            GROUP BY pv.product_id, p.title, p.store_name, lc.product_name, lc.store
             ORDER BY views DESC
             LIMIT 15
           `
         : sql`
             SELECT
               pv.product_id AS "productId",
-              p.title AS name,
-              p.store_name AS store,
+              COALESCE(p.title, lc.product_name) AS name,
+              COALESCE(p.store_name, lc.store) AS store,
               COUNT(*)::int AS views
             FROM product_views pv
             LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = pv.product_id
-            GROUP BY pv.product_id, p.title, p.store_name
+            LEFT JOIN LATERAL (
+              SELECT product_name, store FROM clicks
+              WHERE product_id = pv.product_id
+              ORDER BY timestamp DESC LIMIT 1
+            ) lc ON true
+            GROUP BY pv.product_id, p.title, p.store_name, lc.product_name, lc.store
             ORDER BY views DESC
             LIMIT 15
           `,

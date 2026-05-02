@@ -171,7 +171,7 @@ export async function getPendingUsersToApprove(): Promise<
       WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
     ) combined
     ORDER BY ref_count DESC, created_at ASC
-    LIMIT 10
+    LIMIT 20
   `;
   return rows as { email: string; first_name: string | null }[];
 }

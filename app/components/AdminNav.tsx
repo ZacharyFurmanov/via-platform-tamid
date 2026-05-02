@@ -17,6 +17,7 @@ import {
   Link2,
   Store,
   LogOut,
+  X,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -59,7 +60,13 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function AdminNav() {
+export default function AdminNav({
+  mobileOpen = false,
+  onMobileClose,
+}: {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -71,45 +78,61 @@ export default function AdminNav() {
 
   return (
     <aside
+      className={[
+        "fixed top-0 left-0 h-screen overflow-y-auto flex flex-col z-[58]",
+        "transition-transform duration-[220ms] ease-in-out",
+        // Mobile: slide in/out. Desktop: always visible.
+        mobileOpen ? "translate-x-0" : "-translate-x-full",
+        "md:translate-x-0",
+      ].join(" ")}
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
         width: 220,
-        height: "100vh",
         background: "#0d0f12",
-        display: "flex",
-        flexDirection: "column",
         borderRight: "1px solid rgba(255,255,255,0.05)",
-        zIndex: 50,
-        overflowY: "auto",
       }}
     >
-      {/* Logo */}
-      <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <Link href="/admin/analytics" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+      {/* Logo + mobile close button */}
+      <div style={{
+        padding: "20px 16px 16px",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}>
+        <Link
+          href="/admin/analytics"
+          onClick={onMobileClose}
+          style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}
+        >
           <Image src="/vya-logo.png" alt="VYA" width={28} height={28} style={{ objectFit: "contain" }} />
           <span style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 600, letterSpacing: "0.05em" }}>
             VYA Admin
           </span>
         </Link>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onMobileClose}
+          className="flex md:hidden items-center p-1"
+          style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}
+          aria-label="Close menu"
+        >
+          <X size={16} />
+        </button>
       </div>
 
       {/* Nav sections */}
       <nav style={{ flex: 1, padding: "12px 8px" }}>
         {NAV_SECTIONS.map((section) => (
           <div key={section.label} style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.25)",
-                padding: "0 8px",
-                marginBottom: 4,
-              }}
-            >
+            <div style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.25)",
+              padding: "0 8px",
+              marginBottom: 4,
+            }}>
               {section.label}
             </div>
             {section.items.map((item) => {
@@ -119,6 +142,7 @@ export default function AdminNav() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onMobileClose}
                   style={{
                     display: "flex",
                     alignItems: "center",

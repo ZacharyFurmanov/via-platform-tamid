@@ -30,7 +30,7 @@
     },
     {
       "path": "/api/cron/approve-pilot-users",
-      "schedule": "0 16 * * *"
+      "schedule": "0 16 * * 1"
     },
     {
       "path": "/api/cron/abandoned-cart",

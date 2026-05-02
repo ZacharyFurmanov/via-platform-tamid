@@ -68,9 +68,14 @@ export default function AdminConversionsPage() {
   const [filter, setFilter] = useState<"unmatched" | "all">(initialFilter);
   const [selected, setSelected] = useState<Conversion | null>(null);
   const [candidates, setCandidates] = useState<CandidateClick[]>([]);
+  const [userClicks, setUserClicks] = useState<CandidateClick[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [matching, setMatching] = useState<string | null>(null);
   const [manualUserInput, setManualUserInput] = useState("");
+  const [productQuery, setProductQuery] = useState("");
+  const [productResults, setProductResults] = useState<{ title: string; price: number; image: string | null; source: string }[]>([]);
+  const [productSearchLoading, setProductSearchLoading] = useState(false);
+  const [settingProduct, setSettingProduct] = useState(false);
   const [addingOrder, setAddingOrder] = useState(false);
   const [newOrder, setNewOrder] = useState({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
   const [savingOrder, setSavingOrder] = useState(false);
@@ -89,12 +94,23 @@ export default function AdminConversionsPage() {
   function openPanel(conv: Conversion) {
     setSelected(conv);
     setManualUserInput(conv.userEmail ?? conv.userId ?? "");
+    setProductQuery("");
+    setProductResults([]);
     setCandidates([]);
+    setUserClicks([]);
     setCandidatesLoading(true);
-    fetch(`/api/admin/conversions/${conv.conversionId}`)
-      .then((r) => r.json())
-      .then((d) => { setCandidates(d.clicks ?? []); setCandidatesLoading(false); })
-      .catch(() => setCandidatesLoading(false));
+    setProductSearchLoading(true);
+
+    Promise.all([
+      fetch(`/api/admin/conversions/${conv.conversionId}`).then((r) => r.json()),
+      fetch(`/api/admin/products/search?store=${encodeURIComponent(conv.storeSlug)}&q=`).then((r) => r.json()),
+    ]).then(([convData, productData]) => {
+      setCandidates(convData.clicks ?? []);
+      setUserClicks(convData.userClicks ?? []);
+      setCandidatesLoading(false);
+      setProductResults(productData.products ?? []);
+      setProductSearchLoading(false);
+    }).catch(() => { setCandidatesLoading(false); setProductSearchLoading(false); });
   }
 
   async function matchToClick(clickId: string) {
@@ -159,6 +175,35 @@ export default function AdminConversionsPage() {
   async function deleteConversion(conversionId: string) {
     if (!confirm("Permanently delete this conversion record? This cannot be undone.")) return;
     await fetch(`/api/admin/conversions/${conversionId}`, { method: "DELETE" });
+    load();
+  }
+
+  async function searchProducts(query: string) {
+    if (!selected) return;
+    setProductQuery(query);
+    setProductSearchLoading(true);
+    fetch(`/api/admin/products/search?store=${encodeURIComponent(selected.storeSlug)}&q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then((d) => { setProductResults(d.products ?? []); setProductSearchLoading(false); })
+      .catch(() => setProductSearchLoading(false));
+  }
+
+  async function setProduct(productName: string) {
+    if (!selected) return;
+    setSettingProduct(true);
+    await fetch(`/api/admin/conversions/${selected.conversionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set_product", productName }),
+    });
+    setSettingProduct(false);
+    setProductQuery("");
+    setProductResults([]);
+    // Update selected in place so the panel reflects the new name immediately
+    setSelected((prev) => prev ? {
+      ...prev,
+      matchedClickData: { ...(prev.matchedClickData ?? {}), productName },
+    } : null);
     load();
   }
 
@@ -280,12 +325,12 @@ export default function AdminConversionsPage() {
                           <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 7px", borderRadius: 99, background: "#dcfce7", color: "#15803d" }}>
                             {c.matchedClickData?.source === "admin-manual" || c.matchedClickData?.source?.startsWith("admin") ? "Manually matched" : "Matched"}
                           </span>
-                          {(c.items?.length > 0 ? c.items : null)?.map((it) => it.productName).filter(Boolean).join(", ") ? (
+                          {c.matchedClickData?.productName ? (
+                            <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>{c.matchedClickData.productName}</div>
+                          ) : (c.items?.length > 0 ? c.items : null)?.map((it) => it.productName).filter(Boolean).join(", ") ? (
                             <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>
                               {c.items.map((it) => it.productName).join(", ")}
                             </div>
-                          ) : c.matchedClickData?.productName ? (
-                            <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>{c.matchedClickData.productName}</div>
                           ) : null}
                         </div>
                       ) : (
@@ -372,8 +417,127 @@ export default function AdminConversionsPage() {
                 </button>
               </div>
 
+              {/* Product linking */}
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 6px" }}>
+                Link Product
+                {(() => {
+                  const current = selected.matchedClickData?.productName || selected.items?.find(i => i.productName)?.productName;
+                  return current ? <span style={{ marginLeft: 8, fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "#09090b" }}>Currently: {current}</span> : null;
+                })()}
+              </p>
+
+              {/* If products exist in DB for this store: show searchable list */}
+              {(productSearchLoading || productResults.length > 0) ? (
+                <>
+                  <div style={{ position: "relative", marginBottom: 6 }}>
+                    <input
+                      type="text"
+                      value={productQuery}
+                      onChange={(e) => searchProducts(e.target.value)}
+                      placeholder={`Search ${selected.storeName} products…`}
+                      style={{ width: "100%", padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }}
+                    />
+                    {productSearchLoading && (
+                      <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#a1a1aa" }}>…</span>
+                    )}
+                  </div>
+                  {productResults.length > 0 && (
+                    <div style={{ border: "1px solid #e4e4e7", borderRadius: 6, overflow: "hidden", marginBottom: 16, maxHeight: 240, overflowY: "auto" }}>
+                      {productResults.map((p) => (
+                        <button
+                          key={p.title}
+                          onClick={() => setProduct(p.title)}
+                          disabled={settingProduct}
+                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", background: "#fff", border: "none", borderBottom: "1px solid #f4f4f5", cursor: "pointer", textAlign: "left" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                        >
+                          {p.image && <img src={p.image} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, color: "#09090b", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
+                            <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 1 }}>
+                              ${p.price.toFixed(2)} · <span style={{ color: p.source === "current" ? "#15803d" : "#854d0e" }}>{p.source === "current" ? "in stock" : "sold"}</span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {productQuery && productResults.length === 0 && !productSearchLoading && (
+                    <p style={{ fontSize: 12, color: "#a1a1aa", margin: "0 0 16px" }}>No matches — type the product name below to set it manually.</p>
+                  )}
+                </>
+              ) : null}
+
+              {/* Always-visible manual name input — primary for stores with no synced products */}
+              {!productSearchLoading && (
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  <input
+                    type="text"
+                    value={productQuery}
+                    onChange={(e) => setProductQuery(e.target.value)}
+                    placeholder="Type product name and press Set…"
+                    style={{ flex: 1, padding: "7px 10px", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 13 }}
+                  />
+                  <button
+                    onClick={() => setProduct(productQuery)}
+                    disabled={settingProduct || !productQuery.trim()}
+                    style={{ padding: "7px 14px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", opacity: !productQuery.trim() ? 0.4 : 1 }}
+                  >
+                    {settingProduct ? "Saving…" : "Set"}
+                  </button>
+                </div>
+              )}
+
+              {/* Customer's full click history at this store */}
+              {userClicks.length > 0 && (
+                <>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 4px" }}>
+                    All Clicks by This Customer at {selected.storeName}
+                  </p>
+                  <p style={{ fontSize: 11, color: "#a1a1aa", margin: "0 0 8px" }}>
+                    No time limit — use these to identify what they purchased.
+                  </p>
+                  {userClicks.map((click) => (
+                    <div key={click.clickId} style={{
+                      border: click.productSoldOut ? "1px solid #09090b" : "1px solid #e4e4e7",
+                      borderRadius: 6, padding: "10px 14px", marginBottom: 8,
+                      background: click.productSoldOut ? "#fafafa" : "#fff",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#09090b", display: "flex", alignItems: "center", gap: 6 }}>
+                            {click.productSoldOut && <span title="Product is now sold out">🔴</span>}
+                            {click.productName || "—"}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 2 }}>
+                            {fmtDate(click.timestamp)} · {minsApart(click.timestamp, selected.timestamp)}m from order
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6, marginLeft: 10, flexShrink: 0 }}>
+                          <button
+                            onClick={() => setProduct(click.productName)}
+                            disabled={settingProduct}
+                            style={{ padding: "5px 10px", background: "#f4f4f5", color: "#09090b", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}
+                          >
+                            Link name
+                          </button>
+                          <button
+                            onClick={() => matchToClick(click.clickId)}
+                            disabled={matching === click.clickId}
+                            style={{ padding: "5px 10px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}
+                          >
+                            {matching === click.clickId ? "…" : "Use click"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
               {/* Candidate clicks */}
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "0 0 4px" }}>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 4px" }}>
                 Candidate Clicks (same store, ±48h)
               </p>
               <p style={{ fontSize: 11, color: "#a1a1aa", margin: "0 0 12px" }}>

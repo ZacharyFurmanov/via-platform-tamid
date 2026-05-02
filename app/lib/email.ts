@@ -1638,25 +1638,18 @@ export async function sendStoreSaleEmail({
 
 export async function sendMonthlyReportEmail({
   monthLabel,
-  gmvCur, gmvPrev, ordersCur, ordersPrev,
   newUsersCur, newUsersPrev, activeUsersCur, activeUsersPrev,
-  clicksCur, clicksPrev, convRate, convRatePrev,
-  repeatBuyers,
-  topStores, topCategories, priceRanges, topProducts, dayOfWeek,
+  clicksCur, clicksPrev,
+  topCategories, topProducts, dayOfWeek,
 }: {
   monthLabel: string;
-  gmvCur: number; gmvPrev: number; ordersCur: number; ordersPrev: number;
   newUsersCur: number; newUsersPrev: number; activeUsersCur: number; activeUsersPrev: number;
-  clicksCur: number; clicksPrev: number; convRate: number; convRatePrev: number;
-  repeatBuyers: number;
-  topStores: { store_name: string; store_slug: string; gmv: number; orders: number }[];
+  clicksCur: number; clicksPrev: number;
   topCategories: { category: string; clicks: number }[];
-  priceRanges: { range: string; orders: number; gmv: number }[];
   topProducts: { product_name: string; store_slug: string; clicks: number; unique_users: number }[];
   dayOfWeek: { label: string; clicks: number; pct: number }[];
 }): Promise<void> {
   const resend = getResend();
-  const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
   const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
   const delta = (cur: number, prev: number) => prev === 0 ? null : ((cur - prev) / prev) * 100;
   const arrow = (d: number | null) => d === null ? "" : d >= 0
@@ -1664,7 +1657,7 @@ export async function sendMonthlyReportEmail({
     : `<span style="color:#dc2626;font-size:11px;font-weight:600;"> ▼ ${pct(Math.abs(d))}</span>`;
 
   const statCard = (label: string, value: string, trend: number | null) => `
-    <td style="width:25%;padding:0 8px 0 0;vertical-align:top;">
+    <td style="width:33%;padding:0 8px 0 0;vertical-align:top;">
       <div style="background:#F7F3EA;border:1px solid rgba(93,15,23,0.12);padding:18px 16px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(93,15,23,0.5);margin-bottom:6px;font-family:Georgia,serif;">${label}</div>
         <div style="font-size:22px;font-weight:700;color:#5D0F17;font-family:Georgia,serif;">${value}</div>
@@ -1679,25 +1672,8 @@ export async function sendMonthlyReportEmail({
     </div>
   `;
 
-  const maxStoreGmv = Math.max(...topStores.map((s) => s.gmv), 1);
   const maxCatClicks = Math.max(...topCategories.map((c) => c.clicks), 1);
   const maxProductClicks = Math.max(...topProducts.map((p) => p.clicks), 1);
-
-  const storeRows = topStores.map((s, i) => `
-    <tr>
-      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;">
-        <span style="color:rgba(93,15,23,0.35);margin-right:8px;font-size:11px;">${i + 1}</span>
-        ${s.store_name}
-      </td>
-      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;font-weight:600;color:#5D0F17;font-family:Georgia,serif;">${fmt(s.gmv)}</td>
-      <td style="padding:9px 12px;border-bottom:1px solid rgba(93,15,23,0.07);vertical-align:middle;">
-        <div style="background:rgba(93,15,23,0.08);height:6px;border-radius:3px;width:100%;">
-          <div style="background:#5D0F17;height:6px;border-radius:3px;width:${Math.round((s.gmv / maxStoreGmv) * 100)}%;"></div>
-        </div>
-      </td>
-      <td style="padding:9px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:11px;color:rgba(93,15,23,0.5);font-family:Georgia,serif;">${s.orders} order${s.orders === 1 ? "" : "s"}</td>
-    </tr>
-  `).join("");
 
   const categoryRows = topCategories.map((c) => `
     <tr>
@@ -1708,14 +1684,6 @@ export async function sendMonthlyReportEmail({
         </div>
       </td>
       <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:12px;color:rgba(93,15,23,0.6);font-family:Georgia,serif;">${c.clicks.toLocaleString()} clicks</td>
-    </tr>
-  `).join("");
-
-  const priceRows = priceRanges.map((r) => `
-    <tr>
-      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);font-size:13px;color:#5D0F17;font-family:Georgia,serif;">${r.range}</td>
-      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;font-weight:600;color:#5D0F17;font-family:Georgia,serif;">${r.orders} orders</td>
-      <td style="padding:8px 0;border-bottom:1px solid rgba(93,15,23,0.07);text-align:right;font-size:13px;color:rgba(93,15,23,0.6);font-family:Georgia,serif;">${fmt(r.gmv)}</td>
     </tr>
   `).join("");
 
@@ -1754,51 +1722,16 @@ export async function sendMonthlyReportEmail({
     <!-- Top-line stats -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px;">
       <tr>
-        ${statCard("GMV", fmt(gmvCur), delta(gmvCur, gmvPrev))}
-        ${statCard("Orders", String(ordersCur), delta(ordersCur, ordersPrev))}
         ${statCard("New Members", String(newUsersCur), delta(newUsersCur, newUsersPrev))}
         ${statCard("Active Members", String(activeUsersCur), delta(activeUsersCur, activeUsersPrev))}
-      </tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
-      <tr>
         ${statCard("Total Clicks", clicksCur.toLocaleString(), delta(clicksCur, clicksPrev))}
-        ${statCard("Conv. Rate", `${convRate.toFixed(2)}%`, delta(convRate, convRatePrev))}
-        ${statCard("Avg. Order", ordersCur > 0 ? fmt(gmvCur / ordersCur) : "$0", null)}
-        ${statCard("Repeat Buyers", String(repeatBuyers), null)}
       </tr>
     </table>
-
-    ${sectionHeader("Top Stores by Revenue")}
-    ${topStores.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No orders this month.</p>` : `
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <thead>
-        <tr>
-          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Store</th>
-          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Revenue</th>
-          <th style="width:30%;padding-bottom:8px;"></th>
-          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Orders</th>
-        </tr>
-      </thead>
-      <tbody>${storeRows}</tbody>
-    </table>`}
 
     ${sectionHeader("What Members Are Browsing — Top Categories")}
+    ${topCategories.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No click data this month.</p>` : `
     <table width="100%" cellpadding="0" cellspacing="0">
       <tbody>${categoryRows}</tbody>
-    </table>
-
-    ${sectionHeader("Price Range Breakdown")}
-    ${priceRanges.length === 0 ? `<p style="font-size:13px;color:rgba(93,15,23,0.4);font-family:Georgia,serif;">No orders this month.</p>` : `
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <thead>
-        <tr>
-          <th style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Range</th>
-          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">Orders</th>
-          <th style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.4);padding-bottom:8px;font-family:Georgia,serif;font-weight:400;">GMV</th>
-        </tr>
-      </thead>
-      <tbody>${priceRows}</tbody>
     </table>`}
 
     ${sectionHeader("Most-Wanted Products — Top Clicked")}

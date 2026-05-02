@@ -60,17 +60,41 @@ export async function GET(
     LIMIT 50
   `;
 
+  // If the conversion is already matched to a user, also fetch all their clicks at
+  // this store (no time window) so we can find the product name even if the click
+  // was outside the ±48h window or the product is already sold/removed.
+  const userId = conv.user_id as string | null;
+  const userClicks = userId ? await sql`
+    SELECT
+      cl.*,
+      u.email AS user_email,
+      u.name AS user_name,
+      (p.id IS NOT NULL) AS product_still_exists
+    FROM clicks cl
+    LEFT JOIN users u ON u.id::text = cl.user_id
+    LEFT JOIN products p ON p.store_slug = cl.store_slug
+      AND LOWER(p.title) = LOWER(cl.product_name)
+    WHERE cl.user_id = ${userId}
+      AND cl.store_slug = ${conv.store_slug as string}
+    ORDER BY
+      ABS(EXTRACT(EPOCH FROM (cl.timestamp - ${ts.toISOString()}::timestamptz))) ASC
+    LIMIT 30
+  ` : [];
+
+  const mapClick = (c: Record<string, unknown>) => ({
+    clickId: c.click_id,
+    timestamp: c.timestamp instanceof Date ? (c.timestamp as Date).toISOString() : c.timestamp,
+    productName: c.product_name,
+    storeSlug: c.store_slug,
+    userId: c.user_id ?? null,
+    userEmail: c.user_email ?? null,
+    userName: c.user_name ?? null,
+    productSoldOut: !c.product_still_exists,
+  });
+
   return NextResponse.json({
-    clicks: clicks.map((c) => ({
-      clickId: c.click_id,
-      timestamp: c.timestamp instanceof Date ? c.timestamp.toISOString() : c.timestamp,
-      productName: c.product_name,
-      storeSlug: c.store_slug,
-      userId: c.user_id ?? null,
-      userEmail: c.user_email ?? null,
-      userName: c.user_name ?? null,
-      productSoldOut: !c.product_still_exists,
-    })),
+    clicks: clicks.map(mapClick),
+    userClicks: userClicks.map(mapClick),
   });
 }
 
@@ -218,6 +242,13 @@ export async function PATCH(
   } else if (body.action === "update_items" && Array.isArray(body.items)) {
     await sql`
       UPDATE conversions SET items = ${JSON.stringify(body.items)}
+      WHERE conversion_id = ${id}
+    `;
+  } else if (body.action === "set_product" && typeof body.productName === "string") {
+    // Merge productName into matched_click_data without overwriting other fields
+    await sql`
+      UPDATE conversions
+      SET matched_click_data = COALESCE(matched_click_data, '{}'::jsonb) || ${JSON.stringify({ productName: body.productName })}::jsonb
       WHERE conversion_id = ${id}
     `;
   } else {
