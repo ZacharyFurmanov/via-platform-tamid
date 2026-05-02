@@ -16,6 +16,43 @@ function isAuthorized(request: NextRequest): boolean {
   return token === hashPassword(adminPassword);
 }
 
+/** Attempt to send the store sale notification for a conversion.
+ *  Returns true if the email was sent, false if skipped (already sent or no config),
+ *  throws if Resend fails. */
+async function trySendStoreSaleEmail(
+  sql: ReturnType<typeof neon>,
+  conversionId: string,
+  { force = false }: { force?: boolean } = {}
+): Promise<boolean> {
+  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS sale_email_sent BOOLEAN DEFAULT FALSE`.catch(() => {});
+  const rows = await sql`
+    SELECT store_slug, store_name, order_total, currency, order_id, timestamp, matched_click_data, sale_email_sent
+    FROM conversions WHERE conversion_id = ${conversionId} LIMIT 1
+  `;
+  const conv = rows[0];
+  if (!conv) return false;
+  if (!force && conv.sale_email_sent) return false;
+
+  const storeConfig = stores.find((s) => s.slug === conv.store_slug);
+  const storeEmail = storeContactEmails[conv.store_slug as string];
+  if (!storeConfig || !storeEmail) return false;
+
+  const productName = (conv.matched_click_data as { productName?: string } | null)?.productName ?? null;
+  await sendStoreSaleEmail({
+    storeEmail,
+    storeName: conv.store_name as string,
+    storeSlug: conv.store_slug as string,
+    dashboardToken: storeConfig.dashboardToken,
+    orderTotal: Number(conv.order_total),
+    currency: (conv.currency as string) || "USD",
+    productName,
+    orderId: conv.order_id as string,
+    timestamp: conv.timestamp instanceof Date ? conv.timestamp.toISOString() : conv.timestamp as string,
+  });
+  await sql`UPDATE conversions SET sale_email_sent = true WHERE conversion_id = ${conversionId}`.catch(() => {});
+  return true;
+}
+
 // GET /api/admin/conversions/[id] — candidate clicks for matching
 export async function GET(
   request: NextRequest,
@@ -153,40 +190,16 @@ export async function POST(
     return NextResponse.json({ error: "Provide clickId, userId, or userEmail" }, { status: 400 });
   }
 
-  // Send store sale notification email (only if not already sent for this conversion)
+  let emailSent = false;
+  let emailError: string | null = null;
   try {
-    await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS sale_email_sent BOOLEAN DEFAULT FALSE`.catch(() => {});
-    const convRows = await sql`
-      SELECT store_slug, store_name, order_total, currency, order_id, timestamp, matched_click_data, sale_email_sent
-      FROM conversions WHERE conversion_id = ${id} LIMIT 1
-    `;
-    const conv = convRows[0];
-    if (conv && !conv.sale_email_sent) {
-      const storeConfig = stores.find((s) => s.slug === conv.store_slug);
-      const storeEmail = storeContactEmails[conv.store_slug as string];
-      if (storeConfig && storeEmail) {
-        const productName = (conv.matched_click_data as { productName?: string } | null)?.productName ?? null;
-        await sendStoreSaleEmail({
-          storeEmail,
-          storeName: conv.store_name as string,
-          storeSlug: conv.store_slug as string,
-          dashboardToken: storeConfig.dashboardToken,
-          orderTotal: Number(conv.order_total),
-          currency: (conv.currency as string) || "USD",
-          productName,
-          orderId: conv.order_id as string,
-          timestamp: conv.timestamp instanceof Date ? conv.timestamp.toISOString() : conv.timestamp as string,
-        });
-        // Mark as sent so re-matching doesn't re-send
-        await sql`UPDATE conversions SET sale_email_sent = true WHERE conversion_id = ${id}`.catch(() => {});
-      }
-    }
+    emailSent = await trySendStoreSaleEmail(sql, id);
   } catch (err) {
+    emailError = String(err);
     console.error("[match] Failed to send store sale email:", err);
-    // Don't fail the match if the email fails
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, emailSent, emailError });
 }
 
 // PUT — update order total
@@ -245,12 +258,32 @@ export async function PATCH(
       WHERE conversion_id = ${id}
     `;
   } else if (body.action === "set_product" && typeof body.productName === "string") {
-    // Merge productName into matched_click_data without overwriting other fields
     await sql`
       UPDATE conversions
       SET matched_click_data = COALESCE(matched_click_data, '{}'::jsonb) || ${JSON.stringify({ productName: body.productName })}::jsonb
       WHERE conversion_id = ${id}
     `;
+    // Send store email now that we have a product name (if not already sent)
+    let emailSent = false;
+    let emailError: string | null = null;
+    try {
+      emailSent = await trySendStoreSaleEmail(sql, id);
+    } catch (err) {
+      emailError = String(err);
+      console.error("[set_product] Failed to send store sale email:", err);
+    }
+    return NextResponse.json({ ok: true, emailSent, emailError });
+  } else if (body.action === "send_email") {
+    // Manual resend — force=true bypasses the already-sent guard
+    let emailSent = false;
+    let emailError: string | null = null;
+    try {
+      emailSent = await trySendStoreSaleEmail(sql, id, { force: true });
+    } catch (err) {
+      emailError = String(err);
+      console.error("[send_email] Failed to send store sale email:", err);
+    }
+    return NextResponse.json({ ok: true, emailSent, emailError });
   } else {
     await sql`
       UPDATE conversions SET

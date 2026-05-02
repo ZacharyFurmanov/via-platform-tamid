@@ -76,6 +76,8 @@ export default function AdminConversionsPage() {
   const [productResults, setProductResults] = useState<{ title: string; price: number; image: string | null; source: string }[]>([]);
   const [productSearchLoading, setProductSearchLoading] = useState(false);
   const [settingProduct, setSettingProduct] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<"sent" | "error" | null>(null);
   const [addingOrder, setAddingOrder] = useState(false);
   const [newOrder, setNewOrder] = useState({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
   const [savingOrder, setSavingOrder] = useState(false);
@@ -98,6 +100,7 @@ export default function AdminConversionsPage() {
     setProductResults([]);
     setCandidates([]);
     setUserClicks([]);
+    setEmailStatus(null);
     setCandidatesLoading(true);
     setProductSearchLoading(true);
 
@@ -205,6 +208,24 @@ export default function AdminConversionsPage() {
       matchedClickData: { ...(prev.matchedClickData ?? {}), productName },
     } : null);
     load();
+  }
+
+  async function sendStoreEmail() {
+    if (!selected) return;
+    setSendingEmail(true);
+    setEmailStatus(null);
+    try {
+      const res = await fetch(`/api/admin/conversions/${selected.conversionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send_email" }),
+      });
+      const d = await res.json();
+      setEmailStatus(d.emailSent ? "sent" : "error");
+    } catch {
+      setEmailStatus("error");
+    }
+    setSendingEmail(false);
   }
 
   async function editAmount(conversionId: string, currentTotal: number) {
@@ -397,6 +418,19 @@ export default function AdminConversionsPage() {
                   Items: {selected.items.map((it) => it.productName).join(", ")}
                 </div>
               )}
+
+              {/* Send store notification */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <button
+                  onClick={sendStoreEmail}
+                  disabled={sendingEmail}
+                  style={{ padding: "7px 14px", background: sendingEmail ? "#f4f4f5" : "#fff", color: "#09090b", border: "1px solid #e4e4e7", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: sendingEmail ? "default" : "pointer" }}
+                >
+                  {sendingEmail ? "Sending…" : "Send store notification"}
+                </button>
+                {emailStatus === "sent" && <span style={{ fontSize: 12, color: "#15803d" }}>✓ Email sent</span>}
+                {emailStatus === "error" && <span style={{ fontSize: 12, color: "#dc2626" }}>Failed — check store email config</span>}
+              </div>
 
               {/* Manual user match */}
               <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 8px" }}>Match to Customer</p>
