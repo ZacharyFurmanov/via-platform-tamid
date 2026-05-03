@@ -130,7 +130,7 @@ export async function fetchSquareProducts(
 
       // Only include items published on the Square Online store (ecom_uri present)
       const ecomUri = itemData.ecom_uri;
-      if (!ecomUri || !ecomUri.includes("/product/")) { skippedCount++; continue; }
+      if (!ecomUri) { skippedCount++; continue; }
 
       // Images
       const images: string[] = [];
