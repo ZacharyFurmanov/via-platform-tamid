@@ -14,6 +14,7 @@ type StoreInfo = {
   logo: string;
   logoBg: string;
   commissionType: "shopify-collabs" | "squarespace-manual" | "square-manual" | "custom-webhook";
+  commissionRates?: { upTo?: number; rate: number }[];
   totalInventoryValue: number;
   viaCommissionPotential: number;
   storeFollowers: number;
@@ -76,12 +77,19 @@ type OfferForm = {
 
 type RangeOption = "7d" | "30d" | "all";
 
-/** Tiered commission VYA earns on a given revenue total. */
-function calcViaCommission(revenue: number): number {
+const DEFAULT_RATES: { upTo?: number; rate: number }[] = [
+  { upTo: 1000, rate: 0.07 },
+  { upTo: 5000, rate: 0.05 },
+  { rate: 0.03 },
+];
+
+function calcViaCommission(revenue: number, rates?: { upTo?: number; rate: number }[]): number {
   if (revenue <= 0) return 0;
-  if (revenue <= 1000) return revenue * 0.07;
-  if (revenue <= 5000) return 1000 * 0.07 + (revenue - 1000) * 0.05;
-  return 1000 * 0.07 + 4000 * 0.05 + (revenue - 5000) * 0.03;
+  const tiers = rates ?? DEFAULT_RATES;
+  for (const tier of tiers) {
+    if (tier.upTo === undefined || revenue < tier.upTo) return revenue * tier.rate;
+  }
+  return revenue * tiers[tiers.length - 1].rate;
 }
 
 export default function StoreDashboardPage() {
@@ -426,7 +434,12 @@ export default function StoreDashboardPage() {
               </div>
             </div>
             <p className="text-[11px] mt-3" style={{ color: "rgba(93,15,23,0.4)" }}>
-              Commission rates: 7% under $1k · 5% $1k–$5k · 3% $5k+
+              Commission rates: {(store?.commissionRates ?? DEFAULT_RATES).map((t, i, arr) => {
+                const pct = `${Math.round(t.rate * 100)}%`;
+                if (i === 0 && t.upTo) return `${pct} under $${(t.upTo/1000).toFixed(0)}k`;
+                if (t.upTo) return `${pct} $${(arr[i-1]?.upTo??0)/1000}k–$${t.upTo/1000}k`;
+                return `${pct} above`;
+              }).join(" · ")}
             </p>
           </section>
         )}
@@ -563,13 +576,13 @@ export default function StoreDashboardPage() {
                 </div>
                 <div className="bg-white p-6 shadow-sm text-center">
                   <p className="text-3xl font-serif" style={{ color: "#5D0F17" }}>
-                    ${Math.round(calcViaCommission(analytics.totalRevenue)).toLocaleString()}
+                    ${Math.round(calcViaCommission(analytics.totalRevenue, store?.commissionRates)).toLocaleString()}
                   </p>
                   <p className="text-xs uppercase tracking-wide mt-1" style={{ color: "rgba(93,15,23,0.5)" }}>
                     VYA Commission
                   </p>
                   <p className="text-[10px] mt-1" style={{ color: "rgba(93,15,23,0.35)" }}>
-                    7% · 5% · 3% tiered
+                    {(store?.commissionRates ?? DEFAULT_RATES).map(t => `${Math.round(t.rate * 100)}%`).join(" · ")} tiered
                   </p>
                 </div>
               </div>

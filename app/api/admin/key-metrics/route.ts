@@ -187,14 +187,15 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — all time
+    // Revenue per buying user — only conversions matched to a known user
     sql`
       SELECT
-        COALESCE(SUM(order_total), 0)::float                                                    AS total_gmv,
-        (COUNT(DISTINCT user_id) FILTER (WHERE user_id IS NOT NULL)
-         + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                        AS buying_users
+        COALESCE(SUM(order_total), 0)::float       AS total_gmv,
+        COUNT(DISTINCT user_id)::int               AS buying_users
       FROM conversions
-      WHERE order_total > 0 AND (returned IS NULL OR returned = false)
+      WHERE order_total > 0
+        AND user_id IS NOT NULL
+        AND (returned IS NULL OR returned = false)
     `,
 
     // GMV by week sparkline — always last 10 weeks for context
@@ -210,8 +211,26 @@ export async function GET(request: NextRequest) {
 
     sql`SELECT COUNT(*)::int AS total FROM users`,
     sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'approved')::int AS approved FROM pilot_access`,
-    // Total commission — tiered, excluding returned orders
-    sql`SELECT COALESCE(SUM(CASE WHEN order_total < 1000 THEN order_total * 0.07 WHEN order_total <= 5000 THEN order_total * 0.05 ELSE order_total * 0.03 END), 0)::float AS commission FROM conversions WHERE order_total > 0 AND (returned IS NULL OR returned = false)`,
+    // Total commission — per-store tiered rates, excluding returned orders
+    sql`
+      SELECT COALESCE(SUM(
+        CASE
+          WHEN store_slug = 'sheer-vintage' THEN
+            CASE WHEN order_total < 1000 THEN order_total * 0.05
+                 WHEN order_total < 5000 THEN order_total * 0.04
+                 ELSE order_total * 0.03 END
+          WHEN store_slug = 'vintage-girlfriend' THEN
+            CASE WHEN order_total < 1000 THEN order_total * 0.05
+                 ELSE order_total * 0.03 END
+          ELSE
+            CASE WHEN order_total < 1000 THEN order_total * 0.07
+                 WHEN order_total < 5000 THEN order_total * 0.05
+                 ELSE order_total * 0.03 END
+        END
+      ), 0)::float AS commission
+      FROM conversions
+      WHERE order_total > 0 AND (returned IS NULL OR returned = false)
+    `,
 
     // Waitlist growth by month
     sql`

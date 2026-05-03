@@ -63,6 +63,16 @@ export async function GET() {
     });
   }
 
+  const commissionRates: { upTo?: number; rate: number }[] =
+    (store as any).commissionRates ?? [{ upTo: 1000, rate: 0.07 }, { upTo: 5000, rate: 0.05 }, { rate: 0.03 }];
+
+  function calcCommission(price: number): number {
+    for (const tier of commissionRates) {
+      if (tier.upTo === undefined || price < tier.upTo) return price * tier.rate;
+    }
+    return price * commissionRates[commissionRates.length - 1].rate;
+  }
+
   // Calculate total inventory value, commission potential, store followers, and top favorited products
   let totalInventoryValue = 0;
   let viaCommissionPotential = 0;
@@ -71,18 +81,10 @@ export async function GET() {
 
   try {
     const sql = neon(getDatabaseUrl());
+
     const [inventoryRows, followerRows, favProductRows] = await Promise.all([
       sql`
-        SELECT
-          COALESCE(SUM(price), 0) AS total_inventory_value,
-          COALESCE(SUM(
-            CASE
-              WHEN price < 1000 THEN price * 0.07
-              WHEN price < 5000 THEN price * 0.05
-              ELSE price * 0.03
-            END
-          ), 0) AS via_commission_potential
-        FROM products
+        SELECT price FROM products
         WHERE store_slug = ${storeSlug}
           AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
       `,
@@ -100,8 +102,8 @@ export async function GET() {
       `,
     ]);
 
-    totalInventoryValue = Math.round(Number(inventoryRows[0]?.total_inventory_value ?? 0));
-    viaCommissionPotential = Math.round(Number(inventoryRows[0]?.via_commission_potential ?? 0));
+    totalInventoryValue = Math.round(inventoryRows.reduce((s, r) => s + Number(r.price), 0));
+    viaCommissionPotential = Math.round(inventoryRows.reduce((s, r) => s + calcCommission(Number(r.price)), 0));
     storeFollowers = Number(followerRows[0]?.cnt ?? 0);
     topFavoritedProducts = favProductRows.map((r) => ({
       title: r.title as string,
@@ -121,6 +123,7 @@ export async function GET() {
     logo: store.logo,
     logoBg: store.logoBg,
     commissionType: store.commissionType,
+    commissionRates,
     totalInventoryValue,
     viaCommissionPotential,
     storeFollowers,
