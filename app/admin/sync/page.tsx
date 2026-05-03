@@ -15,6 +15,7 @@ type SyncResult = {
   message?: string;
   productCount?: number;
   skippedCount?: number;
+  skipReasons?: Record<string, number>;
   shopName?: string;
   error?: string;
   details?: string;
@@ -274,6 +275,11 @@ export default function SyncAdminPage() {
                           <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
                           {result.skippedCount !== undefined && result.skippedCount > 0 && (
                             <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped</p>
+                          )}
+                          {result.skipReasons && Object.keys(result.skipReasons).length > 0 && (
+                            <p style={{ color: "#a1a1aa", marginTop: 4, fontSize: 12 }}>
+                              {Object.entries(result.skipReasons).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                            </p>
                           )}
                         </div>
                       ) : (

@@ -13,6 +13,7 @@ export type SquareProduct = {
 export type SquareResult = {
   products: SquareProduct[];
   skippedCount: number;
+  skipReasons: Record<string, number>;
 };
 
 // Fetch inventory counts from Square and return a set of sold-out variant IDs.
@@ -73,6 +74,8 @@ export async function fetchSquareProducts(
 
   const candidates: SquareProduct[] = [];
   let skippedCount = 0;
+  const skipReasons: Record<string, number> = {};
+  const skip = (reason: string) => { skippedCount++; skipReasons[reason] = (skipReasons[reason] ?? 0) + 1; };
   let cursor: string | undefined;
 
   do {
@@ -116,21 +119,21 @@ export async function fetchSquareProducts(
       if (item.type !== "ITEM" || !item.item_data) continue;
 
       // Skip archived catalog items
-      if (item.is_archived) { skippedCount++; continue; }
+      if (item.is_archived) { skip("archived"); continue; }
 
       const itemData = item.item_data;
       const title = itemData.name;
-      if (!title) { skippedCount++; continue; }
+      if (!title) { skip("no_title"); continue; }
 
       // Skip items hidden from the Square Online storefront
-      if (itemData.ecom_visibility === "HIDDEN") { skippedCount++; continue; }
+      if (itemData.ecom_visibility === "HIDDEN") { skip("hidden"); continue; }
 
       // Skip gift cards
-      if (title.toLowerCase().includes("gift card")) { skippedCount++; continue; }
+      if (title.toLowerCase().includes("gift card")) { skip("gift_card"); continue; }
 
       // Only include items published on the Square Online store (ecom_uri present)
       const ecomUri = itemData.ecom_uri;
-      if (!ecomUri) { skippedCount++; continue; }
+      if (!ecomUri) { skip("no_ecom_uri"); continue; }
 
       // Images
       const images: string[] = [];
@@ -146,15 +149,10 @@ export async function fetchSquareProducts(
 
         const vData = variant.item_variation_data;
         const priceMoney = vData.price_money;
-        if (!priceMoney) { skippedCount++; continue; }
-
-        // Skip variants marked sold out at this location via Square Online's sold_out flag
-        if (locationId && vData.location_overrides?.some(
-          (lo) => lo.location_id === locationId && lo.sold_out
-        )) { skippedCount++; continue; }
+        if (!priceMoney) { skip("no_price"); continue; }
 
         const priceUsd = priceMoney.amount / 100;
-        if (priceUsd <= 0) { skippedCount++; continue; }
+        if (priceUsd <= 0) { skip("zero_price"); continue; }
 
         const variantName = vData.name ?? "";
         const fullTitle = variantName && variantName.toLowerCase() !== "regular"
@@ -185,11 +183,13 @@ export async function fetchSquareProducts(
   const soldOutIds = await fetchSoldOutVariantIds(variantIds, locationId, accessToken);
 
   const products = candidates.filter((p) => !p.variantId || !soldOutIds.has(p.variantId));
-  skippedCount += candidates.length - products.length;
+  const inventorySoldOut = candidates.length - products.length;
+  skippedCount += inventorySoldOut;
+  if (inventorySoldOut > 0) skipReasons["inventory_sold_out"] = inventorySoldOut;
 
-  console.log(`[square-sync] ${storeName}: ${products.length} available, ${skippedCount} skipped (${soldOutIds.size} sold out by inventory)`);
+  console.log(`[square-sync] ${storeName}: ${products.length} available, ${skippedCount} skipped — reasons: ${JSON.stringify(skipReasons)}`);
 
-  return { products, skippedCount };
+  return { products, skippedCount, skipReasons };
 }
 
 type SquareCatalogObject = {

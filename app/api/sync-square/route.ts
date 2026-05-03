@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     await initDatabase();
 
-    const { products: rawProducts, skippedCount } = await fetchSquareProducts(
+    const { products: rawProducts, skippedCount, skipReasons } = await fetchSquareProducts(
       locationId ?? storeConfig.locationId,
       storeConfig.name,
       websiteUrl,
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     const { count: productCount } = await syncProducts(storeSlug, storeConfig.name, mapped);
 
-    return NextResponse.json({ success: true, productCount, skippedCount });
+    return NextResponse.json({ success: true, productCount, skippedCount, skipReasons });
   } catch (err) {
     console.error("[sync-square] error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
