@@ -1,11 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import ProductCard from "@/app/components/ProductCard";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import type { FavoriteProductEntry } from "@/app/lib/favorites-db";
 import { formatPrice } from "@/app/lib/formatPrice";
+
+type RecommendedProduct = {
+  id: number;
+  store_slug: string;
+  store_name: string;
+  title: string;
+  price: number;
+  currency: string;
+  image: string;
+  images: string | null;
+  external_url: string | null;
+  size: string | null;
+  fav_count: number;
+};
 
 type Props = {
   userId: string;
@@ -13,6 +28,18 @@ type Props = {
 };
 
 export default function SavesTab({ userId: _userId, favProducts }: Props) {
+  const [recs, setRecs] = useState<RecommendedProduct[]>([]);
+  const [recsLoaded, setRecsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (favProducts.length === 0) return;
+    fetch("/api/account/recommendations")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.products)) setRecs(d.products); })
+      .catch(() => {})
+      .finally(() => setRecsLoaded(true));
+  }, [favProducts.length]);
+
   if (favProducts.length === 0) {
     return (
       <div className="text-center py-16">
@@ -91,6 +118,48 @@ export default function SavesTab({ userId: _userId, favProducts }: Props) {
           <Link href="/account/favorites" className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 hover:text-[#5D0F17] transition">
             View all {favProducts.length} favorites →
           </Link>
+        </div>
+      )}
+
+      {/* You might also like */}
+      {recsLoaded && recs.length > 0 && (
+        <div className="mt-14">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-serif text-lg text-[#5D0F17]">You might also like</h2>
+            <p className="text-xs text-[#5D0F17]/40">{recs.length} items</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+            {recs.map((p) => {
+              let images: string[] = [];
+              if (p.images) {
+                try {
+                  const parsed = JSON.parse(p.images);
+                  if (Array.isArray(parsed)) images = parsed;
+                } catch {}
+              }
+              if (images.length === 0 && p.image) images = [p.image];
+
+              const categorySlug = inferCategoryFromTitle(p.title);
+              const categoryLabel = categoryMap[categorySlug];
+
+              return (
+                <ProductCard
+                  key={p.id}
+                  id={`${p.store_slug}-${p.id}`}
+                  dbId={p.id}
+                  name={p.title}
+                  price={formatPrice(Number(p.price), p.currency)}
+                  category={categoryLabel}
+                  storeName={p.store_name}
+                  storeSlug={p.store_slug}
+                  image={p.image}
+                  images={images}
+                  size={p.size}
+                  from="/account"
+                />
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
