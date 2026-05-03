@@ -148,6 +148,11 @@ export async function fetchSquareProducts(
         const priceMoney = vData.price_money;
         if (!priceMoney) { skippedCount++; continue; }
 
+        // Skip variants marked sold out at this location via Square Online's sold_out flag
+        if (locationId && vData.location_overrides?.some(
+          (lo) => lo.location_id === locationId && lo.sold_out
+        )) { skippedCount++; continue; }
+
         const priceUsd = priceMoney.amount / 100;
         if (priceUsd <= 0) { skippedCount++; continue; }
 
@@ -202,6 +207,7 @@ type SquareCatalogObject = {
   item_variation_data?: {
     name?: string;
     price_money?: { amount: number; currency: string };
+    location_overrides?: Array<{ location_id: string; sold_out?: boolean }>;
   };
   image_data?: {
     url?: string;
