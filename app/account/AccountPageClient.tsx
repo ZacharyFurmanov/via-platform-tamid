@@ -5,13 +5,15 @@ import Link from "next/link";
 import InviteButton from "./InviteButton";
 import AccountActions from "./AccountActions";
 import SavesTab from "./tabs/SavesTab";
+import ForYouTab from "./tabs/ForYouTab";
+import PurchasesTab from "./tabs/PurchasesTab";
 import CollectionsTab from "./tabs/CollectionsTab";
 import StoresTab from "./tabs/StoresTab";
 import SourcingTab from "./tabs/SourcingTab";
 import type { FavoriteProductEntry } from "@/app/lib/favorites-db";
 import type { SourcingRequest } from "@/app/lib/sourcing-db";
 
-type Tab = "favorites" | "collections" | "stores" | "sourcing" | "friends" | "settings";
+type Tab = "favorites" | "for-you" | "purchases" | "collections" | "stores" | "sourcing" | "friends" | "settings";
 
 type Props = {
   userId: string;
@@ -48,6 +50,8 @@ export default function AccountPageClient({
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "favorites", label: "Favorites" },
+    { key: "for-you", label: "Other Things You Might Like" },
+    { key: "purchases", label: "Purchases" },
     { key: "collections", label: "Collections" },
     { key: "stores", label: "Stores" },
     { key: "sourcing", label: "Sourcing" },
@@ -118,6 +122,8 @@ export default function AccountPageClient({
       {/* ── Tab Content ── */}
       <div className="max-w-2xl lg:max-w-6xl mx-auto px-6 py-8">
         {tab === "favorites" && <SavesTab userId={userId} favProducts={favProducts} />}
+        {tab === "for-you" && <ForYouTab hasFavorites={favProducts.length > 0} />}
+        {tab === "purchases" && <PurchasesTab />}
         {tab === "collections" && <CollectionsTab userId={userId} />}
         {tab === "stores" && <StoresTab userId={userId} />}
         {tab === "sourcing" && <SourcingTab requests={sourcingRequests} />}
