@@ -19,11 +19,17 @@ type SyncResult = {
   shopName?: string;
   error?: string;
   details?: string;
+  // orders sync
+  ordersFound?: number;
+  saved?: number;
+  duplicates?: number;
 };
 
 type StoreStatus = {
   loading: boolean;
   result: SyncResult | null;
+  ordersLoading?: boolean;
+  ordersResult?: SyncResult | null;
 };
 
 export default function SyncAdminPage() {
@@ -93,6 +99,34 @@ export default function SyncAdminPage() {
             error: "Request failed",
             details: error instanceof Error ? error.message : "Unknown error",
           },
+        },
+      }));
+    }
+  }
+
+  async function handleSyncOrders(store: Store) {
+    setStatuses((prev) => ({
+      ...prev,
+      [store.slug]: { ...(prev[store.slug] ?? { loading: false, result: null }), ordersLoading: true, ordersResult: null },
+    }));
+    try {
+      const response = await fetch("/api/sync-square-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeSlug: store.slug }),
+      });
+      const data = await response.json();
+      setStatuses((prev) => ({
+        ...prev,
+        [store.slug]: { ...(prev[store.slug] ?? { loading: false, result: null }), ordersLoading: false, ordersResult: data },
+      }));
+    } catch (error) {
+      setStatuses((prev) => ({
+        ...prev,
+        [store.slug]: {
+          ...(prev[store.slug] ?? { loading: false, result: null }),
+          ordersLoading: false,
+          ordersResult: { error: error instanceof Error ? error.message : "Request failed" },
         },
       }));
     }
@@ -248,6 +282,8 @@ export default function SyncAdminPage() {
               const status = statuses[store.slug];
               const isLoading = status?.loading;
               const result = status?.result;
+              const ordersLoading = status?.ordersLoading;
+              const ordersResult = status?.ordersResult;
               return (
                 <div key={store.slug} style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -260,31 +296,49 @@ export default function SyncAdminPage() {
                         <p style={{ fontSize: 12, color: "#71717a" }}>Location: {store.locationId}</p>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleSync(store)}
-                      disabled={isLoading}
-                      style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
-                    >
-                      {isLoading ? "Syncing..." : "Sync"}
-                    </button>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <button
+                        onClick={() => handleSyncOrders(store)}
+                        disabled={ordersLoading}
+                        style={{ padding: "7px 18px", background: "#fff", color: "#18181b", border: "1px solid #e4e4e7", borderRadius: 6, cursor: ordersLoading ? "not-allowed" : "pointer", opacity: ordersLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+                      >
+                        {ordersLoading ? "Syncing..." : "Sync Orders"}
+                      </button>
+                      <button
+                        onClick={() => handleSync(store)}
+                        disabled={isLoading}
+                        style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+                      >
+                        {isLoading ? "Syncing..." : "Sync Products"}
+                      </button>
+                    </div>
                   </div>
-                  {result && (
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
-                      {result.success ? (
+                  {(result || ordersResult) && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7", display: "flex", flexDirection: "column", gap: 6 }}>
+                      {result && (result.success ? (
                         <div style={{ fontSize: 13 }}>
                           <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
                           {result.skippedCount !== undefined && result.skippedCount > 0 && (
-                            <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped</p>
+                            <p style={{ color: "#71717a", marginTop: 2 }}>{result.skippedCount} skipped</p>
                           )}
                           {result.skipReasons && Object.keys(result.skipReasons).length > 0 && (
-                            <p style={{ color: "#a1a1aa", marginTop: 4, fontSize: 12 }}>
+                            <p style={{ color: "#a1a1aa", fontSize: 12 }}>
                               {Object.entries(result.skipReasons).map(([k, v]) => `${k}: ${v}`).join(" · ")}
                             </p>
                           )}
                         </div>
                       ) : (
                         <p style={{ color: "#dc2626", fontSize: 13 }}>{result.error}</p>
-                      )}
+                      ))}
+                      {ordersResult && (ordersResult.success ? (
+                        <p style={{ fontSize: 13, color: "#15803d" }}>
+                          {ordersResult.saved} new orders saved
+                          {(ordersResult.duplicates ?? 0) > 0 ? ` · ${ordersResult.duplicates} already tracked` : ""}
+                          {` (${ordersResult.ordersFound} found in last 7 days)`}
+                        </p>
+                      ) : (
+                        <p style={{ color: "#dc2626", fontSize: 13 }}>{ordersResult.error}</p>
+                      ))}
                     </div>
                   )}
                 </div>

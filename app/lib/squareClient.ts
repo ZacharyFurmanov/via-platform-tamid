@@ -131,9 +131,10 @@ export async function fetchSquareProducts(
       // Skip gift cards
       if (title.toLowerCase().includes("gift card")) { skip("gift_card"); continue; }
 
-      // Only include items published on the Square Online store (ecom_uri present)
-      const ecomUri = itemData.ecom_uri;
-      if (!ecomUri) { skip("no_ecom_uri"); continue; }
+      // Use the product's Square Online URL if available, otherwise fall back
+      // to the store website. Some Square accounts don't populate ecom_uri even
+      // when items are visible on their Square Online site.
+      const ecomUri = itemData.ecom_uri ?? storeWebsiteUrl;
 
       // Images
       const images: string[] = [];
