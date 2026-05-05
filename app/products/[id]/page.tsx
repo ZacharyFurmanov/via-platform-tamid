@@ -49,12 +49,19 @@ const MEASUREMENT_KEYWORDS = [
   "outseam", "rise", "hem", "thigh", "knee", "pit", "armhole",
   "width", "circumference", "belt", "back length", "front length",
   "total length", "length", "pit to pit",
+  // bag/accessory measurements
+  "height", "depth", "drop", "handle", "strap", "diagonal", "gusset",
 ];
 
 // Section headers that signal a measurements block
 const MEASUREMENT_HEADERS = /^measurements?[:\s]*$/i;
-// Section headers that signal the end of a measurements block
-const SECTION_HEADER_RE = /^([A-Z][A-Z\s&/]{2,}):?\s*$/;
+// Section headers that signal the end of a measurements/condition block.
+// Matches ALL-CAPS headings (e.g. "SHIPPING:") or common Title-Case standalone labels
+// (e.g. "Details:", "Notes:", "Shipping:", "About:") that appear alone on a line.
+const SECTION_HEADER_RE = /^([A-Z][A-Z\s&/]{2,}):?\s*$|^(Details?|Notes?|Description|Shipping|Returns?|About|Care|Fabric|Material|Fit|Style|Care\s+Instructions?|Please\s+Note|Contact)\s*:?\s*$/i;
+
+// Unit pattern used by multiple measurement checks
+const UNIT_RE = /\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?\s*(?:cm|mm|in\b|inches?\b|["″''"]\s*(?:flat|laid\s+flat)?|feet\b|ft\b)/i;
 
 /** Returns true if a plain-text line looks like a size or measurement */
 function isMeasurementLine(text: string): boolean {
@@ -63,17 +70,16 @@ function isMeasurementLine(text: string): boolean {
   // Size labels: "Size: M", "Labeled size: 10", "Tagged size S", "Size & fit: ..."
   if (/(?:tagged|labeled|marked)?\s*size\s*[:\s&]/.test(t)) return true;
   // Dimension/measurement labels
-  if (/^(?:dimensions?|measurements?)\s*:/.test(t)) return true;
-  // Measurement with optional ~ and inches/cm value: "Bust: ~16"", "Waist: 14 cm"
-  if (/:\s*~?\s*\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b)/.test(t)) {
-    return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
-  }
-  // "16" flat", "~37"" with a keyword somewhere in the line
+  if (/^(?:dimensions?|measurements?)\s*[:\s]/.test(t)) return true;
+  // Known measurement keyword + any numeric value with unit — covers all separator styles:
+  //   colon "Width: 15 cm", em/en dash "Width — 15 cm", plain "Width 15 cm", range "Width 6-7 cm"
+  if (MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw)) && UNIT_RE.test(t)) return true;
+  // Quote-format measurements: '16" flat', '~37"' — requires keyword
   if (/~?\d+(?:[.,]\d+)?\s*["″''"]\s*(?:flat|laid flat)?/.test(t)) {
     return MEASUREMENT_KEYWORDS.some((kw) => t.includes(kw));
   }
-  // "flat measurements: bust 20 in pit to pit, waist 19.5 in, ..." — "measurements" keyword + numeric value with unit
-  if (/\bmeasurements?\b/.test(t) && /\d[\d.]*\s*(?:in\b|cm\b)/.test(t)) return true;
+  // "flat measurements: bust 20 in pit to pit, waist 19.5 in, ..." — "measurements" keyword + value
+  if (/\bmeasurements?\b/.test(t) && UNIT_RE.test(t)) return true;
   // Multiple inline measurements on one line: "bust 20 in, waist 19.5 in, hips 21 in"
   if (((t.match(/\d[\d.]*\s*(?:in|cm)\b/g)) || []).length >= 2) return true;
   return false;
@@ -106,6 +112,18 @@ function splitDescription(html: string | null): {
   conditionItems: string[];
 } {
   if (!html) return { detailsHtml: null, sizingItems: [], conditionItems: [] };
+
+  // Plain-text descriptions (Square, Stripe) have no HTML tags.
+  // If the text has multiple lines, convert each to a <p> so the section parser
+  // can route measurements and condition correctly.
+  // Single-line text is left as-is and falls through to Product Details (avoids
+  // false-positive routing when size/condition keywords appear inline in narrative).
+  if (!/<[^>]+>/.test(html)) {
+    const plainLines = html.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (plainLines.length > 1) {
+      html = plainLines.map((line) => `<p>${line}</p>`).join("");
+    }
+  }
 
   html = html
     .replace(/<div([^>]*)>/gi, "<p$1>")
@@ -149,9 +167,18 @@ function splitDescription(html: string | null): {
       if (CONDITION_HEADERS.test(plain)) { inConditionSectionP = true; inMeasurementsSectionP = false; continue; }
       if (MEASUREMENT_HEADERS.test(plain)) { inMeasurementsSectionP = true; inConditionSectionP = false; continue; }
       if (SECTION_HEADER_RE.test(plain)) { inConditionSectionP = false; inMeasurementsSectionP = false; continue; }
-      // Section content
-      if (inConditionSectionP) { conditionItems.push(plain); continue; }
-      if (inMeasurementsSectionP) { sizingItems.push(plain); continue; }
+      // Section content — apply same exit guards as Strategy 2
+      if (inConditionSectionP) {
+        if (isConditionLine(plain) || plain.length < 120) { conditionItems.push(plain); }
+        else { inConditionSectionP = false; }
+        continue;
+      }
+      if (inMeasurementsSectionP) {
+        if (isMeasurementLine(plain) || /[:\s]\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b|inches?\b)/i.test(plain)) {
+          sizingItems.push(plain);
+        } else { inMeasurementsSectionP = false; }
+        continue;
+      }
       // Fallback keyword matching
       if (isMeasurementLine(plain)) sizingItems.push(plain);
       else if (isConditionLine(plain)) conditionItems.push(plain);
@@ -189,13 +216,30 @@ function splitDescription(html: string | null): {
     if (CONDITION_HEADERS.test(plain)) { inConditionSection = true; inMeasurementsSection = false; continue; }
 
     if (inMeasurementsSection) {
-      if (SECTION_HEADER_RE.test(plain)) { inMeasurementsSection = false; remaining.push(`<p>${inner}</p>`); }
-      else if (plain) sizingItems.push(plain);
+      if (SECTION_HEADER_RE.test(plain)) {
+        inMeasurementsSection = false; remaining.push(`<p>${inner}</p>`);
+      } else if (plain && isMeasurementLine(plain)) {
+        sizingItems.push(plain);
+      } else if (plain && /[:\s]\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b|inches?\b)/i.test(plain)) {
+        // Dimension value without keyword match (e.g. "Height: 9"") — still a measurement
+        sizingItems.push(plain);
+      } else if (plain) {
+        // Doesn't look like a measurement — exit section rather than contaminate sizingItems
+        inMeasurementsSection = false;
+        remaining.push(`<p>${inner}</p>`);
+      }
       continue;
     }
     if (inConditionSection) {
-      if (SECTION_HEADER_RE.test(plain)) { inConditionSection = false; remaining.push(`<p>${inner}</p>`); }
-      else if (plain) conditionItems.push(plain);
+      if (SECTION_HEADER_RE.test(plain)) {
+        inConditionSection = false; remaining.push(`<p>${inner}</p>`);
+      } else if (plain && (isConditionLine(plain) || plain.length < 120)) {
+        // Keep condition content; short lines are likely condition notes even without keywords
+        conditionItems.push(plain);
+      } else if (plain) {
+        inConditionSection = false;
+        remaining.push(`<p>${inner}</p>`);
+      }
       continue;
     }
 
@@ -382,16 +426,31 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
       {/* Product layout */}
       <div className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-16">
-          {/* Image */}
-          <ImageCarousel
-            images={productImages}
-            alt={product.title}
-            variant="detail"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-16 md:items-start">
 
-          {/* Details */}
-          <div className="flex flex-col justify-center py-1 md:py-8">
+          {/* Images — carousel on mobile, vertical stack on desktop */}
+          <div>
+            <div className="md:hidden">
+              <ImageCarousel images={productImages} alt={product.title} variant="detail" />
+            </div>
+            <div className="hidden md:flex flex-col gap-2">
+              {productImages.length > 0 ? productImages.map((src, i) => (
+                <div key={i} className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/20">
+                  <img
+                    src={src}
+                    alt={`${product.title}${i > 0 ? ` — image ${i + 1}` : ""}`}
+                    className="w-full h-full object-cover object-center"
+                    loading={i === 0 ? "eager" : "lazy"}
+                  />
+                </div>
+              )) : (
+                <div className="aspect-[3/4] w-full bg-[#D8CABD]/30" />
+              )}
+            </div>
+          </div>
+
+          {/* Details — sticky on desktop, independently scrollable if content exceeds viewport */}
+          <div className="flex flex-col py-1 md:sticky md:top-8 md:self-start md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2 scrollbar-hide">
             <TrackedStoreLink
               href={`/stores/${store.slug}`}
               storeSlug={store.slug}
@@ -441,7 +500,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                         dangerouslySetInnerHTML={{ __html: detailsHtml }}
                       />
                     ) : (
-                      <p>{product.title}</p>
+                      <p className="text-black/60 italic">
+                        No additional details — visit the store listing for more information.
+                      </p>
                     ),
                   },
                   {
@@ -492,13 +553,23 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                   },
                   {
                     title: "Authenticity & Curation",
-                    content: (
-                      <p>
-                        {storeConfig && "authenticityPolicy" in storeConfig && storeConfig.authenticityPolicy
-                          ? String(storeConfig.authenticityPolicy)
-                          : `All items sold by ${store.name} are personally sourced and inspected before listing. Each piece is described accurately — please review all item details and photos carefully before purchasing.`}
-                      </p>
-                    ),
+                    content: (() => {
+                      const policyText = storeConfig && "authenticityPolicy" in storeConfig && storeConfig.authenticityPolicy
+                        ? String(storeConfig.authenticityPolicy)
+                        : `All items sold by ${store.name} are personally sourced and inspected before listing. Each piece is described accurately — please review all item details and photos carefully before purchasing.`;
+                      const paragraphs = policyText.split(/\n\n+/);
+                      return (
+                        <div className="space-y-3">
+                          {paragraphs.map((para, i) =>
+                            i === 0 && para.length < 60 ? (
+                              <p key={i} className="font-medium">{para}</p>
+                            ) : (
+                              <p key={i}>{para}</p>
+                            )
+                          )}
+                        </div>
+                      );
+                    })(),
                   },
                   {
                     title: "Shipping & Returns",

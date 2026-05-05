@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getApprovedPilotEmails } from "@/app/lib/pilot-db";
 import { sendNewArrivalsEmail } from "@/app/lib/email";
-import { getSetting, saveSetting } from "@/app/lib/settings-db";
+import { getSetting } from "@/app/lib/settings-db";
 import type { DBProduct } from "@/app/lib/db";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
+import { brands as brandDefs } from "@/app/lib/brandData";
+
+// Lowercase ILIKE patterns for all known designer brand keywords
+const DESIGNER_PATTERNS = brandDefs.flatMap((b) => b.keywords.map((k) => `%${k}%`));
 
 // Allow up to 5 minutes for bulk sending
 export const maxDuration = 300;
@@ -71,15 +75,41 @@ export async function GET(request: Request) {
     const sinceIso = since.toISOString();
 
     const rows = await sql`
-      SELECT * FROM products
-      WHERE created_at IS NOT NULL
-        AND created_at >= ${sinceIso}
-        AND created_at <= NOW() - interval '24 hours'
-        AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-        AND title NOT ILIKE '%gift card%'
-        AND image IS NOT NULL AND image != ''
-        AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-      ORDER BY created_at DESC
+      WITH base AS (
+        SELECT *,
+          CASE WHEN lower(title) LIKE ANY(${DESIGNER_PATTERNS}::text[]) THEN 1 ELSE 0 END AS is_designer
+        FROM products
+        WHERE created_at IS NOT NULL
+          AND created_at >= ${sinceIso}
+          AND created_at <= NOW() - interval '24 hours'
+          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          AND title NOT ILIKE '%gift card%'
+          AND image IS NOT NULL AND image != ''
+          AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
+      ),
+      store_scores AS (
+        SELECT store_slug,
+          COUNT(*)::int AS total_count,
+          SUM(is_designer)::int AS designer_count
+        FROM base
+        GROUP BY store_slug
+      ),
+      ranked AS (
+        SELECT b.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY b.store_slug
+            ORDER BY b.is_designer DESC, b.created_at DESC
+          ) AS rn,
+          ss.designer_count,
+          ss.total_count
+        FROM base b
+        JOIN store_scores ss ON ss.store_slug = b.store_slug
+      )
+      SELECT id, store_slug, store_name, title, price, currency, compare_at_price,
+             image, images, external_url, size, variant_id, collabs_link,
+             shopify_product_id, created_at
+      FROM ranked
+      ORDER BY rn ASC, designer_count DESC, total_count DESC
       LIMIT 50
     `;
 
@@ -90,7 +120,8 @@ export async function GET(request: Request) {
         // Debug: show counts with and without the shopify filter to diagnose
         const [unfiltered] = await sql`
           SELECT COUNT(*) as total,
-            COUNT(*) FILTER (WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL) as after_shopify_filter
+            COUNT(*) FILTER (WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL) as after_shopify_filter,
+            COUNT(DISTINCT store_slug) as store_count
           FROM products
           WHERE created_at IS NOT NULL
             AND created_at >= ${sinceIso}

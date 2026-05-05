@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       // Shopify CDN (product images)
       { protocol: "https", hostname: "**.shopify.com" },
@@ -43,6 +44,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.squarespace-cdn.com" },
       // Big Cartel
       { protocol: "https", hostname: "**.bigcartel.com" },
+      // Square CDN
+      { protocol: "https", hostname: "**.squareup.com" },
+      { protocol: "https", hostname: "items-images.squareup.com" },
       // Generic CDNs used by stores
       { protocol: "https", hostname: "**.cloudinary.com" },
       { protocol: "https", hostname: "**.imgix.net" },

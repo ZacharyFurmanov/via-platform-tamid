@@ -131,10 +131,14 @@ export async function fetchSquareProducts(
       // Skip gift cards
       if (title.toLowerCase().includes("gift card")) { skip("gift_card"); continue; }
 
-      // Use the product's Square Online URL if available, otherwise fall back
-      // to the store website. Some Square accounts don't populate ecom_uri even
-      // when items are visible on their Square Online site.
-      const ecomUri = itemData.ecom_uri ?? storeWebsiteUrl;
+      // Use the product's Square Online URL if available; otherwise construct one
+      // from the store's base URL + slugified name + catalog item ID, which matches
+      // Square Online's standard URL format: /product/[slug]/[catalog-id]
+      const ecomUri = itemData.ecom_uri ?? (() => {
+        const base = storeWebsiteUrl.replace(/\/$/, "");
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        return `${base}/product/${slug}/${item.id}`;
+      })();
 
       // Images
       const images: string[] = [];
@@ -156,11 +160,31 @@ export async function fetchSquareProducts(
         if (priceUsd <= 0) { skip("zero_price"); continue; }
 
         const variantName = vData.name ?? "";
-        const fullTitle = variantName && variantName.toLowerCase() !== "regular"
+
+        // Prefer structured item option values (e.g. Size: Small) over the plain variant name.
+        // Square stores size in item_option_values referencing item_option_value objects in the catalog.
+        const NON_SIZE_NAMES = new Set(["regular", "default", "n/a", "one size fits all", "os"]);
+        let sizeFromOptions: string | null = null;
+        for (const optVal of vData.item_option_values ?? []) {
+          const valObj = relatedMap.get(optVal.item_option_value_id);
+          if (!valObj?.item_option_value_data?.name) continue;
+          const optionId = valObj.item_option_value_data.item_option_id;
+          const optionObj = optionId ? relatedMap.get(optionId) : undefined;
+          const optionName = optionObj?.item_option_data?.name ?? "";
+          if (/size|sz/i.test(optionName) || /^(XS|S|M|L|XL|XXL|2XL|3XL|\d[\d./]*)$/i.test(valObj.item_option_value_data.name.trim())) {
+            sizeFromOptions = valObj.item_option_value_data.name.trim();
+            break;
+          }
+        }
+
+        const cleanVariantName = variantName.toLowerCase().trim();
+        const isGenericVariantName = !variantName || NON_SIZE_NAMES.has(cleanVariantName);
+        const sizeFromName = isGenericVariantName ? null : variantName;
+        const size = sizeFromOptions ?? sizeFromName;
+
+        const fullTitle = !isGenericVariantName
           ? `${title} — ${variantName}`
           : title;
-
-        const size = variantName && variantName.toLowerCase() !== "regular" ? variantName : null;
 
         candidates.push({
           title: fullTitle,
@@ -209,8 +233,16 @@ type SquareCatalogObject = {
     name?: string;
     price_money?: { amount: number; currency: string };
     location_overrides?: Array<{ location_id: string; sold_out?: boolean }>;
+    item_option_values?: Array<{ item_option_id: string; item_option_value_id: string }>;
   };
   image_data?: {
     url?: string;
+  };
+  item_option_value_data?: {
+    name?: string;
+    item_option_id?: string;
+  };
+  item_option_data?: {
+    name?: string;
   };
 };

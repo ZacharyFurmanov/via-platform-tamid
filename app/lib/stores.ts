@@ -175,7 +175,7 @@ export const stores = [
     affiliatePath: "1111",
     collabsStoreId: "237672",
     authenticityPolicy:
-      "Every handbag at Dear Muse is personally sourced and selected for its craftsmanship, history, and emotional resonance. With over 15 years of industry expertise, each piece is carefully authenticated and accurately described before listing.",
+      "100% Authenticity Guaranteed\n\nEvery piece offered by Dear Muse undergoes an authentication process conducted by trusted third-party experts — the same industry-recognized services used by platforms such as eBay and Vestiaire Collective. Some items may include a physical authentication card or certificate, while others will have digital verification records. Regardless of format, every purchase is fully backed by our Authenticity Guarantee.\n\nFor additional photos, videos, or questions about this piece, please contact rachel.dearmuse@gmail.com or send a message on Instagram at @__dearmuse. I'm always happy to provide further details.",
     shippingPolicy:
       "Ships from Los Angeles, CA. Shipping rates are calculated at checkout.",
     returnPolicy:

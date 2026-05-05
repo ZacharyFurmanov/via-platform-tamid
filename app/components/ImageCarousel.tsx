@@ -9,6 +9,7 @@ type ImageCarouselProps = {
   variant: "card" | "detail";
   isEditorsPick?: boolean;
   onAllImagesFailed?: () => void;
+  priority?: boolean;
 };
 
 export default function ImageCarousel({
@@ -17,6 +18,7 @@ export default function ImageCarousel({
   variant,
   isEditorsPick,
   onAllImagesFailed,
+  priority,
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
@@ -144,6 +146,7 @@ export default function ImageCarousel({
             fill
             sizes={sizes}
             className={`object-cover ${objectPosition}`}
+            priority={priority && idx === 0}
             onError={() =>
               setFailedImages((prev) => {
                 const next = new Set(prev);
@@ -168,7 +171,7 @@ export default function ImageCarousel({
         onMouseMove={hasMultiple ? onMouseMove : undefined}
         onMouseUp={hasMultiple ? onMouseUp : undefined}
       >
-        {renderImages("(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px", "object-center")}
+        {renderImages("(max-width: 768px) 50vw, 25vw", "object-center")}
 
         {isEditorsPick && (
           <div className="hidden sm:block absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">

@@ -537,6 +537,7 @@ export default function FilteredProductGrid({
                 soldOut={product.soldOut}
                 from={from}
                 onImageFail={() => handleImageFail(product.id)}
+                priority={i < 4}
                 favoriteCount={
                   favCounts[
                     product.dbId ??

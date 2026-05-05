@@ -61,6 +61,7 @@ export default function MixedProductGrid({
               from={from}
               isEditorsPick={allEditorsPicks}
               favoriteCount={product.favoriteCount}
+              priority={i < 4}
             />
           </div>
         );

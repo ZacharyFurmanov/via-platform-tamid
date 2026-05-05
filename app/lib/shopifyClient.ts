@@ -861,7 +861,9 @@ export async function scrapeProductPageSections(url: string): Promise<string> {
       .trim();
 
     const sections: string[] = [];
-    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic|Details|Shipping|Returns)";
+    // Stop at recognized page sections AND common Shopify footer/nav markers so
+    // we don't accidentally capture footer HTML that appears after product content.
+    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic|Details|Shipping|Returns|You\\s+may\\s+also|Powered\\s+by|Sign\\s+up|Newsletter|Privacy\\s+(?:Policy|Choices)|Customer\\s+(?:care|service)|Follow\\s+(?:us|me)|Social\\s+Media)";
 
     const dimResult = new RegExp(`\\b(?:Dimensions?|Measurements?)\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
     if (dimResult) {
