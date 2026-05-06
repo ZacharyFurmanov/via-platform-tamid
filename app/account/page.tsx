@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
-import { getUserFavoritedProducts, getUserStoreFavoriteIds, type FavoriteProductEntry } from "@/app/lib/favorites-db";
-import { getUserSourcingRequests, type SourcingRequest } from "@/app/lib/sourcing-db";
+import { getUserFavoritedProducts, getUserStoreFavoriteIds } from "@/app/lib/favorites-db";
 import { getReferralInfo } from "@/app/lib/pilot-db";
 import { neon } from "@neondatabase/serverless";
 import AccountPageClient from "./AccountPageClient";
@@ -25,11 +24,10 @@ export default async function AccountPage() {
 
   const userId = session.user.id!;
 
-  const [favProducts, storeSlugs, settings, sourcingRequests, referralInfo] = await Promise.all([
+  const [favProducts, storeSlugs, settings, referralInfo] = await Promise.all([
     getUserFavoritedProducts(userId).catch(() => []),
     getUserStoreFavoriteIds(userId).catch(() => []),
     getUserSettings(userId),
-    getUserSourcingRequests(userId).catch(() => []),
     session.user.email ? getReferralInfo(session.user.email).catch(() => null) : Promise.resolve(null),
   ]);
 
@@ -44,7 +42,6 @@ export default async function AccountPage() {
       favoritesCount={favProducts.length}
       storesCount={storesCount}
       favProducts={favProducts}
-      sourcingRequests={sourcingRequests}
       notificationsEnabled={settings.notificationsEnabled}
       initialPhone={settings.phone}
       referralCode={referralInfo?.referralCode ?? null}

@@ -85,7 +85,6 @@ export default function Footer() {
                 { href: "/categories", label: "Categories" },
                 { href: "/brands", label: "Designers" },
                 { href: "/collections", label: "Collections" },
-                { href: "/account/sourcing", label: "Sourcing Request" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link

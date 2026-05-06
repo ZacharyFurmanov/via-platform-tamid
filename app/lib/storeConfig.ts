@@ -294,6 +294,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "other-matters-atelier",
     storeDomain: "othermattersatelier.com",
     scrapeProductPage: true,
+    excludeKeywords: ["vintage edit", "designer's guide", "instant download"],
   },
   {
     type: "shopify",

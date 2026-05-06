@@ -27,10 +27,6 @@ export default async function BrandPage({
   const inventory = await getInventory();
   const brandItems = inventory.filter((item) => item.brand === slug);
 
-  if (brandItems.length === 0) {
-    return notFound();
-  }
-
   // Extract DB IDs and fetch popularity scores
   const dbIdMap = new Map<string, number>();
   for (const item of brandItems) {
@@ -38,7 +34,7 @@ export default async function BrandPage({
     if (match) dbIdMap.set(item.id, parseInt(match[1], 10));
   }
   const dbIds = Array.from(dbIdMap.values());
-  const popularityScores = await getProductPopularityScores(dbIds);
+  const popularityScores = dbIds.length > 0 ? await getProductPopularityScores(dbIds) : {};
 
   const products: FilterableProduct[] = brandItems.map((item) => {
     const engagementScore = popularityScores[dbIdMap.get(item.id) ?? 0] ?? 0;
@@ -89,7 +85,9 @@ export default async function BrandPage({
           </Link>
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">{label}</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
-            {products.length} {products.length === 1 ? "piece" : "pieces"} available
+            {products.length > 0
+              ? `${products.length} ${products.length === 1 ? "piece" : "pieces"} available`
+              : "No pieces available right now — check back soon."}
           </p>
         </div>
       </section>

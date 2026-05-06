@@ -442,13 +442,6 @@ export default function HeaderClient({
                 </div>
               </div>
 
-              {/* SOURCING REQUESTS LINK */}
-              <Link
-                href="/sourcing"
-                className="hover:text-[#5D0F17]/60 transition-colors duration-300"
-              >
-                Sourcing Requests
-              </Link>
             </nav>
 
             {/* Search Button */}
@@ -645,15 +638,6 @@ export default function HeaderClient({
                     </div>
                   )}
                 </li>
-                <li className="border-b border-[#5D0F17]/15">
-                  <Link
-                    href="/sourcing"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block py-4 text-lg text-[#5D0F17]"
-                  >
-                    Sourcing Requests
-                  </Link>
-                </li>
               </ul>
 
               <div className="mt-8 pt-8 border-t border-[#5D0F17]/15">
@@ -672,7 +656,7 @@ export default function HeaderClient({
 
       {/* SEARCH OVERLAY */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-[#5D0F17]/20 backdrop-blur-sm flex items-start justify-center md:pt-20" onClick={() => closeSearch()}>
+        <div className="fixed inset-0 z-[70] bg-[#5D0F17]/20 backdrop-blur-sm flex items-start justify-center md:pt-20" onClick={() => closeSearch()}>
           <div className="bg-[#F7F3EA] w-full h-full md:h-auto md:max-h-[78vh] md:max-w-xl md:rounded-sm shadow-2xl relative flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center gap-3 px-5 pt-5 pb-0 flex-shrink-0">
