@@ -23,6 +23,8 @@ const slugByNormalized = new Map<string, string>(
 );
 const collabsHandleOverrides: Record<string, string> = {
   "source 24": "source-twenty-four",
+  "chill boutique consignment": "chill-boutique",
+  "chillboutiqueconsignment": "chill-boutique",
 };
 
 function resolveStoreSlug(brandName: string): string | null {
