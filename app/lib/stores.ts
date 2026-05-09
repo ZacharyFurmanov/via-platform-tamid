@@ -94,7 +94,8 @@ export const stores = [
     dashboardToken: "ccv-4e8b2f1a9d3c",
     name: "Chomp Chomp Vintage",
     location: "London, UK",
-    description: "",
+    description:
+      "Chomp Chomp started with a genuine love for clothing and grew from there. We're based in London and focus on giving vintage a second life. We dig through the past so you can wear something better than whatever everyone else has on.",
     website: "https://chompchompvintage.com",
     contactEmail: "chompchompvintage@gmail.com",
     dataSource: "chomp-chomp-vintage",

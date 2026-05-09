@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — only conversions matched to a known user
+    // Revenue per buying user — scoped to the selected period
     sql`
       SELECT
         COALESCE(SUM(order_total), 0)::float       AS total_gmv,
@@ -196,6 +196,7 @@ export async function GET(request: NextRequest) {
       WHERE order_total > 0
         AND user_id IS NOT NULL
         AND (returned IS NULL OR returned = false)
+        AND timestamp >= ${pStart} AND timestamp < ${pEnd}
     `,
 
     // GMV by week sparkline — always last 10 weeks for context

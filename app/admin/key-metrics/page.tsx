@@ -345,12 +345,8 @@ export default function KeyMetricsPage() {
                 />
                 <MetricCard
                   label="Revenue per Buying User"
-                  value={data.period?.isMonth && data.activityBreakdown?.buyers
-                    ? fmt$((data.activityBreakdown.buyers > 0 ? data.gmv.last30d / data.activityBreakdown.buyers : 0))
-                    : fmt$(data.revenuePerUser.value)}
-                  sub={data.period?.isMonth && data.activityBreakdown?.buyers
-                    ? `Across ${fmtNum(data.activityBreakdown.buyers)} buyers in ${data.period.label}`
-                    : `Across ${fmtNum(data.revenuePerUser.buyingUsers)} users who've purchased`}
+                  value={fmt$(data.revenuePerUser.value)}
+                  sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} buyers in period`}
                   note="Period GMV ÷ distinct buyers in the period"
                   href="/admin/customers"
                 />
