@@ -39,10 +39,14 @@ function baseStyles() {
  * - Generous whitespace, left-aligned body text
  * - Footer with website, Instagram, and unsubscribe link
  */
-function viaShell(subtitle: string, content: string, unsubscribeUrl?: string): string {
+function minifyHtml(html: string): string {
+  return html.replace(/\s*\n\s*/g, " ").replace(/ {2,}/g, " ").trim();
+}
+
+function viaShell(_subtitle: string, content: string, unsubscribeUrl?: string): string {
   const year = new Date().getFullYear();
   const unsubUrl = unsubscribeUrl || `${BASE_URL}/account`;
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
 <meta charset="UTF-8" />
@@ -74,12 +78,10 @@ u + .body .email-inner { background-color: #F7F3EA !important; }
 <div class="email-wrapper" style="background-color:#F7F3EA;padding:52px 24px 48px;" bgcolor="#F7F3EA">
   <div class="email-inner" style="max-width:560px;margin:0 auto;background-color:#F7F3EA;" bgcolor="#F7F3EA">
 
-    <!-- Header: logo + subtitle -->
+    <!-- Header: logo -->
     <div style="text-align:center;margin-bottom:56px;">
       <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="160"
         style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
-      <p style="margin:10px 0 0;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;
-        color:#5D0F17;font-family:Georgia,'Times New Roman',serif;">${subtitle}</p>
     </div>
 
     <!-- Body -->
@@ -103,11 +105,12 @@ u + .body .email-inner { background-color: #F7F3EA !important; }
 </div>
 </body>
 </html>`;
+  return minifyHtml(html);
 }
 
 function emailShell(content: string): string {
   const year = new Date().getFullYear();
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
 <meta charset="UTF-8" />
@@ -149,6 +152,7 @@ u + .body .wrapper { background-color: #F7F3EA !important; }
 </div>
 </body>
 </html>`;
+  return minifyHtml(html);
 }
 
 function formatEmailPrice(price: number | string, currency: string): string {
@@ -1770,5 +1774,325 @@ export async function sendMonthlyReportEmail({
     to: "hana@vyaplatform.com",
     subject: `VYA Monthly Report — ${monthLabel}`,
     html,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Win-back
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function sendWinbackEmail(
+  email: string,
+  tier: "14d" | "30d",
+): Promise<void> {
+  const resend = getResend();
+  const shopUrl = withUtm(`${BASE_URL}/browse`, `winback_${tier}`);
+
+  const headline =
+    tier === "14d"
+      ? "Something good is waiting for you."
+      : "It's been a while. Come see what's new.";
+  const body =
+    tier === "14d"
+      ? "You haven't been back in a bit — and new pieces have been coming in every day. Vintage moves fast. Don't miss it."
+      : "A lot has changed since you last visited. New stores, new arrivals, pieces you won't find anywhere else.";
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      ${headline}
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 32px;">
+      ${body}
+    </p>
+    <a href="${shopUrl}"
+       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
+              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+              font-family:Georgia,'Times New Roman',serif;">See What's New</a>
+  `;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: tier === "14d" ? "We miss you" : "It's been a while",
+    html: viaShell("For You", content),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Viewed item reminder
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function sendViewedItemReminderEmail(
+  email: string,
+  items: Array<{
+    productTitle: string;
+    productImage: string | null;
+    storeName: string;
+    productUrl: string;
+    price: number;
+    currency: string;
+  }>,
+): Promise<void> {
+  const resend = getResend();
+
+  let content: string;
+
+  if (items.length === 1) {
+    const { productTitle, productImage, storeName, productUrl, price, currency } = items[0];
+    const imgBlock = productImage
+      ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
+           <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
+             style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
+         </a>`
+      : `<div style="height:28px;"></div>`;
+
+    content = `
+      <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+        Still thinking about it?
+      </p>
+      <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+        You looked at this — and it&rsquo;s still here. But vintage is one of a kind.
+      </p>
+      ${imgBlock}
+      <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
+      <a href="${productUrl}" style="text-decoration:none;">
+        <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+           line-height:1.35;margin:0 0 8px;">${productTitle}</p>
+      </a>
+      <p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
+        ${formatEmailPrice(price, currency)}
+      </p>
+      <a href="${productUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;">View Item</a>
+    `;
+  } else {
+    const itemsHtml = items
+      .map(({ productTitle, productImage, storeName, productUrl, price, currency }) => {
+        const img = productImage
+          ? `<a href="${productUrl}" style="text-decoration:none;display:block;width:80px;flex-shrink:0;">
+               <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="80"
+                 style="display:block;width:80px;height:80px;object-fit:cover;" border="0" />
+             </a>`
+          : `<div style="width:80px;height:80px;background:#ede9e0;flex-shrink:0;"></div>`;
+        return `
+          <tr>
+            <td style="padding:16px 0;border-bottom:1px solid rgba(93,15,23,0.08);">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+                <tr>
+                  <td style="width:80px;vertical-align:top;">${img}</td>
+                  <td style="padding-left:16px;vertical-align:top;">
+                    <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+                       font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">${storeName}</p>
+                    <a href="${productUrl}" style="text-decoration:none;">
+                      <p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+                         line-height:1.3;margin:0 0 6px;">${productTitle}</p>
+                    </a>
+                    <p style="font-size:13px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 10px;">
+                      ${formatEmailPrice(price, currency)}
+                    </p>
+                    <a href="${productUrl}"
+                       style="display:inline-block;border:1px solid rgba(93,15,23,0.4);color:#5D0F17 !important;padding:6px 18px;
+                              text-decoration:none;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+                              font-family:Georgia,'Times New Roman',serif;">View Item</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+      })
+      .join("");
+
+    content = `
+      <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+        Still thinking about these?
+      </p>
+      <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 24px;">
+        You browsed these pieces recently — and they&rsquo;re still available. Each one is one of a kind.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+        ${itemsHtml}
+      </table>
+    `;
+  }
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "You left something behind",
+    html: viaShell("Still Available", content),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Store digest
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function sendStoreDigestEmail(
+  email: string,
+  stores: Array<{
+    store_slug: string;
+    store_name: string;
+    items: Array<{
+      product_id: number;
+      product_title: string;
+      product_image: string | null;
+      price: number;
+      currency: string;
+      store_slug: string;
+    }>;
+  }>,
+  baseUrl: string,
+): Promise<void> {
+  const resend = getResend();
+
+  const storesHtml = stores
+    .map(({ store_slug, store_name, items }) => {
+      const storeUrl = withUtm(`${baseUrl}/stores/${store_slug}`, "store_digest", store_slug);
+      const itemsHtml = items
+        .map(({ product_id, product_title, product_image, price, currency, store_slug: slug }) => {
+          const productUrl = withUtm(`${baseUrl}/products/${slug}-${product_id}`, "store_digest", store_slug);
+          const img = product_image
+            ? `<a href="${productUrl}" style="text-decoration:none;display:block;">
+                 <img src="${product_image}" alt="${product_title.replace(/"/g, "&quot;")}" width="120"
+                   style="display:block;width:120px;height:120px;object-fit:cover;" border="0" />
+               </a>`
+            : `<div style="width:120px;height:120px;background:#ede9e0;"></div>`;
+          return `
+            <td style="width:120px;vertical-align:top;padding-right:12px;">
+              ${img}
+              <p style="font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+                 line-height:1.3;margin:8px 0 4px;">${product_title}</p>
+              <p style="font-size:12px;color:rgba(93,15,23,0.6);font-family:Georgia,'Times New Roman',serif;
+                 margin:0;">${formatEmailPrice(price, currency)}</p>
+            </td>`;
+        })
+        .join("");
+
+      return `
+        <div style="margin-bottom:40px;">
+          <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+             font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">New from</p>
+          <a href="${storeUrl}" style="text-decoration:none;">
+            <p style="font-size:18px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+               font-weight:400;margin:0 0 16px;">${store_name}</p>
+          </a>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>${itemsHtml}</tr>
+          </table>
+          <a href="${storeUrl}"
+             style="display:inline-block;margin-top:14px;border-bottom:1px solid rgba(93,15,23,0.35);
+                    color:#5D0F17 !important;text-decoration:none;font-size:11px;letter-spacing:0.12em;
+                    text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;padding-bottom:2px;">
+            Shop ${store_name} →
+          </a>
+        </div>`;
+    })
+    .join(`<div style="border-top:1px solid rgba(93,15,23,0.1);margin:8px 0 40px;"></div>`);
+
+  const storeNames = stores.map((s) => s.store_name);
+  const storeListCopy =
+    storeNames.length === 1
+      ? storeNames[0]
+      : storeNames.length === 2
+        ? `${storeNames[0]} and ${storeNames[1]}`
+        : `${storeNames.slice(0, -1).join(", ")}, and ${storeNames[storeNames.length - 1]}`;
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      New arrivals from stores you follow.
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 40px;">
+      ${storeListCopy} added new pieces this week.
+    </p>
+    ${storesHtml}
+  `;
+
+  const subjectStore = stores.length === 1 ? stores[0].store_name : `${stores.length} stores you follow`;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: `New arrivals: ${subjectStore}`,
+    html: viaShell("New Arrivals", content),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Last chance
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function sendLastChanceEmail(
+  email: string,
+  items: Array<{
+    productTitle: string;
+    productImage: string | null;
+    storeName: string;
+    productUrl: string;
+    price: number;
+    currency: string;
+    daysSaved: number;
+  }>,
+): Promise<void> {
+  const resend = getResend();
+
+  const itemsHtml = items
+    .map(({ productTitle, productImage, storeName, productUrl, price, currency, daysSaved }) => {
+      const weeksAgo = Math.round(daysSaved / 7);
+      const timeLabel = weeksAgo <= 3 ? `${weeksAgo} week${weeksAgo !== 1 ? "s" : ""} ago` : `${Math.round(daysSaved / 30)} month${Math.round(daysSaved / 30) !== 1 ? "s" : ""} ago`;
+      const img = productImage
+        ? `<a href="${productUrl}" style="text-decoration:none;display:block;width:80px;flex-shrink:0;">
+             <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="80"
+               style="display:block;width:80px;height:80px;object-fit:cover;" border="0" />
+           </a>`
+        : `<div style="width:80px;height:80px;background:#ede9e0;flex-shrink:0;"></div>`;
+      return `
+        <tr>
+          <td style="padding:16px 0;border-bottom:1px solid rgba(93,15,23,0.08);">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+              <tr>
+                <td style="width:80px;vertical-align:top;">${img}</td>
+                <td style="padding-left:16px;vertical-align:top;">
+                  <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+                     font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">${storeName} &middot; Saved ${timeLabel}</p>
+                  <a href="${productUrl}" style="text-decoration:none;">
+                    <p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+                       line-height:1.3;margin:0 0 6px;">${productTitle}</p>
+                  </a>
+                  <p style="font-size:13px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 10px;">
+                    ${formatEmailPrice(price, currency)}
+                  </p>
+                  <a href="${productUrl}"
+                     style="display:inline-block;border:1px solid rgba(93,15,23,0.4);color:#5D0F17 !important;padding:6px 18px;
+                            text-decoration:none;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
+                            font-family:Georgia,'Times New Roman',serif;">View Item</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`;
+    })
+    .join("");
+
+  const content = `
+    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+      These are still waiting for you.
+    </p>
+    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 24px;">
+      You saved ${items.length === 1 ? "this piece" : "these pieces"} a while back — and ${items.length === 1 ? "it&rsquo;s" : "they&rsquo;re"} still here.
+      Vintage doesn&rsquo;t last forever. If you want it, now is the time.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+      ${itemsHtml}
+    </table>
+  `;
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: items.length === 1 ? "You saved this — it's still here" : "Your saved items are still here",
+    html: viaShell("Still Here", content),
   });
 }

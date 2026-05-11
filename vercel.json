@@ -47,6 +47,22 @@
     {
       "path": "/api/cron/monthly-report",
       "schedule": "0 8 1 * *"
+    },
+    {
+      "path": "/api/cron/winback",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/viewed-item-reminder",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/store-digest",
+      "schedule": "0 14 * * 4"
+    },
+    {
+      "path": "/api/cron/last-chance",
+      "schedule": "0 12 * * *"
     }
   ]
 }

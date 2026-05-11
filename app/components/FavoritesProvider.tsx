@@ -33,7 +33,29 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [storeSlugs, setStoreSlugs] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
-  // Fetch favorites when user signs in
+  const fetchFavorites = useCallback(async () => {
+    if (!session?.user) return;
+    try {
+      const [prodRes, storeRes] = await Promise.all([
+        fetch("/api/favorites/product"),
+        fetch("/api/favorites/store"),
+      ]);
+      if (prodRes.ok) {
+        const data = await prodRes.json();
+        setProductIds(new Set(data.productIds));
+      }
+      if (storeRes.ok) {
+        const data = await storeRes.json();
+        setStoreSlugs(new Set(data.storeSlugs));
+      }
+    } catch {
+      // Silently fail — favorites just won't show
+    } finally {
+      setLoaded(true);
+    }
+  }, [session?.user]);
+
+  // Fetch on sign-in
   useEffect(() => {
     if (!session?.user) {
       setProductIds(new Set());
@@ -41,36 +63,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-
-    let cancelled = false;
-
-    async function fetchFavorites() {
-      try {
-        const [prodRes, storeRes] = await Promise.all([
-          fetch("/api/favorites/product"),
-          fetch("/api/favorites/store"),
-        ]);
-
-        if (cancelled) return;
-
-        if (prodRes.ok) {
-          const data = await prodRes.json();
-          setProductIds(new Set(data.productIds));
-        }
-        if (storeRes.ok) {
-          const data = await storeRes.json();
-          setStoreSlugs(new Set(data.storeSlugs));
-        }
-      } catch {
-        // Silently fail — favorites just won't show
-      } finally {
-        if (!cancelled) setLoaded(true);
-      }
-    }
-
     fetchFavorites();
-    return () => { cancelled = true; };
-  }, [session?.user]);
+  }, [session?.user, fetchFavorites]);
+
+  // Re-sync when the tab regains focus — keeps state fresh across tabs/sessions
+  useEffect(() => {
+    const handleFocus = () => { if (session?.user) fetchFavorites(); };
+    document.addEventListener("visibilitychange", handleFocus);
+    return () => document.removeEventListener("visibilitychange", handleFocus);
+  }, [session?.user, fetchFavorites]);
 
   const isProductFavorited = useCallback(
     (productId: number) => productIds.has(productId),

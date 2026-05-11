@@ -1,26 +1,10 @@
 import Link from "next/link";
-import NewsletterSignup from "./NewsletterSignup";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-[#D8CABD] text-[#5D0F17]">
-      {/* Newsletter Section */}
-      <div className="border-b border-[#5D0F17]/15">
-        <div className="max-w-7xl mx-auto px-6 py-20 sm:py-24">
-          <div className="max-w-xl mx-auto text-center">
-            <h3 className="text-2xl sm:text-3xl font-serif mb-3 text-[#5D0F17]">
-              Join the Inner Circle
-            </h3>
-            <p className="text-[#5D0F17]/70 text-sm sm:text-base mb-8 leading-relaxed">
-              Be the first to discover new stores, rare finds, and exclusive drops from independent sellers worldwide.
-            </p>
-            <NewsletterSignup variant="hero" />
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">

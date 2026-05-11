@@ -12,19 +12,15 @@ const getDatabaseUrl = () => {
   return url;
 };
 
-// Words stripped from multi-word queries before AND-matching.
-// Prevents "dolce AND gabbana" from requiring literal "and" in product titles.
 const STOP_WORDS = new Set([
   "and", "or", "the", "a", "an", "in", "of", "for", "with", "by",
   "de", "et", "le", "la", "von", "van", "&",
 ]);
 
-// Aliases: common search terms → internal category slug
+// Common search terms → internal category slug (used for quick-link chips only)
 const categoryAliases: Record<string, string> = {
-  // bags
   bag: "bags", pouch: "bags", clutch: "bags", tote: "bags", purse: "bags",
   backpack: "bags", satchel: "bags", crossbody: "bags", handbag: "bags",
-  // shoes
   shoe: "shoes", shoes: "shoes", boot: "shoes", boots: "shoes",
   bootie: "shoes", booties: "shoes", heel: "shoes", heels: "shoes",
   pump: "shoes", pumps: "shoes", flat: "shoes", flats: "shoes",
@@ -33,7 +29,6 @@ const categoryAliases: Record<string, string> = {
   clog: "shoes", clogs: "shoes", loafer: "shoes", loafers: "shoes",
   wedge: "shoes", wedges: "shoes", slipper: "shoes", slippers: "shoes",
   espadrille: "shoes", espadrilles: "shoes",
-  // clothing
   clothing: "clothing", clothes: "clothing",
   top: "tops", tops: "tops", shirt: "tops", shirts: "tops",
   blouse: "tops", blouses: "tops", bodysuit: "tops", bodysuits: "tops",
@@ -57,10 +52,8 @@ const categoryAliases: Record<string, string> = {
   jumpsuit: "jumpsuits", jumpsuits: "jumpsuits",
   romper: "jumpsuits", rompers: "jumpsuits",
   overall: "jumpsuits", overalls: "jumpsuits", playsuit: "jumpsuits",
-  // accessories (generic)
   accessory: "accessories", accessories: "accessories",
   hat: "accessories", hats: "accessories", cap: "accessories", caps: "accessories",
-  // jewelry
   jewelry: "jewelry", jewellery: "jewelry",
   ring: "jewelry", rings: "jewelry",
   necklace: "jewelry", necklaces: "jewelry",
@@ -70,62 +63,57 @@ const categoryAliases: Record<string, string> = {
   bangle: "jewelry", bangles: "jewelry",
   pendant: "jewelry", pendants: "jewelry",
   choker: "jewelry", anklet: "jewelry",
-  // belts
   belt: "belts", belts: "belts",
-  // scarves
   scarf: "scarves", scarves: "scarves",
   shawl: "scarves", wrap: "scarves", stole: "scarves",
-  // sunglasses
   sunglasses: "sunglasses", sunglass: "sunglasses",
-  // watches
   watch: "watches", watches: "watches",
-  // headpieces
   headpiece: "headpieces", headpieces: "headpieces",
   headband: "headpieces", fascinator: "headpieces", tiara: "headpieces",
-  // home
   home: "home", decor: "home",
-  // wallets
   wallet: "wallets", wallets: "wallets",
-  "coin purse": "wallets", cardholder: "wallets", "card holder": "wallets",
+  cardholder: "wallets",
 };
 
-// Category slug → product title keywords used in DB regex search
-const categoryKeywords: Record<string, string[]> = {
-  bags: ["bag", "clutch", "tote", "purse", "handbag", "pouch", "backpack", "rucksack", "satchel", "crossbody", "wristlet", "minaudiere"],
-  shoes: ["heel", "shoe", "boot", "pump", "sandal", "mule", "clog", "loafer", "sneaker", "slipper", "espadrille", "stiletto", "wedge", "oxford", "derby", "brogue", "trainer", "slide", "slingback", "mary jane", "moccasin", "flat", "bootie"],
-  accessories: ["belt", "scarf", "hat", "sunglass", "necklace", "bracelet", "earring", "watch", "ring", "brooch", "pendant", "bangle", "choker", "anklet", "jewelry", "jewel"],
-  jewelry: ["necklace", "bracelet", "earring", "ring", "brooch", "pendant", "bangle", "choker", "anklet", "locket", "cameo", "jewel", "gemstone", "pearl", "charm", "cuff", "stud", "pin", "jewellery"],
-  belts: ["belt"],
-  scarves: ["scarf", "shawl", "stole", "wrap", "pashmina", "bandana"],
-  sunglasses: ["sunglass", "eyewear", "eyeglasses"],
-  watches: ["watch", "timepiece"],
-  headpieces: ["headpiece", "headband", "barrette", "hairpin", "fascinator", "tiara", "hair clip", "hair bow", "hair comb", "hair slide", "scrunchie", "hair pin"],
-  home: ["vase", "plate", "cup", "mug", "bowl", "pitcher", "dish", "candle", "book", "figurine", "sculpture", "lamp", "mirror", "tray", "blanket", "pillow", "cushion", "ceramic", "pottery", "platter", "tumbler", "glassware", "kitchenware", "tableware", "decor", "frame", "basket", "textile", "linen", "napkin", "teapot", "carafe", "ashtray", "inkwell"],
-  clothing: ["jacket", "coat", "blazer", "dress", "skirt", "pants", "trousers", "jeans", "blouse", "shirt", "sweater", "cardigan", "vest", "suit", "jumpsuit", "romper", "shorts", "cape", "top", "hoodie", "sweatshirt", "tee", "t-shirt", "bodysuit", "corset", "tunic", "cami", "kimono"],
-  tops: ["top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami", "bodysuit", "corset", "bustier", "halter", "polo", "henley", "tunic"],
-  dresses: ["dress", "gown", "kaftan", "sundress", "minidress"],
-  "coats-jackets": ["coat", "jacket", "blazer", "parka", "windbreaker", "puffer", "bomber", "trench", "overcoat", "cape", "poncho", "anorak", "kimono", "vest", "suit", "fur"],
-  sweaters: ["sweater", "cardigan", "knit", "pullover", "hoodie", "sweatshirt", "turtleneck", "crewneck"],
-  jeans: ["jeans", "denim"],
-  pants: ["pants", "trousers", "chino", "jogger", "legging", "culottes"],
-  skirts: ["skirt", "sarong"],
-  shorts: ["shorts"],
-  jumpsuits: ["jumpsuit", "romper", "playsuit", "overall", "matching set"],
-  wallets: ["wallet", "coin purse", "card holder", "cardholder", "billfold", "card case"],
-};
+// Strip stop words and punctuation, return meaningful search tokens
+function parseWords(q: string): string[] {
+  const all = q
+    .split(/[\s&]+/)
+    .map(w => w.replace(/[.,!?'"()]/g, "").trim())
+    .filter(w => w.length > 1);
+  const meaningful = all.filter(w => !STOP_WORDS.has(w));
+  return meaningful.length > 0 ? meaningful : all;
+}
 
-// Build a word-start-bounded OR regex for a category slug.
-// \m = PostgreSQL word-start boundary → "shoe" matches "shoes" but not "horseshoe".
-function buildCatRegex(slug: string): string {
-  const kws = categoryKeywords[slug].map((k) =>
-    k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  );
-  return `\\m(${kws.join("|")})`;
+// Sanitize for plainto_tsquery — strips chars that could cause parse errors
+function toSafeTsQuery(q: string): string {
+  return q.replace(/[^\w\s'\-]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Returns the best-matching brand for this query, or null
+function detectBrand(q: string, words: string[]): (typeof brands)[0] | null {
+  // Exact keyword match
+  for (const b of brands) {
+    if (b.keywords.some(kw => q === kw)) return b;
+  }
+  // Query contains a brand keyword (e.g. "chanel bag" contains "chanel")
+  for (const b of brands) {
+    if (b.keywords.some(kw => kw.length > 3 && q.includes(kw))) return b;
+  }
+  // All significant words in query appear in a brand label ("dolce gabbana")
+  if (words.length > 1) {
+    for (const b of brands) {
+      const bLabel = b.label.toLowerCase();
+      if (words.every(w => bLabel.includes(w))) return b;
+    }
+  }
+  return null;
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q")?.trim().toLowerCase();
+  const rawQ = searchParams.get("q")?.trim() ?? "";
+  const q = rawQ.toLowerCase();
 
   if (!q || q.length < 2) {
     return NextResponse.json({ products: [], designers: [], categories: [], stores: [] });
@@ -134,161 +122,160 @@ export async function GET(request: Request) {
   try {
     const sql = neon(getDatabaseUrl());
 
+    // ── 1. Parse query into tokens ────────────────────────────────────────────
+    const words = parseWords(q);
+    const phrasePattern = `%${q}%`;
+    const startPattern = `${q}%`;
+    const wordPatterns = words.map(w => `%${w}%`);
+    // plainto_tsquery-safe version of the query
+    const safeQ = toSafeTsQuery(q) || words.join(" ") || q;
 
-    // ─── 1. Designer / brand matching ────────────────────────────────────────
-    // Strip stop words and "&" for word-level brand matching
-    // so "dolce and gabbana" → ["dolce", "gabbana"] matches "Dolce & Gabbana"
-    const qSignificantWords = q
-      .split(/[\s&]+/)
-      .map((w) => w.replace(/[.,!?]/g, ""))
-      .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
+    // ── 2. Brand detection ────────────────────────────────────────────────────
+    // When a brand is identified, use its primary keyword to search the
+    // product_type column (Shopify's brand/designer field). This surfaces
+    // products whose title doesn't mention the brand (e.g. title = "Mini Flap",
+    // product_type = "Chanel").
+    const detectedBrand = detectBrand(q, words);
+    const brandPtPattern = detectedBrand
+      ? `%${detectedBrand.keywords[0]}%`
+      : phrasePattern;
 
+    // ── 3. Quick-links: designers, categories, stores ─────────────────────────
     const matchedDesigners = brands
-      .filter((b) => {
+      .filter(b => {
         const bLabel = b.label.toLowerCase();
         if (bLabel.includes(q)) return true;
-        if (b.keywords.some((kw) => kw.includes(q) || q.includes(kw))) return true;
-        // All significant words in query appear in brand label (handles "and" vs "&")
-        if (
-          qSignificantWords.length > 1 &&
-          qSignificantWords.every((w) => bLabel.includes(w))
-        ) return true;
+        if (b.keywords.some(kw => kw.includes(q) || q.includes(kw))) return true;
+        if (words.length > 1 && words.every(w => bLabel.includes(w))) return true;
         return false;
       })
       .slice(0, 5)
-      .map((b) => ({ slug: b.slug, label: b.label }));
+      .map(b => ({ slug: b.slug, label: b.label }));
 
-    // ─── 2. Category quick-links ──────────────────────────────────────────────
+    // Show category chips for the full query AND for any individual word
+    // (so "leather dress" shows a Dresses chip, not just "leather dress" → nothing)
     const matchedCategories: { slug: string; label: string }[] = [];
-    const seenSlugs = new Set<string>();
+    const seenCatSlugs = new Set<string>();
+    const addCatChip = (slug: string) => {
+      if (seenCatSlugs.has(slug)) return;
+      const label = categoryMap[slug as keyof typeof categoryMap];
+      if (label) { matchedCategories.push({ slug, label }); seenCatSlugs.add(slug); }
+    };
 
     const aliasTarget = categoryAliases[q];
-    if (aliasTarget) {
-      const label = categoryMap[aliasTarget as keyof typeof categoryMap];
-      if (label && !seenSlugs.has(aliasTarget)) {
-        matchedCategories.push({ slug: aliasTarget, label });
-        seenSlugs.add(aliasTarget);
-      }
+    if (aliasTarget) addCatChip(aliasTarget);
+    for (const w of words) {
+      const wAlias = categoryAliases[w];
+      if (wAlias) addCatChip(wAlias);
     }
     for (const [slug, label] of Object.entries(categoryMap)) {
-      if (!seenSlugs.has(slug) && (slug.includes(q) || label.toLowerCase().includes(q))) {
+      if (!seenCatSlugs.has(slug) && (slug.includes(q) || label.toLowerCase().includes(q))) {
         matchedCategories.push({ slug, label });
-        seenSlugs.add(slug);
+        seenCatSlugs.add(slug);
       }
     }
 
-    // ─── 3. Store matching ────────────────────────────────────────────────────
     const matchedStores = stores
-      .filter((s) => s.name.toLowerCase().includes(q) || s.location.toLowerCase().includes(q))
+      .filter(s => s.name.toLowerCase().includes(q) || s.location.toLowerCase().includes(q))
       .slice(0, 5)
-      .map((s) => ({ slug: s.slug, name: s.name, location: s.location }));
+      .map(s => ({ slug: s.slug, name: s.name, location: s.location }));
 
-    // ─── 4. Product search ────────────────────────────────────────────────────
-    // Resolve query to a category slug if it matches an alias or is a known slug
-    const catSlug = categoryAliases[q] || (categoryKeywords[q] ? q : null);
-    let products;
-
-    if (catSlug && categoryKeywords[catSlug]) {
-      // ── Single-word category search: "dress", "shoes", "bag", "jewelry" ───
-      const catRegex = buildCatRegex(catSlug);
-      products = await sql`
-        SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
+    // ── 4. Main product search — unified relevance scoring ────────────────────
+    //
+    // Every candidate gets a composite relevance score. Higher = better match.
+    //
+    //   10 000  exact title match ("chanel" → "Chanel")
+    //    5 000  title starts with query
+    //    2 000  title contains exact phrase
+    //    0–1000 FTS ts_rank — handles word forms, plurals, stemming
+    //      500  all search words present in title
+    //      800  product_type (Shopify brand field) matches brand keyword
+    //      120  description contains the phrase
+    //     0–30  recency bonus (max for today's listings, decays over ~30 days)
+    //
+    // WHERE casts a wide net (OR); ORDER BY score filters it to the best matches.
+    //
+    const products = await sql`
+      WITH scored AS (
+        SELECT
+          id, store_slug, store_name, title, price, currency, image, images, created_at,
+          (
+            CASE WHEN LOWER(title) = ${q}                THEN 10000 ELSE 0 END
+            + CASE WHEN LOWER(title) LIKE ${startPattern}  THEN  5000 ELSE 0 END
+            + CASE WHEN LOWER(title) LIKE ${phrasePattern}  THEN  2000 ELSE 0 END
+            + FLOOR(
+                ts_rank(
+                  setweight(to_tsvector('english', COALESCE(title, '')), 'A'),
+                  plainto_tsquery('english', ${safeQ})
+                ) * 1000
+              )::int
+            + CASE WHEN LOWER(title) LIKE ALL(${wordPatterns}) THEN 500 ELSE 0 END
+            + CASE
+                WHEN product_type IS NOT NULL
+                     AND LOWER(product_type) LIKE ${brandPtPattern}
+                THEN 800
+                ELSE 0
+              END
+            + CASE
+                WHEN description IS NOT NULL
+                     AND LOWER(description) LIKE ${phrasePattern}
+                THEN 120
+                ELSE 0
+              END
+            + GREATEST(0, 30 - FLOOR(
+                EXTRACT(EPOCH FROM (NOW() - COALESCE(created_at, NOW()))) / 86400.0
+              ))::int
+          ) AS relevance
         FROM products
-        WHERE LOWER(title) ~* ${catRegex}
-          AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+        WHERE
+          (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-        ORDER BY created_at DESC NULLS LAST
-        LIMIT 500
-      `;
-    } else {
-      // Strip stop words so "dolce and gabbana" → ["dolce","gabbana"]
-      const allWords = q.split(/\s+/).filter((w) => w.length > 1);
-      const searchWords = allWords.filter((w) => !STOP_WORDS.has(w));
-      const words = searchWords.length > 0 ? searchWords : allWords;
+          AND (
+            LOWER(title) LIKE ${phrasePattern}
+            OR LOWER(title) LIKE ANY(${wordPatterns})
+            OR to_tsvector('english', COALESCE(title, ''))
+               @@ plainto_tsquery('english', ${safeQ})
+            OR (product_type IS NOT NULL
+                AND LOWER(product_type) LIKE ${brandPtPattern})
+            OR (description IS NOT NULL
+                AND LOWER(description) LIKE ${phrasePattern})
+          )
+      )
+      SELECT * FROM scored WHERE relevance > 0
+      ORDER BY relevance DESC, created_at DESC NULLS LAST
+      LIMIT 200
+    `;
 
-      if (words.length > 1) {
-        // Check if any word is a category alias ("black dress" → catWord = "dress")
-        const catWord = words.find(
-          (w) => categoryAliases[w] && categoryKeywords[categoryAliases[w]]
-        );
-
-        if (catWord) {
-          // ── Category + modifiers: "vintage chanel bag", "silk dress", "leather jacket" ──
-          const targetSlug = categoryAliases[catWord];
-          const catRegex = buildCatRegex(targetSlug);
-          const modifiers = words.filter((w) => w !== catWord);
-          const modLike = modifiers.map((m) => `%${m}%`);
-
-          products = await sql`
-            SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
-            FROM products
-            WHERE LOWER(title) ~* ${catRegex}
-              AND LOWER(title) LIKE ALL(${modLike})
-              AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-            ORDER BY created_at DESC NULLS LAST
-            LIMIT 500
-          `;
-
-          // Fallback: category only if modifiers too specific (e.g. rare brand + category)
-          if (!products.length) {
-            products = await sql`
-              SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
-              FROM products
-              WHERE LOWER(title) ~* ${catRegex}
-                AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-              ORDER BY created_at DESC NULLS LAST
-              LIMIT 500
-            `;
-          }
-        } else {
-          // ── No category word: "dolce gabbana", "ralph lauren", "vintage sequin" ──
-          // AND match: all words must appear as substrings in title
-          const likePatterns = words.map((w) => `%${w}%`);
-          products = await sql`
-            SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
-            FROM products
-            WHERE LOWER(title) LIKE ALL(${likePatterns})
-              AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-              AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-            ORDER BY created_at DESC NULLS LAST
-            LIMIT 500
-          `;
-
-          // Fallback: any word matches (OR), ranked by how many words match
-          if (!products.length) {
-            products = await sql`
-              SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
-              FROM products
-              WHERE LOWER(title) LIKE ANY(${likePatterns})
-                AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-                AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-              ORDER BY created_at DESC NULLS LAST
-              LIMIT 500
-            `;
-          }
-        }
-      } else {
-        // ── Single non-category word: partial match, start-anchored results first ──
-        const singleWord = words[0] ?? q;
-        const pattern = `%${singleWord}%`;
-        const startPattern = `${singleWord}%`;
-        products = await sql`
+    // ── 5. Fuzzy trigram fallback for typos ───────────────────────────────────
+    // Triggered when the main search returns fewer than 5 results.
+    // Uses pg_trgm similarity to catch misspellings ("chanell" → Chanel items).
+    // Silently skipped if pg_trgm extension isn't installed.
+    let allProducts = products as Array<Record<string, unknown>>;
+    if (allProducts.length < 5 && words.length > 0) {
+      // Use the longest word as the anchor for fuzzy matching
+      const anchor = words.reduce((a, b) => (a.length >= b.length ? a : b));
+      try {
+        const fuzzy = await sql`
           SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
           FROM products
-          WHERE LOWER(title) LIKE ${pattern}
-            AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+          WHERE
+            (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
             AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-          ORDER BY
-            CASE WHEN LOWER(title) LIKE ${startPattern} THEN 0 ELSE 1 END,
-            created_at DESC NULLS LAST
-          LIMIT 500
+            AND similarity(LOWER(title), ${anchor}) > 0.25
+          ORDER BY similarity(LOWER(title), ${anchor}) DESC, created_at DESC NULLS LAST
+          LIMIT 50
         `;
+        const existingIds = new Set(allProducts.map(p => p.id));
+        allProducts = [
+          ...allProducts,
+          ...fuzzy.filter((p: Record<string, unknown>) => !existingIds.has(p.id)),
+        ];
+      } catch {
+        // pg_trgm not available — graceful no-op
       }
     }
 
-    // Fire-and-forget: record search term so admin can see top searches
+    // Fire-and-forget: log the search term for analytics
     sql`
       CREATE TABLE IF NOT EXISTS searches (
         id SERIAL PRIMARY KEY,
@@ -297,18 +284,20 @@ export async function GET(request: Request) {
         timestamp TIMESTAMPTZ DEFAULT NOW()
       )
     `.then(() =>
-      sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${products.length})`
+      sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${allProducts.length})`
     ).catch(() => {});
 
     return NextResponse.json({
       designers: matchedDesigners,
       categories: matchedCategories,
       stores: matchedStores,
-      products: products.map((p) => {
+      products: allProducts.map(p => {
         let parsedImages: string[] | undefined;
         try {
           parsedImages = p.images ? JSON.parse(p.images as string) : undefined;
-        } catch {}
+        } catch {
+          // malformed JSON — skip
+        }
         return {
           id: p.id,
           name: p.title,
@@ -322,6 +311,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Search API error:", error);
-    return NextResponse.json({ products: [], designers: [], categories: [], stores: [] }, { status: 500 });
+    return NextResponse.json(
+      { products: [], designers: [], categories: [], stores: [] },
+      { status: 500 }
+    );
   }
 }

@@ -106,6 +106,7 @@ export async function getAbandonedCartItems(): Promise<AbandonedCartItem[]> {
     FROM user_cart_items uc
     JOIN users u ON u.id = uc.user_id
     WHERE uc.email_sent_at IS NULL
+      AND uc.purchased_at IS NULL
       AND uc.added_at < NOW() - INTERVAL '5 hours'
       AND u.email IS NOT NULL
       AND NOT EXISTS (

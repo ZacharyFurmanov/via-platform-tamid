@@ -206,6 +206,17 @@ export async function initDatabase() {
       PRIMARY KEY (store_slug, title)
     )
   `;
+
+  // Search indexes — required for full-text and fuzzy search in /api/search
+  await sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`.catch(() => {});
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_products_title_fts
+    ON products USING GIN (to_tsvector('english', COALESCE(title, '')))
+  `.catch(() => {});
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_products_title_trgm
+    ON products USING GIN (LOWER(title) gin_trgm_ops)
+  `.catch(() => {});
 }
 
 /**
