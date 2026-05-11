@@ -2010,12 +2010,10 @@ export async function sendStoreDigestEmail(
     ${storesHtml}
   `;
 
-  const subjectStore = stores.length === 1 ? stores[0].store_name : `${stores.length} stores you follow`;
-
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: `New arrivals: ${subjectStore}`,
+    subject: stores.length === 1 ? "Your favorite store just dropped new pieces" : "Your favorite stores just dropped new pieces",
     html: viaShell("New Arrivals", content),
   });
 }
