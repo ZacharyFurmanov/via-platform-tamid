@@ -94,32 +94,55 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     2
                   </span>
-                  <h3 className="text-lg font-medium">Set Your Commission Rate</h3>
+                  <h3 className="text-lg font-medium">Create Your Tiered Commission Collections</h3>
                 </div>
-                <div className="text-[#5D0F17]/60 space-y-3">
-                  <p>In Shopify Collabs, create a program and set a flat commission rate that applies to all your products:</p>
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>In Shopify Collabs, click <strong>Programs</strong> in the left sidebar</li>
-                    <li>Click <strong>Create program</strong> (or open your existing one)</li>
-                    <li>Under <strong>Commission</strong>, set a base rate of <strong>5%</strong></li>
-                    <li>Under <strong>Cookie duration</strong>, enter <strong>30</strong> days</li>
-                    <li>Click <strong>Save</strong></li>
-                  </ol>
+                <div className="text-[#5D0F17]/60 space-y-4">
+                  <p>VYA uses tiered commission rates based on product price. You&apos;ll create three <strong>Smart collections</strong> in Shopify — one per price tier — using price conditions to automatically include the right products, then assign each collection its rate in Collabs.</p>
+
                   <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-4 text-sm">
-                    <p className="font-medium text-[#5D0F17] mb-2">Commission rate reference:</p>
-                    <p className="mb-3">A flat <strong>5%</strong> works well for most stores. If you want tiered rates by price range, see the Advanced section below.</p>
-                    <div className="flex justify-between items-center py-1">
-                      <span>Flat rate (all products)</span>
-                      <span className="font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">5%</span>
+                    <p className="font-medium text-[#5D0F17] mb-3">Commission rate tiers:</p>
+                    <div className="space-y-0">
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
+                        <span><strong>TIER 1</strong> — products under $1,000</span>
+                        <span className="font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">7%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
+                        <span><strong>TIER 2</strong> — products $1,000–$5,000</span>
+                        <span className="font-medium bg-[#5D0F17]/50 text-white px-3 py-1">5%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span><strong>TIER 3</strong> — products above $5,000</span>
+                        <span className="font-medium bg-[#5D0F17]/40 text-[#F7F3EA] px-3 py-1">3%</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 p-3 text-sm">
-                    <p className="text-amber-800">
-                      <strong>Why 30 days?</strong> This captures customers who browse VYA but
-                      come back to buy later. Most vintage purchases happen within a week, but
-                      the extra window means you won&apos;t miss delayed sales.
-                    </p>
+
+                  <div>
+                    <p className="text-sm font-medium text-[#5D0F17] mb-2">Step 2a — Create the three Smart collections:</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>In your Shopify Admin, go to <strong>Products → Collections</strong></li>
+                      <li>Click <strong>Create collection</strong></li>
+                      <li>Name it <strong>Under $1,000</strong></li>
+                      <li>Under <strong>Collection type</strong>, select <strong>Smart</strong></li>
+                      <li>Set condition: <strong>Price</strong> → <strong>is less than</strong> → <strong>1000</strong></li>
+                      <li>Click <strong>Save</strong></li>
+                      <li>Repeat to create <strong>$1,000–$5,000</strong> (price is greater than or equal to 1000 AND price is less than or equal to 5000) and <strong>Above $5,000</strong> (price is greater than 5000)</li>
+                    </ol>
                   </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-[#5D0F17] mb-2">Step 2b — Set commission rates per collection in Collabs:</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>Open <strong>Shopify Collabs</strong> from your Apps</li>
+                      <li>Click <strong>Programs</strong> in the left sidebar, then open your program (or click <strong>Create program</strong>)</li>
+                      <li>Under <strong>Commission</strong>, click <strong>Add collection rate</strong></li>
+                      <li>Select <strong>Under $1,000</strong> → set rate to <strong>7%</strong></li>
+                      <li>Add another collection rate: <strong>$1,000–$5,000</strong> → <strong>5%</strong></li>
+                      <li>Add another collection rate: <strong>Above $5,000</strong> → <strong>3%</strong></li>
+                      <li>Click <strong>Save</strong></li>
+                    </ol>
+                  </div>
+
                 </div>
               </div>
 
@@ -197,39 +220,6 @@ export default function ShopifySetupPage() {
             </div>
           </div>
 
-          {/* Advanced: Tiered Rates */}
-          <div className="mb-12 sm:mb-16">
-            <h2 className="text-xl sm:text-2xl font-serif mb-4">Advanced: Tiered Commission Rates</h2>
-            <p className="text-[#5D0F17]/60 text-sm mb-4">
-              If you want different rates for different price ranges (e.g., 7% under $1,000 / 5% up to $5,000 / 3% above), you can set per-collection commission rates in Collabs. This requires creating <strong>manual collections</strong> and adding products to each one by hand.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 p-4 text-sm mb-4">
-              <p className="text-amber-900 font-medium mb-1">Important: Automated collections don&apos;t work</p>
-              <p className="text-amber-800">
-                Shopify Collabs <strong>cannot see Automated (smart) collections</strong> — only <strong>Manual collections</strong> appear when setting per-collection commission rates.
-                If you created collections using price conditions or tags, Collabs will show &quot;no collections found&quot; no matter how many products are in them.
-                You must create new collections set to <strong>Manual</strong> type and add products yourself.
-              </p>
-            </div>
-            <div className="bg-[#5D0F17]/5 border border-[#5D0F17]/10 p-4 text-sm">
-              <p className="text-sm font-medium text-[#5D0F17] mb-3">Tiered rate reference:</p>
-              <div className="space-y-0">
-                <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
-                  <span><strong>TIER 1</strong> — products under $1,000</span>
-                  <span className="font-medium bg-[#5D0F17] text-[#F7F3EA] px-3 py-1">7%</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-[#5D0F17]/10">
-                  <span><strong>TIER 2</strong> — products $1,000–$5,000</span>
-                  <span className="font-medium bg-[#5D0F17]/50 text-white px-3 py-1">5%</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span><strong>TIER 3</strong> — products above $5,000</span>
-                  <span className="font-medium bg-[#5D0F17]/40 text-[#F7F3EA] px-3 py-1">3%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* How It Works */}
           <div className="mb-12 sm:mb-16">
             <h2 className="text-xl sm:text-2xl font-serif mb-4">How Attribution Works</h2>
@@ -288,13 +278,10 @@ export default function ShopifySetupPage() {
               <div>
                 <h3 className="font-medium mb-2">Shopify Collabs says &quot;no collections&quot; when I try to set rates — why?</h3>
                 <p className="text-[#5D0F17]/60 text-sm mb-2">
-                  The most common cause: your collections are <strong>Automated</strong> (smart collections with price/tag conditions).
-                  Shopify Collabs only supports <strong>Manual collections</strong> for commission rate assignment.
-                  Go to <strong>Products → Collections</strong>, delete the automated TIER collections, and recreate them
-                  as <strong>Manual</strong> type — then add products to each one by hand.
+                  Make sure your Smart collections are set to <strong>Active</strong> (not Draft) and have at least one product matching the price condition. Collections that are empty or in Draft won&apos;t appear in Collabs.
                 </p>
                 <p className="text-[#5D0F17]/60 text-sm">
-                  Also confirm each collection is set to <strong>Active</strong> (not Draft) and has at least one product in it.
+                  If they still don&apos;t appear, try saving the collection again in Shopify Admin to force a sync, then refresh Collabs.
                 </p>
               </div>
             </div>
