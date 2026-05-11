@@ -918,6 +918,30 @@ export const stores = [
     returnPolicy:
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
+  {
+    slug: "ange-archive",
+    dashboardToken: "aa-2c7e1d4f8b9a",
+    name: "Ange Archive",
+    location: "New York, NY",
+    description:
+      "Ange Archive is a NYC based vintage boutique founded by two besties Simi and Chay. We focus on iconic vintage pieces, the ones you always see saved, screenshotted, and obsessed over. Vintage Fendi baguettes, iconic Chanel, the perfect balance between trending and timeless. Bringing your Pinterest boards to life. Everything is sourced internationally and chosen for how it feels, not just what it is. Because every angel deserves something cool… a piece of us.",
+    website: "https://angearchive.com",
+    contactEmail: "info@angearchive.com",
+    dataSource: "ange-archive",
+    image: "/stores/ange-archive.jpg",
+    logo: "/stores/ange-archive.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "111",
+    collabsStoreId: "239342",
+    authenticityPolicy:
+      "Every piece at Ange Archive is personally sourced internationally by Simi and Chay and chosen for how it feels, not just what it is. Each item is carefully inspected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
+  },
 ];
 
 /**
@@ -986,6 +1010,7 @@ export const storeContactEmails: Record<string, string> = {
   "other-matters-atelier": "othermattersatelier@gmail.com",
   "tess-elizabeth-vintage": "hello@tesselizabeth.com",
   "west-village-vintage": "info@westvillagevintage.com",
+  "ange-archive": "info@angearchive.com",
   "dear-muse": "rachel.dearmuse@gmail.com",
   // VYA admin test account — sees all requests
   "via-admin": "hana@vyaplatform.com",

@@ -324,6 +324,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     storeDomain: "shopdearmuse.com",
     scrapeProductPage: true,
   },
+  {
+    type: "shopify",
+    name: "Ange Archive",
+    slug: "ange-archive",
+    storeDomain: "angearchive.com",
+    scrapeProductPage: true,
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
