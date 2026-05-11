@@ -46,19 +46,101 @@ function parseCommission(displayValue: string): number {
   return isNaN(n) ? 0 : n;
 }
 
-/** Reverse-calculate order total from commission earned.
- *  Uses 7% as the base rate (most vintage items are under $1k).
- *  If the implied total exceeds $1k we step up to 5%, and >$5k to 3%. */
+type CommissionRule = { value: number }; // value is a percentage, e.g. 7 means 7%
+
+/**
+ * Calculate order total from a commission amount using the store's actual commission rates.
+ * For flat-rate stores (one rule), the result is exact.
+ * For tiered stores, picks the tier whose implied price is self-consistent with that tier.
+ */
+function calculateOrderTotal(commissionUsd: number, rules: CommissionRule[]): number {
+  if (commissionUsd <= 0) return 0;
+  if (rules.length === 0) return estimateRevenue(commissionUsd);
+
+  // Unique rates sorted high → low (highest rate applies to lowest price tier)
+  const rates = [...new Set(rules.map((r) => r.value / 100))].sort((a, b) => b - a);
+  if (rates.length === 1) return commissionUsd / rates[0]; // Flat rate — exact
+
+  // Tiered: try each rate; pick the first one where the implied price is plausibly
+  // within that tier. We use $1k and $5k as standard breakpoints.
+  const tierCeilings = [1000, 5000]; // upper bound for each tier index
+  for (let i = 0; i < rates.length; i++) {
+    const implied = commissionUsd / rates[i];
+    const ceiling = tierCeilings[i] ?? Infinity;
+    if (implied < ceiling) return implied;
+  }
+  return commissionUsd / rates[rates.length - 1];
+}
+
+/** Fallback: reverse-calculate from assumed VYA tiers (7/5/3%) when no rules are available. */
 function estimateRevenue(commission: number): number {
   if (commission <= 0) return 0;
-  // Try 7% first
   let implied = commission / 0.07;
   if (implied < 1000) return implied;
-  // Try 5%
   implied = commission / 0.05;
   if (implied <= 5000) return implied;
-  // Use 3%
   return commission / 0.03;
+}
+
+/**
+ * Try to fetch individual Commission records for a partnership.
+ * Tries each PayoutGroup value until we find records.
+ * Returns null if the API doesn't support this or no records are found.
+ */
+async function fetchIndividualCommissions(
+  partnershipId: string,
+  cookie: string,
+  csrfToken: string,
+  lastSyncedAt: string | null,
+  deltaOrders: number
+): Promise<{ commissionUsdAmount: number; earnedAt: string }[] | null> {
+  const groups = ["NEXT_PAYOUT", "IN_HOLDING_PERIOD", "PAYOUT_REQUESTED", "CREATOR_ACTION_REQUIRED", "PAID_OUT"];
+  const headers = {
+    "content-type": "application/json",
+    "cookie": cookie,
+    "x-csrf-token": csrfToken,
+    "origin": "https://collabs.shopify.com",
+    "referer": "https://collabs.shopify.com/",
+    "x-client-type": "web",
+    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+  };
+
+  for (const group of groups) {
+    try {
+      const res = await fetch(COLLABS_GRAPHQL_URL, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          query: `query {
+            payouts {
+              partnershipCommissions(group: ${group}, partnershipId: "${partnershipId}", first: ${deltaOrders + 5}) {
+                nodes { id commissionUsd { amount } earnedAt }
+              }
+            }
+          }`,
+        }),
+      });
+      const json = await res.json();
+      if (json.errors) continue;
+      const nodes = (json?.data?.payouts?.partnershipCommissions?.nodes ?? []) as {
+        id: string; commissionUsd: { amount: number }; earnedAt: string;
+      }[];
+      if (nodes.length === 0) continue;
+
+      // Filter to records since last sync
+      const cutoff = lastSyncedAt ? new Date(lastSyncedAt) : null;
+      const recent = cutoff
+        ? nodes.filter((n) => new Date(n.earnedAt) > cutoff)
+        : nodes.slice(0, deltaOrders);
+
+      if (recent.length > 0) {
+        return recent.map((n) => ({ commissionUsdAmount: n.commissionUsd.amount, earnedAt: n.earnedAt }));
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 async function saveCollabsConversions(
@@ -69,16 +151,71 @@ async function saveCollabsConversions(
   currency: string,
   now: string,
   lastSyncedAt: string | null,
-  prevOrderCount: number
+  prevOrderCount: number,
+  commissionRules: CommissionRule[],
+  cookie: string,
+  csrfToken: string
 ) {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!dbUrl) return;
   const sql = neon(dbUrl);
 
   const storeSlug = resolveStoreSlug(brandName);
-  // Convert commission to USD before estimating revenue so non-USD stores get correct totals
+
+  // Try to get individual commission records for accurate per-order totals
+  const individualCommissions = await fetchIndividualCommissions(
+    partnershipId, cookie, csrfToken, lastSyncedAt, deltaOrders
+  );
+
+  if (individualCommissions && individualCommissions.length > 0) {
+    // Use individual per-order commissions — most accurate path
+    const ordersToSave = individualCommissions.slice(0, deltaOrders);
+    const windowStart = lastSyncedAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const recentClicks = await sql`
+      SELECT click_id, user_id, timestamp, product_name, cart_items
+      FROM clicks
+      WHERE store_slug = ${storeSlug}
+        AND user_id IS NOT NULL
+        AND timestamp >= ${windowStart}
+        AND timestamp <= ${now}
+        AND click_id NOT IN (
+          SELECT via_click_id FROM conversions WHERE via_click_id IS NOT NULL AND store_slug = ${storeSlug}
+        )
+      ORDER BY timestamp DESC
+      LIMIT ${ordersToSave.length}
+    `;
+
+    for (let i = 0; i < ordersToSave.length; i++) {
+      const { commissionUsdAmount, earnedAt } = ordersToSave[i];
+      const orderTotal = calculateOrderTotal(commissionUsdAmount, commissionRules);
+      const click = recentClicks[i] ?? null;
+      const orderId = `collabs-${partnershipId}-order-${prevOrderCount + i}`;
+      const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
+      const ts = earnedAt || now;
+
+      await sql`
+        INSERT INTO conversions (
+          conversion_id, timestamp, order_id, order_total, currency,
+          items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
+        )
+        VALUES (
+          ${conversionId}, ${ts}, ${orderId}, ${orderTotal}, 'USD',
+          ${JSON.stringify([{ productName: click?.product_name ?? `Order via Shopify Collabs`, quantity: 1, price: orderTotal }])},
+          ${click ? (click.click_id as string) : null},
+          ${storeSlug}, ${brandName}, true,
+          ${JSON.stringify({ source: "shopify-collabs", partnershipId, commissionUsd: commissionUsdAmount, commissionRate: commissionRules.map(r => r.value) })},
+          ${click ? (click.user_id as string) : null}
+        )
+        ON CONFLICT (order_id, store_slug) DO NOTHING
+      `;
+    }
+    return;
+  }
+
+  // Fallback: delta-based approach using actual commission rates
   const commissionUSD = convertCurrencyToUSD(deltaCommission, currency);
-  const perOrderTotal = estimateRevenue(commissionUSD) / deltaOrders;
+  const perOrderTotal = calculateOrderTotal(commissionUSD / deltaOrders, commissionRules);
 
   // Look for unmatched clicks to this store since the last sync
   // (fall back to 24h window if this is the first sync)
@@ -211,6 +348,14 @@ const PARTNERSHIPS_QUERY = `query PartnershipsAnalyticsQuery($first: Int, $last:
       }
       totalLinkVisits
       totalOrders
+      affiliateOffer {
+        commissionRules {
+          __typename
+          ... on GlobalCommissionRule { value }
+          ... on CollectionCommissionRule { value }
+          ... on ProductCommissionRule { value }
+        }
+      }
       __typename
     }
     __typename
@@ -277,6 +422,8 @@ export async function GET(request: Request) {
   const partnerships = nodes.map((node: Record<string, unknown>) => {
     const brand = node.partnershipBrand as Record<string, unknown>;
     const commission = node.totalCommissionEarned as Record<string, unknown>;
+    const offer = node.affiliateOffer as Record<string, unknown> | null;
+    const rules = (offer?.commissionRules as CommissionRule[] | null) ?? [];
     return {
       id: node.id as string,
       name: brand?.name as string,
@@ -285,6 +432,7 @@ export async function GET(request: Request) {
       currency: commission?.currency as string,
       totalLinkVisits: node.totalLinkVisits as number,
       totalOrders: node.totalOrders as number,
+      commissionRules: rules,
     };
   });
 
@@ -317,9 +465,9 @@ export async function GET(request: Request) {
 
     if (deltaOrders > 0 && deltaCommission > 0) {
       try {
-        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders);
+        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders, p.commissionRules ?? [], cookie, csrfToken);
         newOrdersRecorded += deltaOrders;
-        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +${deltaCommission.toFixed(2)} ${p.currency ?? "USD"} commission`);
+        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +${deltaCommission.toFixed(2)} ${p.currency ?? "USD"} commission, rates: [${(p.commissionRules ?? []).map((r: CommissionRule) => r.value + "%").join(", ")}]`);
       } catch (err) {
         dbWriteFailed = true;
         console.error(`[Sync Collabs Revenue] DB write failed for ${p.name}:`, err);
