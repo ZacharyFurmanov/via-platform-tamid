@@ -88,7 +88,7 @@ function isMeasurementLine(text: string): boolean {
 // Labels that signal a condition line
 const CONDITION_LABEL_RE = /^(overall|condition|upper|lower|interior|exterior|hardware|sole|heel|lining|strap|clasp|zipper|buckle|toe|cap|front|back|handles?|base|corners?|bottom|sides?|edges?)\s*:/i;
 // Keywords anywhere in the line that signal condition content
-const CONDITION_KEYWORD_RE = /\b(condition|preowned|pre-?owned|pre-?loved|wear|worn|scuff|scratch|fad(ing)?|missing|intact|snag|fray|crack|patina|stain|mark|repair|restor|damag|chip|tear|peel|rub|soil|discolor|yellowing|tarnish|oxidiz|light use|gently used|like new|mint|NWT|NWOT|EUC|VGUC|GUC)\b/i;
+const CONDITION_KEYWORD_RE = /\b(condition|preowned|pre-?owned|pre-?loved|wear|worn|scuff|scratch|fad(ing)?|missing|intact|snag|fray|crack(?:ed|ing)?|patina|stain(?:ed|s)?|mark(?:ed|s)?|repair(?:ed|s)?|restor(?:e[ds]?|ation|ing)?|damag(?:e[ds]?|ing)?|chip(?:ped|s)?|tear(?:ing|s)?|peel(?:ing|ed)?|rub(?:bed|s)?|soil(?:ed|ing)?|discolor(?:ation|e[ds]?|ing)?|yellowing|tarnish(?:ed|ing)?|oxidiz(?:ed|ing)?|light use|gently used|like new|mint|NWT|NWOT|EUC|VGUC|GUC)\b/i;
 // Section headers that signal a condition block
 const CONDITION_HEADERS = /^condition[:\s]*$/i;
 

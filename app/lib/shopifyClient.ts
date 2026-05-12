@@ -843,8 +843,12 @@ export async function fetchShopifyProductsByCollections(
  * Fetches a Shopify product page and extracts metafield sections (h2/p pairs)
  * that aren't in the body_html, such as Condition and Dimensions.
  * Returns appended HTML in a format compatible with splitDescription parsing.
+ *
+ * When extractFallbackDescription=true, also tries to extract the main product
+ * description from a "Details" or "Description" section on the page — useful
+ * for stores where body_html is empty but the description renders in a page tab.
  */
-export async function scrapeProductPageSections(url: string): Promise<string> {
+export async function scrapeProductPageSections(url: string, extractFallbackDescription = false): Promise<string> {
   try {
     const res = await fetch(url, {
       headers: { Accept: "text/html" },
@@ -886,6 +890,36 @@ export async function scrapeProductPageSections(url: string): Promise<string> {
       if (val.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))) val = firstHalf.trim();
       if (val.length >= 3 && val.length <= 500) {
         sections.push(`<p>Condition: ${val}</p>`);
+      }
+    }
+
+    // When body_html is empty, try to extract the product description from the page.
+    // Many Shopify themes render the description in a "Details" or "Description" tab
+    // section that doesn't appear in body_html (e.g., Ange Archive's theme).
+    if (extractFallbackDescription && sections.length === 0) {
+      const descEnd = "(?:Materials?(?:\\s+\\+\\s*|\\s+)Care|Materials?|Care\\s+Instructions?|Shipping|Returns?|You\\s+might|You\\s+may|NEWSLETTER|Newsletter|SHOP\\b|Footer|\\u00a9\\s*\\d{4})";
+      const detailsResult = new RegExp(
+        `\\bDetails?\\b\\s+(.{20,800}?)\\s+${descEnd}`,
+        "is"
+      ).exec(text);
+      if (detailsResult) {
+        const raw = detailsResult[1].trim();
+        // Deduplicate repeated text (some themes echo the title into this section)
+        const half = Math.ceil(raw.length / 2);
+        const firstHalf = raw.slice(0, half);
+        const val = raw.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))
+          ? firstHalf.trim()
+          : raw;
+        if (val.length >= 20) {
+          // Split into individual sentences/lines to produce paragraph HTML
+          const paras = val
+            .split(/(?<=[.!?])\s{2,}|\.\s+(?=[A-Z])/)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 5);
+          if (paras.length > 0) {
+            sections.push(paras.map((p) => `<p>${p}</p>`).join(""));
+          }
+        }
       }
     }
 

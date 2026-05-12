@@ -39,15 +39,16 @@ export async function GET(request: NextRequest) {
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
-  await sendTrendingItemEmail(
-    "hana@vyaplatform.com",
-    p.title,
-    p.image,
-    p.store_name,
-    `${BASE_URL}/products/${p.store_slug}-${p.id}`,
-    17,
-    Number(p.price),
-    "USD",
-  );
+  await sendTrendingItemEmail("hana@vyaplatform.com", [
+    {
+      title: p.title,
+      image: p.image,
+      storeName: p.store_name,
+      productUrl: `${BASE_URL}/products/${p.store_slug}-${p.id}`,
+      favoriteCount: 17,
+      price: Number(p.price),
+      currency: "USD",
+    },
+  ]);
   return NextResponse.json({ ok: true, sent: "hana@vyaplatform.com", product: p.title });
 }

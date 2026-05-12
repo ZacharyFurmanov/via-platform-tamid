@@ -94,7 +94,8 @@ export async function GET(request: Request) {
             const batch = toScrape.slice(i, i + CONCURRENCY);
             await Promise.all(
               batch.map(async (p) => {
-                const extra = await scrapeProductPageSections(p.externalUrl);
+                const descriptionIsEmpty = !(p.description || "").replace(/<[^>]+>/g, "").trim();
+                const extra = await scrapeProductPageSections(p.externalUrl, descriptionIsEmpty);
                 if (extra) p.description = (p.description || "") + extra;
               })
             );

@@ -187,14 +187,15 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — scoped to the selected period
+    // Revenue per buying user — scoped to the selected period.
+    // Count distinct logged-in users + each anonymous order as its own buyer
+    // so the GMV and buyer count are consistent with the top-level GMV metric.
     sql`
       SELECT
-        COALESCE(SUM(order_total), 0)::float       AS total_gmv,
-        COUNT(DISTINCT user_id)::int               AS buying_users
+        COALESCE(SUM(order_total), 0)::float                                       AS total_gmv,
+        (COUNT(DISTINCT user_id) + COUNT(*) FILTER (WHERE user_id IS NULL))::int   AS buying_users
       FROM conversions
       WHERE order_total > 0
-        AND user_id IS NOT NULL
         AND (returned IS NULL OR returned = false)
         AND timestamp >= ${pStart} AND timestamp < ${pEnd}
     `,

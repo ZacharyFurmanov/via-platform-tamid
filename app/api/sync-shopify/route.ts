@@ -127,7 +127,8 @@ export async function POST(request: NextRequest) {
     if (shouldScrape) {
       await Promise.all(
         rawProducts.map(async (p) => {
-          const extra = await scrapeProductPageSections(p.externalUrl);
+          const descriptionIsEmpty = !(p.description || "").replace(/<[^>]+>/g, "").trim();
+          const extra = await scrapeProductPageSections(p.externalUrl, descriptionIsEmpty);
           if (extra) {
             p.description = (p.description || "") + extra;
           }

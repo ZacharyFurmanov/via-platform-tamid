@@ -298,69 +298,90 @@ export async function sendMembershipConfirmation(email: string) {
   });
 }
 
+export type FavoriteActivityProduct = {
+  title: string;
+  image: string | null;
+  storeName: string;
+  productUrl: string;
+  price?: number;
+  currency?: string;
+  clickCount?: number;
+};
+
 export async function sendFavoriteActivityNotification(
   email: string,
-  productTitle: string,
-  productImage: string | null,
-  storeName: string,
-  productUrl: string,
-  price?: number,
-  currency?: string,
-  clickCount?: number,
+  products: FavoriteActivityProduct[],
 ) {
+  if (products.length === 0) return;
   const resend = getResend();
 
-  const imgBlock = productImage
-    ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
-         <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
-           style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
-       </a>`
-    : `<div style="height:28px;"></div>`;
+  const isSingle = products.length === 1;
+  const subject = isSingle
+    ? "Someone else is looking at your saved piece"
+    : `${products.length} of your saved pieces are getting attention`;
 
-  const socialProof = clickCount && clickCount >= 5
-    ? `<p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(93,15,23,0.55);
-         font-family:Georgia,'Times New Roman',serif;margin:0 0 14px;">${clickCount} people have viewed this recently</p>`
-    : "";
-
-  const priceBlock = price && currency
-    ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
-         ${formatEmailPrice(price, currency)}
+  const intro = isSingle
+    ? `<p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+         Something you saved is <strong>getting attention.</strong>
+       </p>
+       <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+         Others are looking at it right now &mdash; and vintage is always one of a kind.
+         If you love it, don&rsquo;t wait.
        </p>`
-    : `<div style="height:28px;"></div>`;
+    : `<p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+         Some pieces you&rsquo;ve saved are <strong>getting attention.</strong>
+       </p>
+       <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+         Others are looking at the same things. Vintage is one of a kind &mdash; don&rsquo;t wait.
+       </p>`;
 
-  const content = `
-    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
-      Something you saved is <strong>getting attention.</strong>
-    </p>
-    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
-      Others are looking at it right now &mdash; and vintage is always one of a kind.
-      If you love it, don't wait.
-    </p>
+  const productBlocks = products.map((p, i) => {
+    const imgBlock = p.image
+      ? `<a href="${p.productUrl}" style="text-decoration:none;display:block;margin:28px 0 16px;">
+           <img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="480"
+             style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;" border="0" />
+         </a>`
+      : `<div style="height:20px;"></div>`;
 
-    ${imgBlock}
+    const socialProof = p.clickCount && p.clickCount >= 5
+      ? `<p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(93,15,23,0.55);
+           font-family:Georgia,'Times New Roman',serif;margin:0 0 10px;">${p.clickCount} people have viewed this recently</p>`
+      : "";
 
-    <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-       font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
-    <a href="${productUrl}" style="text-decoration:none;">
-      <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
-         line-height:1.35;margin:0 0 8px;">${productTitle}</p>
-    </a>
-    ${socialProof}
-    ${priceBlock}
-    <p style="font-size:14px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
-       line-height:1.75;margin:0 0 32px;">
-      Once it&rsquo;s gone, it&rsquo;s gone forever.
-    </p>
-    <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
-              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
-              font-family:Georgia,'Times New Roman',serif;">Shop Now</a>
-  `;
+    const priceBlock = p.price && p.currency
+      ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 12px;">
+           ${formatEmailPrice(p.price, p.currency)}
+         </p>`
+      : "";
+
+    return `
+      ${imgBlock}
+      <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${p.storeName}</p>
+      <a href="${p.productUrl}" style="text-decoration:none;">
+        <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+           line-height:1.35;margin:0 0 8px;">${p.title}</p>
+      </a>
+      ${socialProof}
+      ${priceBlock}
+      <p style="font-size:14px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
+         line-height:1.75;margin:0 0 12px;">
+        Once it&rsquo;s gone, it&rsquo;s gone forever.
+      </p>
+      <a href="${p.productUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:11px 28px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;margin-bottom:36px;">View Item</a>
+      ${i < products.length - 1 ? '<hr style="border:none;border-top:1px solid rgba(93,15,23,0.12);margin:8px 0 0;" />' : ""}
+    `;
+  }).join("");
+
+  const content = intro + productBlocks;
 
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: `Someone else is looking at your saved piece`,
+    subject,
     html: viaShell("For You", content),
   });
 }
@@ -1418,63 +1439,81 @@ export async function sendAbandonedCartEmail(
   });
 }
 
+export type TrendingEmailProduct = {
+  title: string;
+  image: string | null;
+  storeName: string;
+  productUrl: string;
+  favoriteCount: number;
+  price?: number;
+  currency?: string;
+};
+
 export async function sendTrendingItemEmail(
   email: string,
-  productTitle: string,
-  productImage: string | null,
-  storeName: string,
-  productUrl: string,
-  favoriteCount: number,
-  price?: number,
-  currency?: string,
+  products: TrendingEmailProduct[],
 ): Promise<void> {
+  if (products.length === 0) return;
   const resend = getResend();
 
-  const imgBlock = productImage
-    ? `<a href="${productUrl}" style="text-decoration:none;display:block;margin:32px 0 24px;">
-         <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="480"
-           style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" border="0" />
-       </a>`
-    : `<div style="height:28px;"></div>`;
+  const isSingle = products.length === 1;
+  const subject = isSingle ? "Your saved item is trending" : `${products.length} of your saved items are trending`;
 
-  const priceBlock = price && currency
-    ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 28px;">
-         ${formatEmailPrice(price, currency)}
+  const intro = isSingle
+    ? `<p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+         Something you saved is <strong>trending.</strong>
+       </p>
+       <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+         ${products[0].favoriteCount} people have saved this piece &mdash; and there&rsquo;s only one.
+         If you love it, don&rsquo;t wait.
        </p>`
-    : `<div style="height:16px;"></div>`;
+    : `<p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+         Some things you&rsquo;ve saved are <strong>trending.</strong>
+       </p>
+       <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
+         Others are eyeing the same pieces. If you love them, don&rsquo;t wait.
+       </p>`;
 
-  const content = `
-    <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
-      Something you saved is <strong>trending.</strong>
-    </p>
-    <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 4px;">
-      ${favoriteCount} people have saved this piece &mdash; and there&rsquo;s only one.
-      If you love it, don&rsquo;t wait.
-    </p>
+  const productBlocks = products.map((p) => {
+    const imgBlock = p.image
+      ? `<a href="${p.productUrl}" style="text-decoration:none;display:block;margin:28px 0 16px;">
+           <img src="${p.image}" alt="${p.title.replace(/"/g, "&quot;")}" width="480"
+             style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;" border="0" />
+         </a>`
+      : `<div style="height:20px;"></div>`;
 
-    ${imgBlock}
+    const priceBlock = p.price && p.currency
+      ? `<p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0 0 12px;">
+           ${formatEmailPrice(p.price, p.currency)}
+         </p>`
+      : "";
 
-    <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
-       font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${storeName}</p>
-    <a href="${productUrl}" style="text-decoration:none;">
-      <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
-         line-height:1.35;margin:0 0 8px;">${productTitle}</p>
-    </a>
-    ${priceBlock}
-    <p style="font-size:14px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;
-       line-height:1.75;margin:0 0 32px;">
-      Once it&rsquo;s gone, it&rsquo;s gone forever.
-    </p>
-    <a href="${productUrl}"
-       style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:13px 36px;
-              text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
-              font-family:Georgia,'Times New Roman',serif;">Shop Now</a>
-  `;
+    return `
+      ${imgBlock}
+      <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,15,23,0.5);
+         font-family:Georgia,'Times New Roman',serif;margin:0 0 5px;">${p.storeName}</p>
+      <a href="${p.productUrl}" style="text-decoration:none;">
+        <p style="font-size:17px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
+           line-height:1.35;margin:0 0 8px;">${p.title}</p>
+      </a>
+      ${priceBlock}
+      <p style="font-size:12px;color:rgba(93,15,23,0.5);font-family:Georgia,'Times New Roman',serif;margin:0 0 12px;">
+        ${p.favoriteCount} ${p.favoriteCount === 1 ? "person has" : "people have"} saved this &mdash; once it&rsquo;s gone, it&rsquo;s gone.
+      </p>
+      <a href="${p.productUrl}"
+         style="display:inline-block;background:#5D0F17;color:#F7F3EA !important;padding:11px 28px;
+                text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+                font-family:Georgia,'Times New Roman',serif;margin-bottom:36px;">View Item</a>
+      ${products.indexOf(p) < products.length - 1 ? '<hr style="border:none;border-top:1px solid rgba(93,15,23,0.12);margin:8px 0 0;" />' : ""}
+    `;
+  }).join("");
+
+  const content = intro + productBlocks;
 
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: "Your saved item is trending",
+    subject,
     html: viaShell("Trending", content),
   });
 }

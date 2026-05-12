@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import {
   getFavoriteNotificationCandidates,
   recordNotificationSent,
-  getNotificationsSentTodayCount,
 } from "@/app/lib/notification-db";
-import { sendFavoriteActivityNotification } from "@/app/lib/email";
+import { sendFavoriteActivityNotification, type FavoriteActivityProduct } from "@/app/lib/email";
 
-const MAX_DAILY_EMAILS_PER_USER = 3;
+const MAX_ITEMS_PER_EMAIL = 3;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
 
 export async function GET(request: Request) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
@@ -20,49 +18,45 @@ export async function GET(request: Request) {
 
   try {
     const candidates = await getFavoriteNotificationCandidates();
+
+    // Group all qualifying products by user — one email per user, never one per product
+    const byUser = new Map<string, typeof candidates>();
+    for (const c of candidates) {
+      const existing = byUser.get(c.user_id) ?? [];
+      existing.push(c);
+      byUser.set(c.user_id, existing);
+    }
+
     let sent = 0;
     let skipped = 0;
 
-    // Track per-user daily counts in this batch
-    const dailyCounts = new Map<string, number>();
+    for (const [userId, items] of byUser) {
+      // Sort by click count desc so the hottest items lead the email
+      items.sort((a, b) => b.recent_click_count - a.recent_click_count);
 
-    for (const candidate of candidates) {
-      // Check daily cap
-      let todayCount = dailyCounts.get(candidate.user_id);
-      if (todayCount === undefined) {
-        todayCount = await getNotificationsSentTodayCount(candidate.user_id);
-        dailyCounts.set(candidate.user_id, todayCount);
-      }
+      // Show top MAX_ITEMS_PER_EMAIL; mark ALL as sent so they don't re-queue
+      const toShow = items.slice(0, MAX_ITEMS_PER_EMAIL);
+      const email = items[0].email;
 
-      if (todayCount >= MAX_DAILY_EMAILS_PER_USER) {
-        skipped++;
-        continue;
-      }
-
-      const productUrl = `${BASE_URL}/products/${candidate.store_slug}-${candidate.product_id}?utm_source=email&utm_medium=email&utm_campaign=favorite_notification`;
+      const products: FavoriteActivityProduct[] = toShow.map((c) => ({
+        title: c.product_title,
+        image: c.product_image,
+        storeName: c.store_name,
+        productUrl: `${BASE_URL}/products/${c.store_slug}-${c.product_id}?utm_source=email&utm_medium=email&utm_campaign=favorite_notification`,
+        price: c.price,
+        currency: c.currency,
+        clickCount: c.recent_click_count,
+      }));
 
       try {
-        await sendFavoriteActivityNotification(
-          candidate.email,
-          candidate.product_title,
-          candidate.product_image,
-          candidate.store_name,
-          productUrl,
-          candidate.price,
-          candidate.currency,
-          candidate.recent_click_count,
+        await sendFavoriteActivityNotification(email, products);
+        // Record every qualifying item as sent (including ones beyond the display cap)
+        await Promise.all(
+          items.map((c) => recordNotificationSent(userId, c.product_id, c.recent_click_count))
         );
-
-        await recordNotificationSent(
-          candidate.user_id,
-          candidate.product_id,
-          candidate.recent_click_count,
-        );
-
-        dailyCounts.set(candidate.user_id, (todayCount ?? 0) + 1);
         sent++;
       } catch (err) {
-        console.error(`Failed to send notification to ${candidate.email}:`, err);
+        console.error(`Failed to send notification to ${email}:`, err);
         skipped++;
       }
     }
@@ -70,7 +64,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       candidates: candidates.length,
-      sent,
+      usersNotified: sent,
       skipped,
     });
   } catch (err) {
