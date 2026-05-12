@@ -22,31 +22,55 @@ export default function ImageCarousel({
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const mouseStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
+  const lightboxImgRef = useRef<HTMLDivElement>(null);
 
   const validImages = images.filter((src) => !!src);
   const safeImages = validImages.length > 0 ? validImages : ["/placeholder.jpg"];
 
-  // If no valid images at all, report immediately
   useEffect(() => {
     if (validImages.length === 0) onAllImagesFailed?.();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Report when every image URL has failed to load
   useEffect(() => {
     if (validImages.length > 0 && failedImages.size >= validImages.length) {
       onAllImagesFailed?.();
     }
   }, [failedImages, validImages.length, onAllImagesFailed]);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isLightboxOpen]);
+
   const hasMultiple = safeImages.length > 1;
 
   const goTo = useCallback(
     (idx: number) => {
       setCurrent((idx + safeImages.length) % safeImages.length);
+    },
+    [safeImages.length]
+  );
+
+  const goToLightbox = useCallback(
+    (idx: number) => {
+      setCurrent((idx + safeImages.length) % safeImages.length);
+      setLightboxZoomed(false);
+      if (lightboxImgRef.current) {
+        lightboxImgRef.current.scrollTop = 0;
+        lightboxImgRef.current.scrollLeft = 0;
+      }
     },
     [safeImages.length]
   );
@@ -69,7 +93,22 @@ export default function ImageCarousel({
     [current, goTo]
   );
 
-  // Touch handlers
+  const lightboxPrev = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      goToLightbox(current - 1);
+    },
+    [current, goToLightbox]
+  );
+
+  const lightboxNext = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      goToLightbox(current + 1);
+    },
+    [current, goToLightbox]
+  );
+
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
@@ -82,7 +121,6 @@ export default function ImageCarousel({
       const diffY = touchStartY.current - e.changedTouches[0].clientY;
       touchStartX.current = null;
       touchStartY.current = null;
-      // Only swipe if horizontal movement dominates (not a vertical scroll)
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
         goTo(current + (diffX > 0 ? 1 : -1));
       }
@@ -90,7 +128,6 @@ export default function ImageCarousel({
     [current, goTo]
   );
 
-  // Mouse drag handlers (for laptop trackpad / desktop drag)
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     mouseStartX.current = e.clientX;
     isDragging.current = false;
@@ -125,7 +162,29 @@ export default function ImageCarousel({
     [goTo]
   );
 
-  // Pre-render current + adjacent images with instant opacity swap
+  const openLightbox = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLightboxZoomed(false);
+    setIsLightboxOpen(true);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setIsLightboxOpen(false);
+    setLightboxZoomed(false);
+  }, []);
+
+  const toggleZoom = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !lightboxZoomed;
+    setLightboxZoomed(next);
+    if (!next && lightboxImgRef.current) {
+      lightboxImgRef.current.scrollTop = 0;
+      lightboxImgRef.current.scrollLeft = 0;
+    }
+  }, [lightboxZoomed]);
+
+  // Pre-render current + adjacent images
   const renderImages = (sizes: string, objectPosition = "object-top") =>
     safeImages.map((src, idx) => {
       const isAdjacentOrCurrent =
@@ -183,7 +242,6 @@ export default function ImageCarousel({
 
         {hasMultiple && (
           <>
-            {/* Left arrow */}
             <button
               onClick={prev}
               className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
@@ -194,7 +252,6 @@ export default function ImageCarousel({
               </svg>
             </button>
 
-            {/* Right arrow */}
             <button
               onClick={next}
               className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
@@ -205,7 +262,6 @@ export default function ImageCarousel({
               </svg>
             </button>
 
-            {/* Dots */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30">
               {safeImages.map((_, idx) => (
                 <button
@@ -228,71 +284,199 @@ export default function ImageCarousel({
 
   // ── Detail variant ──
   return (
-    <div>
-      <div
-        className="relative aspect-[2/3] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
-        style={{ touchAction: "pan-y" }}
-        onTouchStart={hasMultiple ? onTouchStart : undefined}
-        onTouchEnd={hasMultiple ? onTouchEnd : undefined}
-        onMouseDown={hasMultiple ? onMouseDown : undefined}
-        onMouseMove={hasMultiple ? onMouseMove : undefined}
-        onMouseUp={hasMultiple ? onMouseUp : undefined}
-      >
-        {renderImages("(max-width: 768px) 100vw, 600px", "object-center")}
+    <>
+      <div>
+        <div
+          className="relative aspect-[4/5] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "pan-y" }}
+          onTouchStart={hasMultiple ? onTouchStart : undefined}
+          onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+          onMouseDown={hasMultiple ? onMouseDown : undefined}
+          onMouseMove={hasMultiple ? onMouseMove : undefined}
+          onMouseUp={hasMultiple ? onMouseUp : undefined}
+        >
+          {renderImages("(max-width: 768px) 100vw, 600px", "object-center")}
 
-        {safeImages[0] === "/placeholder.jpg" && (
-          <div className="absolute inset-0 bg-[#D8CABD]/50" />
-        )}
+          {safeImages[0] === "/placeholder.jpg" && (
+            <div className="absolute inset-0 bg-[#D8CABD]/50" />
+          )}
 
+          {/* Image counter */}
+          {hasMultiple && (
+            <div className="absolute top-3 left-3 z-20 bg-black/40 text-white text-xs px-2 py-1 rounded-full select-none">
+              {current + 1} / {safeImages.length}
+            </div>
+          )}
+
+          {/* Expand / zoom button */}
+          <button
+            onClick={openLightbox}
+            className="absolute bottom-3 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
+            aria-label="View full screen"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5" />
+            </svg>
+          </button>
+
+          {hasMultiple && (
+            <>
+              <button
+                onClick={prev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
+                aria-label="Previous image"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <button
+                onClick={next}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
+                aria-label="Next image"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnail strip — visible on both mobile and desktop */}
         {hasMultiple && (
-          <>
-            <button
-              onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
-              aria-label="Previous image"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
-              aria-label="Next image"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
+          <div className="flex gap-2 mt-3 overflow-x-auto px-4 md:px-0 pb-1">
+            {safeImages.map((src, idx) => (
+              <button
+                key={idx}
+                onClick={() => goTo(idx)}
+                className={`relative flex-shrink-0 w-14 h-[72px] overflow-hidden rounded transition-all ${
+                  idx === current
+                    ? "ring-2 ring-black opacity-100"
+                    : "opacity-40 hover:opacity-70"
+                }`}
+                aria-label={`View image ${idx + 1}`}
+              >
+                <NextImage
+                  src={src}
+                  alt={`${alt} ${idx + 1}`}
+                  fill
+                  sizes="56px"
+                  className="object-cover object-center"
+                />
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {hasMultiple && (
-        <div className="hidden md:flex gap-2 mt-3 overflow-x-auto">
-          {safeImages.map((src, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrent(idx)}
-              className={`relative flex-shrink-0 w-16 h-20 overflow-hidden rounded transition-all ${
-                idx === current
-                  ? "ring-2 ring-black opacity-100"
-                  : "opacity-50 hover:opacity-80"
-              }`}
-              aria-label={`View image ${idx + 1}`}
+      {/* ── Lightbox ── */}
+      {isLightboxOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col" onClick={closeLightbox}>
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <span className="text-white/60 text-sm select-none">
+              {current + 1} / {safeImages.length}
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleZoom}
+                className="text-white/70 hover:text-white transition text-xs uppercase tracking-wide select-none"
+                aria-label={lightboxZoomed ? "Zoom out" : "Zoom in"}
+              >
+                {lightboxZoomed ? "Zoom out" : "Zoom in"}
+              </button>
+              <button
+                onClick={closeLightbox}
+                className="w-9 h-9 flex items-center justify-center text-white bg-white/10 hover:bg-white/20 rounded-full transition"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Image area */}
+          <div
+            ref={lightboxImgRef}
+            className="flex-1 relative"
+            style={{
+              overflow: lightboxZoomed ? "auto" : "hidden",
+              display: lightboxZoomed ? "block" : "flex",
+              alignItems: lightboxZoomed ? undefined : "center",
+              justifyContent: lightboxZoomed ? undefined : "center",
+              cursor: lightboxZoomed ? "zoom-out" : "zoom-in",
+            }}
+            onClick={toggleZoom}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={safeImages[current]}
+              alt={alt}
+              style={{
+                display: "block",
+                maxWidth: lightboxZoomed ? "none" : "100%",
+                maxHeight: lightboxZoomed ? "none" : "100%",
+                width: lightboxZoomed ? "200%" : "auto",
+                height: lightboxZoomed ? "auto" : "auto",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+
+          {/* Navigation arrows */}
+          {hasMultiple && (
+            <>
+              <button
+                onClick={lightboxPrev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition z-10"
+                aria-label="Previous image"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={lightboxNext}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition z-10"
+                aria-label="Next image"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Thumbnail strip */}
+          {hasMultiple && (
+            <div
+              className="flex gap-2 px-4 py-3 overflow-x-auto justify-center flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
             >
-              <NextImage
-                src={src}
-                alt={`${alt} ${idx + 1}`}
-                fill
-                sizes="64px"
-                className="object-cover object-center"
-              />
-            </button>
-          ))}
+              {safeImages.map((src, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToLightbox(idx)}
+                  className={`relative flex-shrink-0 w-12 h-16 overflow-hidden rounded transition-all ${
+                    idx === current
+                      ? "ring-2 ring-white opacity-100"
+                      : "opacity-40 hover:opacity-70"
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={`${alt} ${idx + 1}`} className="w-full h-full object-cover object-center" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }

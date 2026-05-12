@@ -368,9 +368,12 @@ export async function GET(request: NextRequest) {
   const totalSavers = saverRows[0]?.total_savers ?? 0;
   const saversBought = saverBuyerRows[0]?.savers_who_bought ?? 0;
 
-  const convRate = cl.total_clicks > 0 ? co.total_conversions / cl.total_clicks : 0;
-  const convRate7d = cl.clicks_7d > 0 ? co.conversions_7d / cl.clicks_7d : 0;
-  const convRatePrev7d = cl.clicks_prev_7d > 0 ? co.conversions_prev_7d / cl.clicks_prev_7d : 0;
+  // Conversion rate = orders / unique visitors (industry standard)
+  // Using total_ever_active / mau / wau as the visitor denominator since
+  // VYA is a gated platform where all meaningful visitors are logged-in users.
+  const convRate = (wm.total_ever_active as number) > 0 ? co.total_conversions / (wm.total_ever_active as number) : 0;
+  const convRate7d = (wm.wau as number) > 0 ? co.conversions_7d / (wm.wau as number) : 0;
+  const convRatePrev7d = (wm.wau_prev as number) > 0 ? co.conversions_prev_7d / (wm.wau_prev as number) : 0;
 
   const stickiness = wm.mau > 0 ? wm.wau / wm.mau : 0;
   const stickinessPrev = (wm.mau_for_prev_week as number) > 0
@@ -398,11 +401,11 @@ export async function GET(request: NextRequest) {
       allTime: convRate,
       last7d: convRate7d,
       prev7d: convRatePrev7d,
-      totalClicks: cl.total_clicks,
+      totalVisitors: wm.total_ever_active,
       totalConversions: co.total_conversions,
-      periodClicks: cl.clicks_30d,
+      periodVisitors: wm.mau,
       periodConversions: co.conversions_30d,
-      periodRate: (cl.clicks_30d as number) > 0 ? (co.conversions_30d as number) / (cl.clicks_30d as number) : 0,
+      periodRate: (wm.mau as number) > 0 ? (co.conversions_30d as number) / (wm.mau as number) : 0,
     },
     wau: { current: wm.wau, prev: wm.wau_prev },
     mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active },

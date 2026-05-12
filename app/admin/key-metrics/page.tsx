@@ -142,7 +142,7 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
 type Metrics = {
   gmv: { total: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
   totalOrders: { allTime: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
-  conversionRate: { allTime: number; last7d: number; prev7d: number; totalClicks: number; totalConversions: number; periodClicks: number; periodConversions: number; periodRate: number };
+  conversionRate: { allTime: number; last7d: number; prev7d: number; totalVisitors: number; totalConversions: number; periodVisitors: number; periodConversions: number; periodRate: number };
   wau: { current: number; prev: number };
   mau: { current: number; prev: number; totalEverActive: number };
   stickiness: { current: number; prev: number };
@@ -323,10 +323,10 @@ export default function KeyMetricsPage() {
                   label={data.period?.isMonth || data.period?.isAllTime ? `Conversion Rate — ${data.period.label}` : "Conversion Rate (7d)"}
                   value={data.period?.isMonth || data.period?.isAllTime ? fmtPct(data.conversionRate.periodRate) : fmtPct(data.conversionRate.last7d)}
                   sub={data.period?.isMonth || data.period?.isAllTime
-                    ? `${fmtNum(data.conversionRate.periodConversions)} orders from ${fmtNum(data.conversionRate.periodClicks)} clicks in ${data.period?.label}`
-                    : `${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalClicks)} clicks (all time)`}
+                    ? `${fmtNum(data.conversionRate.periodConversions)} orders from ${fmtNum(data.conversionRate.periodVisitors)} visitors in ${data.period?.label}`
+                    : `${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalVisitors)} visitors (all time)`}
                   trend={data.period?.isMonth ? <TrendBadge current={data.conversionRate.periodRate} prev={data.conversionRate.prev7d} fmtFn={fmtPct} /> : <TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
-                  note="Clicks that resulted in an attributed purchase"
+                  note="Visitors (ever-active users) who placed an order"
                   href="/admin/conversions"
                 />
                 <MetricCard

@@ -430,7 +430,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
           {/* Images — carousel on mobile, vertical stack on desktop */}
           <div>
-            <div className="md:hidden">
+            <div className="md:hidden -mx-6">
               <ImageCarousel images={productImages} alt={product.title} variant="detail" />
             </div>
             <div className="hidden md:flex flex-col gap-2">
@@ -450,7 +450,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           </div>
 
           {/* Details — sticky on desktop, independently scrollable if content exceeds viewport */}
-          <div className="flex flex-col py-1 md:sticky md:top-8 md:self-start md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2 scrollbar-hide">
+          <div className="flex flex-col pt-4 pb-1 md:pt-1 md:sticky md:top-8 md:self-start md:max-h-[calc(100vh-4rem)] md:overflow-y-auto md:pr-2 scrollbar-hide">
             <TrackedStoreLink
               href={`/stores/${store.slug}`}
               storeSlug={store.slug}
