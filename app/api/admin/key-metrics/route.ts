@@ -187,9 +187,9 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — scoped to the selected period.
-    // Count distinct logged-in users + each anonymous order as its own buyer
-    // so the GMV and buyer count are consistent with the top-level GMV metric.
+    // Revenue per buying user — always all-time so it matches the all-time GMV
+    // and all-time order count shown at the top of the dashboard.
+    // Count distinct logged-in users + each anonymous order as its own buyer.
     sql`
       SELECT
         COALESCE(SUM(order_total), 0)::float                                       AS total_gmv,
@@ -197,7 +197,6 @@ export async function GET(request: NextRequest) {
       FROM conversions
       WHERE order_total > 0
         AND (returned IS NULL OR returned = false)
-        AND timestamp >= ${pStart} AND timestamp < ${pEnd}
     `,
 
     // GMV by week sparkline — always last 10 weeks for context

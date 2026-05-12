@@ -346,8 +346,8 @@ export default function KeyMetricsPage() {
                 <MetricCard
                   label="Revenue per Buying User"
                   value={fmt$(data.revenuePerUser.value)}
-                  sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} buyers in period`}
-                  note="Period GMV ÷ distinct buyers in the period"
+                  sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} buyers all time`}
+                  note="All-time GMV ÷ distinct buyers all time"
                   href="/admin/customers"
                 />
                 <MetricCard
