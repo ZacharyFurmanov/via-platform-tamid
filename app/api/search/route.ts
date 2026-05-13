@@ -75,6 +75,11 @@ const categoryAliases: Record<string, string> = {
   cardholder: "wallets",
 };
 
+// Strip accents/diacritics so "chloe" matches "Chloé", "rene" matches "René", etc.
+function stripAccents(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
 // Strip stop words and punctuation, return meaningful search tokens
 function parseWords(q: string): string[] {
   const all = q
@@ -113,7 +118,8 @@ function detectBrand(q: string, words: string[]): (typeof brands)[0] | null {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawQ = searchParams.get("q")?.trim() ?? "";
-  const q = rawQ.toLowerCase();
+  // Normalize: lowercase + strip accents so "chloe" matches "Chloé"
+  const q = stripAccents(rawQ.toLowerCase());
 
   if (!q || q.length < 2) {
     return NextResponse.json({ products: [], designers: [], categories: [], stores: [] });
@@ -121,6 +127,9 @@ export async function GET(request: Request) {
 
   try {
     const sql = neon(getDatabaseUrl());
+
+    // Ensure unaccent extension is available (standard PostgreSQL contrib, no-op if already installed)
+    sql`CREATE EXTENSION IF NOT EXISTS unaccent`.catch(() => {});
 
     // ── 1. Parse query into tokens ────────────────────────────────────────────
     const words = parseWords(q);
@@ -143,7 +152,7 @@ export async function GET(request: Request) {
     // ── 3. Quick-links: designers, categories, stores ─────────────────────────
     const matchedDesigners = brands
       .filter(b => {
-        const bLabel = b.label.toLowerCase();
+        const bLabel = stripAccents(b.label.toLowerCase());
         if (bLabel.includes(q)) return true;
         if (b.keywords.some(kw => kw.includes(q) || q.includes(kw))) return true;
         if (words.length > 1 && words.every(w => bLabel.includes(w))) return true;
@@ -200,16 +209,16 @@ export async function GET(request: Request) {
         SELECT
           id, store_slug, store_name, title, price, currency, image, images, created_at,
           (
-            CASE WHEN LOWER(title) = ${q}                THEN 10000 ELSE 0 END
-            + CASE WHEN LOWER(title) LIKE ${startPattern}  THEN  5000 ELSE 0 END
-            + CASE WHEN LOWER(title) LIKE ${phrasePattern}  THEN  2000 ELSE 0 END
+            CASE WHEN unaccent(LOWER(title)) = ${q}               THEN 10000 ELSE 0 END
+            + CASE WHEN unaccent(LOWER(title)) LIKE ${startPattern}  THEN  5000 ELSE 0 END
+            + CASE WHEN unaccent(LOWER(title)) LIKE ${phrasePattern}  THEN  2000 ELSE 0 END
             + FLOOR(
                 ts_rank(
-                  setweight(to_tsvector('english', COALESCE(title, '')), 'A'),
-                  plainto_tsquery('english', ${safeQ})
+                  setweight(to_tsvector('english', unaccent(COALESCE(title, ''))), 'A'),
+                  plainto_tsquery('english', unaccent(${safeQ}))
                 ) * 1000
               )::int
-            + CASE WHEN LOWER(title) LIKE ALL(${wordPatterns}) THEN 500 ELSE 0 END
+            + CASE WHEN unaccent(LOWER(title)) LIKE ALL(${wordPatterns}) THEN 500 ELSE 0 END
             + CASE
                 WHEN product_type IS NOT NULL
                      AND LOWER(product_type) LIKE ${brandPtPattern}
@@ -218,7 +227,7 @@ export async function GET(request: Request) {
               END
             + CASE
                 WHEN description IS NOT NULL
-                     AND LOWER(description) LIKE ${phrasePattern}
+                     AND unaccent(LOWER(description)) LIKE ${phrasePattern}
                 THEN 120
                 ELSE 0
               END
@@ -231,14 +240,14 @@ export async function GET(request: Request) {
           (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
           AND (
-            LOWER(title) LIKE ${phrasePattern}
-            OR LOWER(title) LIKE ANY(${wordPatterns})
-            OR to_tsvector('english', COALESCE(title, ''))
-               @@ plainto_tsquery('english', ${safeQ})
+            unaccent(LOWER(title)) LIKE ${phrasePattern}
+            OR unaccent(LOWER(title)) LIKE ANY(${wordPatterns})
+            OR to_tsvector('english', unaccent(COALESCE(title, '')))
+               @@ plainto_tsquery('english', unaccent(${safeQ}))
             OR (product_type IS NOT NULL
                 AND LOWER(product_type) LIKE ${brandPtPattern})
             OR (description IS NOT NULL
-                AND LOWER(description) LIKE ${phrasePattern})
+                AND unaccent(LOWER(description)) LIKE ${phrasePattern})
           )
       )
       SELECT * FROM scored WHERE relevance > 0
@@ -261,8 +270,8 @@ export async function GET(request: Request) {
           WHERE
             (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
             AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-            AND similarity(LOWER(title), ${anchor}) > 0.25
-          ORDER BY similarity(LOWER(title), ${anchor}) DESC, created_at DESC NULLS LAST
+            AND similarity(unaccent(LOWER(title)), ${anchor}) > 0.25
+          ORDER BY similarity(unaccent(LOWER(title)), ${anchor}) DESC, created_at DESC NULLS LAST
           LIMIT 50
         `;
         const existingIds = new Set(allProducts.map(p => p.id));

@@ -149,13 +149,13 @@ type Metrics = {
   returningUsers: { last7d: number; last30d: number };
   buyerRetention: { totalBuyers: number; returnedAfterPurchase: number; boughtAgain: number; returnRate: number | null; repeatPurchaseRate: number | null };
   saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
-  revenuePerUser: { value: number; buyingUsers: number };
+  revenuePerUser: { value: number; buyingUsers: number; allTimeValue: number; allTimeBuyingUsers: number };
   gmvByWeek: { week: string; gmv: number }[];
   totalCommission: number;
   users: { registered: number; waitlist: number; approved: number };
   waitlistByMonth: { month: string; signups: number; approved: number }[];
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
-  emailCtr?: { opens7d: number; clicks7d: number; ctr7d: number; opensPrev7d: number; clicksPrev7d: number; ctrPrev7d: number; opensPeriod: number; clicksPeriod: number; ctrPeriod: number; opensAll: number; clicksAll: number; ctrAll: number };
+  emailCtr?: { opens7d: number; clicks7d: number; delivered7d: number; ctr7d: number; opensPrev7d: number; clicksPrev7d: number; ctrPrev7d: number; opensPeriod: number; clicksPeriod: number; deliveredPeriod: number; ctrPeriod: number; opensAll: number; clicksAll: number; deliveredAll: number; ctrAll: number };
   period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
 };
 
@@ -326,7 +326,7 @@ export default function KeyMetricsPage() {
                     ? `${fmtNum(data.conversionRate.periodConversions)} orders from ${fmtNum(data.conversionRate.periodVisitors)} visitors in ${data.period?.label}`
                     : `${fmtNum(data.conversionRate.totalConversions)} orders from ${fmtNum(data.conversionRate.totalVisitors)} visitors (all time)`}
                   trend={data.period?.isMonth ? <TrendBadge current={data.conversionRate.periodRate} prev={data.conversionRate.prev7d} fmtFn={fmtPct} /> : <TrendBadge current={data.conversionRate.last7d} prev={data.conversionRate.prev7d} fmtFn={fmtPct} />}
-                  note="Visitors (ever-active users) who placed an order"
+                  note="Active users who placed an order in the period"
                   href="/admin/conversions"
                 />
                 <MetricCard
@@ -335,26 +335,26 @@ export default function KeyMetricsPage() {
                     ? fmtPct(data.emailCtr?.ctrPeriod ?? 0)
                     : fmtPct(data.emailCtr?.ctr7d ?? 0)}
                   sub={data.period?.isMonth || data.period?.isAllTime
-                    ? `${fmtNum(data.emailCtr?.clicksPeriod ?? 0)} clicks from ${fmtNum(data.emailCtr?.opensPeriod ?? 0)} opens`
-                    : `${fmtNum(data.emailCtr?.clicks7d ?? 0)} clicks from ${fmtNum(data.emailCtr?.opens7d ?? 0)} opens`}
+                    ? `${fmtNum(data.emailCtr?.clicksPeriod ?? 0)} clicks / ${fmtNum(data.emailCtr?.deliveredPeriod ?? 0)} delivered in ${data.period?.label}`
+                    : `${fmtNum(data.emailCtr?.clicks7d ?? 0)} clicks / ${fmtNum(data.emailCtr?.delivered7d ?? 0)} delivered (7d)`}
                   trend={data.period?.isMonth
                     ? undefined
                     : <TrendBadge current={data.emailCtr?.ctr7d ?? 0} prev={data.emailCtr?.ctrPrev7d ?? 0} fmtFn={fmtPct} />}
-                  note="Of members who opened an email, % who clicked through to the site"
+                  note="% of delivered emails that got a click (click-through rate)"
                   href="/admin/emails"
                 />
                 <MetricCard
                   label="Revenue per Buying User"
                   value={fmt$(data.revenuePerUser.value)}
-                  sub={`Across ${fmtNum(data.revenuePerUser.buyingUsers)} buyers all time`}
-                  note="All-time GMV ÷ distinct buyers all time"
+                  sub={`${fmtNum(data.revenuePerUser.buyingUsers)} buyers in ${data.period?.label ?? "this period"}`}
+                  note={`Period GMV ÷ distinct buyers · All time: ${fmt$(data.revenuePerUser.allTimeValue)} across ${fmtNum(data.revenuePerUser.allTimeBuyingUsers)} buyers`}
                   href="/admin/customers"
                 />
                 <MetricCard
                   label="Save-to-Purchase Rate"
                   value={fmtPct(data.saveToPurchase.rate)}
-                  sub={`${fmtNum(data.saveToPurchase.saversBought)} of ${fmtNum(data.saveToPurchase.totalSavers)} users who saved also bought`}
-                  note="All-time: users who favorited anything and later placed an order"
+                  sub={`${fmtNum(data.saveToPurchase.saversBought)} of ${fmtNum(data.saveToPurchase.totalSavers)} who saved also bought`}
+                  note={`In ${data.period?.label ?? "this period"}: users who favorited a product and also placed an order`}
                   href="/admin/customers"
                 />
               </div>

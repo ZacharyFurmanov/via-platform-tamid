@@ -166,13 +166,15 @@ export async function GET(request: NextRequest) {
       ) a
     `,
 
-    // Save-to-purchase — all time
+    // Save-to-purchase — scoped to the selected period
     sql`
       SELECT COUNT(DISTINCT user_id::text)::int AS total_savers FROM (
         SELECT user_id FROM product_favorites WHERE user_id IS NOT NULL
+          AND created_at >= ${pStart} AND created_at < ${pEnd}
         UNION
         SELECT user_id FROM store_favorites WHERE user_id IS NOT NULL
-      ) all_savers
+          AND created_at >= ${pStart} AND created_at < ${pEnd}
+      ) period_savers
     `,
 
     sql`
@@ -181,19 +183,25 @@ export async function GET(request: NextRequest) {
       WHERE c.user_id IS NOT NULL
         AND c.order_total > 0
         AND (c.returned IS NULL OR c.returned = false)
+        AND c.timestamp >= ${pStart} AND c.timestamp < ${pEnd}
         AND (
-          EXISTS (SELECT 1 FROM product_favorites pf WHERE pf.user_id::text = c.user_id)
-          OR EXISTS (SELECT 1 FROM store_favorites sf WHERE sf.user_id::text = c.user_id)
+          EXISTS (SELECT 1 FROM product_favorites pf
+            WHERE pf.user_id::text = c.user_id
+            AND pf.created_at >= ${pStart} AND pf.created_at < ${pEnd})
+          OR EXISTS (SELECT 1 FROM store_favorites sf
+            WHERE sf.user_id::text = c.user_id
+            AND sf.created_at >= ${pStart} AND sf.created_at < ${pEnd})
         )
     `,
 
-    // Revenue per buying user — always all-time so it matches the all-time GMV
-    // and all-time order count shown at the top of the dashboard.
-    // Count distinct logged-in users + each anonymous order as its own buyer.
+    // Revenue per buying user — scoped to the selected period AND all-time for context
     sql`
       SELECT
-        COALESCE(SUM(order_total), 0)::float                                       AS total_gmv,
-        (COUNT(DISTINCT user_id) + COUNT(*) FILTER (WHERE user_id IS NULL))::int   AS buying_users
+        COALESCE(SUM(order_total), 0)::float                                                                                                      AS total_gmv,
+        (COUNT(DISTINCT user_id) + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                                                  AS buying_users,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd}), 0)::float                                        AS period_gmv,
+        (COUNT(DISTINCT user_id) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd})
+         + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${pStart} AND timestamp < ${pEnd}))::int                                       AS period_buying_users
       FROM conversions
       WHERE order_total > 0
         AND (returned IS NULL OR returned = false)
@@ -299,20 +307,24 @@ export async function GET(request: NextRequest) {
       LEFT JOIN repeat_buyers   rep ON rep.uid = pb.uid
     `,
 
-    // Email click-to-open rate — from email_events table (created by Resend webhook)
+    // Email stats — from email_events table (created by Resend webhook)
     sql`
       SELECT
-        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${shortStart}  AND created_at < ${shortEnd})::int   AS opens_7d,
-        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${shortStart} AND created_at < ${shortEnd})::int   AS clicks_7d,
-        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${shortPrevStart}  AND created_at < ${shortPrevEnd})::int AS opens_prev_7d,
-        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int AS clicks_prev_7d,
-        COUNT(*) FILTER (WHERE event_type = 'email.opened' AND created_at >= ${pStart}  AND created_at < ${pEnd})::int   AS opens_period,
-        COUNT(*) FILTER (WHERE event_type = 'email.clicked' AND created_at >= ${pStart} AND created_at < ${pEnd})::int   AS clicks_period,
-        COUNT(*) FILTER (WHERE event_type = 'email.opened')::int  AS opens_all,
-        COUNT(*) FILTER (WHERE event_type = 'email.clicked')::int AS clicks_all
+        COUNT(*) FILTER (WHERE event_type = 'email.opened'    AND created_at >= ${shortStart}     AND created_at < ${shortEnd})::int      AS opens_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked'   AND created_at >= ${shortStart}     AND created_at < ${shortEnd})::int      AS clicks_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.delivered' AND created_at >= ${shortStart}     AND created_at < ${shortEnd})::int      AS delivered_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened'    AND created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int  AS opens_prev_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked'   AND created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int  AS clicks_prev_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.delivered' AND created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int  AS delivered_prev_7d,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened'    AND created_at >= ${pStart}         AND created_at < ${pEnd})::int          AS opens_period,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked'   AND created_at >= ${pStart}         AND created_at < ${pEnd})::int          AS clicks_period,
+        COUNT(*) FILTER (WHERE event_type = 'email.delivered' AND created_at >= ${pStart}         AND created_at < ${pEnd})::int          AS delivered_period,
+        COUNT(*) FILTER (WHERE event_type = 'email.opened')::int   AS opens_all,
+        COUNT(*) FILTER (WHERE event_type = 'email.clicked')::int  AS clicks_all,
+        COUNT(*) FILTER (WHERE event_type = 'email.delivered')::int AS delivered_all
       FROM email_events
       WHERE category NOT IN ('magic_link', 'internal_alert')
-    `.catch(() => [{ opens_7d: 0, clicks_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, opens_period: 0, clicks_period: 0, opens_all: 0, clicks_all: 0 }]),
+    `.catch(() => [{ opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 }]),
 
     // Returning users — scoped to the selected period
     sql`
@@ -380,7 +392,7 @@ export async function GET(request: NextRequest) {
     ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
     : 0;
 
-  const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; opens_prev_7d: number; clicks_prev_7d: number; opens_period: number; clicks_period: number; opens_all: number; clicks_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, opens_period: 0, clicks_period: 0, opens_all: 0, clicks_all: 0 };
+  const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; delivered_7d: number; opens_prev_7d: number; clicks_prev_7d: number; delivered_prev_7d: number; opens_period: number; clicks_period: number; delivered_period: number; opens_all: number; clicks_all: number; delivered_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 };
 
   return NextResponse.json({
     gmv: {
@@ -416,8 +428,14 @@ export async function GET(request: NextRequest) {
       saversBought,
     },
     revenuePerUser: {
-      value: rev.buying_users > 0 ? (rev.total_gmv as number) / (rev.buying_users as number) : 0,
-      buyingUsers: rev.buying_users,
+      value: (rev.period_buying_users as number) > 0
+        ? (rev.period_gmv as number) / (rev.period_buying_users as number)
+        : 0,
+      buyingUsers: rev.period_buying_users as number,
+      allTimeValue: (rev.buying_users as number) > 0
+        ? (rev.total_gmv as number) / (rev.buying_users as number)
+        : 0,
+      allTimeBuyingUsers: rev.buying_users as number,
     },
     gmvByWeek: gmvByWeekRows,
     totalCommission,
@@ -442,16 +460,20 @@ export async function GET(request: NextRequest) {
     emailCtr: {
       opens7d: ec.opens_7d,
       clicks7d: ec.clicks_7d,
-      ctr7d: ec.opens_7d > 0 ? ec.clicks_7d / ec.opens_7d : 0,
+      delivered7d: ec.delivered_7d,
+      // CTR = clicks / delivered (industry standard click-through rate)
+      ctr7d: ec.delivered_7d > 0 ? ec.clicks_7d / ec.delivered_7d : 0,
       opensPrev7d: ec.opens_prev_7d,
       clicksPrev7d: ec.clicks_prev_7d,
-      ctrPrev7d: ec.opens_prev_7d > 0 ? ec.clicks_prev_7d / ec.opens_prev_7d : 0,
+      ctrPrev7d: ec.delivered_prev_7d > 0 ? ec.clicks_prev_7d / ec.delivered_prev_7d : 0,
       opensPeriod: ec.opens_period,
       clicksPeriod: ec.clicks_period,
-      ctrPeriod: ec.opens_period > 0 ? ec.clicks_period / ec.opens_period : 0,
+      deliveredPeriod: ec.delivered_period,
+      ctrPeriod: ec.delivered_period > 0 ? ec.clicks_period / ec.delivered_period : 0,
       opensAll: ec.opens_all,
       clicksAll: ec.clicks_all,
-      ctrAll: ec.opens_all > 0 ? ec.clicks_all / ec.opens_all : 0,
+      deliveredAll: ec.delivered_all,
+      ctrAll: ec.delivered_all > 0 ? ec.clicks_all / ec.delivered_all : 0,
     },
     period: {
       start: pStart.toISOString(),

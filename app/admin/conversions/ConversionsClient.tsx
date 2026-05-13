@@ -69,6 +69,8 @@ export default function AdminConversionsPage() {
   const [selected, setSelected] = useState<Conversion | null>(null);
   const [candidates, setCandidates] = useState<CandidateClick[]>([]);
   const [userClicks, setUserClicks] = useState<CandidateClick[]>([]);
+  const [sameOrderSiblings, setSameOrderSiblings] = useState<{ conversionId: string; orderId: string; orderTotal: number; currency: string; timestamp: string; productName: string | null }[]>([]);
+  const [nearbyOrders, setNearbyOrders] = useState<{ conversionId: string; orderId: string; orderTotal: number; currency: string; timestamp: string; productName: string | null }[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [matching, setMatching] = useState<string | null>(null);
   const [manualUserInput, setManualUserInput] = useState("");
@@ -101,6 +103,8 @@ export default function AdminConversionsPage() {
     setProductResults([]);
     setCandidates([]);
     setUserClicks([]);
+    setSameOrderSiblings([]);
+    setNearbyOrders([]);
     setEmailStatus(null);
     setEmailErrorMsg(null);
     setCandidatesLoading(true);
@@ -112,6 +116,8 @@ export default function AdminConversionsPage() {
     ]).then(([convData, productData]) => {
       setCandidates(convData.clicks ?? []);
       setUserClicks(convData.userClicks ?? []);
+      setSameOrderSiblings(convData.sameOrderSiblings ?? []);
+      setNearbyOrders(convData.nearbyOrders ?? []);
       setCandidatesLoading(false);
       setProductResults(productData.products ?? []);
       setProductSearchLoading(false);
@@ -266,6 +272,17 @@ export default function AdminConversionsPage() {
               style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: "pointer", fontWeight: 500 }}
             >
               Fix store slugs
+            </button>
+            <button
+              onClick={async () => {
+                const r = await fetch("/api/admin/backfill-collabs-products", { method: "POST" }).then(r => r.json());
+                if (r.error) { alert(`Error: ${r.error}`); return; }
+                alert(`Backfilled product names on ${r.updated} of ${r.total} Collabs conversions (${r.noProductName ?? 0} had no product data in Collabs API).`);
+                load();
+              }}
+              style={{ padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: "pointer", fontWeight: 500 }}
+            >
+              Backfill product names
             </button>
             <button
               onClick={() => setAddingOrder(true)}
@@ -428,8 +445,26 @@ export default function AdminConversionsPage() {
                 Order ID: <span style={{ background: "#f4f4f5", color: "#09090b", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>{selected.orderId}</span>
               </div>
               {selected.items.length > 0 && (
-                <div style={{ fontSize: 12, color: "#71717a", marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: "#71717a", marginBottom: 8 }}>
                   Items: {selected.items.map((it) => it.productName).join(", ")}
+                </div>
+              )}
+
+              {/* Other line items from the same order */}
+              {sameOrderSiblings.length > 0 && (
+                <div style={{ marginBottom: 16, background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: 6, padding: "10px 14px" }}>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "0 0 6px" }}>
+                    Other items in this order
+                  </p>
+                  {sameOrderSiblings.map((o) => (
+                    <div key={o.conversionId} style={{ fontSize: 12, color: "#09090b", marginBottom: 4, display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ fontFamily: "monospace", color: "#a1a1aa", fontSize: 11 }}>{o.orderId}</span>
+                      <span style={{ flex: 1, fontWeight: o.productName ? 500 : 400, color: o.productName ? "#09090b" : "#a1a1aa" }}>
+                        {o.productName ?? "—"}
+                      </span>
+                      <span style={{ color: "#71717a" }}>{fmt(Number(o.orderTotal), o.currency)}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -581,6 +616,42 @@ export default function AdminConversionsPage() {
                       </div>
                     </div>
                   ))}
+                </>
+              )}
+
+              {/* Nearby orders from the same store */}
+              {nearbyOrders.length > 0 && (
+                <>
+                  <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, margin: "16px 0 4px" }}>
+                    Other {selected.storeName} purchases (±7 days)
+                  </p>
+                  <p style={{ fontSize: 11, color: "#a1a1aa", margin: "0 0 8px" }}>
+                    Helps identify sold-out items by what else was selling around this time.
+                  </p>
+                  <div style={{ border: "1px solid #e4e4e7", borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
+                    {nearbyOrders.map((o, i) => (
+                      <div key={o.conversionId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderBottom: i < nearbyOrders.length - 1 ? "1px solid #f4f4f5" : "none", background: "#fff" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 500, color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {o.productName ?? <span style={{ color: "#a1a1aa", fontWeight: 400 }}>Unidentified</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#a1a1aa", marginTop: 1 }}>
+                            {fmtDate(o.timestamp as string)} · <span style={{ fontFamily: "monospace" }}>{o.orderId}</span>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#09090b", whiteSpace: "nowrap" }}>
+                          {fmt(Number(o.orderTotal), o.currency)}
+                        </div>
+                        <button
+                          onClick={() => o.productName && setProduct(o.productName)}
+                          disabled={!o.productName || settingProduct}
+                          style={{ padding: "4px 10px", background: "#f4f4f5", color: "#09090b", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: o.productName ? "pointer" : "default", opacity: o.productName ? 1 : 0.3, whiteSpace: "nowrap" }}
+                        >
+                          Use name
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
 

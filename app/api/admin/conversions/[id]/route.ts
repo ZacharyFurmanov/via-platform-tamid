@@ -135,9 +135,45 @@ export async function GET(
     productSoldOut: !c.product_still_exists,
   });
 
+  // Other line items from the same order (strips trailing -N suffix to find siblings)
+  const baseOrderId = (conv.order_id as string).replace(/-\d+$/, "");
+  const sameOrderSiblings = await sql`
+    SELECT conversion_id, order_id, order_total, currency, timestamp, matched_click_data, items
+    FROM conversions
+    WHERE order_id LIKE ${baseOrderId + "%"}
+      AND conversion_id != ${id}
+    ORDER BY order_id ASC
+    LIMIT 10
+  `;
+
+  // Other conversions from this store within ±7 days — helps identify sold-out items by context
+  const nearbyOrders = await sql`
+    SELECT conversion_id, order_id, order_total, currency, timestamp, matched_click_data, items
+    FROM conversions
+    WHERE store_slug = ${conv.store_slug as string}
+      AND conversion_id != ${id}
+      AND timestamp BETWEEN ${new Date(ts.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()}
+        AND ${new Date(ts.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()}
+    ORDER BY ABS(EXTRACT(EPOCH FROM (timestamp - ${ts.toISOString()}::timestamptz))) ASC
+    LIMIT 15
+  `;
+
+  const mapOrder = (o: Record<string, unknown>) => ({
+    conversionId: o.conversion_id,
+    orderId: o.order_id,
+    orderTotal: o.order_total,
+    currency: o.currency,
+    timestamp: o.timestamp instanceof Date ? (o.timestamp as Date).toISOString() : o.timestamp,
+    productName: (o.matched_click_data as { productName?: string } | null)?.productName
+      ?? (Array.isArray(o.items) ? (o.items as { productName?: string }[]).map(i => i.productName).filter(Boolean).join(", ") : null)
+      ?? null,
+  });
+
   return NextResponse.json({
     clicks: clicks.map(mapClick),
     userClicks: userClicks.map(mapClick),
+    sameOrderSiblings: sameOrderSiblings.map(mapOrder),
+    nearbyOrders: nearbyOrders.map(mapOrder),
   });
 }
 

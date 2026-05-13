@@ -86,6 +86,9 @@ function estimateRevenue(commission: number): number {
  * Try to fetch individual Commission records for a partnership.
  * Tries each PayoutGroup value until we find records.
  * Returns null if the API doesn't support this or no records are found.
+ *
+ * Attempts a rich query first (with lineItemTitle + order name); if the API
+ * doesn't expose those fields, falls back to the minimal query.
  */
 async function fetchIndividualCommissions(
   partnershipId: string,
@@ -93,7 +96,7 @@ async function fetchIndividualCommissions(
   csrfToken: string,
   lastSyncedAt: string | null,
   deltaOrders: number
-): Promise<{ commissionUsdAmount: number; earnedAt: string }[] | null> {
+): Promise<{ commissionUsdAmount: number; earnedAt: string; productName?: string; shopifyOrderName?: string }[] | null> {
   const groups = ["NEXT_PAYOUT", "IN_HOLDING_PERIOD", "PAYOUT_REQUESTED", "CREATOR_ACTION_REQUIRED", "PAID_OUT"];
   const headers = {
     "content-type": "application/json",
@@ -105,36 +108,60 @@ async function fetchIndividualCommissions(
     "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
   };
 
+  // Whether the richer query fields are supported by the API (detected on first attempt)
+  let richFieldsSupported: boolean | null = null;
+
+  const makeBody = (group: string, rich: boolean) => JSON.stringify({
+    query: `query {
+      payouts {
+        partnershipCommissions(group: ${group}, partnershipId: "${partnershipId}", first: ${deltaOrders + 5}) {
+          nodes {
+            id commissionUsd { amount } earnedAt
+            ${rich ? "lineItemTitle order { name }" : ""}
+          }
+        }
+      }
+    }`,
+  });
+
   for (const group of groups) {
     try {
-      const res = await fetch(COLLABS_GRAPHQL_URL, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          query: `query {
-            payouts {
-              partnershipCommissions(group: ${group}, partnershipId: "${partnershipId}", first: ${deltaOrders + 5}) {
-                nodes { id commissionUsd { amount } earnedAt }
-              }
-            }
-          }`,
-        }),
-      });
-      const json = await res.json();
+      // First pass: try rich query (or minimal if we already know rich isn't supported)
+      const useRich = richFieldsSupported !== false;
+      let res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, useRich) });
+      let json = await res.json();
+
+      // If rich query errored, remember that and retry with minimal query
+      if (json.errors && useRich) {
+        richFieldsSupported = false;
+        res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, false) });
+        json = await res.json();
+      }
+
       if (json.errors) continue;
+      if (richFieldsSupported === null) richFieldsSupported = true;
+
       const nodes = (json?.data?.payouts?.partnershipCommissions?.nodes ?? []) as {
-        id: string; commissionUsd: { amount: number }; earnedAt: string;
+        id: string;
+        commissionUsd: { amount: number };
+        earnedAt: string;
+        lineItemTitle?: string;
+        order?: { name: string };
       }[];
       if (nodes.length === 0) continue;
 
-      // Filter to records since last sync
       const cutoff = lastSyncedAt ? new Date(lastSyncedAt) : null;
       const recent = cutoff
         ? nodes.filter((n) => new Date(n.earnedAt) > cutoff)
         : nodes.slice(0, deltaOrders);
 
       if (recent.length > 0) {
-        return recent.map((n) => ({ commissionUsdAmount: n.commissionUsd.amount, earnedAt: n.earnedAt }));
+        return recent.map((n) => ({
+          commissionUsdAmount: n.commissionUsd.amount,
+          earnedAt: n.earnedAt,
+          productName: n.lineItemTitle ?? undefined,
+          shopifyOrderName: n.order?.name ?? undefined,
+        }));
       }
     } catch {
       continue;
@@ -187,12 +214,18 @@ async function saveCollabsConversions(
     `;
 
     for (let i = 0; i < ordersToSave.length; i++) {
-      const { commissionUsdAmount, earnedAt } = ordersToSave[i];
+      const { commissionUsdAmount, earnedAt, productName: collabsProductName, shopifyOrderName } = ordersToSave[i];
       const orderTotal = calculateOrderTotal(commissionUsdAmount, commissionRules);
       const click = recentClicks[i] ?? null;
-      const orderId = `collabs-${partnershipId}-order-${prevOrderCount + i}`;
+      // Prefer Shopify order name for a stable, meaningful ID; fall back to synthetic
+      const orderIdBase = shopifyOrderName
+        ? `collabs-${storeSlug}-${shopifyOrderName.replace(/^#/, "")}`
+        : `collabs-${partnershipId}-order-${prevOrderCount + i}`;
+      const orderId = orderIdBase;
       const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
       const ts = earnedAt || now;
+      // Product name priority: Collabs API line item > VYA click > generic fallback
+      const resolvedProductName = collabsProductName ?? (click?.product_name as string | null) ?? "Order via Shopify Collabs";
 
       await sql`
         INSERT INTO conversions (
@@ -201,10 +234,17 @@ async function saveCollabsConversions(
         )
         VALUES (
           ${conversionId}, ${ts}, ${orderId}, ${orderTotal}, 'USD',
-          ${JSON.stringify([{ productName: click?.product_name ?? `Order via Shopify Collabs`, quantity: 1, price: orderTotal }])},
+          ${JSON.stringify([{ productName: resolvedProductName, quantity: 1, price: orderTotal }])},
           ${click ? (click.click_id as string) : null},
           ${storeSlug}, ${brandName}, true,
-          ${JSON.stringify({ source: "shopify-collabs", partnershipId, commissionUsd: commissionUsdAmount, commissionRate: commissionRules.map(r => r.value) })},
+          ${JSON.stringify({
+            source: "shopify-collabs",
+            partnershipId,
+            commissionUsd: commissionUsdAmount,
+            commissionRate: commissionRules.map(r => r.value),
+            ...(shopifyOrderName ? { shopifyOrderName } : {}),
+            ...(collabsProductName ? { productName: collabsProductName } : {}),
+          })},
           ${click ? (click.user_id as string) : null}
         )
         ON CONFLICT (order_id, store_slug) DO NOTHING
