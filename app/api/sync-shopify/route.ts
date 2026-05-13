@@ -3,6 +3,7 @@ import {
   fetchShopifyProducts,
   fetchShopifyProductsPublic,
   fetchShopifyProductsByCollections,
+  fetchProductIdsByCollections,
   testShopifyConnection,
   toRSSProductFormat,
   scrapeProductPageSections,
@@ -117,6 +118,11 @@ export async function POST(request: NextRequest) {
     const excludedKeywords: string[] = ((storeConfig as any)?.excludeKeywords ?? []).map(
       (k: string) => k.toLowerCase()
     );
+    const excludeCollectionHandles: string[] = (storeConfig as any)?.excludeCollectionHandles ?? [];
+    const excludedCollectionIds =
+      excludeCollectionHandles.length > 0
+        ? await fetchProductIdsByCollections(storeDomain, excludeCollectionHandles)
+        : new Set<string>();
 
     // Convert to standard format for storage, filtering out null prices and excluded titles/keywords
     const rawProducts = fetchResult.products.map(toRSSProductFormat);
@@ -139,6 +145,7 @@ export async function POST(request: NextRequest) {
       .filter((p) => p.price !== null)
       .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
       .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
+      .filter((p) => !p.shopifyProductId || !excludedCollectionIds.has(p.shopifyProductId))
       .map((p) => {
         const storeCurrency = p.currency || "USD";
         return {

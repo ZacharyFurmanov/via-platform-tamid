@@ -4,6 +4,7 @@ import {
   fetchShopifyProducts,
   fetchShopifyProductsPublic,
   fetchShopifyProductsByCollections,
+  fetchProductIdsByCollections,
   toRSSProductFormat,
   scrapeProductPageSections,
 } from "@/app/lib/shopifyClient";
@@ -79,6 +80,10 @@ export async function GET(request: Request) {
           (store.excludeTitles ?? []).map((t) => t.toLowerCase())
         );
         const excludedKeywords = (store.excludeKeywords ?? []).map((k) => k.toLowerCase());
+        const excludedCollectionIds =
+          store.excludeCollectionHandles && store.excludeCollectionHandles.length > 0
+            ? await fetchProductIdsByCollections(store.storeDomain, store.excludeCollectionHandles)
+            : new Set<string>();
         const rawProducts = fetchResult.products.map(toRSSProductFormat);
 
         // Scrape product pages to pull condition/measurements from tab sections not in body_html.
@@ -109,6 +114,7 @@ export async function GET(request: Request) {
           .filter((p) => p.price !== null)
           .filter((p) => !excludedTitles.has(p.title.toLowerCase()))
           .filter((p) => !excludedKeywords.some((kw) => p.title.toLowerCase().includes(kw)))
+          .filter((p) => !p.shopifyProductId || !excludedCollectionIds.has(p.shopifyProductId))
           .map((p) => {
             const storeCurrency = p.currency || "USD";
             return {

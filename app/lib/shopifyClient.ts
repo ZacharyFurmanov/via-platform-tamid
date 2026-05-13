@@ -725,6 +725,40 @@ export async function fetchShopifyProductsPublic(
 }
 
 /**
+ * Returns a Set of Shopify product IDs (as strings) for all products in the given collection handles.
+ * Used to build an exclusion set before syncing — products whose ID appears here are filtered out.
+ */
+export async function fetchProductIdsByCollections(
+  storeDomain: string,
+  collectionHandles: string[]
+): Promise<Set<string>> {
+  const normalizedDomain = normalizeStoreDomain(storeDomain);
+  const ids = new Set<string>();
+  const limit = 250;
+
+  for (const handle of collectionHandles) {
+    let page = 1;
+    while (true) {
+      const url = `https://${normalizedDomain}/collections/${handle}/products.json?limit=${limit}&page=${page}`;
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        console.warn(`[Shopify] excludeCollectionHandles: could not fetch "${handle}" (${response.status}), skipping`);
+        break;
+      }
+      const data = await response.json();
+      if (!data.products || data.products.length === 0) break;
+      for (const p of data.products) {
+        if (p.id) ids.add(String(p.id));
+      }
+      if (data.products.length < limit) break;
+      page++;
+    }
+  }
+
+  return ids;
+}
+
+/**
  * Fetches products from specific Shopify collections using the public collections.json endpoint.
  * Deduplicates products that appear in multiple collections.
  * No access token required.

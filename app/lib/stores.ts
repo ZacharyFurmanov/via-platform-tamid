@@ -207,6 +207,30 @@ export const stores = [
       "All sales are final. As a curated vintage handbag boutique, every piece is one-of-a-kind. Please review all item details and photos carefully before purchasing. Contact rachel.dearmuse@gmail.com with any pre-purchase questions.",
   },
   {
+    slug: "edited-archive",
+    dashboardToken: "ea-5c2b8f1a9d7e",
+    name: "Edited Archive",
+    location: "New York, NY",
+    description:
+      "Edited Archive is a New York–based curated vintage shop offering a thoughtfully selected collection of pre-loved and archival pieces. Each item is hand-picked for its quality, character, and lasting appeal.",
+    website: "https://editedarchive.com",
+    contactEmail: "francesca.m.alfano@gmail.com",
+    dataSource: "edited-archive",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "238926",
+    authenticityPolicy:
+      "Every piece at Edited Archive is personally sourced and hand-selected before listing. Items are accurately described with full condition details so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "for-the-globe",
     dashboardToken: "ftg-2c8a1e5d9b3f",
     name: "For The Globe",
@@ -571,6 +595,30 @@ export const stores = [
       "Ships from Australia. Shipping rates and delivery times are calculated at checkout. For U.S. customers, all applicable tariffs and duties are included in the price — no surprise fees on delivery.",
     returnPolicy:
       "All sales are final. Due to the vintage and pre-loved nature of items, returns are not accepted. If there is a quality or condition issue, use the form below within 2 business days of delivery.",
+  },
+  {
+    slug: "rejects-only-vintage",
+    dashboardToken: "rov-3a7e2c9d1f8b",
+    name: "Rejects Only Vintage",
+    location: "Rhode Island",
+    description:
+      "Rejects Only Vintage is a curated premium vintage boutique based in Rhode Island, founded by Jordan Cameron. Born and raised in Narragansett, RI, Jordan studied Textiles, Fashion Merchandising and Design at the University of Rhode Island and spent time abroad at Academia Italiana Arte Moda Design in Florence, studying Fashion Design & Illustration. After launching her career in the luxury fashion industry at Gucci in New York City, she channeled her lifelong love of fashion, one-of-a-kind pieces, and sustainability into Rejects Only Vintage. At Rejects Only Premium Vintage, you'll find an intentionally sourced collection of pre-loved and vintage pieces — offering a meaningful way to satisfy the desire for new clothing, and giving a second life to those rejected pieces.",
+    website: "https://rejectsonlyvintage.com/VYA",
+    contactEmail: "Rejectsonlyvintage@gmail.com",
+    dataSource: "rejects-only-vintage",
+    image: "/stores/rejects-only-vintage.jpg",
+    logo: "/stores/rejects-only-vintage.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "238591",
+    authenticityPolicy:
+      "Every piece at Rejects Only Vintage is personally and intentionally sourced by founder Jordan Cameron — chosen for its quality, character, and ability to give pre-loved pieces a meaningful second life. Each item is carefully inspected and accurately described before listing.",
+    shippingPolicy:
+      "Ships from Rhode Island. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. As a curated vintage boutique specializing in one-of-a-kind pre-loved pieces, please review all item details and photos carefully before purchasing.",
   },
   {
     slug: "sassy-so-what",
@@ -1000,11 +1048,13 @@ export const storeContactEmails: Record<string, string> = {
   "promised-vintage": "kellanmccormick@gmail.com",
   "dayton-jane": "jacquelyne.rankin@gmail.com",
   "club-fleur": "theclubfleur@gmail.com",
+  "edited-archive": "francesca.m.alfano@gmail.com",
   "for-the-globe": "for.the.globe1@gmail.com",
   "front-page-finds": "charlee@frontpagefinds.com",
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "chomp-chomp-vintage": "chompchompvintage@gmail.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
+  "rejects-only-vintage": "Rejectsonlyvintage@gmail.com",
   "sassy-so-what": "hello@sassysowhat.com",
   "so-lxury": "solxuryvintage@gmail.com",
   "other-matters-atelier": "othermattersatelier@gmail.com",

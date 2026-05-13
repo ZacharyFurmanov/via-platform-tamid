@@ -20,6 +20,8 @@ export type ShopifyStore = {
   collectionHandles?: string[];
   /** If true, fetch each product's page HTML during sync to extract metafield sections (condition, dimensions, etc.) */
   scrapeProductPage?: boolean;
+  /** Collection handles to EXCLUDE from sync (blacklist — products in these collections are filtered out) */
+  excludeCollectionHandles?: string[];
 };
 
 export type BigCartelStore = {
@@ -319,6 +321,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
+    name: "Edited Archive",
+    slug: "edited-archive",
+    storeDomain: "editedarchive.com",
+    scrapeProductPage: true,
+  },
+  {
+    type: "shopify",
     name: "Dear Muse",
     slug: "dear-muse",
     storeDomain: "shopdearmuse.com",
@@ -330,6 +339,14 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     slug: "ange-archive",
     storeDomain: "angearchive.com",
     scrapeProductPage: true,
+  },
+  {
+    type: "shopify",
+    name: "Rejects Only Vintage",
+    slug: "rejects-only-vintage",
+    storeDomain: "rejectsonlyvintage.com",
+    scrapeProductPage: true,
+    excludeCollectionHandles: ["merch", "men-s-vintage-designer-ties", "children-s"],
   },
 ];
 
