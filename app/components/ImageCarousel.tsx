@@ -287,7 +287,7 @@ export default function ImageCarousel({
     <>
       <div>
         <div
-          className="relative aspect-[4/5] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+          className="relative aspect-square md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
           style={{ touchAction: "pan-y" }}
           onTouchStart={hasMultiple ? onTouchStart : undefined}
           onTouchEnd={hasMultiple ? onTouchEnd : undefined}
@@ -311,7 +311,7 @@ export default function ImageCarousel({
           {/* Expand / zoom button */}
           <button
             onClick={openLightbox}
-            className="absolute bottom-3 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
+            className="absolute bottom-14 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
             aria-label="View full screen"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,56 +320,32 @@ export default function ImageCarousel({
             </svg>
           </button>
 
+          {/* Thumbnail bar — overlaid at the bottom of the image */}
           {hasMultiple && (
-            <>
-              <button
-                onClick={prev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
-                aria-label="Previous image"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <button
-                onClick={next}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition z-20"
-                aria-label="Next image"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </>
+            <div className="absolute bottom-0 left-0 right-0 z-20 flex gap-2 px-3 py-2 overflow-x-auto bg-gradient-to-t from-black/30 to-transparent">
+              {safeImages.map((src, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(idx); }}
+                  className={`relative flex-shrink-0 w-10 h-[52px] overflow-hidden rounded transition-all ${
+                    idx === current
+                      ? "ring-2 ring-white opacity-100"
+                      : "opacity-50 hover:opacity-80"
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  <NextImage
+                    src={src}
+                    alt={`${alt} ${idx + 1}`}
+                    fill
+                    sizes="40px"
+                    className="object-cover object-center"
+                  />
+                </button>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Thumbnail strip — visible on both mobile and desktop */}
-        {hasMultiple && (
-          <div className="flex gap-2 mt-3 overflow-x-auto px-4 md:px-0 pb-1">
-            {safeImages.map((src, idx) => (
-              <button
-                key={idx}
-                onClick={() => goTo(idx)}
-                className={`relative flex-shrink-0 w-14 h-[72px] overflow-hidden rounded transition-all ${
-                  idx === current
-                    ? "ring-2 ring-black opacity-100"
-                    : "opacity-40 hover:opacity-70"
-                }`}
-                aria-label={`View image ${idx + 1}`}
-              >
-                <NextImage
-                  src={src}
-                  alt={`${alt} ${idx + 1}`}
-                  fill
-                  sizes="56px"
-                  className="object-cover object-center"
-                />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Lightbox ── */}
