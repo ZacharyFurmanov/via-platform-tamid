@@ -6,7 +6,7 @@ export default function FeaturedDesignerSection() {
     <section className="border-t border-[#5D0F17]/10">
       <Link href="/search?q=dior" className="block relative w-full overflow-hidden group" style={{ aspectRatio: "16/7", minHeight: "260px" }}>
         <Image
-          src="/featured-dior-4.jpg"
+          src="/featured-dior-5.jpg"
           alt="Christian Dior"
           fill
           sizes="100vw"

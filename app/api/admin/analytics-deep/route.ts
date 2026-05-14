@@ -45,6 +45,11 @@ export async function GET(request: NextRequest) {
     const cutoff = getCutoff(range);
     const cutoffIso = cutoff ? cutoff.toISOString() : null;
 
+    // Ensure utm_source column exists — migration normally runs inside saveClick,
+    // but if no click has fired since deployment the column won't exist yet and
+    // the clicksBySource query would silently return [] via .catch(() => []).
+    await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS utm_source TEXT`.catch(() => {});
+
     // ── KPIs ─────────────────────────────────────────────────────────────────
 
     const [

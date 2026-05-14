@@ -22,14 +22,24 @@ export default function GlobalPageTracker() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const utmTracked = useRef(false);
+  // In-memory ref so UTM data survives even when sessionStorage is blocked
+  // (TikTok in-app browser and some other WebViews block web storage).
+  const utmPayloadRef = useRef<Record<string, string | null> | null>(null);
 
-  // Step 1: Capture UTM/referrer data into sessionStorage on first page load.
-  // We don't send it yet because the session hasn't resolved — user_id would be null.
+  // Step 1: Capture UTM/referrer data on first page load.
+  // Store in both the in-memory ref and sessionStorage (as a cross-navigation fallback).
+  // We don't send the beacon yet because auth hasn't resolved — user_id would be null.
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // sessionStorage guard — skip if already captured this session.
+    // Wrapped in try/catch because some WebViews (TikTok) block storage access.
     try {
-      if (sessionStorage.getItem("via_utm_data")) return; // already captured this session
+      if (sessionStorage.getItem("via_utm_data")) return;
     } catch {}
+
+    // If the in-memory ref is already populated, Step 1 already ran this mount.
+    if (utmPayloadRef.current) return;
 
     const params = new URLSearchParams(window.location.search);
     let utmSource = params.get("utm_source");
@@ -86,11 +96,16 @@ export default function GlobalPageTracker() {
       landing_path: window.location.pathname,
     };
 
+    // Primary: in-memory ref — always works regardless of browser storage policy.
+    utmPayloadRef.current = utmPayload;
+
+    // Secondary: sessionStorage for cross-navigation persistence within the same tab.
     try {
       sessionStorage.setItem("via_utm_data", JSON.stringify(utmPayload));
     } catch {}
 
-    // Also persist to localStorage for click attribution (30-day window)
+    // Also persist to localStorage for click attribution (30-day window).
+    // May fail silently in TikTok browser — click attribution is best-effort.
     try {
       localStorage.setItem("via_utm", JSON.stringify({
         utm_source: utmSource,
@@ -100,29 +115,36 @@ export default function GlobalPageTracker() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Step 2: Once auth resolves, send the stored UTM data with the real user_id.
-  // This fires when status changes from "loading" → "authenticated"/"unauthenticated".
+  // Step 2: Once auth resolves, send the UTM data with the real user_id.
+  // Reads from the in-memory ref first; falls back to sessionStorage for cases
+  // where the component re-mounted (e.g. after a full page navigation) and the
+  // ref was reset but sessionStorage survived.
   useEffect(() => {
     if (status === "loading") return;
     if (utmTracked.current) return;
 
-    let stored: string | null = null;
-    try {
-      stored = sessionStorage.getItem("via_utm_data");
-    } catch {}
-    if (!stored) return;
+    // Try in-memory ref first (works in TikTok browser and all others).
+    let data: Record<string, string | null> | null = utmPayloadRef.current;
+
+    // Fallback to sessionStorage (covers re-mount after full navigation).
+    if (!data) {
+      try {
+        const stored = sessionStorage.getItem("via_utm_data");
+        if (stored) data = JSON.parse(stored);
+      } catch {}
+    }
+
+    if (!data) return;
 
     const userId = status === "authenticated"
       ? ((session?.user as { id?: string } | undefined)?.id ?? null)
       : null;
 
     utmTracked.current = true;
+    utmPayloadRef.current = null;
     try {
       sessionStorage.removeItem("via_utm_data");
     } catch {}
-
-    let data: Record<string, string | null> = {};
-    try { data = JSON.parse(stored); } catch {}
 
     const payload = JSON.stringify({ ...data, user_id: userId });
 

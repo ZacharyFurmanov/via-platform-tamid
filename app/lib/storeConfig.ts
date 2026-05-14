@@ -348,6 +348,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     scrapeProductPage: true,
     excludeCollectionHandles: ["merch", "men-s-vintage-designer-ties", "children-s"],
   },
+  {
+    type: "shopify",
+    name: "Hachi Archive",
+    slug: "hachi-archive",
+    storeDomain: "hachiarchive.com",
+    scrapeProductPage: true,
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

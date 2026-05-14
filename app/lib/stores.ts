@@ -277,6 +277,30 @@ export const stores = [
       "All sales are final. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "hachi-archive",
+    dashboardToken: "ha-6d3f2b9e1c7a",
+    name: "Hachi Archive",
+    location: "New York, NY",
+    description:
+      "Hachi Archive is a leading destination for pre-owned luxury fashion — carefully curated, every piece authenticated, and priced to be within reach. From our online collections to our NYC pop-up events, we've built a reputation for quality and authenticity with a dedicated and growing customer base. Driven by circularity, we're committed to making curated designer fashion accessible.",
+    website: "https://hachiarchive.com",
+    contactEmail: "patricia@hachiarchive.com",
+    dataSource: "hachi-archive",
+    image: "/stores/hachi-archive.jpg",
+    logo: "/stores/hachi-archive.jpg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "239937",
+    authenticityPolicy:
+      "Every piece at Hachi Archive is carefully curated and authenticated before listing. Each item is accurately described with full condition details so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "honey-bear-vintage",
     dashboardToken: "hbv-4e2a8f1c9d7b",
     name: "Honeybear Vintage",
@@ -1054,6 +1078,7 @@ export const storeContactEmails: Record<string, string> = {
   "vintage-girlfriend": "anna@vintage-girlfriend.com",
   "chomp-chomp-vintage": "chompchompvintage@gmail.com",
   "rareality-archive": "holly.cooper01@hotmail.com",
+  "hachi-archive": "patricia@hachiarchive.com",
   "rejects-only-vintage": "Rejectsonlyvintage@gmail.com",
   "sassy-so-what": "hello@sassysowhat.com",
   "so-lxury": "solxuryvintage@gmail.com",
