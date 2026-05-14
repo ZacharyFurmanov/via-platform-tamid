@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
       trafficSourcesResult,
       dropOffProductsResult,
       clicksBySourceResult,
+      conversionsBySourceResult,
     ] = await Promise.all([
       // totalClicks
       cutoffIso
@@ -495,6 +496,34 @@ export async function GET(request: NextRequest) {
             GROUP BY utm_source
             ORDER BY clicks DESC
           `.catch(() => []),
+
+      // conversionsBySource — orders + revenue attributed to each utm_source via click join
+      cutoffIso
+        ? sql`
+            SELECT
+              c.utm_source AS source,
+              COUNT(DISTINCT conv.id)::int AS conversions,
+              COALESCE(SUM(conv.order_total), 0)::float AS revenue
+            FROM conversions conv
+            JOIN clicks c ON c.click_id = conv.via_click_id
+            WHERE c.utm_source IS NOT NULL
+              AND (conv.returned IS NULL OR conv.returned = false)
+              AND conv.timestamp >= ${cutoffIso}
+            GROUP BY c.utm_source
+            ORDER BY revenue DESC
+          `.catch(() => [])
+        : sql`
+            SELECT
+              c.utm_source AS source,
+              COUNT(DISTINCT conv.id)::int AS conversions,
+              COALESCE(SUM(conv.order_total), 0)::float AS revenue
+            FROM conversions conv
+            JOIN clicks c ON c.click_id = conv.via_click_id
+            WHERE c.utm_source IS NOT NULL
+              AND (conv.returned IS NULL OR conv.returned = false)
+            GROUP BY c.utm_source
+            ORDER BY revenue DESC
+          `.catch(() => []),
     ]);
 
     // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
@@ -590,6 +619,11 @@ export async function GET(request: NextRequest) {
       clicksBySource: (clicksBySourceResult as { utm_source: string; clicks: number }[]).map((r) => ({
         source: r.utm_source,
         clicks: r.clicks,
+      })),
+      conversionsBySource: (conversionsBySourceResult as { source: string; conversions: number; revenue: number }[]).map((r) => ({
+        source: r.source,
+        conversions: r.conversions,
+        revenue: r.revenue,
       })),
       dropOffProducts: (dropOffProductsResult as { productId: string; name: string; store: string; views: number; clicks: number }[]).map((r) => ({
         productId: r.productId,

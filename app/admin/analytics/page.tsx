@@ -112,6 +112,12 @@ type ClicksBySource = {
   clicks: number;
 };
 
+type ConversionsBySource = {
+  source: string;
+  conversions: number;
+  revenue: number;
+};
+
 type AnalyticsData = {
   kpis: KPIs;
   topProductsByClicks: TopProduct[];
@@ -125,6 +131,7 @@ type AnalyticsData = {
   topSearches: SearchEntry[];
   trafficSources: TrafficSource[];
   clicksBySource: ClicksBySource[];
+  conversionsBySource: ConversionsBySource[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -398,38 +405,77 @@ export default function DeepAnalyticsPage() {
             </div>
 
 
-            {/* ── Traffic Sources ──────────────────────────────────────────── */}
+            {/* ── Source Attribution Funnel ─────────────────────────────── */}
             {data.trafficSources && data.trafficSources.length > 0 && (
               <div style={{ marginBottom: 36 }}>
-                <SectionTitle>Traffic Sources</SectionTitle>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${BORDER}` }}>
-                    {["Source", "Medium", "Campaign", "Visits", "Store Clicks", "Known Users"].map((h) => (
-                      <span key={h} style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED }}>{h}</span>
+                <SectionTitle>Source Attribution</SectionTitle>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "140px 80px 80px 80px 80px 90px 90px", gap: 12, padding: "0 12px 8px", borderBottom: `1px solid ${BORDER}` }}>
+                    {[
+                      { label: "Source", align: "left" },
+                      { label: "Visits", align: "right" },
+                      { label: "Clicks", align: "right" },
+                      { label: "Click %", align: "right" },
+                      { label: "Orders", align: "right" },
+                      { label: "Revenue", align: "right" },
+                      { label: "Conv %", align: "right" },
+                    ].map((h) => (
+                      <span key={h.label} style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED, textAlign: h.align as "left" | "right" }}>{h.label}</span>
                     ))}
                   </div>
-                  {data.trafficSources.map((row, i) => {
-                    const maxVisits = data.trafficSources[0].visits;
-                    const storeClicks = data.clicksBySource?.find((c) => c.source === row.source)?.clicks ?? 0;
-                    return (
-                      <div
-                        key={i}
-                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? BG_HOVER : "transparent", borderRadius: 6, alignItems: "center" }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.source}</span>
-                          <div style={{ flex: 1, height: 4, backgroundColor: BORDER, borderRadius: 2 }}>
-                            <div style={{ height: "100%", backgroundColor: DARK, borderRadius: 2, width: `${(row.visits / maxVisits) * 100}%`, opacity: 0.5 }} />
+                  {/* Rows — built from trafficSources (visits) joined with clicks + conversions */}
+                  {(() => {
+                    // Collect all sources that appear in any dataset
+                    const allSources = Array.from(new Set([
+                      ...data.trafficSources.map((r) => r.source),
+                      ...(data.clicksBySource ?? []).map((r) => r.source),
+                      ...(data.conversionsBySource ?? []).map((r) => r.source),
+                    ]));
+
+                    const rows = allSources.map((source) => {
+                      const visitRow = data.trafficSources.find((r) => r.source === source);
+                      const clickRow = data.clicksBySource?.find((r) => r.source === source);
+                      const convRow = data.conversionsBySource?.find((r) => r.source === source);
+                      return {
+                        source,
+                        visits: visitRow?.visits ?? 0,
+                        clicks: clickRow?.clicks ?? 0,
+                        orders: convRow?.conversions ?? 0,
+                        revenue: convRow?.revenue ?? 0,
+                      };
+                    }).sort((a, b) => b.visits - a.visits);
+
+                    const maxVisits = rows[0]?.visits ?? 1;
+
+                    return rows.map((row, i) => {
+                      const clickRate = row.visits > 0 ? (row.clicks / row.visits) * 100 : 0;
+                      const convRate = row.clicks > 0 ? (row.orders / row.clicks) * 100 : 0;
+                      return (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 80px 80px 80px 80px 90px 90px", gap: 12, padding: "10px 12px", backgroundColor: i % 2 === 0 ? BG_HOVER : "transparent", borderRadius: 6, alignItems: "center" }}>
+                          {/* Source + bar */}
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: DARK, textTransform: "capitalize", marginBottom: 3 }}>{row.source}</div>
+                            <div style={{ height: 3, backgroundColor: BORDER, borderRadius: 2 }}>
+                              <div style={{ height: "100%", backgroundColor: "#5D0F17", borderRadius: 2, width: `${(row.visits / maxVisits) * 100}%`, opacity: 0.6 }} />
+                            </div>
                           </div>
+                          {/* Visits */}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: DARK, textAlign: "right" }}>{row.visits.toLocaleString()}</span>
+                          {/* Clicks */}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: row.clicks > 0 ? DARK : MUTED, textAlign: "right" }}>{row.clicks > 0 ? row.clicks.toLocaleString() : "—"}</span>
+                          {/* Click rate */}
+                          <span style={{ fontSize: 12, color: clickRate >= 10 ? "#15803d" : clickRate > 0 ? GRAY : MUTED, textAlign: "right" }}>{clickRate > 0 ? `${clickRate.toFixed(1)}%` : "—"}</span>
+                          {/* Orders */}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: row.orders > 0 ? "#15803d" : MUTED, textAlign: "right" }}>{row.orders > 0 ? row.orders.toLocaleString() : "—"}</span>
+                          {/* Revenue */}
+                          <span style={{ fontSize: 13, fontWeight: 700, color: row.revenue > 0 ? "#15803d" : MUTED, textAlign: "right" }}>{row.revenue > 0 ? `$${row.revenue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : "—"}</span>
+                          {/* Conv rate */}
+                          <span style={{ fontSize: 12, color: convRate >= 5 ? "#15803d" : convRate > 0 ? GRAY : MUTED, textAlign: "right" }}>{convRate > 0 ? `${convRate.toFixed(1)}%` : "—"}</span>
                         </div>
-                        <span style={{ fontSize: 12, color: GRAY }}>{row.medium ?? "—"}</span>
-                        <span style={{ fontSize: 12, color: GRAY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.campaign ?? "—"}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: DARK }}>{row.visits.toLocaleString()}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: storeClicks > 0 ? "#15803d" : MUTED }}>{storeClicks > 0 ? storeClicks.toLocaleString() : "—"}</span>
-                        <span style={{ fontSize: 12, color: MUTED }}>{row.knownUsers > 0 ? row.knownUsers.toLocaleString() : "—"}</span>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             )}
