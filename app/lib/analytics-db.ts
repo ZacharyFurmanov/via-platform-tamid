@@ -69,6 +69,9 @@ export async function initAnalyticsTables() {
   await sql`CREATE INDEX IF NOT EXISTS idx_conversions_user_id ON conversions(user_id) WHERE user_id IS NOT NULL`;
   // Migration: store all cart items for multi-item checkouts
   await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS cart_items JSONB`;
+  // Migration: store UTM source on clicks for source attribution
+  await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS utm_source TEXT`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_clicks_utm_source ON clicks(utm_source) WHERE utm_source IS NOT NULL`;
 }
 
 export type CartItemSnapshot = {
@@ -88,6 +91,7 @@ export type ClickRecord = {
   userAgent?: string;
   userId?: string | null;
   cartItems?: CartItemSnapshot[];
+  utmSource?: string | null;
 };
 
 export async function saveClick(click: ClickRecord): Promise<void> {
@@ -96,8 +100,8 @@ export async function saveClick(click: ClickRecord): Promise<void> {
 
   const cartItemsJson = click.cartItems ? JSON.stringify(click.cartItems) : null;
   await sql`
-    INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id, cart_items)
-    VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${click.storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson})
+    INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id, cart_items, utm_source)
+    VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${click.storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson}, ${click.utmSource || null})
     ON CONFLICT (click_id) DO NOTHING
   `;
 }

@@ -21,7 +21,7 @@ export default function BuyNowButton({
   externalUrl,
   checkoutUrl,
 }: BuyNowButtonProps) {
-  const trackUrl = (() => {
+  const handleClick = () => {
     const params = new URLSearchParams({
       pid: compositeId,
       pn: title,
@@ -29,10 +29,19 @@ export default function BuyNowButton({
       ss: storeSlug,
       url: checkoutUrl || externalUrl,
     });
-    return `/api/track?${params.toString()}`;
-  })();
 
-  const handleClick = () => {
+    // Attach UTM source if present in localStorage (set by GlobalPageTracker on landing)
+    try {
+      const raw = localStorage.getItem("via_utm");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.utm_source && parsed.expires_at > Date.now()) {
+          params.set("us", parsed.utm_source);
+        }
+      }
+    } catch {}
+
+    const trackUrl = `/api/track?${params.toString()}`;
     const w = 480, h = 700;
     const left = Math.max(0, (window.screen.width - w) / 2);
     const top = Math.max(0, (window.screen.height - h) / 2);

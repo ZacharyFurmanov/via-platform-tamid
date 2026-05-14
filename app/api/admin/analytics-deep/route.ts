@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       pageFunnelResult,
       trafficSourcesResult,
       dropOffProductsResult,
+      clicksBySourceResult,
     ] = await Promise.all([
       // totalClicks
       cutoffIso
@@ -477,6 +478,23 @@ export async function GET(request: NextRequest) {
             ORDER BY (COUNT(DISTINCT pv.id) - COUNT(DISTINCT c.click_id)) DESC, views DESC
             LIMIT 15
           `.catch(() => []),
+
+      // clicksBySource — store clicks grouped by utm_source
+      cutoffIso
+        ? sql`
+            SELECT utm_source, COUNT(*)::int AS clicks
+            FROM clicks
+            WHERE utm_source IS NOT NULL AND timestamp >= ${cutoffIso}
+            GROUP BY utm_source
+            ORDER BY clicks DESC
+          `.catch(() => [])
+        : sql`
+            SELECT utm_source, COUNT(*)::int AS clicks
+            FROM clicks
+            WHERE utm_source IS NOT NULL
+            GROUP BY utm_source
+            ORDER BY clicks DESC
+          `.catch(() => []),
     ]);
 
     // Parse Shopify Collabs cached data (all-time totals — for the Collabs tab display only)
@@ -568,6 +586,10 @@ export async function GET(request: NextRequest) {
         campaign: r.utm_campaign,
         visits: r.visits,
         knownUsers: r.known_users,
+      })),
+      clicksBySource: (clicksBySourceResult as { utm_source: string; clicks: number }[]).map((r) => ({
+        source: r.utm_source,
+        clicks: r.clicks,
       })),
       dropOffProducts: (dropOffProductsResult as { productId: string; name: string; store: string; views: number; clicks: number }[]).map((r) => ({
         productId: r.productId,

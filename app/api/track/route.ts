@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
   const storeSlug = searchParams.get("ss");
   const externalUrl = searchParams.get("url");
   const itemsParam = searchParams.get("items");
+  const utmSource = searchParams.get("us");
 
   // Validate required params
   if (!externalUrl) {
@@ -105,6 +106,7 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") || undefined,
     userId,
     cartItems,
+    utmSource: utmSource || null,
   }).catch(console.error);
 
   // ---- Cart URLs: only route through product's own collabs.shop link ----

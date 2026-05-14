@@ -77,14 +77,24 @@ export default function GlobalPageTracker() {
 
     if (!utmSource) return;
 
+    const utmPayload = {
+      utm_source: utmSource,
+      utm_medium: utmMedium ?? null,
+      utm_campaign: utmCampaign ?? null,
+      utm_content: utmContent ?? null,
+      utm_term: utmTerm ?? null,
+      landing_path: window.location.pathname,
+    };
+
     try {
-      sessionStorage.setItem("via_utm_data", JSON.stringify({
+      sessionStorage.setItem("via_utm_data", JSON.stringify(utmPayload));
+    } catch {}
+
+    // Also persist to localStorage for click attribution (30-day window)
+    try {
+      localStorage.setItem("via_utm", JSON.stringify({
         utm_source: utmSource,
-        utm_medium: utmMedium ?? null,
-        utm_campaign: utmCampaign ?? null,
-        utm_content: utmContent ?? null,
-        utm_term: utmTerm ?? null,
-        landing_path: window.location.pathname,
+        expires_at: Date.now() + 30 * 24 * 60 * 60 * 1000,
       }));
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,11 +112,9 @@ export default function GlobalPageTracker() {
     } catch {}
     if (!stored) return;
 
-    // Only send once with a user_id — if unauthenticated, skip (no way to attribute)
     const userId = status === "authenticated"
       ? ((session?.user as { id?: string } | undefined)?.id ?? null)
       : null;
-    if (!userId) return;
 
     utmTracked.current = true;
     try {

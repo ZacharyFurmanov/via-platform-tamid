@@ -107,6 +107,11 @@ type TrafficSource = {
   knownUsers: number;
 };
 
+type ClicksBySource = {
+  source: string;
+  clicks: number;
+};
+
 type AnalyticsData = {
   kpis: KPIs;
   topProductsByClicks: TopProduct[];
@@ -119,6 +124,7 @@ type AnalyticsData = {
   inventory: InventoryStats;
   topSearches: SearchEntry[];
   trafficSources: TrafficSource[];
+  clicksBySource: ClicksBySource[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -397,17 +403,18 @@ export default function DeepAnalyticsPage() {
               <div style={{ marginBottom: 36 }}>
                 <SectionTitle>Traffic Sources</SectionTitle>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${BORDER}` }}>
-                    {["Source", "Medium", "Campaign", "Visits", "Known Users"].map((h) => (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px 90px", gap: 8, padding: "0 10px 6px", borderBottom: `1px solid ${BORDER}` }}>
+                    {["Source", "Medium", "Campaign", "Visits", "Store Clicks", "Known Users"].map((h) => (
                       <span key={h} style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED }}>{h}</span>
                     ))}
                   </div>
                   {data.trafficSources.map((row, i) => {
                     const maxVisits = data.trafficSources[0].visits;
+                    const storeClicks = data.clicksBySource?.find((c) => c.source === row.source)?.clicks ?? 0;
                     return (
                       <div
                         key={i}
-                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? BG_HOVER : "transparent", borderRadius: 6, alignItems: "center" }}
+                        style={{ display: "grid", gridTemplateColumns: "1fr 100px 140px 80px 90px 90px", gap: 8, padding: "8px 10px", backgroundColor: i % 2 === 0 ? BG_HOVER : "transparent", borderRadius: 6, alignItems: "center" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                           <span style={{ fontSize: 13, fontWeight: 600, color: DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.source}</span>
@@ -418,6 +425,7 @@ export default function DeepAnalyticsPage() {
                         <span style={{ fontSize: 12, color: GRAY }}>{row.medium ?? "—"}</span>
                         <span style={{ fontSize: 12, color: GRAY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.campaign ?? "—"}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: DARK }}>{row.visits.toLocaleString()}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: storeClicks > 0 ? "#15803d" : MUTED }}>{storeClicks > 0 ? storeClicks.toLocaleString() : "—"}</span>
                         <span style={{ fontSize: 12, color: MUTED }}>{row.knownUsers > 0 ? row.knownUsers.toLocaleString() : "—"}</span>
                       </div>
                     );
