@@ -76,8 +76,10 @@ export async function fetchStripeProducts(
     const price = prices.sort((a, b) => a.unit_amount - b.unit_amount)[0];
     const priceUsd = price.unit_amount / 100;
 
-    // External URL: prefer metadata.url, fall back to /products/{id} on their site
-    const externalUrl = prod.metadata.url || prod.metadata.product_url || `${baseUrl}/products/${productId}`;
+    // External URL: prefer metadata.url, fall back to store homepage.
+    // Some Stripe-based stores (e.g. Carroll Street Vintage) use modal overlays
+    // with no per-product URLs, so /products/{id} would 404.
+    const externalUrl = prod.metadata.url || prod.metadata.product_url || baseUrl;
 
     products.push({
       title: prod.name,
