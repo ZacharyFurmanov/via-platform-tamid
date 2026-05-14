@@ -38,7 +38,7 @@
     },
     {
       "path": "/api/cron/trending-items",
-      "schedule": "0 9 * * *"
+      "schedule": "0 14 * * *"
     },
     {
       "path": "/api/cron/send-new-arrivals",
