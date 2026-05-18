@@ -162,12 +162,13 @@ export async function POST(request: NextRequest) {
   const sql = neon(dbUrl);
   const now = new Date().toISOString();
 
-  // Delete old-format records (collabs-{digits}-{digits}) created by the old manual sync
+  // Delete old-format records: collabs-{digits}-{digits} (manual sync)
+  // and collabs-{digits}-order-{digits} (cron fallback path)
   const deleted = await sql`
     DELETE FROM conversions
     WHERE store_slug = ${storeSlug}
       AND matched_click_data->>'source' = 'shopify-collabs'
-      AND order_id ~ '^collabs-[0-9]+-[0-9]+$'
+      AND order_id ~ '^collabs-[0-9]+(-order)?-[0-9]+$'
     RETURNING order_id
   `;
 
