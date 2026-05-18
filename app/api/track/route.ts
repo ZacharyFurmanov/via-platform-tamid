@@ -3,6 +3,7 @@ import { generateClickId } from "@/app/lib/track";
 import { saveClick, saveProductView } from "@/app/lib/analytics-db";
 import { stores } from "@/app/lib/stores";
 import { getCollabsLink } from "@/app/lib/db";
+import { getSetting } from "@/app/lib/settings-db";
 import { auth } from "@/app/lib/auth";
 
 /** POST /api/track — record a product page view (fire-and-forget from client) */
@@ -109,11 +110,18 @@ export async function GET(request: NextRequest) {
     utmSource: utmSource || null,
   }).catch(console.error);
 
-  // ---- Cart URLs: only route through product's own collabs.shop link ----
-  // If a product has no collabs_link it should not be on VYA at all.
-  // No fallbacks — a missing collabs link means no commission, so we refuse
-  // to send the customer through without proper attribution.
+  // ---- Cart URLs ----
   if (isCartUrl(parsedUrl) && storeSlug) {
+    // If the store has a webhook configured, embed via_click_id as a Shopify cart
+    // attribute. Shopify passes it through to note_attributes on the order, giving
+    // the webhook handler an exact click match — no guessing, no last-click fallback.
+    const hasWebhook = !!(await getSetting(`shopify_webhook_secret_${storeSlug}`).catch(() => null));
+    if (hasWebhook) {
+      parsedUrl.searchParams.set("attributes[via_click_id]", clickId);
+      return NextResponse.redirect(parsedUrl.toString(), 302);
+    }
+
+    // No webhook → route through the product's collabs.shop link for commission tracking.
     if (productId) {
       const match = productId.match(/(\d+)$/);
       const numericId = match ? parseInt(match[1], 10) : NaN;
@@ -125,8 +133,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // No product-specific collabs link — fall through to direct redirect.
-    // This should not happen: the DB filter blocks products without collabs_link.
     console.error(`[track] No collabs link for product "${productId}" (store: "${storeSlug}") — this product should not be on VYA.`);
     parsedUrl.searchParams.set("via_click_id", clickId);
     return NextResponse.redirect(parsedUrl.toString(), 302);
