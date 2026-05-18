@@ -96,7 +96,17 @@ async function fetchIndividualCommissions(
   csrfToken: string,
   lastSyncedAt: string | null,
   deltaOrders: number
-): Promise<{ commissionUsdAmount: number; earnedAt: string; productName?: string; shopifyOrderName?: string }[] | null> {
+): Promise<{
+  commissionId: string;
+  commissionUsdAmount: number;
+  lineItemPrice?: number;
+  earnedAt: string;
+  productName?: string;
+  shopifyOrderName?: string;
+  orderTotal?: number;
+  orderCurrency?: string;
+  orderLineItems?: { title: string; quantity: number; price: number }[];
+}[] | null> {
   const groups = ["NEXT_PAYOUT", "IN_HOLDING_PERIOD", "PAYOUT_REQUESTED", "CREATOR_ACTION_REQUIRED", "PAID_OUT"];
   const headers = {
     "content-type": "application/json",
@@ -108,16 +118,22 @@ async function fetchIndividualCommissions(
     "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
   };
 
-  // Whether the richer query fields are supported by the API (detected on first attempt)
-  let richFieldsSupported: boolean | null = null;
+  // Three query tiers, tried in order until one works:
+  // 1. Full: order total + all line items (ideal — exact amount, all items)
+  // 2. Partial: line item title/price + order name (what we had before)
+  // 3. Minimal: commission amount + earnedAt only (fallback)
+  type QueryTier = "full" | "partial" | "minimal";
+  let tier: QueryTier = "full";
 
-  const makeBody = (group: string, rich: boolean) => JSON.stringify({
+  const makeBody = (group: string, t: QueryTier) => JSON.stringify({
     query: `query {
       payouts {
-        partnershipCommissions(group: ${group}, partnershipId: "${partnershipId}", first: ${deltaOrders + 5}) {
+        partnershipCommissions(group: ${group}, partnershipId: "${partnershipId}", first: ${Math.max(20, deltaOrders * 8)}) {
           nodes {
             id commissionUsd { amount } earnedAt
-            ${rich ? "lineItemTitle order { name }" : ""}
+            ${t !== "minimal" ? "lineItemTitle lineItemPrice { amount }" : ""}
+            ${t === "full" ? "order { name total { amount currency } lineItems { nodes { title quantity price { amount } } } }" : ""}
+            ${t === "partial" ? "order { name }" : ""}
           }
         }
       }
@@ -126,41 +142,57 @@ async function fetchIndividualCommissions(
 
   for (const group of groups) {
     try {
-      // First pass: try rich query (or minimal if we already know rich isn't supported)
-      const useRich = richFieldsSupported !== false;
-      let res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, useRich) });
+      let res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, tier) });
       let json = await res.json();
 
-      // If rich query errored, remember that and retry with minimal query
-      if (json.errors && useRich) {
-        richFieldsSupported = false;
-        res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, false) });
+      // Step down tiers on error
+      if (json.errors && tier === "full") {
+        tier = "partial";
+        res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, tier) });
+        json = await res.json();
+      }
+      if (json.errors && tier === "partial") {
+        tier = "minimal";
+        res = await fetch(COLLABS_GRAPHQL_URL, { method: "POST", headers, body: makeBody(group, tier) });
         json = await res.json();
       }
 
       if (json.errors) continue;
-      if (richFieldsSupported === null) richFieldsSupported = true;
 
       const nodes = (json?.data?.payouts?.partnershipCommissions?.nodes ?? []) as {
         id: string;
         commissionUsd: { amount: number };
+        lineItemPrice?: { amount: number };
         earnedAt: string;
         lineItemTitle?: string;
-        order?: { name: string };
+        order?: {
+          name: string;
+          total?: { amount: number; currency: string };
+          lineItems?: { nodes: { title: string; quantity: number; price: { amount: number } }[] };
+        };
       }[];
       if (nodes.length === 0) continue;
 
       const cutoff = lastSyncedAt ? new Date(lastSyncedAt) : null;
       const recent = cutoff
         ? nodes.filter((n) => new Date(n.earnedAt) > cutoff)
-        : nodes.slice(0, deltaOrders);
+        : nodes.slice(0, deltaOrders * 5); // fetch extra to cover multi-item orders
 
       if (recent.length > 0) {
         return recent.map((n) => ({
+          commissionId: n.id,
           commissionUsdAmount: n.commissionUsd.amount,
+          lineItemPrice: n.lineItemPrice?.amount ?? undefined,
           earnedAt: n.earnedAt,
           productName: n.lineItemTitle ?? undefined,
           shopifyOrderName: n.order?.name ?? undefined,
+          orderTotal: n.order?.total?.amount ?? undefined,
+          orderCurrency: n.order?.total?.currency ?? undefined,
+          orderLineItems: n.order?.lineItems?.nodes?.map(li => ({
+            title: li.title,
+            quantity: li.quantity,
+            price: li.price.amount,
+          })) ?? undefined,
         }));
       }
     } catch {
@@ -195,8 +227,26 @@ async function saveCollabsConversions(
   );
 
   if (individualCommissions && individualCommissions.length > 0) {
-    // Use individual per-order commissions — most accurate path
-    const ordersToSave = individualCommissions.slice(0, deltaOrders);
+    // Group line-item commission nodes by Shopify order name so multi-item orders
+    // become a single conversion record (not one record per item).
+    type CommissionItem = NonNullable<typeof individualCommissions>[number];
+    const orderGroups = new Map<string, CommissionItem[]>();
+    for (const c of individualCommissions) {
+      const key = c.shopifyOrderName ?? `solo-${c.commissionId}`;
+      const group = orderGroups.get(key) ?? [];
+      group.push(c);
+      orderGroups.set(key, group);
+    }
+
+    // Sort groups by most-recent earnedAt and take up to deltaOrders orders
+    const groupsToSave = [...orderGroups.values()]
+      .sort((a, b) => {
+        const aLatest = Math.max(...a.map(c => new Date(c.earnedAt).getTime()));
+        const bLatest = Math.max(...b.map(c => new Date(c.earnedAt).getTime()));
+        return bLatest - aLatest;
+      })
+      .slice(0, deltaOrders);
+
     const windowStart = lastSyncedAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     const recentClicks = await sql`
@@ -210,22 +260,51 @@ async function saveCollabsConversions(
           SELECT via_click_id FROM conversions WHERE via_click_id IS NOT NULL AND store_slug = ${storeSlug}
         )
       ORDER BY timestamp DESC
-      LIMIT ${ordersToSave.length}
+      LIMIT ${groupsToSave.length}
     `;
 
-    for (let i = 0; i < ordersToSave.length; i++) {
-      const { commissionUsdAmount, earnedAt, productName: collabsProductName, shopifyOrderName } = ordersToSave[i];
-      const orderTotal = calculateOrderTotal(commissionUsdAmount, commissionRules);
+    for (let i = 0; i < groupsToSave.length; i++) {
+      const items = groupsToSave[i];
+      const firstItem = items[0];
+      const { shopifyOrderName, orderLineItems, orderTotal: apiOrderTotal, orderCurrency } = firstItem;
       const click = recentClicks[i] ?? null;
-      // Prefer Shopify order name for a stable, meaningful ID; fall back to synthetic
-      const orderIdBase = shopifyOrderName
+      const ts = [...items.map(c => c.earnedAt)].sort().reverse()[0] || now;
+      const totalCommission = items.reduce((sum, c) => sum + c.commissionUsdAmount, 0);
+
+      // Build the items array — prefer full order line items from API, else per-commission nodes
+      let lineItems: { productName: string; quantity: number; price: number }[];
+      let orderTotal: number;
+
+      if (orderLineItems && orderLineItems.length > 0 && apiOrderTotal && apiOrderTotal > 0) {
+        // Best case: Collabs API gave us the full order with all items and the actual total
+        const orderCurr = orderCurrency ?? currency;
+        orderTotal = convertCurrencyToUSD(apiOrderTotal, orderCurr);
+        lineItems = orderLineItems.map(li => ({
+          productName: li.title,
+          quantity: li.quantity,
+          price: Math.round(convertCurrencyToUSD(li.price, orderCurr) * 100) / 100,
+        }));
+      } else {
+        // Fallback: build from commission nodes — use lineItemPrice if available, else back-calculate
+        lineItems = items.map(item => {
+          const price = item.lineItemPrice && item.lineItemPrice > 0
+            ? Math.round(convertCurrencyToUSD(item.lineItemPrice, currency) * 100) / 100
+            : calculateOrderTotal(item.commissionUsdAmount, commissionRules);
+          return {
+            productName: item.productName ?? (click?.product_name as string | null) ?? "Item via Shopify Collabs",
+            quantity: 1,
+            price,
+          };
+        });
+        orderTotal = lineItems.reduce((sum, it) => sum + it.price, 0);
+      }
+
+      // Stable order ID: Shopify order name is most reliable; fall back to commission node ID
+      const orderId = shopifyOrderName
         ? `collabs-${storeSlug}-${shopifyOrderName.replace(/^#/, "")}`
-        : `collabs-${partnershipId}-order-${prevOrderCount + i}`;
-      const orderId = orderIdBase;
+        : `collabs-commission-${firstItem.commissionId}`;
+
       const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
-      const ts = earnedAt || now;
-      // Product name priority: Collabs API line item > VYA click > generic fallback
-      const resolvedProductName = collabsProductName ?? (click?.product_name as string | null) ?? "Order via Shopify Collabs";
 
       await sql`
         INSERT INTO conversions (
@@ -234,16 +313,16 @@ async function saveCollabsConversions(
         )
         VALUES (
           ${conversionId}, ${ts}, ${orderId}, ${orderTotal}, 'USD',
-          ${JSON.stringify([{ productName: resolvedProductName, quantity: 1, price: orderTotal }])},
+          ${JSON.stringify(lineItems)},
           ${click ? (click.click_id as string) : null},
           ${storeSlug}, ${brandName}, true,
           ${JSON.stringify({
             source: "shopify-collabs",
             partnershipId,
-            commissionUsd: commissionUsdAmount,
+            commissionUsd: totalCommission,
             commissionRate: commissionRules.map(r => r.value),
             ...(shopifyOrderName ? { shopifyOrderName } : {}),
-            ...(collabsProductName ? { productName: collabsProductName } : {}),
+            dataSource: orderLineItems ? "collabs-order-api" : "commission-nodes",
           })},
           ${click ? (click.user_id as string) : null}
         )

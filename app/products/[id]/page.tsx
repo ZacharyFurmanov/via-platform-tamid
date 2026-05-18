@@ -266,6 +266,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const price = `$${Math.round(Number(product.price))}`;
   const description = `${price} — ${product.store_name}`;
 
+  const ogImage = image
+    ? [{ url: image, width: 1200, height: 630, alt: product.title }]
+    : [`${BASE_URL}/products/${compositeId}/opengraph-image`];
+
   return {
     title: `${product.title} — VYA`,
     description,
@@ -274,11 +278,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       description,
       url: `${BASE_URL}/products/${compositeId}`,
       type: "website",
+      images: ogImage,
     },
     twitter: {
       card: "summary_large_image",
       title: product.title,
       description,
+      images: ogImage,
     },
   };
 }
