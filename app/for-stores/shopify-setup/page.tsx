@@ -28,7 +28,7 @@ export default function ShopifySetupPage() {
         <div className="max-w-4xl mx-auto px-6 py-4">
           <p className="text-sm">
             <span className="font-medium">⏱ Setup time:</span>{" "}
-            <span className="text-[#5D0F17]/60">~3 minutes</span>
+            <span className="text-[#5D0F17]/60">~8 minutes</span>
           </p>
         </div>
       </section>
@@ -174,6 +174,56 @@ export default function ShopifySetupPage() {
                   <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
                     4
                   </span>
+                  <h3 className="text-lg font-medium">Connect Your Store via Webhook</h3>
+                </div>
+                <div className="text-[#5D0F17]/60 space-y-4">
+                  <p>
+                    A webhook lets VYA receive your order data automatically the moment a payment
+                    is confirmed — so we always have the right order total, items, and customer
+                    info without any manual work.
+                  </p>
+
+                  <div>
+                    <p className="text-sm font-medium text-[#5D0F17] mb-2">Step 4a — Create the webhook:</p>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>In your Shopify Admin, click <strong>Settings</strong> (bottom-left)</li>
+                      <li>Click <strong>Notifications</strong></li>
+                      <li>Scroll to the bottom and click <strong>Create webhook</strong></li>
+                      <li>Set <strong>Event</strong> to <strong>Order payment</strong></li>
+                      <li>Set <strong>Format</strong> to <strong>JSON</strong></li>
+                      <li>Paste the webhook URL from your VYA welcome email into the <strong>URL</strong> field — it looks like this:</li>
+                    </ol>
+                    <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm mt-2">
+                      https://vyaplatform.com/api/webhooks/shopify?store=your-store-slug
+                    </div>
+                    <p className="text-sm mt-2">Leave <strong>Webhook API version</strong> as the default. Click <strong>Save</strong>.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-[#5D0F17] mb-2">Step 4b — Send us your signing secret:</p>
+                    <p className="text-sm">
+                      After saving, Shopify displays a <strong>signing secret</strong> — a long string of letters and numbers on the webhooks page.
+                      Copy it and email it to{" "}
+                      <a href="mailto:partnerships@vyaplatform.com" className="text-[#5D0F17] underline">
+                        partnerships@vyaplatform.com
+                      </a>.
+                      This is how VYA verifies that orders are genuinely coming from your store.
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 p-3 text-sm mt-3">
+                      <p className="text-amber-800">
+                        <strong>Keep this secret private.</strong> Don&apos;t share it publicly — treat it like a password. Only send it directly to VYA.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="border-l-2 border-[#5D0F17] pl-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-sm font-medium">
+                    5
+                  </span>
                   <h3 className="text-lg font-medium">We Generate the Affiliate Links</h3>
                 </div>
                 <div className="text-[#5D0F17]/60 space-y-3">
@@ -195,19 +245,18 @@ export default function ShopifySetupPage() {
                 </div>
               </div>
 
-              {/* Step 5 */}
+              {/* Step 6 */}
               <div className="border-l-2 border-[#5D0F17]/20 pl-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="w-8 h-8 bg-[#5D0F17]/15 text-[#5D0F17]/60 flex items-center justify-center text-sm font-medium">
-                    5
+                    6
                   </span>
                   <h3 className="text-lg font-medium text-[#5D0F17]/60">Done!</h3>
                 </div>
                 <div className="text-[#5D0F17]/50 space-y-3">
                   <p>
-                    Once we accept your invitation, all VYA traffic to your store will be
-                    automatically tracked. No theme changes needed — our per-product links
-                    handle tracking and attribution. Shopify handles:
+                    Once we accept your invitation and activate your webhook, all VYA traffic to
+                    your store will be automatically tracked. No theme changes needed. Shopify handles:
                   </p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li>Click tracking via affiliate links</li>
@@ -273,6 +322,22 @@ export default function ShopifySetupPage() {
                 <p className="text-[#5D0F17]/60 text-sm">
                   Yes. You can adjust commission rates anytime in Collabs settings. Changes apply
                   to future sales only.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-medium mb-2">Where do I find my signing secret after I save the webhook?</h3>
+                <p className="text-[#5D0F17]/60 text-sm">
+                  Go to <strong>Settings → Notifications → Webhooks</strong> in your Shopify Admin. Your signing secret is shown at the top of the webhooks page, above the list of webhooks. It stays the same for all webhooks on your store — you only need to send it to us once.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-medium mb-2">What if I accidentally regenerate my signing secret?</h3>
+                <p className="text-[#5D0F17]/60 text-sm">
+                  If Shopify generates a new secret, just email the updated one to{" "}
+                  <a href="mailto:partnerships@vyaplatform.com" className="text-[#5D0F17] underline">
+                    partnerships@vyaplatform.com
+                  </a>{" "}
+                  and we&apos;ll update it on our end. Orders will resume tracking within minutes.
                 </p>
               </div>
               <div>
