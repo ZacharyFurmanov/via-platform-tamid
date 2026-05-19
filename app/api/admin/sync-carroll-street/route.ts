@@ -222,6 +222,103 @@ function mapRowToProduct(row: SupabaseRow) {
   return { title, price, image, images: images.length ? images : undefined, description, size, sold };
 }
 
+const CARROLL_SITE = "https://carrollstreetvintage.com";
+const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+// Extract product objects from a minified JS string by finding objects near Supabase image URLs.
+// Minified Vite bundles use unquoted keys so JSON.parse fails — we use regex instead.
+function extractProductsFromJS(js: string): SupabaseRow[] {
+  const products: SupabaseRow[] = [];
+  const seen = new Set<string>();
+
+  const imageRe = /https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/[^"\\,\s)>]+/g;
+  for (const imgMatch of js.matchAll(imageRe)) {
+    const imgUrl = imgMatch[0];
+    if (seen.has(imgUrl)) continue;
+    seen.add(imgUrl);
+
+    const pos = imgMatch.index!;
+    // Walk backward to find the opening brace of the enclosing object
+    let start = pos;
+    while (start > 0 && js[start] !== "{") start--;
+    // Walk forward tracking depth
+    let depth = 0;
+    let end = start;
+    for (let i = start; i < Math.min(start + 4000, js.length); i++) {
+      if (js[i] === "{") depth++;
+      else if (js[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end <= start) continue;
+    const chunk = js.slice(start, end + 1);
+
+    const nameMatch = chunk.match(/(?:name|title)\s*:\s*"([^"]+)"/);
+    const priceMatch = chunk.match(/price\s*:\s*(\d+(?:\.\d+)?)/);
+    if (!nameMatch || !priceMatch) continue;
+
+    const soldMatch = chunk.match(/(?:sold|is_sold|sold_out)\s*:\s*(true|false)/);
+    const descMatch = chunk.match(/(?:description|details)\s*:\s*"([^"]+)"/);
+    const sizeMatch = chunk.match(/size\s*:\s*"([^"]+)"/);
+    const idMatch = chunk.match(/(?:^|[,{])id\s*:\s*"([^"]+)"/);
+
+    products.push({
+      id: idMatch?.[1],
+      name: nameMatch[1],
+      price: parseFloat(priceMatch[1]),
+      image: imgUrl,
+      sold: soldMatch?.[1] === "true",
+      description: descMatch?.[1],
+      size: sizeMatch?.[1],
+    });
+  }
+  return products;
+}
+
+async function scrapeCarrollStreetProducts(): Promise<{ rows: SupabaseRow[]; source: string }> {
+  // Fetch main HTML to find Vite JS chunk URLs
+  let html = "";
+  try {
+    html = await fetch(CARROLL_SITE, { headers: { "user-agent": UA } }).then(r => r.text());
+  } catch { return { rows: [], source: "scrape-failed-html" }; }
+
+  const scriptSrcs = [...html.matchAll(/src="(\/assets\/[^"]+\.js)"/g)]
+    .map(m => CARROLL_SITE + m[1])
+    // Largest files first — product data lives in bigger chunks
+    .sort((a, b) => b.length - a.length);
+
+  for (const src of scriptSrcs) {
+    let js = "";
+    try {
+      js = await fetch(src, { headers: { "user-agent": UA } }).then(r => r.text());
+    } catch { continue; }
+
+    if (js.length < 5000) continue;
+
+    // Strategy 1: look for JSON.parse("...") with an embedded array
+    for (const m of js.matchAll(/JSON\.parse\("((?:[^"\\]|\\.)*)"\)/g)) {
+      try {
+        const inner = JSON.parse(`"${m[1]}"`); // unescape the JS string
+        const data = JSON.parse(inner);
+        if (Array.isArray(data) && data.length > 0) {
+          const first = data[0] as Record<string, unknown>;
+          const keys = Object.keys(first);
+          if (keys.some(k => ["price", "cost", "amount"].includes(k)) &&
+              keys.some(k => ["name", "title", "product_name"].includes(k))) {
+            return { rows: data as SupabaseRow[], source: src };
+          }
+        }
+      } catch { /* not product data */ }
+    }
+
+    // Strategy 2: extract objects near Supabase image URLs
+    if (js.includes("supabase.co/storage")) {
+      const products = extractProductsFromJS(js);
+      if (products.length > 0) return { rows: products, source: src };
+    }
+  }
+
+  return { rows: [], source: "scrape-no-products-found" };
+}
+
 export async function GET(request: NextRequest) {
   void request;
   const anonKey = process.env.SUPABASE_ANON_KEY_CARROLL;
@@ -232,29 +329,37 @@ export async function GET(request: NextRequest) {
   let rows: SupabaseRow[] | null = null;
   let foundTable = "";
 
-  // Discover tables from the OpenAPI spec, then fall back to our known list
+  // 1. Try Supabase tables
   const discoveredTables = await discoverTables(anonKey);
   const tablesToTry = discoveredTables.length > 0
     ? [...new Set([...discoveredTables, ...FALLBACK_TABLES])]
     : FALLBACK_TABLES;
 
-  const attempts: { table: string; status: number; body?: unknown }[] = [];
-
   for (const table of tablesToTry) {
     const result = await fetchSupabaseTable(anonKey, table);
-    attempts.push({ table, status: result.status, body: result.rows === null ? result.body : `${result.rows.length} rows` });
-    if (result.rows !== null) {
+    if (result.rows !== null && result.rows.length > 0) {
       rows = result.rows;
       foundTable = table;
       break;
     }
   }
 
-  if (!rows) {
+  // 2. Fallback: scrape the website's JS bundle
+  let scrapeSource = "";
+  if (!rows || rows.length === 0) {
+    const scraped = await scrapeCarrollStreetProducts();
+    if (scraped.rows.length > 0) {
+      rows = scraped.rows;
+      foundTable = "js-bundle-scrape";
+      scrapeSource = scraped.source;
+    }
+  }
+
+  if (!rows || rows.length === 0) {
     return NextResponse.json({
-      error: `No product table found.`,
+      error: "No products found via Supabase or site scraping.",
       discoveredTables,
-      attempts,
+      scrapeSource,
     }, { status: 404 });
   }
 
@@ -273,5 +378,5 @@ export async function GET(request: NextRequest) {
 
   const { count } = await syncProducts(STORE_SLUG, STORE_NAME, mapped);
 
-  return NextResponse.json({ ok: true, productCount: count, total: rows.length, table: foundTable });
+  return NextResponse.json({ ok: true, productCount: count, total: rows.length, table: foundTable, scrapeSource });
 }
