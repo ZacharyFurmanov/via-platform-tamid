@@ -48,22 +48,6 @@ export default function SyncAdminPage() {
   const [carrollStripeResult, setCarrollStripeResult] = useState<StripeOrdersResult | null>(null);
   const [carrollProductsLoading, setCarrollProductsLoading] = useState(false);
   const [carrollProductsResult, setCarrollProductsResult] = useState<{ ok?: boolean; productCount?: number; total?: number; error?: string } | null>(null);
-  const [collabsSyncLoading, setCollabsSyncLoading] = useState(false);
-  const [collabsSyncResult, setCollabsSyncResult] = useState<{ ok?: boolean; newOrdersRecorded?: number; partnerships?: number; retroMatched?: number; error?: string; detail?: string } | null>(null);
-
-  async function handleCollabsSync() {
-    setCollabsSyncLoading(true);
-    setCollabsSyncResult(null);
-    try {
-      const resp = await fetch("/api/admin/run-collabs-revenue-sync");
-      const data = await resp.json();
-      setCollabsSyncResult({ ...data, detail: data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : undefined });
-    } catch (err) {
-      setCollabsSyncResult({ error: err instanceof Error ? err.message : "Request failed" });
-    } finally {
-      setCollabsSyncLoading(false);
-    }
-  }
 
   async function handleSyncCarrollStripe() {
     setCarrollStripeLoading(true);
@@ -474,46 +458,6 @@ export default function SyncAdminPage() {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Shopify Collabs Revenue Sync */}
-        <div style={{ marginBottom: 32 }}>
-          <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 16 }}>Shopify Collabs</h2>
-          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>Collabs Revenue Sync</h3>
-                <p style={{ fontSize: 12, color: "#71717a" }}>Fetches new commissions from Shopify Collabs and records them as conversions</p>
-              </div>
-              <button
-                onClick={handleCollabsSync}
-                disabled={collabsSyncLoading}
-                style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: collabsSyncLoading ? "not-allowed" : "pointer", opacity: collabsSyncLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
-              >
-                {collabsSyncLoading ? "Syncing..." : "Sync Collabs"}
-              </button>
-            </div>
-            {collabsSyncResult && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
-                {collabsSyncResult.error ? (
-                  <p style={{ fontSize: 13, color: "#dc2626" }}>
-                    {collabsSyncResult.error}
-                    {collabsSyncResult.detail && (
-                      <span style={{ display: "block", color: "#71717a", marginTop: 4, fontSize: 12 }}>
-                        {collabsSyncResult.detail}
-                      </span>
-                    )}
-                  </p>
-                ) : (
-                  <p style={{ fontSize: 13, color: "#15803d" }}>
-                    {collabsSyncResult.newOrdersRecorded ?? 0} new conversions recorded
-                    {(collabsSyncResult.retroMatched ?? 0) > 0 ? ` · ${collabsSyncResult.retroMatched} retro-matched` : ""}
-                    {` (${collabsSyncResult.partnerships ?? 0} partnerships checked)`}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Carroll Street Vintage — Stripe Orders */}

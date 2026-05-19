@@ -665,6 +665,8 @@ function CollabsTab() {
   const [csrfToken, setCsrfToken] = React.useState("");
   const [savingCreds, setSavingCreds] = React.useState(false);
   const [credsMsg, setCredsMsg] = React.useState<string | null>(null);
+  const [revenueSyncing, setRevenueSyncing] = React.useState(false);
+  const [revenueSyncMsg, setRevenueSyncMsg] = React.useState<string | null>(null);
 
   const load = React.useCallback(async (forceSync = false) => {
     forceSync ? setSyncing(true) : setLoading(true);
@@ -701,6 +703,30 @@ function CollabsTab() {
       setError(String(e));
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleRevenueSync() {
+    setRevenueSyncing(true);
+    setRevenueSyncMsg(null);
+    try {
+      const res = await fetch("/api/admin/run-collabs-revenue-sync");
+      const json = await res.json();
+      if (!res.ok) {
+        setRevenueSyncMsg(json.error ?? `Error ${res.status}`);
+      } else {
+        const recorded = json.newOrdersRecorded ?? 0;
+        const retro = json.retroMatched ?? 0;
+        setRevenueSyncMsg(
+          recorded > 0
+            ? `${recorded} new conversion${recorded !== 1 ? "s" : ""} recorded${retro > 0 ? ` · ${retro} retro-matched` : ""}`
+            : `Up to date — no new conversions${retro > 0 ? ` · ${retro} retro-matched` : ""}`
+        );
+      }
+    } catch (e) {
+      setRevenueSyncMsg(String(e));
+    } finally {
+      setRevenueSyncing(false);
     }
   }
 
@@ -759,8 +785,21 @@ function CollabsTab() {
           >
             {syncing ? "Syncing…" : "Sync Now"}
           </button>
+          <button
+            onClick={handleRevenueSync}
+            disabled={revenueSyncing}
+            style={{ padding: "7px 16px", fontSize: 12, fontWeight: 500, border: "none", background: "#16a34a", color: "#fff", cursor: revenueSyncing ? "not-allowed" : "pointer", opacity: revenueSyncing ? 0.6 : 1, borderRadius: 6 }}
+          >
+            {revenueSyncing ? "Recording…" : "Sync Conversions"}
+          </button>
         </div>
       </div>
+
+      {revenueSyncMsg && (
+        <p style={{ fontSize: 13, color: revenueSyncMsg.includes("Error") || revenueSyncMsg.includes("failed") ? "#dc2626" : "#16a34a", marginBottom: 16 }}>
+          {revenueSyncMsg}
+        </p>
+      )}
 
       {/* Credentials form */}
       {showCreds && (

@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+  let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+  if (baseUrl && !baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`;
 
   let resp: Response;
   try {
