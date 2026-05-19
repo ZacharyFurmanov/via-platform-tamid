@@ -46,9 +46,9 @@ async function fetchStripeCharges(apiKey: string, createdAfter: number): Promise
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.CARROLL_STREET_STRIPE_SECRET_KEY;
+  const apiKey = process.env.STRIPE_SECRET_KEY_CARROLL;
   if (!apiKey) {
-    return NextResponse.json({ error: "CARROLL_STREET_STRIPE_SECRET_KEY not set" }, { status: 500 });
+    return NextResponse.json({ error: "STRIPE_SECRET_KEY_CARROLL not set" }, { status: 500 });
   }
 
   const body = await request.json().catch(() => ({}));
