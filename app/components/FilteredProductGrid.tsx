@@ -206,8 +206,12 @@ export default function FilteredProductGrid({
     };
   }, []);
 
+  const PAGE_SIZE = 48;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
+    setCurrentPage(1);
     try {
       sessionStorage.setItem(getFilterKey(), JSON.stringify(newFilters));
     } catch {}
@@ -437,11 +441,12 @@ export default function FilteredProductGrid({
     setDeadImageIds((prev) => new Set([...prev, id]));
   }, []);
 
-  // Fetch favorite counts for all products
+  // Fetch favorite counts — only for the current page, after idle
   const [favCounts, setFavCounts] = useState<Record<number, number>>({});
 
   useEffect(() => {
-    const dbIds = products
+    const visibleProducts = filteredProducts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const dbIds = visibleProducts
       .map((p) => {
         if (p.dbId) return p.dbId;
         const match = p.id.match(/-(\d+)$/);
@@ -451,13 +456,21 @@ export default function FilteredProductGrid({
 
     if (dbIds.length === 0) return;
 
-    fetch(`/api/favorites/counts?ids=${dbIds.join(",")}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.counts) setFavCounts(data.counts);
-      })
-      .catch(() => {});
-  }, [products]);
+    const run = () => {
+      fetch(`/api/favorites/counts?ids=${dbIds.join(",")}`)
+        .then((res) => res.json())
+        .then((data) => { if (data.counts) setFavCounts((prev) => ({ ...prev, ...data.counts })); })
+        .catch(() => {});
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(run, { timeout: 2000 });
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(run, 500);
+      return () => clearTimeout(id);
+    }
+  }, [filteredProducts, currentPage]);
 
   return (
     <div>
@@ -511,47 +524,104 @@ export default function FilteredProductGrid({
             </button>
           ) : null}
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          {filteredProducts
-            .filter((product) => product.image && !deadImageIds.has(product.id))
-            .map((product, i) => (
-            <div
-              key={product.id}
-              className={`group ${i % 5 === 0 ? "col-span-2 md:col-span-1" : "col-span-1"}`}
-            >
-              <ProductCard
-                id={product.id}
-                dbId={product.dbId}
-                name={product.title}
-                price={formatPrice(product.price, product.currency)}
-                compareAtPrice={product.compareAtPrice ? formatPrice(product.compareAtPrice, product.currency) : undefined}
-                category={product.categoryLabel}
-                storeName={product.store}
-                storeSlug={product.storeSlug}
-                externalUrl={product.externalUrl}
-                image={product.image}
-                images={product.images}
-                size={product.size}
-                isEditorsPick={product.isEditorsPick}
-                soldOut={product.soldOut}
-                from={from}
-                onImageFail={() => handleImageFail(product.id)}
-                priority={i < 4}
-                favoriteCount={
-                  favCounts[
-                    product.dbId ??
-                      (() => {
-                        const m = product.id.match(/-(\d+)$/);
-                        return m ? parseInt(m[1], 10) : 0;
-                      })()
-                  ]
-                }
-              />
+      ) : (() => {
+        const allFiltered = filteredProducts.filter((p) => p.image && !deadImageIds.has(p.id));
+        const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
+        const pageProducts = allFiltered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+        const goToPage = (page: number) => {
+          setCurrentPage(page);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        return (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {pageProducts.map((product, i) => (
+                <div
+                  key={product.id}
+                  className={`group ${i % 5 === 0 ? "col-span-2 md:col-span-1" : "col-span-1"}`}
+                  style={{ contentVisibility: i >= 12 ? "auto" : undefined, containIntrinsicSize: i >= 12 ? "0 420px" : undefined }}
+                >
+                  <ProductCard
+                    id={product.id}
+                    dbId={product.dbId}
+                    name={product.title}
+                    price={formatPrice(product.price, product.currency)}
+                    compareAtPrice={product.compareAtPrice ? formatPrice(product.compareAtPrice, product.currency) : undefined}
+                    category={product.categoryLabel}
+                    storeName={product.store}
+                    storeSlug={product.storeSlug}
+                    externalUrl={product.externalUrl}
+                    image={product.image}
+                    images={product.images}
+                    size={product.size}
+                    isEditorsPick={product.isEditorsPick}
+                    soldOut={product.soldOut}
+                    from={from}
+                    onImageFail={() => handleImageFail(product.id)}
+                    priority={i < 4}
+                    favoriteCount={
+                      favCounts[
+                        product.dbId ??
+                          (() => {
+                            const m = product.id.match(/-(\d+)$/);
+                            return m ? parseInt(m[1], 10) : 0;
+                          })()
+                      ]
+                    }
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2.5 border border-[#5D0F17]/20 text-[#5D0F17] text-xs uppercase tracking-[0.12em] hover:border-[#5D0F17] transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ←
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                  .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "…" ? (
+                      <span key={`ellipsis-${idx}`} className="px-1 text-[#5D0F17]/30 text-xs">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => goToPage(item as number)}
+                        className={`w-9 h-9 text-xs border transition ${
+                          currentPage === item
+                            ? "bg-[#5D0F17] text-[#F7F3EA] border-[#5D0F17]"
+                            : "border-[#5D0F17]/20 text-[#5D0F17] hover:border-[#5D0F17]"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
+
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2.5 border border-[#5D0F17]/20 text-[#5D0F17] text-xs uppercase tracking-[0.12em] hover:border-[#5D0F17] transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  →
+                </button>
+              </div>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }

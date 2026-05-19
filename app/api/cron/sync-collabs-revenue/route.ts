@@ -582,7 +582,9 @@ export async function GET(request: Request) {
     const deltaOrders = currOrders - prevOrders;
     const deltaCommission = currCommission - prevCommission;
 
-    if (deltaOrders > 0 && deltaCommission > 0) {
+    // Also capture orders still in holding period (deltaCommission = 0 but deltaOrders > 0)
+    // fetchIndividualCommissions already queries IN_HOLDING_PERIOD group so amounts are available.
+    if (deltaOrders > 0) {
       try {
         await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders, p.commissionRules ?? [], cookie, csrfToken);
         newOrdersRecorded += deltaOrders;

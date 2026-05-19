@@ -1226,7 +1226,7 @@ export async function sendPilotApprovalEmail(
     <div style="margin-top:40px;padding-top:32px;border-top:1px solid rgba(93,15,23,0.1);">
       <p style="font-size:13px;color:#5D0F17;font-family:Georgia,serif;font-style:italic;margin:0 0 6px;">From the founder of VYA:</p>
       <p style="font-size:14px;color:#5D0F17;font-family:Georgia,serif;line-height:1.8;margin:0 0 24px;">
-        I started VYA only three months ago with an idea in mind. Since then, the VYA community has grown to over 3,000 people, and 30+ partner stores. I am so excited for you to shop the amazing pieces we have. Every store has been handpicked by me, with the intention to provide the best quality. Thank you for supporting me, and stay tuned for more.
+        I started VYA in January with an idea in mind that there are incredible vintage stores around the world, but not one place to discover them all. Since then, the VYA community has grown to over 5,000 people, and 40+ partner stores. I am so excited for you to shop the amazing pieces we have. Every store has been handpicked by me, with the intention to provide the best quality. Thank you for supporting me, and stay tuned for more.
       </p>
       <p style="font-size:14px;color:#5D0F17;font-family:Georgia,serif;line-height:1.8;margin:0;">
         Xoxo,<br/>

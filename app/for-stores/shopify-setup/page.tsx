@@ -1,4 +1,5 @@
 import Link from "next/link";
+import WebhookUrlInput from "./WebhookUrlInput";
 
 export default function ShopifySetupPage() {
   return (
@@ -191,12 +192,12 @@ export default function ShopifySetupPage() {
                       <li>Scroll to the bottom and click <strong>Create webhook</strong></li>
                       <li>Set <strong>Event</strong> to <strong>Order payment</strong></li>
                       <li>Set <strong>Format</strong> to <strong>JSON</strong></li>
-                      <li>Paste the webhook URL from your VYA welcome email into the <strong>URL</strong> field — it looks like this:</li>
+                      <li>Paste the webhook URL into the <strong>URL</strong> field — enter your store name below to generate it:</li>
                     </ol>
-                    <div className="bg-[#5D0F17]/10 p-3 font-mono text-sm mt-2">
-                      https://vyaplatform.com/api/webhooks/shopify?store=your-store-slug
+                    <div className="mt-3">
+                      <WebhookUrlInput />
                     </div>
-                    <p className="text-sm mt-2">Leave <strong>Webhook API version</strong> as the default. Click <strong>Save</strong>.</p>
+                    <p className="text-sm mt-3">Leave <strong>Webhook API version</strong> as the default. Click <strong>Save</strong>.</p>
                   </div>
 
                   <div>

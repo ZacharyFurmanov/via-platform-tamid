@@ -168,110 +168,78 @@ export async function POST(request: NextRequest) {
   });
 }
 
-// ── Product sync ─────────────────────────────────────────────────────────────
+// ── Product sync via Supabase ─────────────────────────────────────────────────
 
-interface StripeProduct {
-  id: string;
-  name: string;
-  description: string | null;
-  images: string[];
-  url: string | null;
-  active: boolean;
-  default_price: {
-    id: string;
-    unit_amount: number | null;
-    currency: string;
-  } | null;
-}
+const CARROLL_SUPABASE_URL = "https://pzolnmlysfhbkvidlpvp.supabase.co";
+const CANDIDATE_TABLES = ["products", "items", "clothing", "inventory", "product", "listings"];
 
-interface StripePaymentLink {
-  id: string;
-  url: string;
-  active: boolean;
-}
+type SupabaseRow = Record<string, unknown>;
 
-interface StripeLineItem {
-  price: { id: string; product: string } | null;
-}
-
-async function stripeGet<T>(apiKey: string, path: string): Promise<T> {
-  const resp = await fetch(`https://api.stripe.com/v1${path}`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
+async function fetchSupabaseTable(anonKey: string, table: string): Promise<SupabaseRow[] | null> {
+  const resp = await fetch(`${CARROLL_SUPABASE_URL}/rest/v1/${table}?select=*`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+      Accept: "application/json",
+    },
   });
-  if (!resp.ok) throw new Error(`Stripe ${path} → ${resp.status}: ${await resp.text()}`);
-  return resp.json() as Promise<T>;
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  return Array.isArray(data) ? data : null;
 }
 
-async function fetchAllStripeProducts(apiKey: string): Promise<StripeProduct[]> {
-  const all: StripeProduct[] = [];
-  let startingAfter: string | null = null;
-  while (true) {
-    const qs = new URLSearchParams({ limit: "100", active: "true", "expand[]": "data.default_price" });
-    if (startingAfter) qs.set("starting_after", startingAfter);
-    const page = await stripeGet<{ data: StripeProduct[]; has_more: boolean }>(apiKey, `/products?${qs}`);
-    all.push(...page.data);
-    if (!page.has_more || page.data.length === 0) break;
-    startingAfter = page.data[page.data.length - 1].id;
-  }
-  return all;
-}
+function mapRowToProduct(row: SupabaseRow) {
+  const title = String(row.name ?? row.title ?? row.product_name ?? "").trim();
+  const price = Number(row.price ?? row.amount ?? row.cost ?? 0);
+  const rawImages = row.images ?? row.image_urls ?? row.photos;
+  const images: string[] = Array.isArray(rawImages)
+    ? (rawImages as unknown[]).map(String).filter(Boolean)
+    : [];
+  const image = String(row.image ?? row.image_url ?? row.photo ?? images[0] ?? "").trim() || null;
+  const description = String(row.description ?? row.details ?? "").trim() || undefined;
+  const size = String(row.size ?? "").trim() || undefined;
+  const sold = !!(row.sold ?? row.is_sold ?? row.sold_out ?? false);
 
-async function buildPaymentLinkMap(apiKey: string): Promise<Map<string, string>> {
-  // Returns productId → payment link buy URL
-  const productToUrl = new Map<string, string>();
-  let startingAfter: string | null = null;
-  while (true) {
-    const qs = new URLSearchParams({ limit: "100", active: "true" });
-    if (startingAfter) qs.set("starting_after", startingAfter);
-    const page = await stripeGet<{ data: StripePaymentLink[]; has_more: boolean }>(apiKey, `/payment_links?${qs}`);
-    for (const link of page.data) {
-      // Fetch line items for this payment link to find which product it sells
-      try {
-        const items = await stripeGet<{ data: StripeLineItem[] }>(apiKey, `/payment_links/${link.id}/line_items?limit=10`);
-        for (const item of items.data) {
-          if (item.price?.product) {
-            productToUrl.set(item.price.product, link.url);
-          }
-        }
-      } catch { /* skip this link if line items fail */ }
-    }
-    if (!page.has_more || page.data.length === 0) break;
-    startingAfter = page.data[page.data.length - 1].id;
-  }
-  return productToUrl;
+  return { title, price, image, images: images.length ? images : undefined, description, size, sold };
 }
 
 export async function GET(request: NextRequest) {
   void request;
-  const apiKey = process.env.STRIPE_SECRET_KEY_CARROLL;
-  if (!apiKey) {
-    return NextResponse.json({ error: "STRIPE_SECRET_KEY_CARROLL not set" }, { status: 500 });
+  const anonKey = process.env.SUPABASE_ANON_KEY_CARROLL;
+  if (!anonKey) {
+    return NextResponse.json({ error: "SUPABASE_ANON_KEY_CARROLL not set" }, { status: 500 });
   }
 
-  let products: StripeProduct[];
-  let paymentLinkMap: Map<string, string>;
+  let rows: SupabaseRow[] | null = null;
+  let foundTable = "";
 
-  try {
-    [products, paymentLinkMap] = await Promise.all([
-      fetchAllStripeProducts(apiKey),
-      buildPaymentLinkMap(apiKey),
-    ]);
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  for (const table of CANDIDATE_TABLES) {
+    const result = await fetchSupabaseTable(anonKey, table);
+    if (result && result.length > 0) {
+      rows = result;
+      foundTable = table;
+      break;
+    }
   }
 
-  const mapped = products.map((p) => ({
-    title: p.name,
-    price: p.default_price?.unit_amount ? p.default_price.unit_amount / 100 : 0,
-    currency: (p.default_price?.currency ?? "usd").toUpperCase(),
-    image: p.images[0] ?? null,
-    images: p.images.length > 0 ? p.images : undefined,
-    externalUrl: paymentLinkMap.get(p.id) ?? p.url ?? "https://carrollstreetvintage.com",
-    description: p.description ?? undefined,
-    variantId: p.default_price?.id ?? undefined,
-  })).filter((p) => p.price > 0);
+  if (!rows) {
+    return NextResponse.json({ error: `No product table found. Tried: ${CANDIDATE_TABLES.join(", ")}` }, { status: 404 });
+  }
+
+  const mapped = rows
+    .map(mapRowToProduct)
+    .filter((p) => p.title && p.price > 0 && !p.sold)
+    .map((p) => ({
+      title: p.title,
+      price: p.price,
+      currency: "USD",
+      image: p.image ?? undefined,
+      images: p.images,
+      externalUrl: "https://carrollstreetvintage.com",
+      description: p.description,
+    }));
 
   const { count } = await syncProducts(STORE_SLUG, STORE_NAME, mapped);
 
-  return NextResponse.json({ ok: true, productCount: count, total: products.length });
+  return NextResponse.json({ ok: true, productCount: count, total: rows.length, table: foundTable });
 }

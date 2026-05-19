@@ -150,9 +150,9 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  // Cache the result
-  await saveSetting("collabs_last_synced_at", new Date().toISOString());
-  await saveSetting("collabs_data", JSON.stringify(partnerships));
+  // Save for analytics display only — do NOT touch collabs_data or collabs_last_synced_at
+  // which are used exclusively by the cron job to detect delta orders for conversion recording.
+  await saveSetting("collabs_analytics_synced_at", new Date().toISOString());
 
   return NextResponse.json({
     ok: true,

@@ -31,7 +31,7 @@ export default async function NewArrivalsSection() {
 
         <div className="overflow-x-auto pb-4 scrollbar-hide touch-pan-x [&_img]:select-none [&_img]:pointer-events-none">
           <div className="flex gap-3 sm:gap-4 pl-6 pr-6">
-            {products.map((product) => {
+            {products.map((product, i) => {
               const categorySlug = inferCategoryFromTitle(product.title);
               const categoryLabel = categoryMap[categorySlug];
               const compositeId = `${product.store_slug}-${product.id}`;
@@ -52,6 +52,7 @@ export default async function NewArrivalsSection() {
                     image={product.image || ""}
                     images={images}
                     size={deriveSize(product)}
+                    priority={i < 3}
                   />
                 </div>
               );

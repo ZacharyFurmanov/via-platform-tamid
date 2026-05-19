@@ -224,6 +224,8 @@ export default function ImageCarousel({
       <div
         className="relative aspect-[3/4] w-full overflow-hidden group/carousel cursor-grab active:cursor-grabbing"
         style={{ touchAction: "pan-y" }}
+        onMouseEnter={hasMultiple ? () => goTo(1) : undefined}
+        onMouseLeave={hasMultiple ? () => goTo(0) : undefined}
         onTouchStart={hasMultiple ? onTouchStart : undefined}
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
         onMouseDown={hasMultiple ? onMouseDown : undefined}
@@ -241,42 +243,18 @@ export default function ImageCarousel({
         )}
 
         {hasMultiple && (
-          <>
-            <button
-              onClick={prev}
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
-              aria-label="Previous image"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={next}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity z-30"
-              aria-label="Next image"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30">
-              {safeImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => handleDotClick(e, idx)}
-                  className={`w-1.5 h-1.5 rounded-full transition-all ${
-                    idx === current
-                      ? "bg-white w-3"
-                      : "bg-white/50 hover:bg-white/80"
-                  }`}
-                  aria-label={`Go to image ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </>
+          <div className="absolute bottom-0 left-0 right-0 z-30 flex gap-[2px] px-2 pb-2 pt-4 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+            {safeImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => handleDotClick(e, idx)}
+                className={`h-[3px] flex-1 transition-all duration-200 ${
+                  idx === current ? "bg-white" : "bg-white/40"
+                }`}
+                aria-label={`Go to image ${idx + 1}`}
+              />
+            ))}
+          </div>
         )}
       </div>
     );
