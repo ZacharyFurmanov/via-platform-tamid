@@ -76,7 +76,7 @@ export default async function BrandPage({
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= BRAND HEADER ================= */}
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
           <Link
             href="/brands"
             className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
@@ -93,7 +93,7 @@ export default async function BrandPage({
       </section>
 
       {/* ================= PRODUCTS WITH FILTERS ================= */}
-      <section className="py-16 sm:py-24">
+      <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-6">
           <FilteredProductGrid
             products={products}

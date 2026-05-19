@@ -273,7 +273,12 @@ export default function HeaderClient({
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8 text-[15px] text-[#5D0F17]" style={{ fontFamily: "'Almarai', system-ui, sans-serif" }}>
               {/* STORES DROPDOWN */}
-              <div className="relative" ref={storesDropdownRef}>
+              <div
+                className="relative"
+                ref={storesDropdownRef}
+                onMouseEnter={() => { setStoresDropdownOpen(true); setCategoriesDropdownOpen(false); setCollectionsDropdownOpen(false); }}
+                onMouseLeave={() => setStoresDropdownOpen(false)}
+              >
                 <button
                   onClick={() => {
                     setStoresDropdownOpen(!storesDropdownOpen);
@@ -324,7 +329,12 @@ export default function HeaderClient({
               </div>
 
               {/* CATEGORIES DROPDOWN */}
-              <div className="relative" ref={categoriesDropdownRef}>
+              <div
+                className="relative"
+                ref={categoriesDropdownRef}
+                onMouseEnter={() => { setCategoriesDropdownOpen(true); setStoresDropdownOpen(false); setCollectionsDropdownOpen(false); }}
+                onMouseLeave={() => setCategoriesDropdownOpen(false)}
+              >
                 <button
                   onClick={() => {
                     setCategoriesDropdownOpen(!categoriesDropdownOpen);
@@ -388,7 +398,12 @@ export default function HeaderClient({
               </Link>
 
               {/* COLLECTIONS DROPDOWN */}
-              <div className="relative" ref={collectionsDropdownRef}>
+              <div
+                className="relative"
+                ref={collectionsDropdownRef}
+                onMouseEnter={() => { setCollectionsDropdownOpen(true); setStoresDropdownOpen(false); setCategoriesDropdownOpen(false); }}
+                onMouseLeave={() => setCollectionsDropdownOpen(false)}
+              >
                 <button
                   onClick={() => {
                     setCollectionsDropdownOpen(!collectionsDropdownOpen);

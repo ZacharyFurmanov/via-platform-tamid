@@ -10,7 +10,7 @@ export default async function BrandsPage() {
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       {/* ================= HEADER ================= */}
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">Shop by Designer</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             Browse vintage and secondhand pieces from the world&apos;s most sought-after designers.
@@ -19,7 +19,7 @@ export default async function BrandsPage() {
       </section>
 
       {/* ================= BRANDS GRID ================= */}
-      <section className="py-16 sm:py-24">
+      <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {brands.map((brand) => (

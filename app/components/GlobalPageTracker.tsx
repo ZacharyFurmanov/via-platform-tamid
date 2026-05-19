@@ -4,6 +4,20 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 
+const SOURCE_ALIASES: Record<string, string> = {
+  ig: "instagram",
+  fb: "facebook",
+  tw: "twitter",
+  tt: "tiktok",
+  yt: "youtube",
+  li: "linkedin",
+};
+
+function normalizeSource(s: string): string {
+  const lower = s.toLowerCase().trim();
+  return SOURCE_ALIASES[lower] ?? lower;
+}
+
 function inferPageType(pathname: string): string {
   if (pathname === "/") return "homepage";
   if (pathname.startsWith("/stores/")) return "store";
@@ -42,7 +56,7 @@ export default function GlobalPageTracker() {
     if (utmPayloadRef.current) return;
 
     const params = new URLSearchParams(window.location.search);
-    let utmSource = params.get("utm_source");
+    let utmSource = params.get("utm_source") ? normalizeSource(params.get("utm_source")!) : null;
     let utmMedium = params.get("utm_medium");
     let utmCampaign = params.get("utm_campaign");
     const utmContent = params.get("utm_content");

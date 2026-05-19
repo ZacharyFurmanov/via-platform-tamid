@@ -3,10 +3,25 @@ import { neon } from "@neondatabase/serverless";
 
 export const runtime = "edge";
 
+const SOURCE_ALIASES: Record<string, string> = {
+  ig: "instagram",
+  fb: "facebook",
+  tw: "twitter",
+  tt: "tiktok",
+  yt: "youtube",
+  li: "linkedin",
+};
+
+function normalizeSource(s: string): string {
+  const lower = s.toLowerCase().trim();
+  return SOURCE_ALIASES[lower] ?? lower;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const utmSource = body?.utm_source as string | undefined;
+    const rawSource = body?.utm_source as string | undefined;
+    const utmSource = rawSource ? normalizeSource(rawSource) : undefined;
     const utmMedium = body?.utm_medium as string | undefined;
     const utmCampaign = body?.utm_campaign as string | undefined;
     const utmContent = body?.utm_content as string | undefined;

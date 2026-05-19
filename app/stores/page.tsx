@@ -10,7 +10,7 @@ export default function StoresPage() {
 
       {/* ================= HEADER ================= */}
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">All Stores</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             A selection of independent vintage and secondhand stores,
@@ -20,7 +20,7 @@ export default function StoresPage() {
       </section>
 
       {/* ================= STORES GRID ================= */}
-      <section className="py-16 sm:py-24">
+      <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-16">
 

@@ -61,7 +61,9 @@ export async function GET(request: NextRequest) {
   const storeSlug = searchParams.get("ss");
   const externalUrl = searchParams.get("url");
   const itemsParam = searchParams.get("items");
-  const utmSource = searchParams.get("us");
+  const rawUtmSource = searchParams.get("us");
+  const SOURCE_ALIASES: Record<string, string> = { ig: "instagram", fb: "facebook", tw: "twitter", tt: "tiktok", yt: "youtube", li: "linkedin" };
+  const utmSource = rawUtmSource ? (SOURCE_ALIASES[rawUtmSource.toLowerCase()] ?? rawUtmSource.toLowerCase()) : null;
 
   // Validate required params
   if (!externalUrl) {

@@ -93,7 +93,7 @@ export default async function NewArrivalsPage() {
   return (
     <main className="bg-[#F7F3EA] min-h-screen text-[#5D0F17]">
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
           <h1 className="text-2xl sm:text-3xl font-serif mb-2">New Arrivals</h1>
           <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-2xl">
             The latest pieces added by our stores this week.
@@ -101,7 +101,7 @@ export default async function NewArrivalsPage() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24">
+      <section className="py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-6">
           <FilteredProductGrid
             products={products}

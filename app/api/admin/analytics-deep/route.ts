@@ -502,31 +502,49 @@ export async function GET(request: NextRequest) {
             ORDER BY clicks DESC
           `.catch(() => []),
 
-      // conversionsBySource — orders + revenue attributed to each utm_source via click join
+      // conversionsBySource — orders + revenue by utm_source.
+      // Primary: click.utm_source via via_click_id.
+      // Fallback: most recent utm_visit for the conversion's user_id (catches email-matched & Collabs orders).
       cutoffIso
         ? sql`
             SELECT
-              c.utm_source AS source,
+              COALESCE(c.utm_source, uv.utm_source) AS source,
               COUNT(DISTINCT conv.id)::int AS conversions,
               COALESCE(SUM(conv.order_total), 0)::float AS revenue
             FROM conversions conv
-            JOIN clicks c ON c.click_id = conv.via_click_id
-            WHERE c.utm_source IS NOT NULL
+            LEFT JOIN clicks c ON c.click_id = conv.via_click_id
+            LEFT JOIN LATERAL (
+              SELECT utm_source
+              FROM utm_visits
+              WHERE user_id = conv.user_id
+                AND utm_source IS NOT NULL
+              ORDER BY timestamp DESC
+              LIMIT 1
+            ) uv ON true
+            WHERE COALESCE(c.utm_source, uv.utm_source) IS NOT NULL
               AND (conv.returned IS NULL OR conv.returned = false)
               AND conv.timestamp >= ${cutoffIso}
-            GROUP BY c.utm_source
+            GROUP BY COALESCE(c.utm_source, uv.utm_source)
             ORDER BY revenue DESC
           `.catch(() => [])
         : sql`
             SELECT
-              c.utm_source AS source,
+              COALESCE(c.utm_source, uv.utm_source) AS source,
               COUNT(DISTINCT conv.id)::int AS conversions,
               COALESCE(SUM(conv.order_total), 0)::float AS revenue
             FROM conversions conv
-            JOIN clicks c ON c.click_id = conv.via_click_id
-            WHERE c.utm_source IS NOT NULL
+            LEFT JOIN clicks c ON c.click_id = conv.via_click_id
+            LEFT JOIN LATERAL (
+              SELECT utm_source
+              FROM utm_visits
+              WHERE user_id = conv.user_id
+                AND utm_source IS NOT NULL
+              ORDER BY timestamp DESC
+              LIMIT 1
+            ) uv ON true
+            WHERE COALESCE(c.utm_source, uv.utm_source) IS NOT NULL
               AND (conv.returned IS NULL OR conv.returned = false)
-            GROUP BY c.utm_source
+            GROUP BY COALESCE(c.utm_source, uv.utm_source)
             ORDER BY revenue DESC
           `.catch(() => []),
     ]);

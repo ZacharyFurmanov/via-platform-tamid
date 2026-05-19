@@ -416,7 +416,7 @@ export default function DeepAnalyticsPage() {
                       { label: "Source", align: "left" },
                       { label: "Visits", align: "right" },
                       { label: "Clicks", align: "right" },
-                      { label: "Click %", align: "right" },
+                      { label: "Clicks/Visit", align: "right" },
                       { label: "Orders", align: "right" },
                       { label: "Revenue", align: "right" },
                       { label: "Conv %", align: "right" },

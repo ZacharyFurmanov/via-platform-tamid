@@ -110,6 +110,11 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
 
+  // Redirect /waitlist to /login
+  if (pathname === "/waitlist" || pathname.startsWith("/waitlist/")) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   // Allow public routes unconditionally
   if (isPublicRoute(pathname)) {
     return NextResponse.next();

@@ -46,7 +46,7 @@ export default function LoginClient() {
         {mode === "entry" && (
           <>
             <p className="text-sm text-[#5D0F17]/60 text-center mb-3 leading-relaxed">
-              Shop the best vintage stores in the world, all in one place.
+              The first online department store for vintage and secondhand.
             </p>
             <p className="text-sm text-[#5D0F17]/60 text-center mb-8 leading-relaxed">
               Our pilot allows users to browse, shop, and give feedback to improve the platform.
@@ -76,10 +76,13 @@ export default function LoginClient() {
               </button>
             </div>
 
-            <div className="flex justify-center gap-5 mt-10">
+            <div className="flex justify-center flex-wrap gap-5 mt-10">
               <Link href="/terms" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">Terms</Link>
               <Link href="/privacy" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">Privacy</Link>
               <Link href="/for-stores" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">Partner with VYA</Link>
+              <a href="https://www.instagram.com/vyaplatform" target="_blank" rel="noopener noreferrer" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">Instagram</a>
+              <a href="https://www.tiktok.com/@vyaplatform" target="_blank" rel="noopener noreferrer" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">TikTok</a>
+              <a href="https://vyaplatform.substack.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-[#5D0F17]/40 underline hover:no-underline">Substack</a>
             </div>
           </>
         )}

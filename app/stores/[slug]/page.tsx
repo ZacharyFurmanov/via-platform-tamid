@@ -154,7 +154,7 @@ export default async function StorePage({ params }: StorePageProps) {
       />
       {/* ================= STORE HEADER ================= */}
       <section className="border-b border-[#5D0F17]/10">
-        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6 py-6 sm:py-10">
           <Link
             href="/stores"
             className="inline-block mb-6 text-xs tracking-[0.25em] uppercase text-[#5D0F17]/50 hover:text-[#5D0F17] transition"
