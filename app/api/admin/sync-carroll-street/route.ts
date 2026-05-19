@@ -329,11 +329,12 @@ export async function GET(request: NextRequest) {
   let rows: SupabaseRow[] | null = null;
   let foundTable = "";
 
-  // 1. Try Supabase tables
+  // 1. Try Supabase tables (skip sold_items — it only tracks past sales, not current inventory)
   const discoveredTables = await discoverTables(anonKey);
-  const tablesToTry = discoveredTables.length > 0
+  const tablesToTry = (discoveredTables.length > 0
     ? [...new Set([...discoveredTables, ...FALLBACK_TABLES])]
-    : FALLBACK_TABLES;
+    : FALLBACK_TABLES
+  ).filter(t => t !== "sold_items");
 
   for (const table of tablesToTry) {
     const result = await fetchSupabaseTable(anonKey, table);
@@ -344,26 +345,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 2. Fallback: scrape the website's JS bundle
-  let scrapeSource = "";
-  if (!rows || rows.length === 0) {
-    const scraped = await scrapeCarrollStreetProducts();
-    if (scraped.rows.length > 0) {
-      rows = scraped.rows;
-      foundTable = "js-bundle-scrape";
-      scrapeSource = scraped.source;
-    }
-  }
-
-  if (!rows || rows.length === 0) {
-    return NextResponse.json({
-      error: "No products found via Supabase or site scraping.",
-      discoveredTables,
-      scrapeSource,
-    }, { status: 404 });
-  }
-
-  const mapped = rows
+  // Map whatever Supabase rows we have
+  let mapped = (rows ?? [])
     .map(mapRowToProduct)
     .filter((p) => p.title && p.price > 0 && !p.sold)
     .map((p) => ({
@@ -376,7 +359,38 @@ export async function GET(request: NextRequest) {
       description: p.description,
     }));
 
+  // 2. Fallback: scrape the website's JS bundle when Supabase has no usable products
+  let scrapeSource = "";
+  if (mapped.length === 0) {
+    const scraped = await scrapeCarrollStreetProducts();
+    scrapeSource = scraped.source;
+    if (scraped.rows.length > 0) {
+      rows = scraped.rows;
+      foundTable = "js-bundle-scrape";
+      mapped = scraped.rows
+        .map(mapRowToProduct)
+        .filter((p) => p.title && p.price > 0 && !p.sold)
+        .map((p) => ({
+          title: p.title,
+          price: p.price,
+          currency: "USD",
+          image: p.image ?? undefined,
+          images: p.images,
+          externalUrl: "https://carrollstreetvintage.com",
+          description: p.description,
+        }));
+    }
+  }
+
+  if (mapped.length === 0) {
+    return NextResponse.json({
+      error: "No available products found via Supabase or site scraping.",
+      discoveredTables,
+      scrapeSource,
+    }, { status: 404 });
+  }
+
   const { count } = await syncProducts(STORE_SLUG, STORE_NAME, mapped);
 
-  return NextResponse.json({ ok: true, productCount: count, total: rows.length, table: foundTable, scrapeSource });
+  return NextResponse.json({ ok: true, productCount: count, total: rows?.length ?? mapped.length, table: foundTable, scrapeSource });
 }
