@@ -46,6 +46,8 @@ export default function SyncAdminPage() {
   const [statuses, setStatuses] = useState<Record<string, StoreStatus>>({});
   const [carrollStripeLoading, setCarrollStripeLoading] = useState(false);
   const [carrollStripeResult, setCarrollStripeResult] = useState<StripeOrdersResult | null>(null);
+  const [carrollProductsLoading, setCarrollProductsLoading] = useState(false);
+  const [carrollProductsResult, setCarrollProductsResult] = useState<{ ok?: boolean; productCount?: number; total?: number; error?: string } | null>(null);
 
   async function handleSyncCarrollStripe() {
     setCarrollStripeLoading(true);
@@ -62,6 +64,20 @@ export default function SyncAdminPage() {
       setCarrollStripeResult({ error: err instanceof Error ? err.message : "Request failed" });
     } finally {
       setCarrollStripeLoading(false);
+    }
+  }
+
+  async function handleSyncCarrollProducts() {
+    setCarrollProductsLoading(true);
+    setCarrollProductsResult(null);
+    try {
+      const resp = await fetch("/api/admin/sync-carroll-street", { method: "GET" });
+      const data = await resp.json();
+      setCarrollProductsResult(data);
+    } catch (err) {
+      setCarrollProductsResult({ error: err instanceof Error ? err.message : "Request failed" });
+    } finally {
+      setCarrollProductsLoading(false);
     }
   }
 
@@ -456,17 +472,31 @@ export default function SyncAdminPage() {
                 </div>
                 <p style={{ fontSize: 12, color: "#71717a" }}>Syncs last 30 days of Stripe charges → conversions</p>
               </div>
-              <button
-                onClick={handleSyncCarrollStripe}
-                disabled={carrollStripeLoading}
-                style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: carrollStripeLoading ? "not-allowed" : "pointer", opacity: carrollStripeLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
-              >
-                {carrollStripeLoading ? "Syncing..." : "Sync Orders"}
-              </button>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <button
+                  onClick={handleSyncCarrollProducts}
+                  disabled={carrollProductsLoading}
+                  style={{ padding: "7px 18px", background: "#fff", color: "#18181b", border: "1px solid #e4e4e7", borderRadius: 6, cursor: carrollProductsLoading ? "not-allowed" : "pointer", opacity: carrollProductsLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+                >
+                  {carrollProductsLoading ? "Syncing..." : "Sync Products"}
+                </button>
+                <button
+                  onClick={handleSyncCarrollStripe}
+                  disabled={carrollStripeLoading}
+                  style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: carrollStripeLoading ? "not-allowed" : "pointer", opacity: carrollStripeLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+                >
+                  {carrollStripeLoading ? "Syncing..." : "Sync Orders"}
+                </button>
+              </div>
             </div>
-            {carrollStripeResult && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
-                {carrollStripeResult.error ? (
+            {(carrollStripeResult || carrollProductsResult) && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7", display: "flex", flexDirection: "column", gap: 6 }}>
+                {carrollProductsResult && (carrollProductsResult.error ? (
+                  <p style={{ fontSize: 13, color: "#dc2626" }}>{carrollProductsResult.error}</p>
+                ) : (
+                  <p style={{ fontSize: 13, color: "#15803d" }}>{carrollProductsResult.productCount} products synced ({carrollProductsResult.total} found in Stripe)</p>
+                ))}
+                {carrollStripeResult && (carrollStripeResult.error ? (
                   <p style={{ fontSize: 13, color: "#dc2626" }}>{carrollStripeResult.error}</p>
                 ) : (
                   <p style={{ fontSize: 13, color: "#15803d" }}>
@@ -475,7 +505,7 @@ export default function SyncAdminPage() {
                     {` (${carrollStripeResult.totalCharges} charges found)`}
                     {carrollStripeResult.errors ? ` · ${carrollStripeResult.errors} errors` : ""}
                   </p>
-                )}
+                ))}
               </div>
             )}
           </div>

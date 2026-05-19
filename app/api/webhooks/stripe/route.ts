@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendSourcingConfirmationToUser, sendSourcingRequestToStores } from "@/app/lib/email";
 import { markSourcingRequestPaid, getSourcingRequestBySession } from "@/app/lib/sourcing-db";
 import { getAllStoreEmails } from "@/app/lib/stores";
+import { saveConversion } from "@/app/lib/analytics-db";
+import { neon } from "@neondatabase/serverless";
 
 // Verify Stripe webhook signature without the SDK
 async function verifyStripeSignature(
@@ -96,6 +98,52 @@ export async function POST(request: NextRequest) {
             console.log(`Sourcing webhook: session ${stripeSessionId} — status: ${existing?.status ?? "not found"}`);
           }
           break;
+        }
+
+        // Handle Carroll Street Vintage payment link purchase
+        const clientRef = session.client_reference_id as string | null;
+        if (clientRef && !clientRef.startsWith("sourcing_")) {
+          const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
+          const amountTotal = (session.amount_total as number | null) ?? 0;
+          const orderTotal = amountTotal / 100;
+          const currency = ((session.currency as string | null) ?? "usd").toUpperCase();
+          const buyerEmail = (session.customer_details as Record<string, unknown> | null)?.email as string | null
+            ?? (session.customer_email as string | null);
+          const sessionId = session.id as string;
+          const conversionId = `stripe-cs-${sessionId}`;
+
+          // Resolve user from email
+          let userId: string | null = null;
+          if (buyerEmail) {
+            const rows = await sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${buyerEmail}) LIMIT 1`.catch(() => []);
+            if (rows.length > 0) userId = String((rows[0] as { id: unknown }).id);
+          }
+
+          // Look up click by client_reference_id (the via_click_id we embedded)
+          type ClickRow = { click_id: string; product_name: string; timestamp: string };
+          let matchedClick: ClickRow | null = null;
+          const clickRows = await sql`
+            SELECT click_id, product_name, timestamp FROM clicks WHERE click_id = ${clientRef} LIMIT 1
+          `.catch(() => []);
+          if (clickRows.length > 0) matchedClick = clickRows[0] as ClickRow;
+
+          await saveConversion({
+            conversionId,
+            timestamp: new Date().toISOString(),
+            orderId: sessionId,
+            orderTotal,
+            currency,
+            items: [],
+            viaClickId: matchedClick?.click_id ?? null,
+            userId: userId ?? undefined,
+            storeSlug: "carroll-street-vintage",
+            storeName: "Carroll Street Vintage",
+            matched: !!(matchedClick || userId),
+            matchedClickData: matchedClick
+              ? { clickId: matchedClick.click_id, clickTimestamp: matchedClick.timestamp, productName: matchedClick.product_name, source: "stripe-payment-link" }
+              : userId ? { source: "stripe-email-match", userId, buyerEmail: buyerEmail ?? undefined }
+              : { source: "stripe-unmatched" },
+          }).catch((err) => console.error("[stripe-webhook] Carroll Street save error:", err));
         }
 
         break;

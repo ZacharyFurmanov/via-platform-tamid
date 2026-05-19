@@ -167,6 +167,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Stripe Payment Links (buy.stripe.com) — append client_reference_id for exact order attribution
+  if (parsedUrl.hostname === "buy.stripe.com") {
+    parsedUrl.searchParams.set("client_reference_id", clickId);
+    return NextResponse.redirect(parsedUrl.toString(), 302);
+  }
+
   // For stores without discount codes or collabs links, redirect directly
   parsedUrl.searchParams.set("via_click_id", clickId);
   return NextResponse.redirect(parsedUrl.toString(), 302);
