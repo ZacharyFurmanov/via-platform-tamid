@@ -175,17 +175,22 @@ const FALLBACK_TABLES = ["sold_items", "products", "items", "clothing", "invento
 
 type SupabaseRow = Record<string, unknown>;
 
-async function fetchSupabaseTable(anonKey: string, table: string): Promise<SupabaseRow[] | null> {
-  const resp = await fetch(`${CARROLL_SUPABASE_URL}/rest/v1/${table}?select=*`, {
-    headers: {
-      apikey: anonKey,
-      Authorization: `Bearer ${anonKey}`,
-      Accept: "application/json",
-    },
-  });
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  return Array.isArray(data) ? data : null;
+async function fetchSupabaseTable(anonKey: string, table: string): Promise<{ rows: SupabaseRow[] | null; status: number; body?: unknown }> {
+  try {
+    const resp = await fetch(`${CARROLL_SUPABASE_URL}/rest/v1/${table}?select=*`, {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    const body = await resp.json().catch(() => null);
+    if (!resp.ok) return { rows: null, status: resp.status, body };
+    return { rows: Array.isArray(body) ? body : null, status: resp.status, body };
+  } catch (err) {
+    return { rows: null, status: 0, body: String(err) };
+  }
 }
 
 // Discover all tables exposed by Supabase via its OpenAPI spec
@@ -233,11 +238,13 @@ export async function GET(request: NextRequest) {
     ? [...new Set([...discoveredTables, ...FALLBACK_TABLES])]
     : FALLBACK_TABLES;
 
+  const attempts: { table: string; status: number; body?: unknown }[] = [];
+
   for (const table of tablesToTry) {
     const result = await fetchSupabaseTable(anonKey, table);
-    // Accept any non-null array — even if all items are sold, mapRowToProduct handles filtering
-    if (result !== null) {
-      rows = result;
+    attempts.push({ table, status: result.status, body: result.rows === null ? result.body : `${result.rows.length} rows` });
+    if (result.rows !== null) {
+      rows = result.rows;
       foundTable = table;
       break;
     }
@@ -247,7 +254,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       error: `No product table found.`,
       discoveredTables,
-      tried: tablesToTry,
+      attempts,
     }, { status: 404 });
   }
 
