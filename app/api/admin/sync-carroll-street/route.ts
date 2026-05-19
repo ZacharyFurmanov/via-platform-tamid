@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 // ── Product sync via Supabase ─────────────────────────────────────────────────
 
 const CARROLL_SUPABASE_URL = "https://pzolnmlysfhbkvidlpvp.supabase.co";
-const FALLBACK_TABLES = ["products", "items", "clothing", "inventory", "product", "listings", "pieces", "catalog", "shop_items", "store_items", "clothes", "vintage_items", "collection"];
+const FALLBACK_TABLES = ["sold_items", "products", "items", "clothing", "inventory", "product", "listings", "pieces", "catalog", "shop_items", "store_items", "clothes", "vintage_items", "collection", "all_items", "inventory_items"];
 
 type SupabaseRow = Record<string, unknown>;
 
@@ -235,7 +235,8 @@ export async function GET(request: NextRequest) {
 
   for (const table of tablesToTry) {
     const result = await fetchSupabaseTable(anonKey, table);
-    if (result && result.length > 0) {
+    // Accept any non-null array — even if all items are sold, mapRowToProduct handles filtering
+    if (result !== null) {
       rows = result;
       foundTable = table;
       break;
