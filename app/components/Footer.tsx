@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="bg-[#D8CABD] text-[#5D0F17]">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block mb-5">
@@ -134,53 +134,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Connect Column */}
-          <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">
-              Connect
-            </h4>
-            <ul className="space-y-4">
-              <li>
-                <a
-                  href="https://www.instagram.com/vyaplatform"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
-                >
-                  <span>Instagram</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.tiktok.com/@vyaplatform"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
-                >
-                  <span>TikTok</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://vyaplatform.substack.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#5D0F17]/75 hover:text-[#5D0F17] transition-colors duration-200 text-sm inline-flex items-center gap-2 link-underline"
-                >
-                  <span>Substack</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
 

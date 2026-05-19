@@ -174,9 +174,14 @@ async function fetchIndividualCommissions(
       if (nodes.length === 0) continue;
 
       const cutoff = lastSyncedAt ? new Date(lastSyncedAt) : null;
-      const recent = cutoff
-        ? nodes.filter((n) => new Date(n.earnedAt) > cutoff)
-        : nodes.slice(0, deltaOrders * 5); // fetch extra to cover multi-item orders
+      // Held orders often have earnedAt predating lastSyncedAt — use a 45-day window
+      // so we find the record even when the holding period started before our last sync.
+      const effectiveCutoff = group === "IN_HOLDING_PERIOD"
+        ? new Date(Date.now() - 45 * 24 * 60 * 60 * 1000)
+        : cutoff;
+      const recent = effectiveCutoff
+        ? nodes.filter((n) => new Date(n.earnedAt) > effectiveCutoff)
+        : nodes.slice(0, deltaOrders * 5);
 
       if (recent.length > 0) {
         return recent.map((n) => ({
@@ -202,6 +207,8 @@ async function fetchIndividualCommissions(
   return null;
 }
 
+// Returns false when the commission is still in holding period and no order total is available.
+// The caller should then hold back the snapshot for this partnership so the next run retries.
 async function saveCollabsConversions(
   partnershipId: string,
   brandName: string,
@@ -214,9 +221,9 @@ async function saveCollabsConversions(
   commissionRules: CommissionRule[],
   cookie: string,
   csrfToken: string
-) {
+): Promise<boolean> {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!dbUrl) return;
+  if (!dbUrl) return false;
   const sql = neon(dbUrl);
 
   const storeSlug = resolveStoreSlug(brandName);
@@ -299,6 +306,10 @@ async function saveCollabsConversions(
         orderTotal = lineItems.reduce((sum, it) => sum + it.price, 0);
       }
 
+      // Commission still in holding period — no amount available yet. Don't insert $0;
+      // caller will hold back the snapshot so the next cron run retries.
+      if (orderTotal <= 0) return false;
+
       // Stable order ID: Shopify order name is most reliable; fall back to commission node ID
       const orderId = shopifyOrderName
         ? `collabs-${storeSlug}-${shopifyOrderName.replace(/^#/, "")}`
@@ -329,8 +340,11 @@ async function saveCollabsConversions(
         ON CONFLICT (order_id, store_slug) DO NOTHING
       `;
     }
-    return;
+    return true;
   }
+
+  // Commission is in holding period and individual records weren't findable — retry next run.
+  if (deltaCommission <= 0) return false;
 
   // Fallback: delta-based approach using actual commission rates
   const commissionUSD = convertCurrencyToUSD(deltaCommission, currency);
@@ -390,6 +404,7 @@ async function saveCollabsConversions(
       ON CONFLICT (order_id, store_slug) DO NOTHING
     `;
   }
+  return true;
 }
 
 /**
@@ -572,6 +587,10 @@ export async function GET(request: Request) {
   let newOrdersRecorded = 0;
   let dbWriteFailed = false;
 
+  // Track partnerships whose commission is in holding period — we'll hold back their
+  // order count in the snapshot so the next cron run sees deltaOrders > 0 and retries.
+  const holdbackIds = new Set<string>();
+
   for (const p of partnerships) {
     const prev = prevMap.get(p.id);
     const prevOrders = prev?.totalOrders ?? 0;
@@ -582,13 +601,16 @@ export async function GET(request: Request) {
     const deltaOrders = currOrders - prevOrders;
     const deltaCommission = currCommission - prevCommission;
 
-    // Also capture orders still in holding period (deltaCommission = 0 but deltaOrders > 0)
-    // fetchIndividualCommissions already queries IN_HOLDING_PERIOD group so amounts are available.
     if (deltaOrders > 0) {
       try {
-        await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders, p.commissionRules ?? [], cookie, csrfToken);
-        newOrdersRecorded += deltaOrders;
-        console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +${deltaCommission.toFixed(2)} ${p.currency ?? "USD"} commission, rates: [${(p.commissionRules ?? []).map((r: CommissionRule) => r.value + "%").join(", ")}]`);
+        const recorded = await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders, p.commissionRules ?? [], cookie, csrfToken);
+        if (recorded) {
+          newOrdersRecorded += deltaOrders;
+          console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders, +${deltaCommission.toFixed(2)} ${p.currency ?? "USD"} commission, rates: [${(p.commissionRules ?? []).map((r: CommissionRule) => r.value + "%").join(", ")}]`);
+        } else {
+          holdbackIds.add(p.id);
+          console.log(`[Sync Collabs Revenue] ${p.name}: +${deltaOrders} orders in holding period — no amount yet, will retry next run`);
+        }
       } catch (err) {
         dbWriteFailed = true;
         console.error(`[Sync Collabs Revenue] DB write failed for ${p.name}:`, err);
@@ -596,11 +618,20 @@ export async function GET(request: Request) {
     }
   }
 
-  // Only advance the snapshot if all DB writes succeeded — if any failed (e.g. quota exceeded),
-  // keep the old snapshot so the next run retries the missed orders.
+  // Build snapshot: for held-back partnerships, preserve the previous order count so
+  // the next run sees deltaOrders > 0 and retries once the holding period clears.
+  const snapshotToSave = partnerships.map((p: Record<string, unknown> & { id: string; totalOrders: number }) => {
+    if (holdbackIds.has(p.id)) {
+      const prev = prevMap.get(p.id);
+      return { ...p, totalOrders: prev?.totalOrders ?? p.totalOrders };
+    }
+    return p;
+  });
+
+  // Only advance the snapshot if all DB writes succeeded.
   if (!dbWriteFailed) {
     await saveSetting("collabs_last_synced_at", now);
-    await saveSetting("collabs_data", JSON.stringify(partnerships));
+    await saveSetting("collabs_data", JSON.stringify(snapshotToSave));
   } else {
     console.warn("[Sync Collabs Revenue] Snapshot NOT advanced due to DB write failures — will retry on next run");
   }
@@ -608,6 +639,7 @@ export async function GET(request: Request) {
   // Retroactively match any older collabs conversions that still have no user_id
   const retroMatched = await retroactivelyMatchCollabsConversions();
 
-  console.log(`[Sync Collabs Revenue] Synced ${partnerships.length} partnerships, recorded ${newOrdersRecorded} new orders, retro-matched ${retroMatched} existing orders${dbWriteFailed ? " (snapshot NOT advanced — DB errors)" : ""}`);
-  return NextResponse.json({ ok: !dbWriteFailed, partnerships: partnerships.length, newOrdersRecorded, retroMatched, syncedAt: now, snapshotAdvanced: !dbWriteFailed });
+  const heldBack = holdbackIds.size;
+  console.log(`[Sync Collabs Revenue] Synced ${partnerships.length} partnerships, recorded ${newOrdersRecorded} new orders, ${heldBack} held back (holding period), retro-matched ${retroMatched} existing orders${dbWriteFailed ? " (snapshot NOT advanced — DB errors)" : ""}`);
+  return NextResponse.json({ ok: !dbWriteFailed, partnerships: partnerships.length, newOrdersRecorded, heldBack, retroMatched, syncedAt: now, snapshotAdvanced: !dbWriteFailed });
 }

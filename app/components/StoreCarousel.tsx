@@ -5,7 +5,8 @@ import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
-const SPEED = 0.5; // px per animation frame
+// Duration for one full loop (both copies of the store list)
+const LOOP_DURATION_S = stores.length * 3;
 
 function StoreCard({ store }: { store: (typeof stores)[number] }) {
   return (
@@ -56,59 +57,65 @@ function StoreCard({ store }: { store: (typeof stores)[number] }) {
 }
 
 export default function StoreCarousel() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    const track = trackRef.current;
+    if (!track) return;
 
-    let animId: number;
-    let paused = false;
     let resumeTimer: ReturnType<typeof setTimeout>;
 
     function pause(ms: number) {
-      paused = true;
+      track!.style.animationPlayState = "paused";
       clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => { paused = false; }, ms);
+      resumeTimer = setTimeout(() => {
+        track!.style.animationPlayState = "running";
+      }, ms);
     }
 
-    function tick() {
-      if (!paused) {
-        el!.scrollLeft += SPEED;
-        // Seamless loop: when we've scrolled through the first copy, jump back
-        const half = el!.scrollWidth / 2;
-        if (el!.scrollLeft >= half) el!.scrollLeft -= half;
-      }
-      animId = requestAnimationFrame(tick);
-    }
-
-    // Pause auto-scroll while the user is actively scrolling, resume after idle
-    el.addEventListener("wheel", () => pause(2000), { passive: true });
-    el.addEventListener("touchstart", () => pause(5000), { passive: true });
-    el.addEventListener("touchend", () => pause(1500), { passive: true });
-    // Pause on hover (desktop)
-    el.addEventListener("mouseenter", () => pause(60000));
-    el.addEventListener("mouseleave", () => pause(300));
-
-    animId = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(animId);
+    const parent = track.parentElement!;
+    parent.addEventListener("wheel", () => pause(2000), { passive: true });
+    parent.addEventListener("touchstart", () => pause(5000), { passive: true });
+    parent.addEventListener("touchend", () => pause(1500), { passive: true });
+    parent.addEventListener("mouseenter", () => pause(60000));
+    parent.addEventListener("mouseleave", () => {
       clearTimeout(resumeTimer);
-    };
+      track.style.animationPlayState = "running";
+    });
+
+    return () => clearTimeout(resumeTimer);
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex gap-4 sm:gap-6 overflow-x-scroll scrollbar-hide"
-      style={{
-        maskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-      }}
-    >
-      {[...stores, ...stores].map((store, i) => (
-        <StoreCard key={`${store.slug}-${i}`} store={store} />
-      ))}
-    </div>
+    <>
+      <style>{`
+        @keyframes store-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div
+        className="overflow-hidden"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+        }}
+      >
+        <div
+          ref={trackRef}
+          className="flex gap-4 sm:gap-6"
+          style={{
+            animation: `store-scroll ${LOOP_DURATION_S}s linear infinite`,
+            willChange: "transform",
+          }}
+        >
+          {[...stores, ...stores].map((store, i) => (
+            <StoreCard key={`${store.slug}-${i}`} store={store} />
+          ))}
+        </div>
+      </div>
+    </>
   );
 }

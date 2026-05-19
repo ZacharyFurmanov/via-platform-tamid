@@ -28,6 +28,7 @@ export default function ImageCarousel({
   const touchStartY = useRef<number | null>(null);
   const mouseStartX = useRef<number | null>(null);
   const isDragging = useRef(false);
+  const wasSwipe = useRef(false);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
 
   const validImages = images.filter((src) => !!src);
@@ -122,7 +123,10 @@ export default function ImageCarousel({
       touchStartX.current = null;
       touchStartY.current = null;
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+        wasSwipe.current = true;
         goTo(current + (diffX > 0 ? 1 : -1));
+      } else {
+        wasSwipe.current = false;
       }
     },
     [current, goTo]
@@ -265,13 +269,21 @@ export default function ImageCarousel({
     <>
       <div>
         <div
-          className="relative aspect-square md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-grab active:cursor-grabbing"
+          className="relative aspect-square md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-zoom-in active:cursor-grabbing"
           style={{ touchAction: "pan-y" }}
-          onTouchStart={hasMultiple ? onTouchStart : undefined}
+          onTouchStart={onTouchStart}
           onTouchEnd={hasMultiple ? onTouchEnd : undefined}
           onMouseDown={hasMultiple ? onMouseDown : undefined}
           onMouseMove={hasMultiple ? onMouseMove : undefined}
           onMouseUp={hasMultiple ? onMouseUp : undefined}
+          onClick={(e) => {
+            if (wasSwipe.current || isDragging.current) {
+              wasSwipe.current = false;
+              isDragging.current = false;
+              return;
+            }
+            openLightbox(e);
+          }}
         >
           {renderImages("(max-width: 768px) 100vw, 600px", "object-center")}
 
