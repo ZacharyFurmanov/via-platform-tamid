@@ -32,8 +32,38 @@ type StoreStatus = {
   ordersResult?: SyncResult | null;
 };
 
+type StripeOrdersResult = {
+  ok?: boolean;
+  totalCharges?: number;
+  saved?: number;
+  skipped?: number;
+  errors?: number;
+  since?: string;
+  error?: string;
+};
+
 export default function SyncAdminPage() {
   const [statuses, setStatuses] = useState<Record<string, StoreStatus>>({});
+  const [carrollStripeLoading, setCarrollStripeLoading] = useState(false);
+  const [carrollStripeResult, setCarrollStripeResult] = useState<StripeOrdersResult | null>(null);
+
+  async function handleSyncCarrollStripe() {
+    setCarrollStripeLoading(true);
+    setCarrollStripeResult(null);
+    try {
+      const resp = await fetch("/api/admin/sync-carroll-street", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await resp.json();
+      setCarrollStripeResult(data);
+    } catch (err) {
+      setCarrollStripeResult({ error: err instanceof Error ? err.message : "Request failed" });
+    } finally {
+      setCarrollStripeLoading(false);
+    }
+  }
 
   async function handleSync(store: Store) {
     setStatuses((prev) => ({
@@ -412,6 +442,43 @@ export default function SyncAdminPage() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Carroll Street Vintage — Stripe Orders */}
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 16 }}>Stripe Stores</h2>
+          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "#09090b" }}>Carroll Street Vintage</h3>
+                  <span style={{ fontSize: 11, padding: "2px 8px", background: "#ede9fe", color: "#6d28d9", borderRadius: 99, fontWeight: 500 }}>Stripe</span>
+                </div>
+                <p style={{ fontSize: 12, color: "#71717a" }}>Syncs last 30 days of Stripe charges → conversions</p>
+              </div>
+              <button
+                onClick={handleSyncCarrollStripe}
+                disabled={carrollStripeLoading}
+                style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: carrollStripeLoading ? "not-allowed" : "pointer", opacity: carrollStripeLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+              >
+                {carrollStripeLoading ? "Syncing..." : "Sync Orders"}
+              </button>
+            </div>
+            {carrollStripeResult && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
+                {carrollStripeResult.error ? (
+                  <p style={{ fontSize: 13, color: "#dc2626" }}>{carrollStripeResult.error}</p>
+                ) : (
+                  <p style={{ fontSize: 13, color: "#15803d" }}>
+                    {carrollStripeResult.saved} new conversions saved
+                    {(carrollStripeResult.skipped ?? 0) > 0 ? ` · ${carrollStripeResult.skipped} already tracked` : ""}
+                    {` (${carrollStripeResult.totalCharges} charges found)`}
+                    {carrollStripeResult.errors ? ` · ${carrollStripeResult.errors} errors` : ""}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Help Section */}
