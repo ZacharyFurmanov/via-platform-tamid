@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 // ── Product sync via Supabase ─────────────────────────────────────────────────
 
 const CARROLL_SUPABASE_URL = "https://pzolnmlysfhbkvidlpvp.supabase.co";
-const CANDIDATE_TABLES = ["products", "items", "clothing", "inventory", "product", "listings"];
+const FALLBACK_TABLES = ["products", "items", "clothing", "inventory", "product", "listings", "pieces", "catalog", "shop_items", "store_items", "clothes", "vintage_items", "collection"];
 
 type SupabaseRow = Record<string, unknown>;
 
@@ -186,6 +186,20 @@ async function fetchSupabaseTable(anonKey: string, table: string): Promise<Supab
   if (!resp.ok) return null;
   const data = await resp.json();
   return Array.isArray(data) ? data : null;
+}
+
+// Discover all tables exposed by Supabase via its OpenAPI spec
+async function discoverTables(anonKey: string): Promise<string[]> {
+  try {
+    const resp = await fetch(`${CARROLL_SUPABASE_URL}/rest/v1/`, {
+      headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}`, Accept: "application/json" },
+    });
+    if (!resp.ok) return [];
+    const spec = await resp.json() as { definitions?: Record<string, unknown> };
+    return Object.keys(spec.definitions ?? {});
+  } catch {
+    return [];
+  }
 }
 
 function mapRowToProduct(row: SupabaseRow) {
@@ -213,7 +227,13 @@ export async function GET(request: NextRequest) {
   let rows: SupabaseRow[] | null = null;
   let foundTable = "";
 
-  for (const table of CANDIDATE_TABLES) {
+  // Discover tables from the OpenAPI spec, then fall back to our known list
+  const discoveredTables = await discoverTables(anonKey);
+  const tablesToTry = discoveredTables.length > 0
+    ? [...new Set([...discoveredTables, ...FALLBACK_TABLES])]
+    : FALLBACK_TABLES;
+
+  for (const table of tablesToTry) {
     const result = await fetchSupabaseTable(anonKey, table);
     if (result && result.length > 0) {
       rows = result;
@@ -223,7 +243,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (!rows) {
-    return NextResponse.json({ error: `No product table found. Tried: ${CANDIDATE_TABLES.join(", ")}` }, { status: 404 });
+    return NextResponse.json({
+      error: `No product table found.`,
+      discoveredTables,
+      tried: tablesToTry,
+    }, { status: 404 });
   }
 
   const mapped = rows
