@@ -49,7 +49,7 @@ export default function SyncAdminPage() {
   const [carrollProductsLoading, setCarrollProductsLoading] = useState(false);
   const [carrollProductsResult, setCarrollProductsResult] = useState<{ ok?: boolean; productCount?: number; total?: number; error?: string } | null>(null);
   const [collabsSyncLoading, setCollabsSyncLoading] = useState(false);
-  const [collabsSyncResult, setCollabsSyncResult] = useState<{ ok?: boolean; newOrdersRecorded?: number; partnerships?: number; retroMatched?: number; error?: string; detail?: unknown } | null>(null);
+  const [collabsSyncResult, setCollabsSyncResult] = useState<{ ok?: boolean; newOrdersRecorded?: number; partnerships?: number; retroMatched?: number; error?: string; detail?: string } | null>(null);
 
   async function handleCollabsSync() {
     setCollabsSyncLoading(true);
@@ -57,7 +57,7 @@ export default function SyncAdminPage() {
     try {
       const resp = await fetch("/api/admin/run-collabs-revenue-sync");
       const data = await resp.json();
-      setCollabsSyncResult(data);
+      setCollabsSyncResult({ ...data, detail: data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : undefined });
     } catch (err) {
       setCollabsSyncResult({ error: err instanceof Error ? err.message : "Request failed" });
     } finally {
@@ -500,7 +500,7 @@ export default function SyncAdminPage() {
                     {collabsSyncResult.error}
                     {collabsSyncResult.detail && (
                       <span style={{ display: "block", color: "#71717a", marginTop: 4, fontSize: 12 }}>
-                        {typeof collabsSyncResult.detail === "string" ? collabsSyncResult.detail : JSON.stringify(collabsSyncResult.detail)}
+                        {collabsSyncResult.detail}
                       </span>
                     )}
                   </p>
