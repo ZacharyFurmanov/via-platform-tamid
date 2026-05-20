@@ -54,6 +54,8 @@ const nextConfig: NextConfig = {
       // Store custom domains (images served directly from store sites)
       { protocol: "https", hostname: "shopfortheglobe.com" },
       { protocol: "https", hostname: "**.shopfortheglobe.com" },
+      // Carroll Street Vintage (images served from their own domain /assets/)
+      { protocol: "https", hostname: "carrollstreetvintage.com" },
       // Vercel Blob (sourcing request image uploads)
       { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
     ],

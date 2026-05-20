@@ -371,15 +371,12 @@ export const SQUARE_STORES: SquareStore[] = [
   },
 ];
 
-export const STRIPE_STORES: StripeStore[] = [
-  {
-    type: "stripe",
-    name: "Carroll Street Vintage",
-    slug: "carroll-street-vintage",
-    secretKeyEnvVar: "STRIPE_SECRET_KEY_CARROLL",
-    websiteUrl: "https://carrollstreetvintage.com",
-  },
-];
+// Carroll Street Vintage uses a custom sync endpoint (/api/admin/sync-carroll-street)
+// that scrapes their JS bundle for products and Stripe for orders separately.
+// It must NOT be in STRIPE_STORES / ALL_STORES — the generic stripe cron fetches
+// Stripe's product catalog (which Carroll Street doesn't use) and would delete
+// all scraped products each night.
+export const STRIPE_STORES: StripeStore[] = [];
 
 export const ALL_STORES: Store[] = [
   ...SQUARESPACE_STORES,
