@@ -645,6 +645,30 @@ export const stores = [
       "All sales are final. As a curated vintage boutique specializing in one-of-a-kind pre-loved pieces, please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "sarah-does",
+    dashboardToken: "sd-7a1c4e9f2b8d",
+    name: "SarahDoes",
+    location: "New York, NY",
+    description:
+      "SarahDoes is a New York–based vintage shop curating one-of-a-kind pieces with a distinct personal eye.",
+    website: "https://sarahdoes.shop",
+    contactEmail: "sarah@sarahdoes.shop",
+    dataSource: "sarah-does",
+    image: "/stores/placeholder.svg",
+    logo: "/stores/placeholder.svg",
+    logoBg: "#ffffff",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "240935",
+    authenticityPolicy:
+      "Every piece at SarahDoes is personally sourced and hand-selected before listing. Items are accurately described with full condition details so you can shop with confidence.",
+    shippingPolicy:
+      "Ships from New York, NY. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "sassy-so-what",
     dashboardToken: "ssw-2e1a9c4f7b3d",
     name: "Sassy So What",
@@ -1080,6 +1104,7 @@ export const storeContactEmails: Record<string, string> = {
   "rareality-archive": "holly.cooper01@hotmail.com",
   "hachi-archive": "patricia@hachiarchive.com",
   "rejects-only-vintage": "Rejectsonlyvintage@gmail.com",
+  "sarah-does": "sarah@sarahdoes.shop",
   "sassy-so-what": "hello@sassysowhat.com",
   "so-lxury": "solxuryvintage@gmail.com",
   "other-matters-atelier": "othermattersatelier@gmail.com",

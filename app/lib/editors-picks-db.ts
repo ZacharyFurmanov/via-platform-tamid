@@ -286,7 +286,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
       AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
       AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
     GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url
-    ORDER BY favorite_count DESC, p.created_at DESC
+    ORDER BY p.created_at DESC NULLS LAST, favorite_count DESC
     LIMIT ${limit}
   `;
 

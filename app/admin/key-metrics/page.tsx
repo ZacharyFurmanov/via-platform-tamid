@@ -141,18 +141,21 @@ function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
 
 type Metrics = {
   gmv: { total: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
+  clicks?: { total: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
   totalOrders: { allTime: number; last7d: number; prev7d: number; last30d: number; prev30d: number };
   conversionRate: { allTime: number; last7d: number; prev7d: number; totalVisitors: number; totalConversions: number; periodVisitors: number; periodConversions: number; periodRate: number };
   wau: { current: number; prev: number };
-  mau: { current: number; prev: number; totalEverActive: number };
-  stickiness: { current: number; prev: number };
+  mau: { current: number; prev: number; totalEverActive: number; rolling30d?: number };
+  stickiness: { current: number; prev: number; mauUsed?: number };
   returningUsers: { last7d: number; last30d: number };
   buyerRetention: { totalBuyers: number; returnedAfterPurchase: number; boughtAgain: number; returnRate: number | null; repeatPurchaseRate: number | null };
   saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
-  revenuePerUser: { value: number; buyingUsers: number; allTimeValue: number; allTimeBuyingUsers: number };
+  revenuePerUser: { value: number; buyingUsers: number; allTimeValue: number; allTimeBuyingUsers: number; prevPeriodValue?: number; prevPeriodBuyingUsers?: number };
   gmvByWeek: { week: string; gmv: number }[];
   totalCommission: number;
   users: { registered: number; waitlist: number; approved: number };
+  newUsers?: { period: number; prevPeriod: number; week: number; prevWeek: number };
+  favoritesVolume?: { period: number; prevPeriod: number; week: number; prevWeek: number };
   waitlistByMonth: { month: string; signups: number; approved: number }[];
   activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
   emailCtr?: { opens7d: number; clicks7d: number; delivered7d: number; ctr7d: number; opensPrev7d: number; clicksPrev7d: number; ctrPrev7d: number; opensPeriod: number; clicksPeriod: number; deliveredPeriod: number; ctrPeriod: number; opensAll: number; clicksAll: number; deliveredAll: number; ctrAll: number };
@@ -244,6 +247,67 @@ export default function KeyMetricsPage() {
 
         {data && (
           <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+
+            {/* ── Growth at a Glance ──────────────────────────────── */}
+            {!data.period?.isAllTime && (() => {
+              const isMonth = data.period?.isMonth;
+              const periodGmv   = isMonth ? data.gmv.last30d   : data.gmv.last30d;
+              const prevGmv     = isMonth ? data.gmv.prev30d   : data.gmv.prev30d;
+              const periodOrders = isMonth ? data.totalOrders.last30d  : data.totalOrders.last30d;
+              const prevOrders   = isMonth ? data.totalOrders.prev30d  : data.totalOrders.prev30d;
+
+              const metrics: { label: string; current: number; prev: number; fmt: (n: number) => string; note?: string }[] = [
+                { label: "GMV",          current: periodGmv,                              prev: prevGmv,                          fmt: fmt$ },
+                { label: "Orders",       current: periodOrders,                           prev: prevOrders,                       fmt: fmtNum },
+                { label: "New Users",    current: data.newUsers?.period ?? 0,             prev: data.newUsers?.prevPeriod ?? 0,   fmt: fmtNum },
+                { label: "Clicks",       current: data.clicks?.last30d ?? 0,              prev: data.clicks?.prev30d ?? 0,        fmt: fmtNum },
+                { label: "WAU",          current: data.wau.current,                       prev: data.wau.prev,                    fmt: fmtNum },
+                { label: "MAU",          current: data.mau.current,                       prev: data.mau.prev,                    fmt: fmtNum },
+                { label: "Stickiness",   current: data.stickiness.current,               prev: data.stickiness.prev,             fmt: fmtPct, note: `${fmtNum(data.wau.current)} WAU ÷ ${fmtNum(data.stickiness.mauUsed ?? data.mau.current)} MAU (30d)` },
+                { label: "Rev / Buyer",  current: data.revenuePerUser.value,              prev: data.revenuePerUser.prevPeriodValue ?? 0, fmt: fmt$ },
+                { label: "Favorites",    current: data.favoritesVolume?.period ?? 0,      prev: data.favoritesVolume?.prevPeriod ?? 0,   fmt: fmtNum },
+              ];
+
+              return (
+                <section>
+                  <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>
+                    Growth at a Glance — {data.period?.label ?? "This Period"} vs Previous Period
+                  </h2>
+                  <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px 32px" }}>
+                      {metrics.map(({ label, current, prev, fmt, note }) => {
+                        const hasPrev = prev > 0 || current > 0;
+                        const rawPct = prev > 0 ? ((current - prev) / prev) * 100 : null;
+                        const pctLabel = rawPct === null ? null : `${rawPct >= 0 ? "+" : ""}${rawPct.toFixed(1)}%`;
+                        const pctColor = rawPct === null ? GRAY : rawPct > 2 ? UP_COLOR : rawPct < -2 ? DN_COLOR : GRAY;
+                        const pctBg   = rawPct === null ? "transparent" : rawPct > 2 ? UP_BG : rawPct < -2 ? DN_BG : "transparent";
+                        return (
+                          <div key={label} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                            <div>
+                              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED_TEXT, margin: "0 0 3px", fontWeight: 500 }}>{label}</p>
+                              <p style={{ fontSize: 22, fontWeight: 700, color: DARK, margin: 0, lineHeight: 1 }}>{fmt(current)}</p>
+                              {hasPrev && <p style={{ fontSize: 11, color: GRAY, margin: "3px 0 0" }}>prev {fmt(prev)}</p>}
+                              {note && <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "2px 0 0" }}>{note}</p>}
+                            </div>
+                            {pctLabel && (
+                              <span style={{ fontSize: 13, fontWeight: 700, color: pctColor, background: pctBg, padding: "3px 8px", borderRadius: 5, whiteSpace: "nowrap", marginTop: 2 }}>
+                                {pctLabel}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "16px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 10 }}>
+                      {isMonth
+                        ? `Comparing ${data.period?.label} to the prior calendar month.`
+                        : "Comparing the rolling 30-day window to the previous 30-day window."}
+                      {" "}WAU and MAU use a 7-day vs 30-day rolling window within the period.
+                    </p>
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* ── GMV ─────────────────────────────────────────────── */}
             <section>
@@ -347,7 +411,10 @@ export default function KeyMetricsPage() {
                   label="Revenue per Buying User"
                   value={fmt$(data.revenuePerUser.value)}
                   sub={`${fmtNum(data.revenuePerUser.buyingUsers)} buyers in ${data.period?.label ?? "this period"}`}
-                  note={`Period GMV ÷ distinct buyers · All time: ${fmt$(data.revenuePerUser.allTimeValue)} across ${fmtNum(data.revenuePerUser.allTimeBuyingUsers)} buyers`}
+                  trend={data.revenuePerUser.prevPeriodValue != null && data.revenuePerUser.prevPeriodValue > 0
+                    ? <TrendBadge current={data.revenuePerUser.value} prev={data.revenuePerUser.prevPeriodValue} fmtFn={fmt$} />
+                    : undefined}
+                  note={`Period GMV ÷ distinct buyers · Prev period: ${fmt$(data.revenuePerUser.prevPeriodValue ?? 0)} · All time: ${fmt$(data.revenuePerUser.allTimeValue)}`}
                   href="/admin/customers"
                 />
                 <MetricCard
@@ -358,12 +425,28 @@ export default function KeyMetricsPage() {
                   href="/admin/customers"
                 />
               </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 16 }}>
+                <MetricCard
+                  label={data.period?.isMonth || data.period?.isAllTime ? `Clicks — ${data.period.label}` : "Clicks — Last 30 Days"}
+                  value={fmtNum(data.clicks?.last30d ?? 0)}
+                  trend={<TrendBadge current={data.clicks?.last30d ?? 0} prev={data.clicks?.prev30d ?? 0} fmtFn={fmtNum} />}
+                  note={`Previous period: ${fmtNum(data.clicks?.prev30d ?? 0)} · Last 7 days: ${fmtNum(data.clicks?.last7d ?? 0)} (prev: ${fmtNum(data.clicks?.prev7d ?? 0)})`}
+                  href="/admin/analytics"
+                />
+                <MetricCard
+                  label={data.period?.isMonth || data.period?.isAllTime ? `Favorites Added — ${data.period.label}` : "Favorites Added — 30d"}
+                  value={fmtNum(data.favoritesVolume?.period ?? 0)}
+                  trend={<TrendBadge current={data.favoritesVolume?.period ?? 0} prev={data.favoritesVolume?.prevPeriod ?? 0} fmtFn={fmtNum} />}
+                  note={`Previous period: ${fmtNum(data.favoritesVolume?.prevPeriod ?? 0)} · Last 7 days: ${fmtNum(data.favoritesVolume?.week ?? 0)}`}
+                  href="/admin/customers"
+                />
+              </div>
             </section>
 
             {/* ── Users ───────────────────────────────────────────── */}
             <section>
               <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>Users</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                 <MetricCard
                   label="Registered Accounts"
                   value={fmtNum(data.users.registered)}
@@ -374,6 +457,13 @@ export default function KeyMetricsPage() {
                   label="Waitlist Signups"
                   value={fmtNum(data.users.waitlist)}
                   note="Total entries in pilot_access (pending + approved)"
+                  href="/admin/customers"
+                />
+                <MetricCard
+                  label={`New Accounts — ${data.period?.label ?? "This Period"}`}
+                  value={fmtNum(data.newUsers?.period ?? 0)}
+                  trend={<TrendBadge current={data.newUsers?.period ?? 0} prev={data.newUsers?.prevPeriod ?? 0} fmtFn={fmtNum} />}
+                  note={`Previous period: ${fmtNum(data.newUsers?.prevPeriod ?? 0)} · Last 7 days: ${fmtNum(data.newUsers?.week ?? 0)} (prev: ${fmtNum(data.newUsers?.prevWeek ?? 0)})`}
                   href="/admin/customers"
                 />
               </div>
@@ -540,9 +630,15 @@ export default function KeyMetricsPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 16 }}>
                 <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
                   <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 8px" }}>Stickiness (WAU/MAU)</p>
-                  <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 6px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
+                  <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
+                  <p style={{ fontSize: 13, color: GRAY, margin: "0 0 6px" }}>
+                    <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.wau.current)}</span> WAU ÷ <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.stickiness.mauUsed ?? data.mau.current)}</span> MAU (rolling 30d)
+                    {data.stickiness.prev > 0 && (
+                      <span style={{ color: MUTED_TEXT }}> · prev {fmtPct(data.stickiness.prev)}</span>
+                    )}
+                  </p>
                   <TrendBadge current={data.stickiness.current} prev={data.stickiness.prev} fmtFn={fmtPct} />
-                  <div style={{ marginTop: 16, background: "#f4f4f5", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ marginTop: 12, background: "#f4f4f5", borderRadius: 8, padding: "10px 14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: GRAY }}>
                       <span>Below 10%</span><span style={{ color: "#b91c1c" }}>Needs work</span>
                     </div>
@@ -553,7 +649,9 @@ export default function KeyMetricsPage() {
                       <span>Above 25%</span><span style={{ color: "#15803d" }}>Healthy</span>
                     </div>
                   </div>
-                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "10px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 8 }}>How often monthly users come back weekly</p>
+                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "10px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 8 }}>
+                    How often monthly users come back weekly. WAU = last 7 days, MAU = full period window.
+                  </p>
                 </div>
 
                 <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>

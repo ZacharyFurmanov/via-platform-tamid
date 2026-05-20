@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
     churnRows,
     emailCtrRows,
     returningUsersRows,
+    favoritesVolumeRows,
   ] = await Promise.all([
     // GMV — all time + period windows
     sql`
@@ -143,14 +144,17 @@ export async function GET(request: NextRequest) {
     `,
 
     // WAU / MAU
+    // mau_rolling_30d is always the 30-day window ending at shortEnd — used for stickiness
+    // in every mode so the denominator is consistent (not "since launch" for all-time).
     sql`
       SELECT
-        COUNT(DISTINCT a.uid)::int                                                                                                    AS total_ever_active,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortStart}     AND a.ts < ${shortEnd})::int                                   AS wau,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortPrevStart} AND a.ts < ${shortPrevEnd})::int                               AS wau_prev,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${pStart}         AND a.ts < ${pEnd})::int                                       AS mau,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${prevPStart}     AND a.ts < ${prevPEnd})::int                                   AS mau_prev,
-        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${mauForPrevWeekStart} AND a.ts < ${mauForPrevWeekEnd})::int                     AS mau_for_prev_week
+        COUNT(DISTINCT a.uid)::int                                                                                                                  AS total_ever_active,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortStart}                                   AND a.ts < ${shortEnd})::int                   AS wau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${shortPrevStart}                               AND a.ts < ${shortPrevEnd})::int               AS wau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${pStart}                                       AND a.ts < ${pEnd})::int                       AS mau,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${prevPStart}                                   AND a.ts < ${prevPEnd})::int                   AS mau_prev,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${mauForPrevWeekStart}                          AND a.ts < ${mauForPrevWeekEnd})::int           AS mau_for_prev_week,
+        COUNT(DISTINCT a.uid) FILTER (WHERE a.ts >= ${new Date(shortEnd.getTime() - 30 * 24 * 60 * 60 * 1000)} AND a.ts < ${shortEnd})::int        AS mau_rolling_30d
       FROM (
         SELECT user_id::text AS uid, timestamp  AS ts FROM clicks            WHERE user_id IS NOT NULL
         UNION ALL
@@ -201,7 +205,10 @@ export async function GET(request: NextRequest) {
         (COUNT(DISTINCT user_id) + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                                                  AS buying_users,
         COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd}), 0)::float                                        AS period_gmv,
         (COUNT(DISTINCT user_id) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd})
-         + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${pStart} AND timestamp < ${pEnd}))::int                                       AS period_buying_users
+         + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${pStart} AND timestamp < ${pEnd}))::int                                       AS period_buying_users,
+        COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${prevPStart} AND timestamp < ${prevPEnd}), 0)::float                                AS prev_period_gmv,
+        (COUNT(DISTINCT user_id) FILTER (WHERE timestamp >= ${prevPStart} AND timestamp < ${prevPEnd})
+         + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${prevPStart} AND timestamp < ${prevPEnd}))::int                               AS prev_period_buying_users
       FROM conversions
       WHERE order_total > 0
         AND (returned IS NULL OR returned = false)
@@ -218,7 +225,15 @@ export async function GET(request: NextRequest) {
       ORDER BY 1 ASC
     `,
 
-    sql`SELECT COUNT(*)::int AS total FROM users`,
+    sql`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE created_at >= ${pStart} AND created_at < ${pEnd})::int AS period_new,
+        COUNT(*) FILTER (WHERE created_at >= ${prevPStart} AND created_at < ${prevPEnd})::int AS prev_period_new,
+        COUNT(*) FILTER (WHERE created_at >= ${shortStart} AND created_at < ${shortEnd})::int AS week_new,
+        COUNT(*) FILTER (WHERE created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int AS prev_week_new
+      FROM users
+    `,
     sql`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'approved')::int AS approved FROM pilot_access`,
     // Total commission — per-store tiered rates, excluding returned orders
     sql`
@@ -353,6 +368,16 @@ export async function GET(request: NextRequest) {
         GROUP BY a.user_id
       ) sub
     `,
+
+    // Product favorites volume — how many favorites were added per period
+    sql`
+      SELECT
+        COUNT(*) FILTER (WHERE created_at >= ${pStart}         AND created_at < ${pEnd})::int         AS period,
+        COUNT(*) FILTER (WHERE created_at >= ${prevPStart}     AND created_at < ${prevPEnd})::int      AS prev_period,
+        COUNT(*) FILTER (WHERE created_at >= ${shortStart}     AND created_at < ${shortEnd})::int      AS week,
+        COUNT(*) FILTER (WHERE created_at >= ${shortPrevStart} AND created_at < ${shortPrevEnd})::int  AS prev_week
+      FROM product_favorites
+    `.catch(() => [{ period: 0, prev_period: 0, week: 0, prev_week: 0 }]),
   ]);
 
   const g = gmvRows[0];
@@ -387,12 +412,19 @@ export async function GET(request: NextRequest) {
   const convRate7d = (wm.wau as number) > 0 ? co.conversions_7d / (wm.wau as number) : 0;
   const convRatePrev7d = (wm.wau_prev as number) > 0 ? co.conversions_prev_7d / (wm.wau_prev as number) : 0;
 
-  const stickiness = wm.mau > 0 ? wm.wau / wm.mau : 0;
+  // Stickiness always uses rolling 30d MAU so the denominator is consistent across
+  // all period modes. For "all time," using pStart=LAUNCH would count every user
+  // ever and make the ratio meaninglessly small.
+  const stickinessMAU = (wm.mau_rolling_30d as number) ?? 0;
+  const stickiness = stickinessMAU > 0 ? (wm.wau as number) / stickinessMAU : 0;
   const stickinessPrev = (wm.mau_for_prev_week as number) > 0
     ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
     : 0;
 
   const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; delivered_7d: number; opens_prev_7d: number; clicks_prev_7d: number; delivered_prev_7d: number; opens_period: number; clicks_period: number; delivered_period: number; opens_all: number; clicks_all: number; delivered_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 };
+
+  const fv = (favoritesVolumeRows as { period: number; prev_period: number; week: number; prev_week: number }[])[0] ?? { period: 0, prev_period: 0, week: 0, prev_week: 0 };
+  const ru = registeredUsersRows[0] as { total: number; period_new: number; prev_period_new: number; week_new: number; prev_week_new: number };
 
   return NextResponse.json({
     gmv: {
@@ -401,6 +433,13 @@ export async function GET(request: NextRequest) {
       prev7d: g.gmv_prev_7d,
       last30d: g.gmv_30d,
       prev30d: g.gmv_prev_30d,
+    },
+    clicks: {
+      total: cl.total_clicks,
+      last7d: cl.clicks_7d,
+      prev7d: cl.clicks_prev_7d,
+      last30d: cl.clicks_30d,
+      prev30d: cl.clicks_prev_30d,
     },
     totalOrders: {
       allTime: co.total_conversions,
@@ -420,8 +459,8 @@ export async function GET(request: NextRequest) {
       periodRate: (wm.mau as number) > 0 ? (co.conversions_30d as number) / (wm.mau as number) : 0,
     },
     wau: { current: wm.wau, prev: wm.wau_prev },
-    mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active },
-    stickiness: { current: stickiness, prev: stickinessPrev },
+    mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active, rolling30d: stickinessMAU },
+    stickiness: { current: stickiness, prev: stickinessPrev, mauUsed: stickinessMAU },
     saveToPurchase: {
       rate: totalSavers > 0 ? saversBought / totalSavers : 0,
       totalSavers,
@@ -436,9 +475,25 @@ export async function GET(request: NextRequest) {
         ? (rev.total_gmv as number) / (rev.buying_users as number)
         : 0,
       allTimeBuyingUsers: rev.buying_users as number,
+      prevPeriodValue: (rev.prev_period_buying_users as number) > 0
+        ? (rev.prev_period_gmv as number) / (rev.prev_period_buying_users as number)
+        : 0,
+      prevPeriodBuyingUsers: rev.prev_period_buying_users as number,
     },
     gmvByWeek: gmvByWeekRows,
     totalCommission,
+    newUsers: {
+      period: ru?.period_new ?? 0,
+      prevPeriod: ru?.prev_period_new ?? 0,
+      week: ru?.week_new ?? 0,
+      prevWeek: ru?.prev_week_new ?? 0,
+    },
+    favoritesVolume: {
+      period: fv.period,
+      prevPeriod: fv.prev_period,
+      week: fv.week,
+      prevWeek: fv.prev_week,
+    },
     users: { registered: totalRegisteredUsers, waitlist: totalWaitlist, approved: totalApproved },
     waitlistByMonth,
     activityBreakdown,

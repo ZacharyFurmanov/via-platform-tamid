@@ -12,5 +12,5 @@ export function AdminHide({ children }: { children: React.ReactNode }) {
 // Conditionally applies the header offset padding
 export function MainWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  return <main className={pathname.startsWith("/admin") ? "" : "pt-[104px]"}>{children}</main>;
+  return <main className={pathname.startsWith("/admin") ? "" : "pt-[88px]"}>{children}</main>;
 }

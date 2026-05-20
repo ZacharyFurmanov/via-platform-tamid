@@ -317,7 +317,7 @@ export default function ProductFilter({
 
   return (
     <>
-    <div className="sticky top-[104px] z-[45] bg-[#F7F3EA] py-3 mb-4">
+    <div className="sticky top-[88px] z-[45] bg-[#F7F3EA] py-3 mb-4">
       <div className="inline-flex flex-col gap-2">
         {/* Search — same width as the buttons row below */}
         <div className="relative">
