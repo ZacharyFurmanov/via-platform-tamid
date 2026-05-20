@@ -78,8 +78,8 @@ export const stores = [
       "Carroll Street Vintage is a Brooklyn-based vintage shop offering a thoughtfully curated selection of pre-loved clothing and accessories. Each piece is hand-selected with an eye for quality, character, and timeless style.",
     website: "https://carrollstreetvintage.com",
     dataSource: "carroll-street-vintage",
-    image: "/stores/placeholder.svg",
-    logo: "/stores/placeholder.svg",
+    image: "/stores/carroll-street-vintage.jpg",
+    logo: "/stores/carroll-street-vintage.jpg",
     logoBg: "#ffffff",
     currency: "USD",
     commissionType: "custom-webhook" as const,
@@ -739,10 +739,10 @@ export const stores = [
   {
     slug: "source-twenty-four",
     dashboardToken: "s24-7d1f8c4a2b9e",
-    name: "Source Twenty Four",
+    name: "Source 24",
     location: "New Jersey",
     description:
-      "Source Twenty Four is a curated collection of pre-owned luxury handbags, wallets, and accessories from iconic designer houses. Each piece is authenticated and hand-selected, offering timeless style from brands like Chanel, Celine, Dior, and Bottega Veneta.",
+      "Source 24 is a curated collection of pre-owned luxury handbags, wallets, and accessories from iconic designer houses. Each piece is authenticated and hand-selected, offering timeless style from brands like Chanel, Celine, Dior, and Bottega Veneta.",
     website: "https://sourcetwentyfour.com",
     dataSource: "source-twenty-four",
     image: "/stores/source-twenty-four.jpg",
@@ -753,7 +753,7 @@ export const stores = [
     affiliatePath: "VIAPLATFORM",
     collabsStoreId: "229322",
     authenticityPolicy:
-      "Every piece at Source Twenty Four is authenticated and hand-selected before listing. Specializing in pre-owned luxury from Chanel, Celine, Dior, and Bottega Veneta, each item undergoes careful inspection to verify quality and authenticity prior to sale. Select items include a Certificate of Authenticity.",
+      "Every piece at Source 24 is authenticated and hand-selected before listing. Specializing in pre-owned luxury from Chanel, Celine, Dior, and Bottega Veneta, each item undergoes careful inspection to verify quality and authenticity prior to sale. Select items include a Certificate of Authenticity.",
     shippingPolicy:
       "Free shipping on all items. Orders ship from the United States.",
     returnPolicy:
@@ -1064,7 +1064,7 @@ export const storeContactEmails: Record<string, string> = {
   "honey-bear-vintage": "honeybearvintagenyc@gmail.com",
   "jade-vintage": "hello@jadevintage.ca",
   "blodas-choice": "annabloda@gmail.com",
-  "carroll-street-vintage": "",
+  "carroll-street-vintage": "kittyzeldis@gmail.com",
   // Styelled — not yet on the site but included in sourcing notifications
   "styelled": "Amandasweetwood@gmail.com",
   "porters-preloved": "porterspreloved@gmail.com",

@@ -137,7 +137,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
-    name: "Source Twenty Four",
+    name: "Source 24",
     slug: "source-twenty-four",
     storeDomain: "sourcetwentyfour.com",
     scrapeProductPage: true,
