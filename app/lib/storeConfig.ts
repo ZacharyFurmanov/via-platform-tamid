@@ -355,6 +355,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
     storeDomain: "hachiarchive.com",
     scrapeProductPage: true,
   },
+  {
+    type: "shopify",
+    name: "SarahDoes",
+    slug: "sarah-does",
+    storeDomain: "sarahdoes.shop",
+    scrapeProductPage: true,
+  },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
