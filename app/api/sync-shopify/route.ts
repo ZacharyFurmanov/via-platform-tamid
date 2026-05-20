@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     const skippedCount = fetchResult.skippedCount;
 
     // Sync products to database
-    const { count: productCount, priceDrops } = await syncProducts(storeSlug, storeName, products);
+    const { count: productCount, inserted, updated, priceDrops } = await syncProducts(storeSlug, storeName, products);
 
     // Price drop emails disabled
 
@@ -175,6 +175,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Synced ${productCount} products from ${storeName}`,
       productCount,
+      inserted,
+      updated,
       skippedCount,
       storeSlug,
       shopName,

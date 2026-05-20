@@ -252,7 +252,7 @@ export async function syncProducts(
     productType?: string;
   }>,
   options?: { excludeKeywords?: string[]; excludeTitles?: string[] }
-): Promise<{ count: number; priceDrops: PriceDrop[] }> {
+): Promise<{ count: number; inserted: number; updated: number; priceDrops: PriceDrop[] }> {
   const sql = neon(getDatabaseUrl());
 
   // Titles that should never appear on VYA — blocked globally across all stores.
@@ -321,9 +321,13 @@ export async function syncProducts(
 
   // Upsert each product (preserves id for existing rows)
   const titles: string[] = [];
+  let insertedCount = 0;
+  let updatedCount = 0;
   for (const product of products) {
     if (isBlocked(product.title)) continue;
     titles.push(product.title);
+    const isExisting = oldByTitle.has(product.title);
+    if (isExisting) updatedCount++; else insertedCount++;
     const imagesJson = product.images ? JSON.stringify(product.images) : null;
     const wasSeenOnInsider = prevSeenTitles.has(product.title);
     await sql`
@@ -444,7 +448,7 @@ export async function syncProducts(
     await sql`DELETE FROM products WHERE store_slug = ${storeSlug}`;
   }
 
-  return { count: products.length, priceDrops };
+  return { count: products.length, inserted: insertedCount, updated: updatedCount, priceDrops };
 }
 
 /**

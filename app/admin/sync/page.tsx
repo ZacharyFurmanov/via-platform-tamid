@@ -14,6 +14,8 @@ type SyncResult = {
   success?: boolean;
   message?: string;
   productCount?: number;
+  inserted?: number;
+  updated?: number;
   skippedCount?: number;
   skipReasons?: Record<string, number>;
   shopName?: string;
@@ -245,7 +247,11 @@ export default function SyncAdminPage() {
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
                       {result.success ? (
                         <div style={{ fontSize: 13 }}>
-                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          <p style={{ color: "#15803d" }}>
+                            {result.inserted != null
+                              ? `${result.inserted} new · ${result.updated ?? 0} updated`
+                              : `${result.productCount} products synced`}
+                          </p>
                           {result.skippedCount !== undefined && result.skippedCount > 0 && (
                             <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
                           )}
@@ -299,7 +305,11 @@ export default function SyncAdminPage() {
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
                       {result.success ? (
                         <div style={{ fontSize: 13 }}>
-                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          <p style={{ color: "#15803d" }}>
+                            {result.inserted != null
+                              ? `${result.inserted} new · ${result.updated ?? 0} updated`
+                              : `${result.productCount} products synced`}
+                          </p>
                           {result.skippedCount !== undefined && result.skippedCount > 0 && (
                             <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
                           )}
@@ -429,7 +439,11 @@ export default function SyncAdminPage() {
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
                       {result.success ? (
                         <div style={{ fontSize: 13 }}>
-                          <p style={{ color: "#15803d" }}>{result.productCount} products synced</p>
+                          <p style={{ color: "#15803d" }}>
+                            {result.inserted != null
+                              ? `${result.inserted} new · ${result.updated ?? 0} updated`
+                              : `${result.productCount} products synced`}
+                          </p>
                           {result.skippedCount !== undefined && result.skippedCount > 0 && (
                             <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
                           )}

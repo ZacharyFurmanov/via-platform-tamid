@@ -235,7 +235,7 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
-    name: "The VNTG Collective",
+    name: "Sablier Vintage",
     slug: "the-vntg-collective",
     storeDomain: "thevntgcollective.com",
     scrapeProductPage: true,

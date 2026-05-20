@@ -225,48 +225,125 @@ function mapRowToProduct(row: SupabaseRow) {
 const CARROLL_SITE = "https://carrollstreetvintage.com";
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-// Extract product objects from a minified JS string by finding objects near Supabase image URLs.
-// Minified Vite bundles use unquoted keys so JSON.parse fails — we use regex instead.
+// Build a map of minified variable name → asset URL from a Vite bundle.
+// Vite outputs image imports as: varName="/assets/file-HASH.ext"
+function buildVarUrlMap(js: string): Map<string, string> {
+  const map = new Map<string, string>();
+  // Match: varName="/assets/..." or varName='...'
+  const re = /\b([a-zA-Z_$][a-zA-Z0-9_$]{1,6})="(\/assets\/[^"]+\.(?:jpe?g|png|webp|gif|avif))"/g;
+  for (const m of js.matchAll(re)) {
+    map.set(m[1], CARROLL_SITE + m[2]);
+  }
+  return map;
+}
+
+// Resolve an `images:[varA,varB]` expression using the var→url map.
+function resolveImages(chunk: string, varMap: Map<string, string>): string[] {
+  const imgArrayMatch = chunk.match(/images\s*:\s*\[([^\]]*)\]/);
+  if (!imgArrayMatch) return [];
+  return imgArrayMatch[1]
+    .split(",")
+    .map(v => v.trim())
+    .map(v => varMap.get(v) ?? "")
+    .filter(Boolean);
+}
+
+// Extract product objects from a minified Vite JS bundle.
+// Carroll Street hardcodes products as {id:N,name:"...",price:N,...} objects.
+// Images are minified variable references resolved via buildVarUrlMap.
 function extractProductsFromJS(js: string): SupabaseRow[] {
   const products: SupabaseRow[] = [];
   const seen = new Set<string>();
 
-  const imageRe = /https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/[^"\\,\s)>]+/g;
-  for (const imgMatch of js.matchAll(imageRe)) {
-    const imgUrl = imgMatch[0];
-    if (seen.has(imgUrl)) continue;
-    seen.add(imgUrl);
+  // Build variable→URL map once for the whole bundle
+  const varMap = buildVarUrlMap(js);
 
-    const pos = imgMatch.index!;
-    // Walk backward to find the opening brace of the enclosing object
+  // Strategy A: anchor on {id:N,name:" — precise format Carroll Street uses
+  const idNameRe = /\{id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]{2,100})"/g;
+  for (const anchor of js.matchAll(idNameRe)) {
+    const pos = anchor.index!;
+    // Walk forward tracking brace depth to find the closing brace
+    let depth = 0, end = pos;
+    for (let i = pos; i < Math.min(pos + 4000, js.length); i++) {
+      if (js[i] === "{") depth++;
+      else if (js[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end <= pos) continue;
+    const chunk = js.slice(pos, end + 1);
+
+    const id = anchor[1];
+    const name = anchor[2];
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const priceMatch = chunk.match(/price\s*:\s*(\d+(?:\.\d+)?)/);
+    if (!priceMatch) continue;
+    const price = parseFloat(priceMatch[1]);
+    if (price < 1 || price > 50000) continue;
+
+    // Minified booleans: sold:!1 = sold:false, sold:!0 = sold:true
+    const soldMatch = chunk.match(/sold\s*:\s*(!0|!1|true|false)/);
+    const sold = soldMatch ? (soldMatch[1] === "!0" || soldMatch[1] === "true") : false;
+
+    const sizeMatch = chunk.match(/size\s*:\s*"([^"]+)"/);
+    const materialMatch = chunk.match(/material\s*:\s*"([^"]+)"/);
+    const measurementsMatch = chunk.match(/measurements\s*:\s*`([^`]+)`/);
+    const conditionMatch = chunk.match(/condition\s*:\s*"([^"]+)"/);
+
+    const images = resolveImages(chunk, varMap);
+    const image = images[0] ?? null;
+
+    products.push({
+      id,
+      name,
+      price,
+      image,
+      images: images.length > 1 ? images : undefined,
+      sold,
+      size: sizeMatch?.[1],
+      description: [materialMatch?.[1], conditionMatch?.[1], measurementsMatch?.[1]].filter(Boolean).join(" · ") || undefined,
+    });
+  }
+  if (products.length > 0) return products;
+
+  // Strategy B: anchor on price:NUMBER (broader fallback)
+  for (const priceMatch of js.matchAll(/price\s*:\s*(\d+(?:\.\d+)?)/g)) {
+    const price = parseFloat(priceMatch[1]);
+    if (price < 1 || price > 50000) continue;
+
+    const pos = priceMatch.index!;
     let start = pos;
-    while (start > 0 && js[start] !== "{") start--;
-    // Walk forward tracking depth
-    let depth = 0;
-    let end = start;
-    for (let i = start; i < Math.min(start + 4000, js.length); i++) {
+    for (let i = pos; i >= Math.max(0, pos - 600); i--) {
+      if (js[i] === "{") { start = i; break; }
+    }
+    let depth = 0, end = start;
+    for (let i = start; i < Math.min(start + 2000, js.length); i++) {
       if (js[i] === "{") depth++;
       else if (js[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
     }
     if (end <= start) continue;
     const chunk = js.slice(start, end + 1);
 
-    const nameMatch = chunk.match(/(?:name|title)\s*:\s*"([^"]+)"/);
-    const priceMatch = chunk.match(/price\s*:\s*(\d+(?:\.\d+)?)/);
-    if (!nameMatch || !priceMatch) continue;
+    const nameMatch = chunk.match(/(?:name|title)\s*:\s*"([^"]{2,80})"/);
+    if (!nameMatch) continue;
+    const key = `${nameMatch[1]}::${price}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
 
-    const soldMatch = chunk.match(/(?:sold|is_sold|sold_out)\s*:\s*(true|false)/);
-    const descMatch = chunk.match(/(?:description|details)\s*:\s*"([^"]+)"/);
+    const soldMatch = chunk.match(/sold\s*:\s*(!0|!1|true|false)/);
+    const sold = soldMatch ? (soldMatch[1] === "!0" || soldMatch[1] === "true") : false;
     const sizeMatch = chunk.match(/size\s*:\s*"([^"]+)"/);
-    const idMatch = chunk.match(/(?:^|[,{])id\s*:\s*"([^"]+)"/);
+    const imageMatch = chunk.match(/(?:image|photo|img|image_url|imageUrl|thumbnail)\s*:\s*"([^"]+)"/);
+    let imgUrl = imageMatch?.[1] ?? "";
+    if (imgUrl && !imgUrl.startsWith("http")) imgUrl = `${CARROLL_SITE}${imgUrl}`;
+    const images = resolveImages(chunk, varMap);
 
     products.push({
-      id: idMatch?.[1],
       name: nameMatch[1],
-      price: parseFloat(priceMatch[1]),
-      image: imgUrl,
-      sold: soldMatch?.[1] === "true",
-      description: descMatch?.[1],
+      price,
+      image: images[0] ?? (imgUrl || null),
+      images: images.length > 1 ? images : undefined,
+      sold,
       size: sizeMatch?.[1],
     });
   }
@@ -274,16 +351,13 @@ function extractProductsFromJS(js: string): SupabaseRow[] {
 }
 
 async function scrapeCarrollStreetProducts(): Promise<{ rows: SupabaseRow[]; source: string }> {
-  // Fetch main HTML to find Vite JS chunk URLs
   let html = "";
   try {
     html = await fetch(CARROLL_SITE, { headers: { "user-agent": UA } }).then(r => r.text());
   } catch { return { rows: [], source: "scrape-failed-html" }; }
 
   const scriptSrcs = [...html.matchAll(/src="(\/assets\/[^"]+\.js)"/g)]
-    .map(m => CARROLL_SITE + m[1])
-    // Largest files first — product data lives in bigger chunks
-    .sort((a, b) => b.length - a.length);
+    .map(m => CARROLL_SITE + m[1]);
 
   for (const src of scriptSrcs) {
     let js = "";
@@ -293,10 +367,10 @@ async function scrapeCarrollStreetProducts(): Promise<{ rows: SupabaseRow[]; sou
 
     if (js.length < 5000) continue;
 
-    // Strategy 1: look for JSON.parse("...") with an embedded array
+    // Strategy 1: look for JSON.parse("...") with an embedded product array
     for (const m of js.matchAll(/JSON\.parse\("((?:[^"\\]|\\.)*)"\)/g)) {
       try {
-        const inner = JSON.parse(`"${m[1]}"`); // unescape the JS string
+        const inner = JSON.parse(`"${m[1]}"`);
         const data = JSON.parse(inner);
         if (Array.isArray(data) && data.length > 0) {
           const first = data[0] as Record<string, unknown>;
@@ -309,8 +383,8 @@ async function scrapeCarrollStreetProducts(): Promise<{ rows: SupabaseRow[]; sou
       } catch { /* not product data */ }
     }
 
-    // Strategy 2: extract objects near Supabase image URLs
-    if (js.includes("supabase.co/storage")) {
+    // Strategy 2: anchor on price:NUMBER and extract surrounding product objects
+    if (js.includes("price")) {
       const products = extractProductsFromJS(js);
       if (products.length > 0) return { rows: products, source: src };
     }

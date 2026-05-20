@@ -831,10 +831,10 @@ export const stores = [
   {
     slug: "the-vntg-collective",
     dashboardToken: "tvc-5e2b8f1a9c3d",
-    name: "The VNTG Collective",
+    name: "Sablier Vintage",
     location: "New York, NY",
     description:
-      "The VNTG Collective is a vintage store founded in 2024 based in New York City. We curate a variety of high-quality garments focused on timeless staples and statement pieces. Our diverse curation offers custom made designs, reviving second hand fabrics into modern and chic styles. We aim to help people find their individuality through fashion without shifting our focus from sustainability. By carefully hand-selecting and reconstructing authentic, quality vintage garments, we create lasting value for our community.",
+      "Sablier Vintage is a vintage store founded in 2024 based in New York City. We curate a variety of high-quality garments focused on timeless staples and statement pieces. Our diverse curation offers custom made designs, reviving second hand fabrics into modern and chic styles. We aim to help people find their individuality through fashion without shifting our focus from sustainability. By carefully hand-selecting and reconstructing authentic, quality vintage garments, we create lasting value for our community.",
     website: "https://thevntgcollective.com",
     dataSource: "the-vntg-collective",
     image: "/stores/the-vntg-collective.jpg",
@@ -845,11 +845,11 @@ export const stores = [
     affiliatePath: "1234",
     collabsStoreId: "231753",
     authenticityPolicy:
-      "Every piece at The VNTG Collective is hand-selected and inspected by the team — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and described with full condition details, with sustainability and individuality at the core of every selection.",
+      "Every piece at Sablier Vintage is hand-selected and inspected by the team — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and described with full condition details, with sustainability and individuality at the core of every selection.",
     shippingPolicy:
       "Ships from New York, NY. Shipping rates are calculated at checkout.",
     returnPolicy:
-      "All sales are final. If there is an issue with your order, contact thevntgcollective@gmail.com and the team will do their best to help.",
+      "All sales are final. If there is an issue with your order, contact the team and they will do their best to help.",
   },
   {
     slug: "to-us-vintage",
