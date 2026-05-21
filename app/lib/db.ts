@@ -4,6 +4,9 @@ import { unstable_cache } from "next/cache";
 // Stores temporarily removed from VYA. Products from these slugs are hidden site-wide.
 export const DISABLED_STORE_SLUGS: string[] = [];
 
+// Stores excluded from New Arrivals only (products still appear in browse/search).
+const NEW_ARRIVALS_EXCLUDED_SLUGS: string[] = ["chill-boutique"];
+
 // Get the database URL from environment variable
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -613,6 +616,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
           AND p.title NOT ILIKE '%gift card%'
           AND p.image IS NOT NULL AND p.image != ''
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
+          AND p.store_slug != ALL(${NEW_ARRIVALS_EXCLUDED_SLUGS})
       )
       SELECT * FROM pool
       WHERE store_rank <= ${maxPerStore}
