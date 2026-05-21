@@ -21,6 +21,7 @@ type Customer = {
   favoriteCount: number;
   cartCount: number;
   orderCount: number;
+  pageViewCount: number;
   lastActiveAt: string | null;
 };
 
@@ -537,6 +538,12 @@ export default function CustomersClient() {
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         <p style={{ fontWeight: 500, color: "#09090b", margin: 0 }}>{c.name || "—"}</p>
+                        {c.pageViewCount > 0 && c.clickCount === 0 && (
+                          <span title={`${c.pageViewCount} site page visits — no product click-throughs yet`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#6d28d9", background: "#ede9fe", padding: "1px 5px", borderRadius: 4 }}>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            {c.pageViewCount}
+                          </span>
+                        )}
                         {c.viewCount > 0 && (
                           <span title={`${c.viewCount} product views`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#71717a", background: "#f4f4f5", padding: "1px 5px", borderRadius: 4 }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>

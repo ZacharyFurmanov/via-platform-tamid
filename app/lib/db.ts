@@ -601,18 +601,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
         LEFT JOIN click_counts cc
           ON cc.store_slug = p.store_slug AND cc.product_name = p.title
         WHERE p.created_at IS NOT NULL
-          AND (
-            -- Non-Shopify stores: use created_at as before
-            (p.shopify_product_id IS NULL AND p.created_at >= NOW() - make_interval(days => ${days}))
-            OR
-            -- Shopify stores: use collabs_link_set_at so only products whose
-            -- Collabs link was freshly generated (for a new item) appear here.
-            -- Batch-generated links for old products won't have a recent collabs_link_set_at.
-            (p.shopify_product_id IS NOT NULL
-              AND p.collabs_link IS NOT NULL
-              AND p.collabs_link_set_at IS NOT NULL
-              AND p.collabs_link_set_at >= NOW() - make_interval(days => ${days}))
-          )
+          AND p.created_at >= NOW() - make_interval(days => ${days})
           AND p.title NOT ILIKE '%gift card%'
           AND p.image IS NOT NULL AND p.image != ''
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))

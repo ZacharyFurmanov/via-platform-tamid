@@ -6,6 +6,7 @@ import {
   SHOPIFY_STORES,
   BIGCARTEL_STORES,
   SQUARE_STORES,
+  WIX_STORES,
   ALL_STORES,
   type Store,
 } from "@/app/lib/storeConfig";
@@ -128,6 +129,17 @@ export default function SyncAdminPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ storeSlug: store.slug, locationId: store.locationId }),
+        });
+      } else if (store.type === "wix") {
+        response = await fetch("/api/sync-wix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            storeName: store.name,
+            storeSlug: store.slug,
+            siteId: store.siteId,
+            apiKeyEnvVar: store.apiKeyEnvVar,
+          }),
         });
       } else {
         return;
@@ -395,6 +407,62 @@ export default function SyncAdminPage() {
                       ) : (
                         <p style={{ color: "#dc2626", fontSize: 13 }}>{ordersResult.error}</p>
                       ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Wix Stores */}
+        {WIX_STORES.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 16 }}>Wix Stores</h2>
+            {WIX_STORES.map((store) => {
+              const status = statuses[store.slug];
+              const isLoading = status?.loading;
+              const result = status?.result;
+
+              return (
+                <div key={store.slug} style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#09090b" }}>{store.name}</h3>
+                        <span style={{ fontSize: 11, padding: "2px 8px", background: "#fae8ff", color: "#7e22ce", borderRadius: 99, fontWeight: 500 }}>Wix</span>
+                      </div>
+                      <p style={{ fontSize: 12, color: "#71717a" }}>Site ID: {store.siteId}</p>
+                    </div>
+                    <button
+                      onClick={() => handleSync(store)}
+                      disabled={isLoading}
+                      style={{ padding: "7px 18px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}
+                    >
+                      {isLoading ? "Syncing..." : "Sync"}
+                    </button>
+                  </div>
+                  {result && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e4e4e7" }}>
+                      {result.success ? (
+                        <div style={{ fontSize: 13 }}>
+                          <p style={{ color: "#15803d" }}>
+                            {result.inserted != null
+                              ? `${result.inserted} new · ${result.updated ?? 0} updated`
+                              : `${result.productCount} products synced`}
+                          </p>
+                          {result.skippedCount !== undefined && result.skippedCount > 0 && (
+                            <p style={{ color: "#71717a", marginTop: 4 }}>{result.skippedCount} skipped (sold out)</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ color: "#dc2626", fontSize: 13 }}>
+                          {result.error}
+                          {result.details && (
+                            <span style={{ display: "block", color: "#71717a", marginTop: 4 }}>{result.details}</span>
+                          )}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
