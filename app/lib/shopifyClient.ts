@@ -784,7 +784,7 @@ export async function fetchShopifyProductsByCollections(
     console.log(`[Shopify Collections] Fetching collection "${handle}" from ${normalizedDomain}`);
 
     while (nextUrl && products.length < maxProducts) {
-      const response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
+      const response: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
 
       if (!response.ok) {
         console.error(`[Shopify Collections] Failed to fetch collection "${handle}": ${response.status}`);
@@ -792,8 +792,8 @@ export async function fetchShopifyProductsByCollections(
       }
 
       // Extract next-page cursor from Link header before consuming body
-      const linkHeader = response.headers.get("link") ?? "";
-      const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+      const linkHeader: string = response.headers.get("link") ?? "";
+      const nextMatch: RegExpMatchArray | null = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
       nextUrl = nextMatch ? nextMatch[1] : null;
 
       const data = await response.json();
