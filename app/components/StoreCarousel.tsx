@@ -5,8 +5,8 @@ import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
-// Auto-scroll speed in px per animation frame (~60fps) — 2.5px ≈ 150px/s
-const SPEED = 2.5;
+// Auto-scroll speed in px per animation frame (~60fps) — 1.0px ≈ 60px/s
+const SPEED = 1.0;
 
 function StoreCard({ store }: { store: (typeof stores)[number] }) {
   return (
