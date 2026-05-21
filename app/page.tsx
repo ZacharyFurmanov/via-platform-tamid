@@ -31,7 +31,7 @@ export default function HomePage() {
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
           <div className="absolute bottom-48 left-6 right-6 z-10">
             <h1 className="text-3xl font-serif text-[#F7F3EA] mb-6 leading-tight">
-              Discover the world&apos;s best vintage.
+              Access the world&apos;s best vintage.
             </h1>
             <div className="flex gap-3">
               <Link
@@ -68,7 +68,7 @@ export default function HomePage() {
         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
         <div className="absolute bottom-[28%] left-10 z-10 animate-hero">
           <h1 className="text-6xl font-serif mb-8 text-[#F7F3EA] leading-tight max-w-xl">
-            Discover the world&apos;s best vintage.
+            Access the world&apos;s best vintage.
           </h1>
           <div className="flex gap-4">
             <Link

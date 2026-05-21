@@ -5,8 +5,8 @@ import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
-// Auto-scroll speed in px per animation frame (~60fps) — 1.5px ≈ 90px/s
-const SPEED = 1.5;
+// Auto-scroll speed in px per animation frame (~60fps) — 2.5px ≈ 150px/s
+const SPEED = 2.5;
 
 function StoreCard({ store }: { store: (typeof stores)[number] }) {
   return (
@@ -81,6 +81,19 @@ export default function StoreCarousel() {
     };
     rafRef.current = requestAnimationFrame(tick);
 
+    let resumeTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleResume = (delay = 800) => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => {
+        // Snap back to first half if momentum scrolled past the loop point
+        const half = el.scrollWidth / 2;
+        if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
+        isDragging.current = false;
+        pausedRef.current = false;
+        el.style.cursor = "grab";
+      }, delay);
+    };
+
     // Desktop: drag to scroll
     const onMouseDown = (e: MouseEvent) => {
       isDragging.current = true;
@@ -88,6 +101,7 @@ export default function StoreCarousel() {
       dragStartX.current = e.clientX;
       dragScrollLeft.current = el.scrollLeft;
       el.style.cursor = "grabbing";
+      if (resumeTimer) clearTimeout(resumeTimer);
     };
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
@@ -95,24 +109,31 @@ export default function StoreCarousel() {
     };
     const onMouseUp = () => {
       if (!isDragging.current) return;
-      isDragging.current = false;
-      el.style.cursor = "grab";
-      setTimeout(() => { pausedRef.current = false; }, 600);
+      scheduleResume(800);
     };
 
-    // Desktop: pause auto-scroll on hover so users can read
+    // Desktop: pause auto-scroll on hover so users can read, resume on leave
     const onMouseEnter = () => { if (!isDragging.current) pausedRef.current = true; };
     const onMouseLeave = () => { if (!isDragging.current) pausedRef.current = false; };
 
-    // Mobile: browser handles native touch scroll — just pause auto-scroll during it
-    const onTouchStart = () => { pausedRef.current = true; };
+    // Desktop: mouse wheel scrolls the carousel horizontally
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      pausedRef.current = true;
+      el.scrollLeft += e.deltaY + e.deltaX;
+      const half = el.scrollWidth / 2;
+      if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
+      if (half > 0 && el.scrollLeft < 0) el.scrollLeft += half;
+      scheduleResume(1200);
+    };
+
+    // Mobile: browser handles native touch scroll — pause auto-scroll during it
+    const onTouchStart = () => {
+      pausedRef.current = true;
+      if (resumeTimer) clearTimeout(resumeTimer);
+    };
     const onTouchEnd = () => {
-      setTimeout(() => {
-        // Correct position if momentum carried past the halfway loop point
-        const half = el.scrollWidth / 2;
-        if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
-        pausedRef.current = false;
-      }, 900);
+      scheduleResume(900);
     };
 
     el.addEventListener("mousedown", onMouseDown);
@@ -120,16 +141,19 @@ export default function StoreCarousel() {
     document.addEventListener("mouseup", onMouseUp);
     el.addEventListener("mouseenter", onMouseEnter);
     el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("touchstart", onTouchStart, { passive: true });
     el.addEventListener("touchend", onTouchEnd, { passive: true });
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (resumeTimer) clearTimeout(resumeTimer);
       el.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
       el.removeEventListener("mouseenter", onMouseEnter);
       el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("wheel", onWheel);
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchend", onTouchEnd);
     };
@@ -142,6 +166,7 @@ export default function StoreCarousel() {
       style={{
         scrollbarWidth: "none",
         msOverflowStyle: "none",
+        touchAction: "pan-x",
         maskImage:
           "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
         WebkitMaskImage:

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import ProductFilter, {
   FilterState,
   PriceRange,
@@ -170,7 +170,6 @@ export default function FilteredProductGrid({
 }: FilteredProductGridProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [filters, setFilters] = useState<FilterState>(() => {
     const saved = loadSavedFilters();
     return initialFilters ? { ...saved, ...initialFilters } : saved;
@@ -209,14 +208,24 @@ export default function FilteredProductGrid({
   }, []);
 
   const PAGE_SIZE = 48;
-  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  // Initialize from the URL so back navigation always restores the correct page.
+  // Local state (not derived from searchParams) avoids Next.js router-cache resets.
+  const [currentPage, setCurrentPageState] = useState<number>(() =>
+    Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
+  );
 
   const setCurrentPage = useCallback((page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (page === 1) params.delete("page");
-    else params.set("page", String(page));
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, router, pathname]);
+    setCurrentPageState(page);
+    // Use replaceState directly so the URL stays in sync without going through
+    // Next.js router, which can serve a stale cached render on back navigation.
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (page === 1) params.delete("page");
+      else params.set("page", String(page));
+      const qs = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    }
+  }, []);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);

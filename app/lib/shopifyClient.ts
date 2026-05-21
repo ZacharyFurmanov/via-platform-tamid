@@ -776,18 +776,25 @@ export async function fetchShopifyProductsByCollections(
   const limit = 250;
 
   for (const handle of collectionHandles) {
-    let page = 1;
+    // Use cursor-based pagination via Shopify's Link header so that products
+    // added or sold mid-sync don't shift page offsets and cause items to be
+    // missed (which would falsely mark them sold and reset their created_at).
+    let nextUrl: string | null =
+      `https://${normalizedDomain}/collections/${handle}/products.json?limit=${limit}`;
     console.log(`[Shopify Collections] Fetching collection "${handle}" from ${normalizedDomain}`);
 
-    while (products.length < maxProducts) {
-      const url = `https://${normalizedDomain}/collections/${handle}/products.json?limit=${limit}&page=${page}`;
-
-      const response = await fetch(url, { headers: { Accept: "application/json" } });
+    while (nextUrl && products.length < maxProducts) {
+      const response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
 
       if (!response.ok) {
         console.error(`[Shopify Collections] Failed to fetch collection "${handle}": ${response.status}`);
         break;
       }
+
+      // Extract next-page cursor from Link header before consuming body
+      const linkHeader = response.headers.get("link") ?? "";
+      const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+      nextUrl = nextMatch ? nextMatch[1] : null;
 
       const data = await response.json();
       if (!data.products || data.products.length === 0) break;
@@ -863,9 +870,6 @@ export async function fetchShopifyProductsByCollections(
           size,
         });
       }
-
-      if (data.products.length < limit) break;
-      page++;
     }
   }
 

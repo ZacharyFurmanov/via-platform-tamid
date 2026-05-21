@@ -412,13 +412,11 @@ export async function GET(request: NextRequest) {
   const convRate7d = (wm.wau as number) > 0 ? co.conversions_7d / (wm.wau as number) : 0;
   const convRatePrev7d = (wm.wau_prev as number) > 0 ? co.conversions_prev_7d / (wm.wau_prev as number) : 0;
 
-  // Stickiness always uses rolling 30d MAU so the denominator is consistent across
-  // all period modes. For "all time," using pStart=LAUNCH would count every user
-  // ever and make the ratio meaninglessly small.
-  const stickinessMAU = (wm.mau_rolling_30d as number) ?? 0;
+  // Stickiness = WAU / MAU using the same period MAU shown on the dashboard card.
+  const stickinessMAU = (wm.mau as number) ?? 0;
   const stickiness = stickinessMAU > 0 ? (wm.wau as number) / stickinessMAU : 0;
-  const stickinessPrev = (wm.mau_for_prev_week as number) > 0
-    ? (wm.wau_prev as number) / (wm.mau_for_prev_week as number)
+  const stickinessPrev = (wm.mau_prev as number) > 0
+    ? (wm.wau_prev as number) / (wm.mau_prev as number)
     : 0;
 
   const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; delivered_7d: number; opens_prev_7d: number; clicks_prev_7d: number; delivered_prev_7d: number; opens_period: number; clicks_period: number; delivered_period: number; opens_all: number; clicks_all: number; delivered_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 };
@@ -459,7 +457,7 @@ export async function GET(request: NextRequest) {
       periodRate: (wm.mau as number) > 0 ? (co.conversions_30d as number) / (wm.mau as number) : 0,
     },
     wau: { current: wm.wau, prev: wm.wau_prev },
-    mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active, rolling30d: stickinessMAU },
+    mau: { current: wm.mau, prev: wm.mau_prev, totalEverActive: wm.total_ever_active, rolling30d: wm.mau_rolling_30d },
     stickiness: { current: stickiness, prev: stickinessPrev, mauUsed: stickinessMAU },
     saveToPurchase: {
       rate: totalSavers > 0 ? saversBought / totalSavers : 0,

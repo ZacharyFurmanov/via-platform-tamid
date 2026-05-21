@@ -283,7 +283,7 @@ export default function KeyMetricsPage() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 32px" }}>
                       {[
                         { label: "WAU (last 7d)",      value: fmtNum(data.wau.current) },
-                        { label: "MAU (rolling 30d)",  value: fmtNum(data.mau.rolling30d ?? data.mau.current) },
+                        { label: "MAU",                value: fmtNum(data.mau.current) },
                         { label: "Stickiness",         value: fmtPct(data.stickiness.current) },
                         { label: "Rev / Buying User",  value: fmt$(data.revenuePerUser.allTimeValue) },
                       ].map(({ label, value }) => (
@@ -316,7 +316,7 @@ export default function KeyMetricsPage() {
                 { label: "Clicks",       current: data.clicks?.last30d ?? 0,              prev: data.clicks?.prev30d ?? 0,        fmt: fmtNum },
                 { label: "WAU",          current: data.wau.current,                       prev: data.wau.prev,                    fmt: fmtNum },
                 { label: "MAU",          current: data.mau.current,                       prev: data.mau.prev,                    fmt: fmtNum },
-                { label: "Stickiness",   current: data.stickiness.current,               prev: data.stickiness.prev,             fmt: fmtPct, note: `${fmtNum(data.wau.current)} WAU ÷ ${fmtNum(data.stickiness.mauUsed ?? data.mau.current)} MAU (30d)` },
+                { label: "Stickiness",   current: data.stickiness.current,               prev: data.stickiness.prev,             fmt: fmtPct, note: `${fmtNum(data.wau.current)} WAU ÷ ${fmtNum(data.stickiness.mauUsed ?? data.mau.current)} MAU` },
                 { label: "Rev / Buyer",  current: data.revenuePerUser.value,              prev: data.revenuePerUser.prevPeriodValue ?? 0, fmt: fmt$ },
                 { label: "Favorites",    current: data.favoritesVolume?.period ?? 0,      prev: data.favoritesVolume?.prevPeriod ?? 0,   fmt: fmtNum },
               ];
@@ -685,7 +685,7 @@ export default function KeyMetricsPage() {
                   <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 8px" }}>Stickiness (WAU/MAU)</p>
                   <p style={{ fontSize: 32, fontWeight: 600, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{fmtPct(data.stickiness.current)}</p>
                   <p style={{ fontSize: 13, color: GRAY, margin: "0 0 6px" }}>
-                    <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.wau.current)}</span> WAU ÷ <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.stickiness.mauUsed ?? data.mau.current)}</span> MAU (rolling 30d)
+                    <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.wau.current)}</span> WAU ÷ <span style={{ fontWeight: 600, color: DARK }}>{fmtNum(data.stickiness.mauUsed ?? data.mau.current)}</span> MAU
                     {data.stickiness.prev > 0 && (
                       <span style={{ color: MUTED_TEXT }}> · prev {fmtPct(data.stickiness.prev)}</span>
                     )}
