@@ -2,10 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { unstable_cache } from "next/cache";
 
 // Stores temporarily removed from VYA. Products from these slugs are hidden site-wide.
-// To re-enable a store: remove its slug from this array and uncomment it in stores.ts.
-export const DISABLED_STORE_SLUGS: string[] = [
-  "velvet-archive",
-];
+export const DISABLED_STORE_SLUGS: string[] = [];
 
 // Get the database URL from environment variable
 const getDatabaseUrl = () => {
@@ -188,6 +185,14 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_products_store_collabs
     ON products(store_slug, collabs_link)
     WHERE shopify_product_id IS NULL OR collabs_link IS NOT NULL
+  `;
+
+  // Timestamp for when a Collabs link was first assigned to a product.
+  // Used by new arrivals to determine if a Shopify product is genuinely new
+  // (link set recently for a just-synced item) vs. an old product that just
+  // had its link batch-generated.
+  await sql`
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS collabs_link_set_at TIMESTAMPTZ
   `;
 
   // Index for insider notification queries
@@ -593,8 +598,18 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
         LEFT JOIN click_counts cc
           ON cc.store_slug = p.store_slug AND cc.product_name = p.title
         WHERE p.created_at IS NOT NULL
-          AND p.created_at >= NOW() - make_interval(days => ${days})
-          AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+          AND (
+            -- Non-Shopify stores: use created_at as before
+            (p.shopify_product_id IS NULL AND p.created_at >= NOW() - make_interval(days => ${days}))
+            OR
+            -- Shopify stores: use collabs_link_set_at so only products whose
+            -- Collabs link was freshly generated (for a new item) appear here.
+            -- Batch-generated links for old products won't have a recent collabs_link_set_at.
+            (p.shopify_product_id IS NOT NULL
+              AND p.collabs_link IS NOT NULL
+              AND p.collabs_link_set_at IS NOT NULL
+              AND p.collabs_link_set_at >= NOW() - make_interval(days => ${days}))
+          )
           AND p.title NOT ILIKE '%gift card%'
           AND p.image IS NOT NULL AND p.image != ''
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
@@ -836,9 +851,18 @@ export async function updateCollabsLinkByShopifyProductId(
   collabsLink: string
 ): Promise<void> {
   const sql = neon(getDatabaseUrl());
+  // Only update rows that don't already have a collabs_link.
+  // collabs_link_set_at = NOW() only if created_at is within the last 14 days
+  // (genuinely new product). Older products get collabs_link_set_at = created_at
+  // so they don't flood new arrivals when links are batch-generated.
   await sql`
     UPDATE products
-    SET collabs_link = ${collabsLink}
+    SET collabs_link = ${collabsLink},
+        collabs_link_set_at = CASE
+          WHEN created_at >= NOW() - INTERVAL '14 days' THEN NOW()
+          ELSE COALESCE(created_at, NOW() - INTERVAL '1 year')
+        END
     WHERE shopify_product_id = ${shopifyProductId}
+      AND collabs_link IS NULL
   `;
 }

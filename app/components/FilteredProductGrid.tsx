@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import ProductFilter, {
   FilterState,
   PriceRange,
@@ -169,6 +169,8 @@ export default function FilteredProductGrid({
   initialFilters,
 }: FilteredProductGridProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [filters, setFilters] = useState<FilterState>(() => {
     const saved = loadSavedFilters();
     return initialFilters ? { ...saved, ...initialFilters } : saved;
@@ -207,7 +209,14 @@ export default function FilteredProductGrid({
   }, []);
 
   const PAGE_SIZE = 48;
-  const [currentPage, setCurrentPage] = useState(1);
+  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+
+  const setCurrentPage = useCallback((page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page === 1) params.delete("page");
+    else params.set("page", String(page));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
@@ -215,7 +224,7 @@ export default function FilteredProductGrid({
     try {
       sessionStorage.setItem(getFilterKey(), JSON.stringify(newFilters));
     } catch {}
-  }, []);
+  }, [setCurrentPage]);
 
   const filteredProducts = useMemo(() => {
     let result = products;
@@ -533,6 +542,7 @@ export default function FilteredProductGrid({
           setCurrentPage(page);
           window.scrollTo({ top: 0, behavior: "smooth" });
         };
+
 
         return (
           <>

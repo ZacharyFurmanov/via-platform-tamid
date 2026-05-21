@@ -102,6 +102,14 @@ function isConditionLine(text: string): boolean {
   return false;
 }
 
+// Shopify storefront UI strings that occasionally leak into scraped descriptions.
+// Filter these out before routing lines into display sections.
+const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*/i;
+
+function isJunkLine(text: string): boolean {
+  return ECOM_JUNK_LINE_RE.test(text);
+}
+
 /**
  * Splits description HTML into product details, sizing/measurements, and condition.
  * Each bucket is mutually exclusive — a line goes into exactly one.
@@ -144,6 +152,7 @@ function splitDescription(html: string | null): {
     hasLiTags = true;
     const inner = match[1];
     const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
+    if (!plain || isJunkLine(plain)) continue;
     if (isMeasurementLine(plain)) {
       sizingItems.push(plain);
     } else if (isConditionLine(plain)) {
@@ -169,19 +178,21 @@ function splitDescription(html: string | null): {
       if (SECTION_HEADER_RE.test(plain)) { inConditionSectionP = false; inMeasurementsSectionP = false; continue; }
       // Section content — apply same exit guards as Strategy 2
       if (inConditionSectionP) {
-        if (isConditionLine(plain) || plain.length < 120) { conditionItems.push(plain); }
+        if (isJunkLine(plain)) { inConditionSectionP = false; continue; }
+        if (isConditionLine(plain) || plain.length < 80) { conditionItems.push(plain); }
         else { inConditionSectionP = false; }
         continue;
       }
       if (inMeasurementsSectionP) {
+        if (isJunkLine(plain)) { inMeasurementsSectionP = false; continue; }
         if (isMeasurementLine(plain) || /[:\s]\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b|inches?\b)/i.test(plain)) {
           sizingItems.push(plain);
         } else { inMeasurementsSectionP = false; }
         continue;
       }
       // Fallback keyword matching
-      if (isMeasurementLine(plain)) sizingItems.push(plain);
-      else if (isConditionLine(plain)) conditionItems.push(plain);
+      if (!isJunkLine(plain) && isMeasurementLine(plain)) sizingItems.push(plain);
+      else if (!isJunkLine(plain) && isConditionLine(plain)) conditionItems.push(plain);
     }
     const detailsHtml = detailItems.length > 0 ? `<ul>${detailItems.join("")}</ul>` : null;
     return { detailsHtml, sizingItems, conditionItems };
@@ -216,8 +227,9 @@ function splitDescription(html: string | null): {
     if (CONDITION_HEADERS.test(plain)) { inConditionSection = true; inMeasurementsSection = false; continue; }
 
     if (inMeasurementsSection) {
-      if (SECTION_HEADER_RE.test(plain)) {
-        inMeasurementsSection = false; remaining.push(`<p>${inner}</p>`);
+      if (SECTION_HEADER_RE.test(plain) || isJunkLine(plain)) {
+        inMeasurementsSection = false;
+        if (!isJunkLine(plain)) remaining.push(`<p>${inner}</p>`);
       } else if (plain && isMeasurementLine(plain)) {
         sizingItems.push(plain);
       } else if (plain && /[:\s]\d+(?:[.,]\d+)?\s*(?:["″''"]|cm|in\b|inches?\b)/i.test(plain)) {
@@ -231,10 +243,11 @@ function splitDescription(html: string | null): {
       continue;
     }
     if (inConditionSection) {
-      if (SECTION_HEADER_RE.test(plain)) {
-        inConditionSection = false; remaining.push(`<p>${inner}</p>`);
-      } else if (plain && (isConditionLine(plain) || plain.length < 120)) {
-        // Keep condition content; short lines are likely condition notes even without keywords
+      if (SECTION_HEADER_RE.test(plain) || isJunkLine(plain)) {
+        inConditionSection = false;
+        if (!isJunkLine(plain)) remaining.push(`<p>${inner}</p>`);
+      } else if (plain && (isConditionLine(plain) || plain.length < 80)) {
+        // Keep condition content; short lines are likely condition notes
         conditionItems.push(plain);
       } else if (plain) {
         inConditionSection = false;
@@ -243,7 +256,8 @@ function splitDescription(html: string | null): {
       continue;
     }
 
-    if (isMeasurementLine(plain)) sizingItems.push(plain);
+    if (isJunkLine(plain)) { /* discard */ }
+    else if (isMeasurementLine(plain)) sizingItems.push(plain);
     else if (isConditionLine(plain)) conditionItems.push(plain);
     else remaining.push(`<p>${inner}</p>`);
   }

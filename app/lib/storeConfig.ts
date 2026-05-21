@@ -52,7 +52,17 @@ export type StripeStore = {
   websiteUrl: string;
 };
 
-export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore | StripeStore;
+export type WixStore = {
+  type: "wix";
+  name: string;
+  slug: string;
+  /** Wix site ID (UUID) */
+  siteId: string;
+  /** Name of the env var holding this store's Wix API key */
+  apiKeyEnvVar: string;
+};
+
+export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore | StripeStore | WixStore;
 
 // Squarespace stores (RSS-based)
 export const SQUARESPACE_STORES: SquarespaceStore[] = [
@@ -78,13 +88,6 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
 
 // Shopify stores (Storefront API)
 export const SHOPIFY_STORES: ShopifyStore[] = [
-  {
-    type: "shopify",
-    name: "Velvet Archive",
-    slug: "velvet-archive",
-    storeDomain: "velvet-archive.com",
-    scrapeProductPage: true,
-  },
   {
     type: "shopify",
     name: "Vintage Archives LA",
@@ -378,6 +381,17 @@ export const SQUARE_STORES: SquareStore[] = [
   },
 ];
 
+// Wix stores (REST Catalog API — api key + site ID)
+export const WIX_STORES: WixStore[] = [
+  {
+    type: "wix",
+    name: "Nello Vintage",
+    slug: "nello-vintage",
+    siteId: "0baffa13-35c4-427f-8973-6ff950c7b722",
+    apiKeyEnvVar: "WIX_API_KEY_NELLO_VINTAGE",
+  },
+];
+
 // Carroll Street Vintage uses a custom sync endpoint (/api/admin/sync-carroll-street)
 // that scrapes their JS bundle for products and Stripe for orders separately.
 // It must NOT be in STRIPE_STORES / ALL_STORES — the generic stripe cron fetches
@@ -391,4 +405,5 @@ export const ALL_STORES: Store[] = [
   ...BIGCARTEL_STORES,
   ...SQUARE_STORES,
   ...STRIPE_STORES,
+  ...WIX_STORES,
 ];

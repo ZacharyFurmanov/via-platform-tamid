@@ -3,7 +3,7 @@ import { getTrendingCandidates, recordTrendingNotificationSent } from "@/app/lib
 import { sendTrendingItemEmail, type TrendingEmailProduct } from "@/app/lib/email";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
-const MAX_ITEMS_PER_EMAIL = 3;
+const MAX_ITEMS_PER_EMAIL = 5;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");

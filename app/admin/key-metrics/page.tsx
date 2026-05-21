@@ -109,31 +109,38 @@ function MetricCard({
   return <div style={cardStyle}>{inner}</div>;
 }
 
-function MiniSparkline({ data }: { data: { week: string; gmv: number }[] }) {
+function WeeklyGmvChart({ data }: { data: { week: string; gmv: number }[] }) {
   if (data.length < 2) return null;
   const max = Math.max(...data.map((d) => d.gmv), 1);
-  const w = 240;
-  const h = 52;
-  const pts = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * w;
-    const y = h - (d.gmv / max) * (h - 6) - 3;
-    return `${x},${y}`;
-  });
+  const W = 600, BAR_H = 90, LABEL_TOP = 22, LABEL_BOT = 20;
+  const TOTAL_H = LABEL_TOP + BAR_H + LABEL_BOT;
+  const slotW = W / data.length;
+  const barW = slotW * 0.55;
   return (
-    <svg width={w} height={h} style={{ display: "block" }}>
-      <polyline
-        points={pts.join(" ")}
-        fill="none"
-        stroke={PRIMARY_BTN}
-        strokeWidth={2}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        opacity={0.7}
-      />
+    <svg viewBox={`0 0 ${W} ${TOTAL_H}`} style={{ width: "100%", display: "block" }} aria-hidden>
+      {/* Baseline */}
+      <line x1={0} y1={LABEL_TOP + BAR_H} x2={W} y2={LABEL_TOP + BAR_H} stroke="#e4e4e7" strokeWidth={1} />
       {data.map((d, i) => {
-        const x = (i / (data.length - 1)) * w;
-        const y = h - (d.gmv / max) * (h - 6) - 3;
-        return <circle key={i} cx={x} cy={y} r={3} fill={PRIMARY_BTN} opacity={0.6} />;
+        const barH = Math.max((d.gmv / max) * BAR_H, d.gmv > 0 ? 3 : 0);
+        const x = i * slotW + (slotW - barW) / 2;
+        const y = LABEL_TOP + BAR_H - barH;
+        const isLatest = i === data.length - 1;
+        const rawDate = d.week.includes("T") ? d.week : d.week + "T00:00:00Z";
+        const dateLabel = new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+        const valueLabel = d.gmv >= 1000 ? `$${(d.gmv / 1000).toFixed(1)}k` : d.gmv > 0 ? `$${Math.round(d.gmv)}` : "";
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width={barW} height={barH} fill={isLatest ? PRIMARY_BTN : "#d4d4d8"} rx={2} />
+            {d.gmv > 0 && (
+              <text x={x + barW / 2} y={y - 5} textAnchor="middle" fontSize={9} fill={isLatest ? DARK : MUTED_TEXT} fontFamily="system-ui, sans-serif" fontWeight={isLatest ? 600 : 400}>
+                {valueLabel}
+              </text>
+            )}
+            <text x={x + barW / 2} y={LABEL_TOP + BAR_H + 14} textAnchor="middle" fontSize={9} fill={isLatest ? DARK : MUTED_TEXT} fontFamily="system-ui, sans-serif" fontWeight={isLatest ? 600 : 400}>
+              {dateLabel}
+            </text>
+          </g>
+        );
       })}
     </svg>
   );
@@ -248,6 +255,52 @@ export default function KeyMetricsPage() {
         {data && (
           <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
 
+            {/* ── All-Time Totals ──────────────────────────────────── */}
+            {data.period?.isAllTime && (
+              <section>
+                <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>All-Time Totals</h2>
+                <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "24px 28px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px 32px", marginBottom: 24 }}>
+                    {[
+                      { label: "Total GMV",         value: fmt$(data.gmv.total),                    note: "All orders attributed to VYA since launch" },
+                      { label: "Total Orders",       value: fmtNum(data.totalOrders.allTime),        note: "Orders placed through VYA links" },
+                      { label: "Total Commission",   value: fmt$(data.totalCommission),              note: "VYA earnings at 7/5/3% tiers" },
+                      { label: "Total Clicks",       value: fmtNum(data.clicks?.total ?? 0),         note: "Product link clicks since launch" },
+                      { label: "Registered Users",   value: fmtNum(data.users.registered),           note: "Created a VYA account" },
+                      { label: "Ever Active",        value: fmtNum(data.mau.totalEverActive),        note: "Clicked, saved, or ordered at least once" },
+                      { label: "Waitlist Total",     value: fmtNum(data.users.waitlist),             note: "Total waitlist signups since launch" },
+                      { label: "Total Favorites",    value: fmtNum(data.favoritesVolume?.period ?? 0), note: "Products saved to wishlists since launch" },
+                    ].map(({ label, value, note }) => (
+                      <div key={label}>
+                        <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED_TEXT, margin: "0 0 4px", fontWeight: 500 }}>{label}</p>
+                        <p style={{ fontSize: 28, fontWeight: 700, color: DARK, margin: "0 0 4px", lineHeight: 1 }}>{value}</p>
+                        <p style={{ fontSize: 11, color: GRAY, margin: 0 }}>{note}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ borderTop: `1px solid #f4f4f5`, paddingTop: 20 }}>
+                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, margin: "0 0 14px", fontWeight: 500 }}>Current Pulse</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 32px" }}>
+                      {[
+                        { label: "WAU (last 7d)",      value: fmtNum(data.wau.current) },
+                        { label: "MAU (rolling 30d)",  value: fmtNum(data.mau.rolling30d ?? data.mau.current) },
+                        { label: "Stickiness",         value: fmtPct(data.stickiness.current) },
+                        { label: "Rev / Buying User",  value: fmt$(data.revenuePerUser.allTimeValue) },
+                      ].map(({ label, value }) => (
+                        <div key={label}>
+                          <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: MUTED_TEXT, margin: "0 0 3px", fontWeight: 500 }}>{label}</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: DARK, margin: 0, lineHeight: 1 }}>{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "16px 0 0", borderTop: `1px solid #f4f4f5`, paddingTop: 10 }}>
+                    Cumulative totals since launch (March 19, 2026). Current Pulse reflects the most recent rolling windows.
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* ── Growth at a Glance ──────────────────────────────── */}
             {!data.period?.isAllTime && (() => {
               const isMonth = data.period?.isMonth;
@@ -323,7 +376,7 @@ export default function KeyMetricsPage() {
                   <p style={{ fontSize: 40, fontWeight: 600, color: DARK, margin: "0 0 12px", lineHeight: 1 }}>
                     {data.period?.isMonth ? fmt$(data.gmv.last30d) : fmt$(data.gmv.total)}
                   </p>
-                  <MiniSparkline data={data.gmvByWeek} />
+                  <WeeklyGmvChart data={data.gmvByWeek} />
                   <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "10px 0 0" }}>Weekly GMV — last 10 weeks</p>
                 </Link>
                 <MetricCard

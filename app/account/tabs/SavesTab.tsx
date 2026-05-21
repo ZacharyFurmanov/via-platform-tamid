@@ -12,6 +12,25 @@ type Props = {
   favProducts: FavoriteProductEntry[];
 };
 
+function interleaveByStore(items: FavoriteProductEntry[]): FavoriteProductEntry[] {
+  const groups = new Map<string, FavoriteProductEntry[]>();
+  for (const item of items) {
+    const slug = item.product?.store_slug ?? item.snapshot?.store_slug ?? "";
+    if (!groups.has(slug)) groups.set(slug, []);
+    groups.get(slug)!.push(item);
+  }
+  const buckets = Array.from(groups.values());
+  const result: FavoriteProductEntry[] = [];
+  for (let i = 0; result.length < items.length; i++) {
+    let any = false;
+    for (const bucket of buckets) {
+      if (i < bucket.length) { result.push(bucket[i]); any = true; }
+    }
+    if (!any) break;
+  }
+  return result;
+}
+
 export default function SavesTab({ userId: _userId, favProducts }: Props) {
   if (favProducts.length === 0) {
     return (
@@ -30,7 +49,7 @@ export default function SavesTab({ userId: _userId, favProducts }: Props) {
     );
   }
 
-  const displayed = favProducts.slice(0, 48);
+  const displayed = interleaveByStore(favProducts).slice(0, 48);
 
   return (
     <div>

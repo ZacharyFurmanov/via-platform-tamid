@@ -899,18 +899,28 @@ export async function scrapeProductPageSections(url: string, extractFallbackDesc
       .trim();
 
     const sections: string[] = [];
+
+    // Regex to strip Shopify storefront UI text that leaks into scraped content.
+    // These strings appear in the raw page text when themes render price/cart UI
+    // between product description sections — they must never end up in our data.
+    const ECOM_JUNK_RE = /\s+(?:THIS\s+ITEM\s+IS\b|Regular\s+price\b|Sale\s+price\b|Unit\s+price\b|Sold\s+out\b|In\s+stock\b|Out\s+of\s+stock\b|Product\s+variant[s]?\b|Quantity\b|Decrease\s+quantity\b|Increase\s+quantity\b|Add\s+to\s+(?:cart|bag|wishlist)\b|Pick\s+up\s+available\b|Tax\s+included\b|Free\s+(?:shipping|returns?)\b|Ships?\s+(?:from|in|within)\b|Checkout\b|\$\s*\d[\d,.]*)[\s\S]*/i;
+
     // Stop at recognized page sections AND common Shopify footer/nav markers so
     // we don't accidentally capture footer HTML that appears after product content.
-    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+cart|Subscribe|Order\\s+Polic|Details|Shipping|Returns|You\\s+may\\s+also|Powered\\s+by|Sign\\s+up|Newsletter|Privacy\\s+(?:Policy|Choices)|Customer\\s+(?:care|service)|Follow\\s+(?:us|me)|Social\\s+Media)";
+    // Also stops at e-commerce UI keywords (price, cart, stock) that some themes
+    // render between product content sections.
+    const nextSection = "\\s+(?:Condition|Dimensions?|Measurements?|Authenticity(?:\\s+Guarantee)?|Model\\s+Number|Serial\\s+Number|Add\\s+to\\s+(?:cart|bag|wishlist)|Subscribe|Order\\s+Polic|Details|Shipping|Returns?|You\\s+may\\s+also|Powered\\s+by|Sign\\s+up|Newsletter|Privacy\\s+(?:Policy|Choices)|Customer\\s+(?:care|service)|Follow\\s+(?:us|me)|Social\\s+Media|Regular\\s+price|Sale\\s+price|Sold\\s+out|In\\s+stock|Unit\\s+price|Product\\s+variant|Decrease\\s+quantity|Increase\\s+quantity|THIS\\s+ITEM\\s+IS|Pick\\s+up\\s+available|Tax\\s+included|\\$\\s*\\d)";
 
     const dimResult = new RegExp(`\\b(?:Dimensions?|Measurements?)\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
     if (dimResult) {
       let val = dimResult[1].trim();
+      // Strip any e-commerce UI text that leaked past the lookahead
+      val = val.replace(ECOM_JUNK_RE, "").trim();
       // Deduplicate: if the text repeats itself, take only the first half
       const half = Math.ceil(val.length / 2);
       const firstHalf = val.slice(0, half);
       if (val.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))) val = firstHalf.trim();
-      if (val.length >= 3 && val.length <= 400) {
+      if (val.length >= 3 && val.length <= 300) {
         sections.push(`<p>Measurements: ${val}</p>`);
       }
     }
@@ -918,11 +928,13 @@ export async function scrapeProductPageSections(url: string, extractFallbackDesc
     const condResult = new RegExp(`\\bCondition\\b\\s*:?\\s*(.+?)(?=${nextSection})`, "i").exec(text);
     if (condResult) {
       let val = condResult[1].trim();
+      // Strip any e-commerce UI text that leaked past the lookahead
+      val = val.replace(ECOM_JUNK_RE, "").trim();
       // Deduplicate
       const half = Math.ceil(val.length / 2);
       const firstHalf = val.slice(0, half);
       if (val.slice(half).trim().startsWith(firstHalf.trim().slice(0, 20))) val = firstHalf.trim();
-      if (val.length >= 3 && val.length <= 500) {
+      if (val.length >= 3 && val.length <= 400) {
         sections.push(`<p>Condition: ${val}</p>`);
       }
     }

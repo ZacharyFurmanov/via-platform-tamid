@@ -203,6 +203,19 @@ export async function getTrendingCandidates(): Promise<TrendingCandidate[]> {
         SELECT 1 FROM trending_notifications tn
         WHERE tn.user_id = pf.user_id AND tn.product_id = pf.product_id
       )
+      AND NOT EXISTS (
+        SELECT 1 FROM (
+          SELECT user_id, sent_at FROM favorite_notifications
+          UNION ALL SELECT user_id, sent_at FROM trending_notifications
+          UNION ALL SELECT user_id, sent_at FROM winback_emails
+          UNION ALL SELECT user_id, sent_at FROM viewed_item_reminders
+          UNION ALL SELECT user_id, sent_at FROM store_digest_sends
+          UNION ALL SELECT user_id, sent_at FROM last_chance_notifications
+          UNION ALL SELECT user_id, email_sent_at AS sent_at FROM user_cart_items WHERE email_sent_at IS NOT NULL
+        ) _freq
+        WHERE _freq.user_id = pf.user_id
+          AND _freq.sent_at > NOW() - INTERVAL '48 hours'
+      )
   `;
 
   return rows as TrendingCandidate[];

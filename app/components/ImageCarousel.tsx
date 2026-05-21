@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import NextImage from "next/image";
+import { resizeImage } from "@/app/lib/imageUtils";
 
 type ImageCarouselProps = {
   images: string[];
@@ -54,6 +55,20 @@ export default function ImageCarousel({
     }
     return () => { document.body.style.overflow = ""; };
   }, [isLightboxOpen]);
+
+  // Preload lightbox images in the background so clicking the image is instant
+  useEffect(() => {
+    if (variant !== "detail") return;
+    safeImages.forEach((src) => {
+      const url = resizeImage(src, 1200);
+      if (url) {
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  // Only run once on mount — safeImages won't change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hasMultiple = safeImages.length > 1;
 
@@ -381,7 +396,7 @@ export default function ImageCarousel({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={safeImages[current]}
+              src={resizeImage(safeImages[current], lightboxZoomed ? 2000 : 1200)}
               alt={alt}
               style={{
                 display: "block",

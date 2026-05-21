@@ -13,6 +13,7 @@ import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
 import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
 import { fetchStripeProducts } from "@/app/lib/stripeClient";
+import { fetchWixProducts } from "@/app/lib/wixClient";
 import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 
@@ -205,6 +206,36 @@ export async function GET(request: Request) {
           }));
         const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
         console.log(`[Sync Stores] Stripe: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
+        results.push({ store: store.name, success: true, productCount });
+      } else if (store.type === "wix") {
+        const apiKey = process.env[store.apiKeyEnvVar];
+        if (!apiKey) {
+          results.push({ store: store.name, success: false, error: `Missing env var ${store.apiKeyEnvVar}` });
+          continue;
+        }
+        const storeInfo = stores.find((s) => s.slug === store.slug);
+        const websiteUrl = storeInfo?.website ?? "https://vyaplatform.com";
+        const { products: rawProducts, skippedCount } = await fetchWixProducts(
+          store.siteId,
+          apiKey,
+          store.name,
+          websiteUrl,
+        );
+        const mappedProducts = rawProducts
+          .filter((p) => p.price > 0)
+          .map((p) => ({
+            title: p.title,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice ?? undefined,
+            image: p.image ?? undefined,
+            images: p.images,
+            externalUrl: p.externalUrl,
+            description: p.description ?? undefined,
+            size: p.size ?? undefined,
+            variantId: p.variantId ?? undefined,
+          }));
+        const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
+        console.log(`[Sync Stores] Wix: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
         results.push({ store: store.name, success: true, productCount });
       } else {
         // Squarespace

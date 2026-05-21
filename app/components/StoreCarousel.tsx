@@ -5,8 +5,8 @@ import Image from "next/image";
 import { stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
-// Duration for one full loop (both copies of the store list)
-const LOOP_DURATION_S = stores.length * 3;
+// Auto-scroll speed in px per animation frame (~60fps) — 1.5px ≈ 90px/s
+const SPEED = 1.5;
 
 function StoreCard({ store }: { store: (typeof stores)[number] }) {
   return (
@@ -57,65 +57,100 @@ function StoreCard({ store }: { store: (typeof stores)[number] }) {
 }
 
 export default function StoreCarousel() {
-  const trackRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
 
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    const el = scrollRef.current;
+    if (!el) return;
 
-    let resumeTimer: ReturnType<typeof setTimeout>;
+    // Auto-scroll tick — scrolls forward and loops seamlessly at the halfway point
+    const tick = () => {
+      if (!pausedRef.current) {
+        el.scrollLeft += SPEED;
+        const half = el.scrollWidth / 2;
+        if (half > 0 && el.scrollLeft >= half) {
+          el.scrollLeft -= half;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
 
-    function pause(ms: number) {
-      track!.style.animationPlayState = "paused";
-      clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => {
-        track!.style.animationPlayState = "running";
-      }, ms);
-    }
+    // Desktop: drag to scroll
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging.current = true;
+      pausedRef.current = true;
+      dragStartX.current = e.clientX;
+      dragScrollLeft.current = el.scrollLeft;
+      el.style.cursor = "grabbing";
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      el.scrollLeft = dragScrollLeft.current + (dragStartX.current - e.clientX);
+    };
+    const onMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      el.style.cursor = "grab";
+      setTimeout(() => { pausedRef.current = false; }, 600);
+    };
 
-    const parent = track.parentElement!;
-    parent.addEventListener("wheel", () => pause(2000), { passive: true });
-    parent.addEventListener("touchstart", () => pause(5000), { passive: true });
-    parent.addEventListener("touchend", () => pause(1500), { passive: true });
-    parent.addEventListener("mouseenter", () => pause(60000));
-    parent.addEventListener("mouseleave", () => {
-      clearTimeout(resumeTimer);
-      track.style.animationPlayState = "running";
-    });
+    // Desktop: pause auto-scroll on hover so users can read
+    const onMouseEnter = () => { if (!isDragging.current) pausedRef.current = true; };
+    const onMouseLeave = () => { if (!isDragging.current) pausedRef.current = false; };
 
-    return () => clearTimeout(resumeTimer);
+    // Mobile: browser handles native touch scroll — just pause auto-scroll during it
+    const onTouchStart = () => { pausedRef.current = true; };
+    const onTouchEnd = () => {
+      setTimeout(() => {
+        // Correct position if momentum carried past the halfway loop point
+        const half = el.scrollWidth / 2;
+        if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
+        pausedRef.current = false;
+      }, 900);
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("mouseenter", onMouseEnter);
+    el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      el.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("mouseenter", onMouseEnter);
+      el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
   }, []);
 
   return (
-    <>
-      <style>{`
-        @keyframes store-scroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-      <div
-        className="overflow-hidden"
-        style={{
-          maskImage:
-            "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-        }}
-      >
-        <div
-          ref={trackRef}
-          className="flex gap-4 sm:gap-6"
-          style={{
-            animation: `store-scroll ${LOOP_DURATION_S}s linear infinite`,
-            willChange: "transform",
-          }}
-        >
-          {[...stores, ...stores].map((store, i) => (
-            <StoreCard key={`${store.slug}-${i}`} store={store} />
-          ))}
-        </div>
-      </div>
-    </>
+    <div
+      ref={scrollRef}
+      className="flex gap-4 sm:gap-6 overflow-x-scroll cursor-grab select-none"
+      style={{
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+      }}
+    >
+      {[...stores, ...stores].map((store, i) => (
+        <StoreCard key={`${store.slug}-${i}`} store={store} />
+      ))}
+    </div>
   );
 }

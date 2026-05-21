@@ -193,7 +193,7 @@ export default function HeaderClient({
 
             {/* Stores */}
             <div
-              className="relative"
+              className="relative flex items-center"
               ref={storesRef}
               onMouseEnter={() => { setStoresOpen(true); setCatsOpen(false); setColsOpen(false); }}
               onMouseLeave={() => setStoresOpen(false)}
@@ -218,7 +218,7 @@ export default function HeaderClient({
 
             {/* Categories */}
             <div
-              className="relative"
+              className="relative flex items-center"
               ref={catsRef}
               onMouseEnter={() => { setCatsOpen(true); setStoresOpen(false); setColsOpen(false); }}
               onMouseLeave={() => setCatsOpen(false)}
@@ -249,7 +249,7 @@ export default function HeaderClient({
 
             {/* Collections */}
             <div
-              className="relative"
+              className="relative flex items-center"
               ref={colsRef}
               onMouseEnter={() => { setColsOpen(true); setStoresOpen(false); setCatsOpen(false); }}
               onMouseLeave={() => setColsOpen(false)}
