@@ -22,6 +22,7 @@ type Customer = {
   cartCount: number;
   orderCount: number;
   pageViewCount: number;
+  totalSpend: number;
   lastActiveAt: string | null;
 };
 
@@ -526,7 +527,7 @@ export default function CustomersClient() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #e4e4e7", background: "#fafafa" }}>
-                  {["#", "Name / Email", "Status", "Login", "Last Active", "Signed Up", "Referral Code", "Referred By", ""].map((h) => (
+                  {["#", "Name / Email", "Status", "Login", "Last Active", "Signed Up", "LTV", "Referral Code", "Referred By", ""].map((h) => (
                     <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#a1a1aa", fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
@@ -538,8 +539,8 @@ export default function CustomersClient() {
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         <p style={{ fontWeight: 500, color: "#09090b", margin: 0 }}>{c.name || "—"}</p>
-                        {c.pageViewCount > 0 && c.clickCount === 0 && (
-                          <span title={`${c.pageViewCount} site page visits — no product click-throughs yet`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#6d28d9", background: "#ede9fe", padding: "1px 5px", borderRadius: 4 }}>
+                        {c.pageViewCount > 0 && (
+                          <span title={`${c.pageViewCount} site page visits`} style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#6d28d9", background: "#ede9fe", padding: "1px 5px", borderRadius: 4 }}>
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                             {c.pageViewCount}
                           </span>
@@ -610,6 +611,13 @@ export default function CustomersClient() {
                       )}
                     </td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: "#71717a" }}>{fmt(c.signedUpAt)}</td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {c.totalSpend > 0 ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#15803d" }}>
+                          ${c.totalSpend.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </span>
+                      ) : <span style={{ fontSize: 12, color: "#a1a1aa" }}>—</span>}
+                    </td>
                     <td style={{ padding: "12px 16px" }}>
                       {c.referralCode ? (
                         <code style={{ fontSize: 11, background: "#f4f4f5", padding: "1px 6px", color: "#09090b", fontFamily: "monospace", borderRadius: 4 }}>{c.referralCode}</code>

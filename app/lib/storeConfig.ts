@@ -203,6 +203,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
   },
   {
     type: "shopify",
+    name: "Bag Crush",
+    slug: "bag-crush",
+    storeDomain: "shopbagcrush.com",
+    scrapeProductPage: true,
+  },
+  {
+    type: "shopify",
     name: "Bloda's Choice",
     slug: "blodas-choice",
     storeDomain: "blodaschoice.com",

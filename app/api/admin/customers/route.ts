@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
       click_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM clicks             WHERE user_id IS NOT NULL GROUP BY user_id::text),
       view_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM product_views      WHERE user_id IS NOT NULL GROUP BY user_id::text),
       order_counts  AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
-      page_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM page_type_views    WHERE user_id IS NOT NULL GROUP BY user_id::text)
+      page_counts   AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp)  AS last_at FROM page_type_views    WHERE user_id IS NOT NULL GROUP BY user_id::text),
+      ltv_amounts   AS (SELECT user_id::text AS uid, SUM(order_total) AS total FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text)
       SELECT
         ac.email,
         ac.first_name,
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
         COALESCE(MAX(cart.cnt), 0) AS cart_count,
         COALESCE(MAX(ord.cnt),  0) AS order_count,
         COALESCE(MAX(pg.cnt),   0) AS page_view_count,
+        COALESCE(MAX(ltv.total), 0) AS total_spend,
         GREATEST(
           MAX(clk.last_at),
           MAX(vw.last_at),
@@ -107,6 +109,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN view_counts  vw   ON vw.uid    = u.id::text
       LEFT JOIN order_counts ord  ON ord.uid   = u.id::text
       LEFT JOIN page_counts  pg   ON pg.uid    = u.id::text
+      LEFT JOIN ltv_amounts  ltv  ON ltv.uid   = u.id::text
       GROUP BY
         ac.email, ac.first_name, ac.last_name, ac.phone,
         ac.status, ac.created_at, ac.approved_at,
@@ -145,6 +148,7 @@ export async function GET(request: NextRequest) {
         cartCount: Number(r.cart_count ?? 0),
         orderCount: Number(r.order_count ?? 0),
         pageViewCount: Number(r.page_view_count ?? 0),
+        totalSpend: Number(r.total_spend ?? 0),
         lastActiveAt: (r.last_active_at as string | null) ?? null,
       };
     });

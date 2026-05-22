@@ -47,6 +47,28 @@ export const stores = [
       "All sales are final. As a vintage and pre-loved retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
   },
   {
+    slug: "bag-crush",
+    dashboardToken: "bgc-4e2d8f1a9c7b",
+    name: "Bag Crush",
+    location: "California",
+    description:
+      "Bag Crush was born from a love of iconic design and the thrill of the find. Passionate about making designer bags more accessible, the mission is to empower fashion lovers to shop smart, sustainably, and stylishly through curated resale. With authenticity, transparency, and a little bit of obsession — redefining what it means to crush on a bag.",
+    website: "https://shopbagcrush.com",
+    contactEmail: "info@shopbagcrush.com",
+    dataSource: "bag-crush",
+    image: "/stores/bag-crush.jpg",
+    currency: "USD",
+    commissionType: "shopify-collabs" as const,
+    affiliatePath: "VYA",
+    collabsStoreId: "241124",
+    authenticityPolicy:
+      "Every bag at Bag Crush is personally sourced and curated with authenticity and transparency as the bare minimum. Each piece is carefully inspected and accurately described before listing, so you can shop designer resale with complete confidence.",
+    shippingPolicy:
+      "Ships from California. Shipping rates are calculated at checkout.",
+    returnPolicy:
+      "All sales are final. Please review all item details and photos carefully before purchasing.",
+  },
+  {
     slug: "blodas-choice",
     dashboardToken: "bc-3d7a1e9f4c2b",
     name: "Bloda's Choice",
@@ -1109,6 +1131,7 @@ export const storeContactEmails: Record<string, string> = {
   "tess-elizabeth-vintage": "hello@tesselizabeth.com",
   "west-village-vintage": "info@westvillagevintage.com",
   "ange-archive": "info@angearchive.com",
+  "bag-crush": "info@shopbagcrush.com",
   "dear-muse": "rachel.dearmuse@gmail.com",
   "nello-vintage": "",
   // VYA admin test account — sees all requests

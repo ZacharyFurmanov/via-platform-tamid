@@ -40,6 +40,31 @@ export default function GlobalPageTracker() {
   // (TikTok in-app browser and some other WebViews block web storage).
   const utmPayloadRef = useRef<Record<string, string | null> | null>(null);
 
+  // Session flow tracking refs
+  const sessionIdRef = useRef<string | null>(null);
+  const prevPathRef = useRef<string | null>(null);
+  const pageEnteredAtRef = useRef<number>(Date.now());
+
+  // Session ID init: generate or retrieve from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let sid: string | null = null;
+    try {
+      sid = sessionStorage.getItem("via_session_id");
+      if (!sid) {
+        sid = crypto.randomUUID();
+        sessionStorage.setItem("via_session_id", sid);
+      }
+    } catch {
+      // sessionStorage blocked (e.g. TikTok in-app browser) — keep in memory only
+      if (!sessionIdRef.current) {
+        sid = crypto.randomUUID();
+      }
+    }
+    if (sid) sessionIdRef.current = sid;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Step 1: Capture UTM/referrer data on first page load.
   // Store in both the in-memory ref and sessionStorage (as a cross-navigation fallback).
   // We don't send the beacon yet because auth hasn't resolved — user_id would be null.
@@ -99,7 +124,25 @@ export default function GlobalPageTracker() {
       }
     }
 
-    if (!utmSource) return;
+    // Infer source from User-Agent for social in-app browsers that strip referrer
+    // (TikTok and Instagram both do this — no document.referrer, no UTM params)
+    if (!utmSource) {
+      const ua = navigator.userAgent;
+      if (/BytedanceWebview|musical_ly|TikTok/i.test(ua)) {
+        utmSource = "tiktok";
+        utmMedium = utmMedium ?? "social";
+        utmCampaign = utmCampaign ?? "organic";
+      } else if (/Instagram/i.test(ua)) {
+        utmSource = "instagram";
+        utmMedium = utmMedium ?? "social";
+        utmCampaign = utmCampaign ?? "organic";
+      }
+    }
+
+    // Fall back to "direct" so Safari bookmarks, typed URLs, etc. are counted
+    if (!utmSource) {
+      utmSource = "direct";
+    }
 
     const utmPayload = {
       utm_source: utmSource,
@@ -175,6 +218,7 @@ export default function GlobalPageTracker() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
+  // Step 3: Track page views for authenticated users
   useEffect(() => {
     // Wait until session has resolved — never fire with a null user_id
     if (status !== "authenticated") return;
@@ -188,7 +232,26 @@ export default function GlobalPageTracker() {
     const segments = pathname.split("/");
     const pageSlug = segments[2] ?? null;
 
-    const payload = JSON.stringify({ pageType, pageSlug, userId });
+    // Capture referrer path and time on previous page before updating
+    const referrerPath = prevPathRef.current;
+    const timeOnPageMs = prevPathRef.current !== null
+      ? Math.max(0, Date.now() - pageEnteredAtRef.current)
+      : null;
+
+    // Update refs for next navigation
+    prevPathRef.current = pathname;
+    pageEnteredAtRef.current = Date.now();
+
+    const payload = JSON.stringify({
+      pageType,
+      pageSlug,
+      userId,
+      sessionId: sessionIdRef.current,
+      fullPath: pathname,
+      referrerPath,
+      timeOnPageMs,
+    });
+
     if (navigator.sendBeacon) {
       navigator.sendBeacon("/api/track-page", new Blob([payload], { type: "application/json" }));
     } else {
