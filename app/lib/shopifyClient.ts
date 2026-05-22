@@ -631,9 +631,10 @@ export async function fetchShopifyProductsPublic(
         const allVariantsUnavailable = hasVariants && variants.every(
           (v: { available?: boolean }) => v.available === false
         );
-        // Shopify tracks inventory and every variant is at 0 — Collabs will exclude
-        // these even if product.available is true (overselling allowed but nothing in stock)
-        const allVariantsZeroInventory = hasVariants && variants.every(
+        // Only infer sold-out from zero inventory when Shopify itself doesn't say the
+        // product is available — if product.available === true the store has overselling
+        // enabled and the item can genuinely be purchased, so we trust that signal.
+        const allVariantsZeroInventory = product.available !== true && hasVariants && variants.every(
           (v: { inventory_management?: string | null; inventory_quantity?: number }) =>
             v.inventory_management === "shopify" && (v.inventory_quantity ?? 0) <= 0
         );
