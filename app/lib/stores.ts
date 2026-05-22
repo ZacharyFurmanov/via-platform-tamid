@@ -53,7 +53,7 @@ export const stores = [
     location: "California",
     description:
       "Bag Crush was born from a love of iconic design and the thrill of the find. Passionate about making designer bags more accessible, the mission is to empower fashion lovers to shop smart, sustainably, and stylishly through curated resale. With authenticity, transparency, and a little bit of obsession — redefining what it means to crush on a bag.",
-    website: "https://shopbagcrush.com",
+    website: "https://mybagcrush.com",
     contactEmail: "info@shopbagcrush.com",
     dataSource: "bag-crush",
     image: "/stores/bag-crush.jpg",
