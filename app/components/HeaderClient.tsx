@@ -168,10 +168,16 @@ export default function HeaderClient({
  >
  <div className="max-w-7xl mx-auto px-6 h-full flex items-center gap-6 relative">
 
- {/* Logo — left (only when not scrolled) */}
+ {/* Mobile logo — always left */}
+ <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 flex items-start gap-1.5 md:hidden">
+ <img src="/vya-logo.png" alt="VYA" className="h-7 w-auto" />
+ <span className="text-[9px] uppercase tracking-[0.2em] text-[#5D0F17]/50 font-cormorant mt-0.5">pilot</span>
+ </Link>
+
+ {/* Desktop logo — left only when not scrolled */}
  {!scrolled && (
- <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 flex items-start gap-1.5">
- <img src="/vya-logo.png" alt="VYA" className="h-7 sm:h-8 w-auto" />
+ <Link href="/" onClick={() => setMobileMenuOpen(false)} className="hidden md:flex flex-shrink-0 items-start gap-1.5">
+ <img src="/vya-logo.png" alt="VYA" className="h-8 w-auto" />
  <span className="text-[9px] uppercase tracking-[0.2em] text-[#5D0F17]/50 font-cormorant mt-0.5">pilot</span>
  </Link>
  )}
@@ -297,9 +303,9 @@ export default function HeaderClient({
 
  </nav>
 
- {/* Center logo — only when scrolled */}
+ {/* Center logo — desktop only when scrolled */}
  {scrolled && (
- <div className="absolute left-1/2 -translate-x-1/2">
+ <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
  <Link href="/" onClick={() => setMobileMenuOpen(false)}>
  <img src="/via-logo-mark.png" alt="VYA" className="h-9 w-auto" />
  </Link>

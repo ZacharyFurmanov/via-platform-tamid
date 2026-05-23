@@ -2,7 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { unstable_cache } from "next/cache";
 
 // Stores temporarily removed from VYA. Products from these slugs are hidden site-wide.
-export const DISABLED_STORE_SLUGS: string[] = [];
+export const DISABLED_STORE_SLUGS: string[] = ["velvet-archive"];
 
 // Stores excluded from New Arrivals only (products still appear in browse/search).
 const NEW_ARRIVALS_EXCLUDED_SLUGS: string[] = ["chill-boutique"];

@@ -243,8 +243,8 @@ export default function ImageCarousel({
  <div
  className="relative aspect-[3/4] w-full overflow-hidden group/carousel cursor-grab active:cursor-grabbing"
  style={{ touchAction: "pan-y" }}
- onMouseEnter={hasMultiple ? () => goTo(1) : undefined}
- onMouseLeave={hasMultiple ? () => goTo(0) : undefined}
+ onPointerEnter={hasMultiple ? (e) => { if (e.pointerType === "mouse") goTo(1); } : undefined}
+ onPointerLeave={hasMultiple ? (e) => { if (e.pointerType === "mouse") goTo(0); } : undefined}
  onTouchStart={hasMultiple ? onTouchStart : undefined}
  onTouchEnd={hasMultiple ? onTouchEnd : undefined}
  onMouseDown={hasMultiple ? onMouseDown : undefined}
@@ -316,7 +316,7 @@ export default function ImageCarousel({
  {/* Expand / zoom button */}
  <button
  onClick={openLightbox}
- className="absolute bottom-14 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
+ className="absolute bottom-8 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
  aria-label="View full screen"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,28 +325,16 @@ export default function ImageCarousel({
  </svg>
  </button>
 
- {/* Thumbnail bar — overlaid at the bottom of the image */}
+ {/* Progress dots */}
  {hasMultiple && (
- <div className="absolute bottom-0 left-0 right-0 z-20 flex gap-2 px-3 py-2 overflow-x-auto bg-gradient-to-t from-black/30 to-transparent">
- {safeImages.map((src, idx) => (
+ <div className="absolute bottom-0 left-0 right-0 z-20 flex gap-[2px] px-3 pb-2 pt-4 bg-gradient-to-t from-black/20 to-transparent">
+ {safeImages.map((_, idx) => (
  <button
  key={idx}
  onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(idx); }}
- className={`relative flex-shrink-0 w-10 h-[52px] overflow-hidden rounded transition-all ${
- idx === current
- ? "ring-2 ring-white opacity-100"
- : "opacity-50 hover:opacity-80"
- }`}
- aria-label={`View image ${idx + 1}`}
- >
- <NextImage
- src={src}
- alt={`${alt} ${idx + 1}`}
- fill
- sizes="40px"
- className="object-cover object-center"
+ className={`h-[3px] flex-1 transition-all duration-200 ${idx === current ? "bg-white" : "bg-white/40"}`}
+ aria-label={`Go to image ${idx + 1}`}
  />
- </button>
  ))}
  </div>
  )}
