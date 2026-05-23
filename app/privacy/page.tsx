@@ -1,308 +1,208 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
+export const metadata: Metadata = {
+ title: "Privacy Policy — VYA",
+ description: "How VYA Platform Corporation collects, uses, and protects your personal information.",
+ openGraph: {
+ title: "Privacy Policy — VYA",
+ description: "How VYA Platform Corporation collects, uses, and protects your personal information.",
+ images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+ },
+};
+
 export default function PrivacyPage() {
-  return (
-    <main className="min-h-screen bg-[#f7f6f3]">
-      <div className="max-w-3xl mx-auto px-6 py-20 sm:py-28">
-        {/* Header */}
-        <div className="mb-16">
-          <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-4">
-            Legal
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-serif mb-4">
-            Privacy Policy
-          </h1>
-          <p className="text-sm text-gray-500">
-            Last updated: January 29, 2026
-          </p>
-        </div>
+ return (
+ <main className="bg-[#FFFDF8] min-h-screen text-[#5D0F17]">
+ {/* Header */}
+ <section className="border-b border-[#5D0F17]/10">
+ <div className="max-w-4xl mx-auto px-6 pt-8 pb-4 sm:pt-10 sm:pb-6">
+ <p className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/40 mb-2">Legal</p>
+ <h1 className="text-2xl sm:text-3xl font-serif mb-2">Privacy Policy</h1>
+ <p className="text-sm text-[#5D0F17]/50">
+ Effective: May 23, 2026 &nbsp;·&nbsp; Last Updated: May 23, 2026
+ </p>
+ </div>
+ </section>
 
-        {/* Content */}
-        <div className="space-y-12 text-gray-700 leading-relaxed">
-          <section>
-            <p>
-              VIA Platform Corporation (&ldquo;VYA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
-              or &ldquo;our&rdquo;) is committed to protecting your privacy. This
-              Privacy Policy explains how we collect, use, disclose, and safeguard
-              your information when you visit our website at vyaplatform.com
-              (the &ldquo;Site&rdquo;). Please read this policy carefully. If you
-              do not agree with the terms of this Privacy Policy, please do not
-              access the Site.
-            </p>
-          </section>
+ {/* Content */}
+ <section className="py-12 sm:py-16">
+ <div className="max-w-4xl mx-auto px-6 space-y-12 text-[#5D0F17]/80 leading-relaxed text-sm sm:text-base">
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              1. Information We Collect
-            </h2>
+ <p>
+ VIA Platform Corporation (&ldquo;VYA,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; and
+ &ldquo;our&rdquo;) take your privacy seriously and have outlined the following Privacy
+ Policy (the &ldquo;Policy&rdquo;) to inform you of our policies and procedures regarding
+ the information we collect from you.
+ </p>
+ <p>
+ By using or accessing VYA&apos;s website (the &ldquo;Services&rdquo;) in any manner, you
+ acknowledge that you accept the practices and requirements outlined in this Policy, and
+ you hereby consent that we will collect, use, and share your information in the following
+ ways:
+ </p>
 
-            <h3 className="text-lg font-serif mb-3 text-black">
-              Personal Information
-            </h3>
-            <p className="mb-4">
-              We may collect personal information that you voluntarily provide to
-              us when you:
-            </p>
-            <ul className="list-disc pl-6 space-y-2 mb-6">
-              <li>Subscribe to our newsletter</li>
-              <li>Create an account or user profile</li>
-              <li>Participate in quizzes or interactive features (e.g., VYA Taste Match)</li>
-              <li>Contact us with inquiries or feedback</li>
-              <li>Apply to partner with us as a store</li>
-            </ul>
-            <p className="mb-4">This information may include:</p>
-            <ul className="list-disc pl-6 space-y-2 mb-6">
-              <li>Email address</li>
-              <li>Name</li>
-              <li>Store or business information (for partners)</li>
-              <li>Quiz responses and style preferences</li>
-            </ul>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">1. Information Collected</h2>
+ <p className="mb-6">
+ We collect certain information to facilitate your use of VYA&apos;s Services.
+ </p>
 
-            <h3 className="text-lg font-serif mb-3 text-black">
-              Automatically Collected Information
-            </h3>
-            <p className="mb-4">
-              When you visit the Site, we may automatically collect certain
-              information about your device and usage, including:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Browser type and version</li>
-              <li>Operating system</li>
-              <li>IP address</li>
-              <li>Pages visited and time spent on pages</li>
-              <li>Referring website addresses</li>
-              <li>Device identifiers</li>
-            </ul>
-          </section>
+ <h3 className="font-serif text-[#5D0F17] text-base mb-2">a. Voluntarily Disclosed Information</h3>
+ <p className="mb-6">
+ When you use the Services, you will have the opportunity to provide us with some
+ information directly. For example, some functions of the Services request that you
+ register for an account, where we may ask you for your email address, name, and phone
+ number. We may also allow you to complete style quizzes, where we collect information
+ about your style and garment preferences to recommend certain items to you; to complete
+ website feedback forms, where we collect information about how to improve our website
+ interface and design; or to participate in our Sourcing Program, where we collect
+ information about the details of a desired item, your contact information, and preferred
+ stores in VYA&apos;s network.
+ </p>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              2. How We Use Your Information
-            </h2>
-            <p className="mb-4">We use the information we collect to:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Provide, operate, and maintain the Site</li>
-              <li>Send you newsletters and marketing communications (with your consent)</li>
-              <li>Improve and personalize your experience on the Site</li>
-              <li>Analyze usage trends and Site performance</li>
-              <li>Generate and display your taste profile and quiz results</li>
-              <li>Facilitate referral and sharing features</li>
-              <li>Respond to your comments, questions, and requests</li>
-              <li>Detect, prevent, and address technical issues or fraud</li>
-              <li>Comply with legal obligations</li>
-            </ul>
-          </section>
+ <h3 className="font-serif text-[#5D0F17] text-base mb-2">b. Automatically Collected Information</h3>
+ <p className="mb-6">
+ Whenever you interact with the Services, VYA and third party services we work with
+ automatically receive and record information from your browser, which may include your IP
+ address, device information, device identifiers (such as cookie IDs), operating system,
+ the type of browser you used, the page or feature you requested, what pages you viewed
+ and the referral source, mouse movements and clicks, sign-ups, and outbound store visits.
+ You may be able to change the preferences on your browser or device to prevent or limit
+ your device&apos;s disclosure of information, but doing so may prevent you from taking
+ advantage of our Services.
+ </p>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              3. Analytics and Tracking
-            </h2>
-            <p className="mb-4">
-              We use third-party analytics services to help us understand how
-              the Site is used. These services may collect information sent by
-              your browser, including:
-            </p>
-            <ul className="list-disc pl-6 space-y-2 mb-4">
-              <li>
-                <strong>Google Analytics (GA4):</strong> We use Google Analytics
-                to analyze Site traffic and usage patterns. Google Analytics uses
-                cookies to collect information. You can learn more about how
-                Google uses data at{" "}
-                <a
-                  href="https://policies.google.com/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-black underline hover:no-underline"
-                >
-                  Google&apos;s Privacy Policy
-                </a>
-                .
-              </li>
-              <li>
-                <strong>Pinterest Tag:</strong> We use the Pinterest Tag to
-                measure the effectiveness of our advertising and to understand
-                how users interact with our content.
-              </li>
-            </ul>
-            <p>
-              You can opt out of analytics tracking by using browser extensions
-              such as the{" "}
-              <a
-                href="https://tools.google.com/dlpage/gaoptout"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-black underline hover:no-underline"
-              >
-                Google Analytics Opt-out Browser Add-on
-              </a>
-              .
-            </p>
-          </section>
+ <h3 className="font-serif text-[#5D0F17] text-base mb-2">c. Third Parties</h3>
+ <p className="mb-4">
+ The technologies we use for automatic information collection may include:
+ </p>
+ <ul className="list-disc pl-6 space-y-3">
+ <li>
+ <strong>Cookies.</strong> A cookie is a small file placed on your computer or phone. It
+ may be possible to refuse to accept cookies by activating the appropriate setting on
+ your computer or phone. However, if you select this setting, you may be unable to access
+ certain parts of the Services.
+ </li>
+ <li>
+ Pages of our website and our emails may contain small electronic files known as web
+ beacons (also referred to as clear gifs, pixel tags, and single-pixel gifs) that permit
+ VYA and third parties we work with to count users who have visited those pages or opened
+ an email and for other related app statistics.
+ </li>
+ <li>
+ We partner with third parties to process payment information. When you complete a
+ monetary transaction on our webpage, third parties may collect your name, billing and
+ shipping addresses, email, phone number, full payment method, credit or debit card
+ numbers, transaction amounts and dates, and currency type.
+ </li>
+ </ul>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              4. Cookies and Local Storage
-            </h2>
-            <p className="mb-4">
-              We use cookies and browser local storage to enhance your experience:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Cookies:</strong> Small data files placed on your device
-                by analytics and tracking services. You can control cookies
-                through your browser settings.
-              </li>
-              <li>
-                <strong>Local Storage:</strong> We use browser local storage to
-                save your quiz results, user preferences, and session data
-                locally on your device. This data is not transmitted to our
-                servers unless you explicitly interact with features that
-                require it.
-              </li>
-            </ul>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">2. Use of Collected Information</h2>
+ <p className="mb-4">
+ We may use information that we collect about you or that you provide to us, including any
+ Personal Information, to provide the Services to you, develop and maintain the Services,
+ comply with legal obligations, and for any lawful purpose.
+ </p>
+ <p>
+ We may communicate with you to verify your account, notify you about certain activity on
+ the Services, inform you of changes to our policies and procedures, or to otherwise
+ facilitate the operation of the Services via email (in each case to the email address you
+ provide) or a posting to our website,{" "}
+ <a href="https://vyaplatform.com/" className="underline hover:text-[#5D0F17]/60 transition">
+ https://vyaplatform.com/
+ </a>
+ .
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              5. Sharing of Information
-            </h2>
-            <p className="mb-4">We may share your information in the following situations:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>With Service Providers:</strong> We may share your
-                information with third-party service providers who perform
-                services on our behalf, such as email delivery, analytics, and
-                hosting.
-              </li>
-              <li>
-                <strong>With Partner Stores:</strong> When you click through to
-                a partner store to make a purchase, you will be subject to that
-                store&apos;s own privacy policy.
-              </li>
-              <li>
-                <strong>For Legal Purposes:</strong> We may disclose your
-                information if required to do so by law or in response to valid
-                requests by public authorities.
-              </li>
-              <li>
-                <strong>Business Transfers:</strong> In connection with a
-                merger, acquisition, or sale of assets, your information may be
-                transferred as a business asset.
-              </li>
-            </ul>
-            <p className="mt-4">
-              We do not sell your personal information to third parties.
-            </p>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">3. Disclosure of Information</h2>
+ <p className="mb-4">
+ We employ and partner with retail stores and third parties to bring third-party
+ merchandise to you and to perform tasks on our behalf. Retail stores
+ (&ldquo;Retail Stores&rdquo;) include any vintage clothing stores that we partner with
+ and list on our website. Third parties (&ldquo;Third Parties&rdquo;) include companies
+ and external products that VYA relies on to operate its Services, such as hosting our
+ website. We must share your information with Retail Stores and Third Parties to provide
+ products and services to you.
+ </p>
+ <p className="mb-4">
+ We may share your Personal Information with Retail Stores and Third Parties. We may also
+ de-identify your Personal Information so that you are not identified as an individual and
+ provide that information to Third Parties. Further, we may also provide aggregate usage
+ information to Third Parties (or allow Third Parties to collect that information from
+ you). Our Services also contain external links to third-party apps or websites. Clicking
+ these links may cause these third parties to collect certain information from you.
+ </p>
+ <p>
+ We reserve the right to access, read, and disclose any information that we believe, in
+ our sole discretion, is necessary to comply with law or court order; enforce or apply our
+ Terms of Service and other agreements; or protect the rights, property, or safety of VYA,
+ our employees, our users, or others. We may notify you by email or text message if we are
+ required to disclose your information to comply with a legal data request, subpoena, or
+ court order.
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              6. Data Security
-            </h2>
-            <p>
-              We use commercially reasonable administrative, technical, and
-              physical security measures to protect your personal information.
-              However, no method of transmission over the Internet or method of
-              electronic storage is 100% secure. While we strive to use
-              commercially acceptable means to protect your personal information,
-              we cannot guarantee its absolute security.
-            </p>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">4. Data Security &amp; Storage</h2>
+ <p>
+ Both VYA and Third Parties that we work with have implemented measures designed to
+ protect your Personal Information from loss, unauthorized access, and alteration. We
+ endeavor to protect the privacy of your account and other Personal Information we hold in
+ our records, and actively work to prevent unauthorized entry or use, hardware or software
+ failure, and other factors that could potentially compromise the security of user
+ information. But we cannot guarantee complete security.
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              7. Data Retention
-            </h2>
-            <p>
-              We retain your personal information only for as long as necessary
-              to fulfill the purposes outlined in this Privacy Policy, unless a
-              longer retention period is required or permitted by law. When your
-              information is no longer needed, we will securely delete or
-              anonymize it.
-            </p>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">5. Modification &amp; Deletion of Information</h2>
+ <p>
+ To access, and, in some cases, edit or delete your Personal Information and other account
+ information, you can do so by accessing the account section of the VYA website, or by
+ emailing VYA at{" "}
+ <a href="mailto:hana@vyaplatform.com" className="underline hover:text-[#5D0F17]/60 transition">
+ hana@vyaplatform.com
+ </a>
+ . If you request removal of your information, you may be unable to utilize the Services.
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              8. Your Rights
-            </h2>
-            <p className="mb-4">
-              Depending on your location, you may have certain rights regarding
-              your personal information, including:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>The right to access the personal information we hold about you</li>
-              <li>The right to request correction of inaccurate information</li>
-              <li>The right to request deletion of your personal information</li>
-              <li>The right to opt out of marketing communications</li>
-              <li>The right to data portability</li>
-            </ul>
-            <p className="mt-4">
-              To exercise any of these rights, please contact us at{" "}
-              <a
-                href="mailto:hana@vyaplatform.com"
-                className="text-black underline hover:no-underline"
-              >
-                hana@vyaplatform.com
-              </a>
-              .
-            </p>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">6. Changes to the Policy</h2>
+ <p>
+ We post any changes we make to our Privacy Policy on this page. If we make material
+ changes to how we treat our users&apos; Personal Information, we will post a banner on our
+ website, vyaplatform.com, alerting users to any changes, or by sending an email
+ notification. The date the Privacy Policy was last revised is identified at the beginning
+ of this Policy. You are responsible for ensuring that we have an up-to-date email address
+ for you.
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              9. Children&apos;s Privacy
-            </h2>
-            <p>
-              Our Service is not directed to individuals under the age of 13. We
-              do not knowingly collect personal information from children under
-              13. If you are a parent or guardian and believe your child has
-              provided us with personal information, please contact us and we
-              will take steps to delete such information.
-            </p>
-          </section>
+ <section>
+ <h2 className="text-xl font-serif text-[#5D0F17] mb-4">7. Contact Information</h2>
+ <p>
+ For any inquiries about this Privacy Policy and our privacy practices, contact us at:{" "}
+ <a href="mailto:hana@thevyaplatform.com" className="underline hover:text-[#5D0F17]/60 transition">
+ hana@thevyaplatform.com
+ </a>
+ .
+ </p>
+ </section>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              10. Changes to This Privacy Policy
-            </h2>
-            <p>
-              We may update this Privacy Policy from time to time. We will notify
-              you of any changes by posting the new Privacy Policy on this page
-              and updating the &ldquo;Last updated&rdquo; date. You are advised
-              to review this Privacy Policy periodically for any changes.
-              Changes are effective when posted on this page.
-            </p>
-          </section>
+ <div className="pt-4 border-t border-[#5D0F17]/10">
+ <Link href="/" className="text-sm text-[#5D0F17]/50 hover:text-[#5D0F17] transition">
+ ← Back to VYA
+ </Link>
+ </div>
 
-          <section>
-            <h2 className="text-2xl font-serif mb-4 text-black">
-              11. Contact Us
-            </h2>
-            <p>
-              If you have any questions about this Privacy Policy, please
-              contact us at{" "}
-              <a
-                href="mailto:hana@vyaplatform.com"
-                className="text-black underline hover:no-underline"
-              >
-                hana@vyaplatform.com
-              </a>
-              .
-            </p>
-          </section>
-        </div>
-
-        {/* Back link */}
-        <div className="mt-16 pt-8 border-t border-gray-200">
-          <Link
-            href="/"
-            className="text-sm text-gray-500 hover:text-black transition"
-          >
-            ← Back to VYA
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
+ </div>
+ </section>
+ </main>
+ );
 }

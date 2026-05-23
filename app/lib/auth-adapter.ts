@@ -2,236 +2,236 @@ import { neon } from "@neondatabase/serverless";
 import type { Adapter, AdapterUser, AdapterAccount } from "next-auth/adapters";
 
 const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
-  }
-  return url;
+ const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!url) {
+ throw new Error("DATABASE_URL or POSTGRES_URL environment variable is not set.");
+ }
+ return url;
 };
 
 export async function initAuthTables() {
-  const sql = neon(getDatabaseUrl());
+ const sql = neon(getDatabaseUrl());
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS users (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name VARCHAR(255),
-      email VARCHAR(255) NOT NULL UNIQUE,
-      email_verified TIMESTAMP WITH TIME ZONE,
-      image TEXT,
-      notification_emails_enabled BOOLEAN DEFAULT TRUE,
-      phone VARCHAR(20) UNIQUE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+ await sql`
+ CREATE TABLE IF NOT EXISTS users (
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ name VARCHAR(255),
+ email VARCHAR(255) NOT NULL UNIQUE,
+ email_verified TIMESTAMP WITH TIME ZONE,
+ image TEXT,
+ notification_emails_enabled BOOLEAN DEFAULT TRUE,
+ phone VARCHAR(20) UNIQUE,
+ created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+ )
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
 
-  // Add phone column to existing users table (CREATE TABLE IF NOT EXISTS won't add new columns)
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`;
-  await sql`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`;
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS saved_sizes TEXT DEFAULT NULL`;
+ // Add phone column to existing users table (CREATE TABLE IF NOT EXISTS won't add new columns)
+ await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`;
+ await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS saved_sizes TEXT DEFAULT NULL`;
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS accounts (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      type VARCHAR(50) NOT NULL,
-      provider VARCHAR(100) NOT NULL,
-      provider_account_id VARCHAR(255) NOT NULL,
-      refresh_token TEXT,
-      access_token TEXT,
-      expires_at BIGINT,
-      token_type VARCHAR(50),
-      scope TEXT,
-      id_token TEXT,
-      UNIQUE(provider, provider_account_id)
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id)`;
+ await sql`
+ CREATE TABLE IF NOT EXISTS accounts (
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ type VARCHAR(50) NOT NULL,
+ provider VARCHAR(100) NOT NULL,
+ provider_account_id VARCHAR(255) NOT NULL,
+ refresh_token TEXT,
+ access_token TEXT,
+ expires_at BIGINT,
+ token_type VARCHAR(50),
+ scope TEXT,
+ id_token TEXT,
+ UNIQUE(provider, provider_account_id)
+ )
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id)`;
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS verification_tokens (
-      identifier VARCHAR(255) NOT NULL,
-      token VARCHAR(255) NOT NULL UNIQUE,
-      expires TIMESTAMP WITH TIME ZONE NOT NULL,
-      PRIMARY KEY (identifier, token)
-    )
-  `;
+ await sql`
+ CREATE TABLE IF NOT EXISTS verification_tokens (
+ identifier VARCHAR(255) NOT NULL,
+ token VARCHAR(255) NOT NULL UNIQUE,
+ expires TIMESTAMP WITH TIME ZONE NOT NULL,
+ PRIMARY KEY (identifier, token)
+ )
+ `;
 }
 
 let tablesInitialized = false;
 async function ensureTables() {
-  if (!tablesInitialized) {
-    await initAuthTables();
-    tablesInitialized = true;
-  }
+ if (!tablesInitialized) {
+ await initAuthTables();
+ tablesInitialized = true;
+ }
 }
 
 function mapUser(row: Record<string, unknown>): AdapterUser {
-  return {
-    id: row.id as string,
-    name: (row.name as string) ?? null,
-    email: row.email as string,
-    emailVerified: row.email_verified ? new Date(row.email_verified as string) : null,
-    image: (row.image as string) ?? null,
-  };
+ return {
+ id: row.id as string,
+ name: (row.name as string) ?? null,
+ email: row.email as string,
+ emailVerified: row.email_verified ? new Date(row.email_verified as string) : null,
+ image: (row.image as string) ?? null,
+ };
 }
 
 export const neonAdapter: Adapter = {
-  async createUser(user) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`
-        INSERT INTO users (name, email, email_verified, image)
-        VALUES (${user.name ?? null}, ${user.email}, ${user.emailVerified?.toISOString() ?? null}, ${user.image ?? null})
-        RETURNING *
-      `;
-      return mapUser(rows[0]);
-    } catch (error) {
-      console.error("ADAPTER createUser ERROR:", error);
-      throw error;
-    }
-  },
+ async createUser(user) {
+ try {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`
+ INSERT INTO users (name, email, email_verified, image)
+ VALUES (${user.name ?? null}, ${user.email}, ${user.emailVerified?.toISOString() ?? null}, ${user.image ?? null})
+ RETURNING *
+ `;
+ return mapUser(rows[0]);
+ } catch (error) {
+ console.error("ADAPTER createUser ERROR:", error);
+ throw error;
+ }
+ },
 
-  async getUser(id) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`SELECT * FROM users WHERE id = ${id}`;
-    return rows[0] ? mapUser(rows[0]) : null;
-  },
+ async getUser(id) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`SELECT * FROM users WHERE id = ${id}`;
+ return rows[0] ? mapUser(rows[0]) : null;
+ },
 
-  async getUserByEmail(email) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
-      return rows[0] ? mapUser(rows[0]) : null;
-    } catch (error) {
-      console.error("ADAPTER getUserByEmail ERROR:", error);
-      throw error;
-    }
-  },
+ async getUserByEmail(email) {
+ try {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
+ return rows[0] ? mapUser(rows[0]) : null;
+ } catch (error) {
+ console.error("ADAPTER getUserByEmail ERROR:", error);
+ throw error;
+ }
+ },
 
-  async getUserByAccount({ provider, providerAccountId }) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      const rows = await sql`
-        SELECT u.* FROM users u
-        JOIN accounts a ON a.user_id = u.id
-        WHERE a.provider = ${provider} AND a.provider_account_id = ${providerAccountId}
-      `;
-      return rows[0] ? mapUser(rows[0]) : null;
-    } catch (error) {
-      console.error("ADAPTER getUserByAccount ERROR:", error);
-      throw error;
-    }
-  },
+ async getUserByAccount({ provider, providerAccountId }) {
+ try {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`
+ SELECT u.* FROM users u
+ JOIN accounts a ON a.user_id = u.id
+ WHERE a.provider = ${provider} AND a.provider_account_id = ${providerAccountId}
+ `;
+ return rows[0] ? mapUser(rows[0]) : null;
+ } catch (error) {
+ console.error("ADAPTER getUserByAccount ERROR:", error);
+ throw error;
+ }
+ },
 
-  async updateUser(user) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
+ async updateUser(user) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
 
-    // Build update fields dynamically to avoid COALESCE issues with undefined
-    const name = user.name !== undefined ? user.name : null;
-    const email = user.email !== undefined ? user.email : null;
-    const emailVerified = user.emailVerified !== undefined
-      ? (user.emailVerified ? user.emailVerified.toISOString() : null)
-      : null;
-    const image = user.image !== undefined ? user.image : null;
+ // Build update fields dynamically to avoid COALESCE issues with undefined
+ const name = user.name !== undefined ? user.name : null;
+ const email = user.email !== undefined ? user.email : null;
+ const emailVerified = user.emailVerified !== undefined
+ ? (user.emailVerified ? user.emailVerified.toISOString() : null)
+ : null;
+ const image = user.image !== undefined ? user.image : null;
 
-    const rows = await sql`
-      UPDATE users SET
-        name = COALESCE(${name}, name),
-        email = COALESCE(${email}, email),
-        email_verified = COALESCE(${emailVerified}::timestamptz, email_verified),
-        image = COALESCE(${image}, image),
-        updated_at = NOW()
-      WHERE id = ${user.id!}
-      RETURNING *
-    `;
-    return mapUser(rows[0]);
-  },
+ const rows = await sql`
+ UPDATE users SET
+ name = COALESCE(${name}, name),
+ email = COALESCE(${email}, email),
+ email_verified = COALESCE(${emailVerified}::timestamptz, email_verified),
+ image = COALESCE(${image}, image),
+ updated_at = NOW()
+ WHERE id = ${user.id!}
+ RETURNING *
+ `;
+ return mapUser(rows[0]);
+ },
 
-  async linkAccount(account) {
-    try {
-      await ensureTables();
-      const sql = neon(getDatabaseUrl());
-      await sql`
-        INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
-        VALUES (
-          ${account.userId},
-          ${account.type},
-          ${account.provider},
-          ${account.providerAccountId},
-          ${account.refresh_token ?? null},
-          ${account.access_token ?? null},
-          ${account.expires_at ?? null},
-          ${account.token_type ?? null},
-          ${account.scope ?? null},
-          ${account.id_token ?? null}
-        )
-      `;
-      return account as AdapterAccount;
-    } catch (error) {
-      console.error("ADAPTER linkAccount ERROR:", error);
-      throw error;
-    }
-  },
+ async linkAccount(account) {
+ try {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ await sql`
+ INSERT INTO accounts (user_id, type, provider, provider_account_id, refresh_token, access_token, expires_at, token_type, scope, id_token)
+ VALUES (
+ ${account.userId},
+ ${account.type},
+ ${account.provider},
+ ${account.providerAccountId},
+ ${account.refresh_token ?? null},
+ ${account.access_token ?? null},
+ ${account.expires_at ?? null},
+ ${account.token_type ?? null},
+ ${account.scope ?? null},
+ ${account.id_token ?? null}
+ )
+ `;
+ return account as AdapterAccount;
+ } catch (error) {
+ console.error("ADAPTER linkAccount ERROR:", error);
+ throw error;
+ }
+ },
 
-  async createVerificationToken(token) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    const rows = await sql`
-      INSERT INTO verification_tokens (identifier, token, expires)
-      VALUES (${token.identifier}, ${token.token}, ${token.expires.toISOString()})
-      RETURNING *
-    `;
-    return {
-      identifier: rows[0].identifier as string,
-      token: rows[0].token as string,
-      expires: new Date(rows[0].expires as string),
-    };
-  },
+ async createVerificationToken(token) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`
+ INSERT INTO verification_tokens (identifier, token, expires)
+ VALUES (${token.identifier}, ${token.token}, ${token.expires.toISOString()})
+ RETURNING *
+ `;
+ return {
+ identifier: rows[0].identifier as string,
+ token: rows[0].token as string,
+ expires: new Date(rows[0].expires as string),
+ };
+ },
 
-  async useVerificationToken({ identifier, token }) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    // Delete the token but re-insert it if not expired, so the same magic link
-    // can be used from multiple devices (e.g. mobile then laptop) until expiry.
-    const rows = await sql`
-      DELETE FROM verification_tokens
-      WHERE identifier = ${identifier} AND token = ${token}
-      RETURNING *
-    `;
-    if (!rows[0]) return null;
-    const expires = new Date(rows[0].expires as string);
-    // Re-insert if still valid so future clicks from other devices work
-    if (expires > new Date()) {
-      await sql`
-        INSERT INTO verification_tokens (identifier, token, expires)
-        VALUES (${identifier}, ${token}, ${expires.toISOString()})
-        ON CONFLICT (identifier, token) DO NOTHING
-      `;
-    }
-    return {
-      identifier: rows[0].identifier as string,
-      token: rows[0].token as string,
-      expires,
-    };
-  },
+ async useVerificationToken({ identifier, token }) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ // Delete the token but re-insert it if not expired, so the same magic link
+ // can be used from multiple devices (e.g. mobile then laptop) until expiry.
+ const rows = await sql`
+ DELETE FROM verification_tokens
+ WHERE identifier = ${identifier} AND token = ${token}
+ RETURNING *
+ `;
+ if (!rows[0]) return null;
+ const expires = new Date(rows[0].expires as string);
+ // Re-insert if still valid so future clicks from other devices work
+ if (expires > new Date()) {
+ await sql`
+ INSERT INTO verification_tokens (identifier, token, expires)
+ VALUES (${identifier}, ${token}, ${expires.toISOString()})
+ ON CONFLICT (identifier, token) DO NOTHING
+ `;
+ }
+ return {
+ identifier: rows[0].identifier as string,
+ token: rows[0].token as string,
+ expires,
+ };
+ },
 
-  async deleteUser(userId) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    await sql`DELETE FROM users WHERE id = ${userId}`;
-  },
+ async deleteUser(userId) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ await sql`DELETE FROM users WHERE id = ${userId}`;
+ },
 
-  async unlinkAccount({ provider, providerAccountId }) {
-    await ensureTables();
-    const sql = neon(getDatabaseUrl());
-    await sql`DELETE FROM accounts WHERE provider = ${provider} AND provider_account_id = ${providerAccountId}`;
-  },
+ async unlinkAccount({ provider, providerAccountId }) {
+ await ensureTables();
+ const sql = neon(getDatabaseUrl());
+ await sql`DELETE FROM accounts WHERE provider = ${provider} AND provider_account_id = ${providerAccountId}`;
+ },
 };

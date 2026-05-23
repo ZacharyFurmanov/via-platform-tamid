@@ -1,378 +1,381 @@
 export type SquarespaceStore = {
-  type: "squarespace";
-  name: string;
-  slug: string;
-  shopUrl?: string;
-  rssUrl?: string;
+ type: "squarespace";
+ name: string;
+ slug: string;
+ shopUrl?: string;
+ rssUrl?: string;
 };
 
 export type ShopifyStore = {
-  type: "shopify";
-  name: string;
-  slug: string;
-  storeDomain: string;
-  storefrontAccessToken?: string;
-  /** Product titles to exclude from sync (exact match, case-insensitive) */
-  excludeTitles?: string[];
-  /** Product title keywords to exclude from sync (partial match, case-insensitive) */
-  excludeKeywords?: string[];
-  /** If set, only sync products from these Shopify collection handles (e.g. ["designer", "vintage"]) */
-  collectionHandles?: string[];
-  /** If true, fetch each product's page HTML during sync to extract metafield sections (condition, dimensions, etc.) */
-  scrapeProductPage?: boolean;
-  /** Collection handles to EXCLUDE from sync (blacklist — products in these collections are filtered out) */
-  excludeCollectionHandles?: string[];
+ type: "shopify";
+ name: string;
+ slug: string;
+ storeDomain: string;
+ storefrontAccessToken?: string;
+ /** Product titles to exclude from sync (exact match, case-insensitive) */
+ excludeTitles?: string[];
+ /** Product title keywords to exclude from sync (partial match, case-insensitive) */
+ excludeKeywords?: string[];
+ /** If set, only sync products from these Shopify collection handles (e.g. ["designer", "vintage"]) */
+ collectionHandles?: string[];
+ /** If true, fetch each product's page HTML during sync to extract metafield sections (condition, dimensions, etc.) */
+ scrapeProductPage?: boolean;
+ /** Collection handles to EXCLUDE from sync (blacklist — products in these collections are filtered out) */
+ excludeCollectionHandles?: string[];
+ /** If true, skip all sold-out filtering — include everything the store lists regardless of inventory status */
+ skipSoldOutFilter?: boolean;
 };
 
 export type BigCartelStore = {
-  type: "bigcartel";
-  name: string;
-  slug: string;
-  /** The store's Big Cartel subdomain slug (e.g. "kikiddesignandconsign") */
-  storeSlug: string;
+ type: "bigcartel";
+ name: string;
+ slug: string;
+ /** The store's Big Cartel subdomain slug (e.g. "kikiddesignandconsign") */
+ storeSlug: string;
 };
 
 export type SquareStore = {
-  type: "square";
-  name: string;
-  slug: string;
-  /** Square Location ID (LXXXXXXXXXXXXXXXXX) — used for product catalog sync */
-  locationId?: string;
-  /** Name of the env var holding this store's Square access token e.g. SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE */
-  accessTokenEnvVar?: string;
+ type: "square";
+ name: string;
+ slug: string;
+ /** Square Location ID (LXXXXXXXXXXXXXXXXX) — used for product catalog sync */
+ locationId?: string;
+ /** Name of the env var holding this store's Square access token e.g. SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE */
+ accessTokenEnvVar?: string;
 };
 
 export type StripeStore = {
-  type: "stripe";
-  name: string;
-  slug: string;
-  /** Name of the env var holding this store's Stripe secret key */
-  secretKeyEnvVar: string;
-  /** Store's public website URL — used to construct product page links */
-  websiteUrl: string;
+ type: "stripe";
+ name: string;
+ slug: string;
+ /** Name of the env var holding this store's Stripe secret key */
+ secretKeyEnvVar: string;
+ /** Store's public website URL — used to construct product page links */
+ websiteUrl: string;
 };
 
 export type WixStore = {
-  type: "wix";
-  name: string;
-  slug: string;
-  /** Wix site ID (UUID) */
-  siteId: string;
-  /** Name of the env var holding this store's Wix API key */
-  apiKeyEnvVar: string;
+ type: "wix";
+ name: string;
+ slug: string;
+ /** Wix site ID (UUID) */
+ siteId: string;
+ /** Name of the env var holding this store's Wix API key */
+ apiKeyEnvVar: string;
 };
 
 export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore | StripeStore | WixStore;
 
 // Squarespace stores (RSS-based)
 export const SQUARESPACE_STORES: SquarespaceStore[] = [
-  {
-    type: "squarespace",
-    name: "LEI Vintage",
-    slug: "lei-vintage",
-    shopUrl: "https://www.leivintage.com/shop",
-  },
-  {
-    type: "squarespace",
-    name: "Montrose Edit",
-    slug: "montrose-edit",
-    shopUrl: "https://www.montroseedit.com/shop",
-  },
-  {
-    type: "squarespace",
-    name: "Sassy So What",
-    slug: "sassy-so-what",
-    shopUrl: "https://www.sassysowhat.com/shopall/available-1",
-  },
+ {
+ type: "squarespace",
+ name: "LEI Vintage",
+ slug: "lei-vintage",
+ shopUrl: "https://www.leivintage.com/shop",
+ },
+ {
+ type: "squarespace",
+ name: "Montrose Edit",
+ slug: "montrose-edit",
+ shopUrl: "https://www.montroseedit.com/shop",
+ },
+ {
+ type: "squarespace",
+ name: "Sassy So What",
+ slug: "sassy-so-what",
+ shopUrl: "https://www.sassysowhat.com/shopall/available-1",
+ },
 ];
 
 // Shopify stores (Storefront API)
 export const SHOPIFY_STORES: ShopifyStore[] = [
-  {
-    type: "shopify",
-    name: "Vintage Archives LA",
-    slug: "vintage-archives-la",
-    storeDomain: "vintagearchivesla.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "SCARZ Vintage",
-    slug: "scarz-vintage",
-    storeDomain: "scarzvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Club Fleur Vintage",
-    slug: "club-fleur",
-    storeDomain: "clubfleurvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Missi Archives",
-    slug: "missi-archives",
-    storeDomain: "www.missiarchives.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Ascensio Vintage",
-    slug: "ascensio-vintage",
-    storeDomain: "ascensiovintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Lover Girl Vintage",
-    slug: "lover-girl-vintage",
-    storeDomain: "lovergirlvintage.com",
-    excludeKeywords: ["trucker hat", "jewelry box"],
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Solxury Vintage",
-    slug: "so-lxury",
-    storeDomain: "solxuryvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Source 24",
-    slug: "source-twenty-four",
-    storeDomain: "sourcetwentyfour.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "The Objects of Affection",
-    slug: "the-objects-of-affection",
-    storeDomain: "theobjectsofaffection.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Vintari Vault",
-    slug: "vintari-vault",
-    storeDomain: "vintarivault.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Vangie",
-    slug: "vangie",
-    storeDomain: "pgkjey-wq.myshopify.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "House on a Chain",
-    slug: "house-on-a-chain",
-    storeDomain: "www.houseonachain.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "To Us Vintage",
-    slug: "to-us-vintage",
-    storeDomain: "tousvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Sourced by Scottie",
-    slug: "sourced-by-scottie",
-    storeDomain: "sourcedbyscottie.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Maison Optimism Vintage",
-    slug: "maison-optimism-vintage",
-    storeDomain: "maisonoptimismvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Moonstruck Vintage",
-    slug: "moonstruck-vintage",
-    storeDomain: "moonstruckvintagenyc.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Bag Crush",
-    slug: "bag-crush",
-    storeDomain: "mybagcrush.com",
-    excludeKeywords: ["standard bag charm"],
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Bloda's Choice",
-    slug: "blodas-choice",
-    storeDomain: "blodaschoice.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Rareality Archive",
-    slug: "rareality-archive",
-    storeDomain: "rarealityarchive.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Sheer Vintage",
-    slug: "sheer-vintage",
-    storeDomain: "shopsheervintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Petria Vintage",
-    slug: "petria-vintage",
-    storeDomain: "petriavintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Promised Vintage",
-    slug: "promised-vintage",
-    storeDomain: "promisedvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Sablier Vintage",
-    slug: "the-vntg-collective",
-    storeDomain: "thevntgcollective.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Dayton Jane",
-    slug: "dayton-jane",
-    storeDomain: "www.daytonjane.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Front Page Finds",
-    slug: "front-page-finds",
-    storeDomain: "frontpagefinds.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Vintage Girlfriend",
-    slug: "vintage-girlfriend",
-    storeDomain: "vintage-girlfriend.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Porter's Preloved",
-    slug: "porters-preloved",
-    storeDomain: "porterspreloved.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "For The Globe",
-    slug: "for-the-globe",
-    storeDomain: "shopfortheglobe.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Chill Boutique",
-    slug: "chill-boutique",
-    storeDomain: "chillboutiqueconsignment.com",
-    collectionHandles: ["designer", "vintage"],
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Jade Vintage",
-    slug: "jade-vintage",
-    storeDomain: "jadevintage.ca",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Other Matters Atelier",
-    slug: "other-matters-atelier",
-    storeDomain: "othermattersatelier.com",
-    scrapeProductPage: true,
-    excludeKeywords: ["vintage edit", "designer's guide", "instant download"],
-  },
-  {
-    type: "shopify",
-    name: "West Village Vintage",
-    slug: "west-village-vintage",
-    storeDomain: "westvillagevintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Chomp Chomp Vintage",
-    slug: "chomp-chomp-vintage",
-    storeDomain: "chompchompvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Tess Elizabeth Vintage",
-    slug: "tess-elizabeth-vintage",
-    storeDomain: "tesselizabethvintage.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Edited Archive",
-    slug: "edited-archive",
-    storeDomain: "editedarchive.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Dear Muse",
-    slug: "dear-muse",
-    storeDomain: "shopdearmuse.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Ange Archive",
-    slug: "ange-archive",
-    storeDomain: "angearchive.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "Rejects Only Vintage",
-    slug: "rejects-only-vintage",
-    storeDomain: "rejectsonlyvintage.com",
-    scrapeProductPage: true,
-    excludeCollectionHandles: ["merch", "men-s-vintage-designer-ties", "children-s"],
-  },
-  {
-    type: "shopify",
-    name: "Hachi Archive",
-    slug: "hachi-archive",
-    storeDomain: "hachiarchive.com",
-    scrapeProductPage: true,
-  },
-  {
-    type: "shopify",
-    name: "SarahDoes",
-    slug: "sarah-does",
-    storeDomain: "sarahdoes.shop",
-    scrapeProductPage: true,
-  },
+ {
+ type: "shopify",
+ name: "Vintage Archives LA",
+ slug: "vintage-archives-la",
+ storeDomain: "vintagearchivesla.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "SCARZ Vintage",
+ slug: "scarz-vintage",
+ storeDomain: "scarzvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Club Fleur Vintage",
+ slug: "club-fleur",
+ storeDomain: "clubfleurvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Missi Archives",
+ slug: "missi-archives",
+ storeDomain: "www.missiarchives.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Ascensio Vintage",
+ slug: "ascensio-vintage",
+ storeDomain: "ascensiovintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Lover Girl Vintage",
+ slug: "lover-girl-vintage",
+ storeDomain: "lovergirlvintage.com",
+ excludeKeywords: ["trucker hat", "jewelry box"],
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Solxury Vintage",
+ slug: "so-lxury",
+ storeDomain: "solxuryvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Source 24",
+ slug: "source-twenty-four",
+ storeDomain: "sourcetwentyfour.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "The Objects of Affection",
+ slug: "the-objects-of-affection",
+ storeDomain: "theobjectsofaffection.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Vintari Vault",
+ slug: "vintari-vault",
+ storeDomain: "vintarivault.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Vangie",
+ slug: "vangie",
+ storeDomain: "pgkjey-wq.myshopify.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "House on a Chain",
+ slug: "house-on-a-chain",
+ storeDomain: "www.houseonachain.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "To Us Vintage",
+ slug: "to-us-vintage",
+ storeDomain: "tousvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Sourced by Scottie",
+ slug: "sourced-by-scottie",
+ storeDomain: "sourcedbyscottie.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Maison Optimism Vintage",
+ slug: "maison-optimism-vintage",
+ storeDomain: "maisonoptimismvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Moonstruck Vintage",
+ slug: "moonstruck-vintage",
+ storeDomain: "moonstruckvintagenyc.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Bag Crush",
+ slug: "bag-crush",
+ storeDomain: "mybagcrush.com",
+ excludeKeywords: ["standard bag charm"],
+ skipSoldOutFilter: true,
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Bloda's Choice",
+ slug: "blodas-choice",
+ storeDomain: "blodaschoice.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Rareality Archive",
+ slug: "rareality-archive",
+ storeDomain: "rarealityarchive.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Sheer Vintage",
+ slug: "sheer-vintage",
+ storeDomain: "shopsheervintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Petria Vintage",
+ slug: "petria-vintage",
+ storeDomain: "petriavintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Promised Vintage",
+ slug: "promised-vintage",
+ storeDomain: "promisedvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Sablier Vintage",
+ slug: "sablier-vintage",
+ storeDomain: "sabliervintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Dayton Jane",
+ slug: "dayton-jane",
+ storeDomain: "www.daytonjane.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Front Page Finds",
+ slug: "front-page-finds",
+ storeDomain: "frontpagefinds.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Vintage Girlfriend",
+ slug: "vintage-girlfriend",
+ storeDomain: "vintage-girlfriend.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Porter's Preloved",
+ slug: "porters-preloved",
+ storeDomain: "porterspreloved.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "For The Globe",
+ slug: "for-the-globe",
+ storeDomain: "shopfortheglobe.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Chill Boutique",
+ slug: "chill-boutique",
+ storeDomain: "chillboutiqueconsignment.com",
+ collectionHandles: ["designer", "vintage"],
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Jade Vintage",
+ slug: "jade-vintage",
+ storeDomain: "jadevintage.ca",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Other Matters Atelier",
+ slug: "other-matters-atelier",
+ storeDomain: "othermattersatelier.com",
+ scrapeProductPage: true,
+ excludeKeywords: ["vintage edit", "designer's guide", "instant download"],
+ },
+ {
+ type: "shopify",
+ name: "West Village Vintage",
+ slug: "west-village-vintage",
+ storeDomain: "westvillagevintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Chomp Chomp Vintage",
+ slug: "chomp-chomp-vintage",
+ storeDomain: "chompchompvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Tess Elizabeth Vintage",
+ slug: "tess-elizabeth-vintage",
+ storeDomain: "tesselizabethvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Edited Archive",
+ slug: "edited-archive",
+ storeDomain: "editedarchive.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Dear Muse",
+ slug: "dear-muse",
+ storeDomain: "shopdearmuse.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Ange Archive",
+ slug: "ange-archive",
+ storeDomain: "angearchive.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Rejects Only Vintage",
+ slug: "rejects-only-vintage",
+ storeDomain: "rejectsonlyvintage.com",
+ scrapeProductPage: true,
+ excludeCollectionHandles: ["merch", "men-s-vintage-designer-ties", "children-s"],
+ },
+ {
+ type: "shopify",
+ name: "Hachi Archive",
+ slug: "hachi-archive",
+ storeDomain: "hachiarchive.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "SarahDoes",
+ slug: "sarah-does",
+ storeDomain: "sarahdoes.shop",
+ scrapeProductPage: true,
+ },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
@@ -380,24 +383,24 @@ export const BIGCARTEL_STORES: BigCartelStore[] = [];
 
 // Square stores (webhook-based order tracking, no product catalog sync yet)
 export const SQUARE_STORES: SquareStore[] = [
-  {
-    type: "square",
-    name: "Honeybear Vintage",
-    slug: "honey-bear-vintage",
-    locationId: "LJ886JKR82R0H",
-    accessTokenEnvVar: "SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE",
-  },
+ {
+ type: "square",
+ name: "Honeybear Vintage",
+ slug: "honey-bear-vintage",
+ locationId: "LJ886JKR82R0H",
+ accessTokenEnvVar: "SQUARE_ACCESS_TOKEN_HONEY_BEAR_VINTAGE",
+ },
 ];
 
 // Wix stores (REST Catalog API — api key + site ID)
 export const WIX_STORES: WixStore[] = [
-  {
-    type: "wix",
-    name: "Nello Vintage",
-    slug: "nello-vintage",
-    siteId: "0baffa13-35c4-427f-8973-6ff950c7b722",
-    apiKeyEnvVar: "WIX_API_KEY_NELLO_VINTAGE",
-  },
+ {
+ type: "wix",
+ name: "Nello Vintage",
+ slug: "nello-vintage",
+ siteId: "1d7e01f6-61bb-477e-a804-db6f2d82275f",
+ apiKeyEnvVar: "WIX_API_KEY_NELLO_VINTAGE",
+ },
 ];
 
 // Carroll Street Vintage uses a custom sync endpoint (/api/admin/sync-carroll-street)
@@ -408,10 +411,10 @@ export const WIX_STORES: WixStore[] = [
 export const STRIPE_STORES: StripeStore[] = [];
 
 export const ALL_STORES: Store[] = [
-  ...SQUARESPACE_STORES,
-  ...SHOPIFY_STORES,
-  ...BIGCARTEL_STORES,
-  ...SQUARE_STORES,
-  ...STRIPE_STORES,
-  ...WIX_STORES,
+ ...SQUARESPACE_STORES,
+ ...SHOPIFY_STORES,
+ ...BIGCARTEL_STORES,
+ ...SQUARE_STORES,
+ ...STRIPE_STORES,
+ ...WIX_STORES,
 ];

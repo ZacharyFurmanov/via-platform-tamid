@@ -5,50 +5,50 @@ import { SQUARE_STORES } from "@/app/lib/storeConfig";
 import { stores } from "@/app/lib/stores";
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { storeSlug, locationId } = body as { storeSlug: string; locationId?: string };
+ try {
+ const body = await request.json();
+ const { storeSlug, locationId } = body as { storeSlug: string; locationId?: string };
 
-    if (!storeSlug) {
-      return NextResponse.json({ error: "storeSlug is required" }, { status: 400 });
-    }
+ if (!storeSlug) {
+ return NextResponse.json({ error: "storeSlug is required" }, { status: 400 });
+ }
 
-    const storeConfig = SQUARE_STORES.find((s) => s.slug === storeSlug);
-    if (!storeConfig) {
-      return NextResponse.json({ error: "Store not found in config" }, { status: 404 });
-    }
+ const storeConfig = SQUARE_STORES.find((s) => s.slug === storeSlug);
+ if (!storeConfig) {
+ return NextResponse.json({ error: "Store not found in config" }, { status: 404 });
+ }
 
-    const storeInfo = stores.find((s) => s.slug === storeSlug);
-    const websiteUrl = storeInfo?.website ?? "https://vyaplatform.com";
+ const storeInfo = stores.find((s) => s.slug === storeSlug);
+ const websiteUrl = storeInfo?.website ?? "https://vyaplatform.com";
 
-    await initDatabase();
+ await initDatabase();
 
-    const { products: rawProducts, skippedCount, skipReasons } = await fetchSquareProducts(
-      locationId ?? storeConfig.locationId,
-      storeConfig.name,
-      websiteUrl,
-      storeConfig.accessTokenEnvVar,
-    );
+ const { products: rawProducts, skippedCount, skipReasons } = await fetchSquareProducts(
+ locationId ?? storeConfig.locationId,
+ storeConfig.name,
+ websiteUrl,
+ storeConfig.accessTokenEnvVar,
+ );
 
-    const mapped = rawProducts
-      .filter((p) => p.price > 0)
-      .map((p) => ({
-        title: p.title,
-        price: p.price,
-        compareAtPrice: p.compareAtPrice ?? undefined,
-        image: p.image ?? undefined,
-        images: p.images,
-        externalUrl: p.externalUrl,
-        description: p.description ?? undefined,
-        size: p.size ?? undefined,
-        variantId: p.variantId ?? undefined,
-      }));
+ const mapped = rawProducts
+ .filter((p) => p.price > 0)
+ .map((p) => ({
+ title: p.title,
+ price: p.price,
+ compareAtPrice: p.compareAtPrice ?? undefined,
+ image: p.image ?? undefined,
+ images: p.images,
+ externalUrl: p.externalUrl,
+ description: p.description ?? undefined,
+ size: p.size ?? undefined,
+ variantId: p.variantId ?? undefined,
+ }));
 
-    const { count: productCount } = await syncProducts(storeSlug, storeConfig.name, mapped);
+ const { count: productCount } = await syncProducts(storeSlug, storeConfig.name, mapped);
 
-    return NextResponse.json({ success: true, productCount, skippedCount, skipReasons });
-  } catch (err) {
-    console.error("[sync-square] error:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
-  }
+ return NextResponse.json({ success: true, productCount, skippedCount, skipReasons });
+ } catch (err) {
+ console.error("[sync-square] error:", err);
+ return NextResponse.json({ error: String(err) }, { status: 500 });
+ }
 }

@@ -10,99 +10,99 @@ import crypto from "crypto";
 export const maxDuration = 300;
 
 function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
+ return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 function isAuthorized(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${adminPassword}`) return true;
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  if (adminToken && adminToken === hashPassword(adminPassword)) return true;
-  return false;
+ const adminPassword = process.env.ADMIN_PASSWORD;
+ if (!adminPassword) return false;
+ const authHeader = request.headers.get("authorization");
+ if (authHeader === `Bearer ${adminPassword}`) return true;
+ const adminToken = request.cookies.get("via_admin_token")?.value;
+ if (adminToken && adminToken === hashPassword(adminPassword)) return true;
+ return false;
 }
 
 /**
  * POST /api/admin/send-new-arrivals
  *
- * { preview: true }   — show product count and since date without sending
- * { send: true }      — send to all approved pilot users and reset the cron lock
- * { testEmail: "x" }  — send only to that address, does not reset the lock
+ * { preview: true } — show product count and since date without sending
+ * { send: true } — send to all approved pilot users and reset the cron lock
+ * { testEmail: "x" } — send only to that address, does not reset the lock
  */
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+ if (!isAuthorized(request)) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
 
-  const body = await request.json().catch(() => ({}));
-  const preview: boolean = body?.preview === true;
-  const sendForReal: boolean = body?.send === true;
-  const testEmail: string | undefined = body?.testEmail;
+ const body = await request.json().catch(() => ({}));
+ const preview: boolean = body?.preview === true;
+ const sendForReal: boolean = body?.send === true;
+ const testEmail: string | undefined = body?.testEmail;
 
-  if (!preview && !sendForReal && !testEmail) {
-    return NextResponse.json(
-      { error: "Provide { preview: true }, { send: true }, or { testEmail: '...' }." },
-      { status: 400 }
-    );
-  }
+ if (!preview && !sendForReal && !testEmail) {
+ return NextResponse.json(
+ { error: "Provide { preview: true }, { send: true }, or { testEmail: '...' }." },
+ { status: 400 }
+ );
+ }
 
-  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!dbUrl) return NextResponse.json({ error: "No database URL" }, { status: 500 });
+ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!dbUrl) return NextResponse.json({ error: "No database URL" }, { status: 500 });
 
-  const sql = neon(dbUrl);
-  const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  // Always look back at least 7 days — if the cron ran recently and set the lock
-  // to today, using that as `since` would produce an empty window.
-  const since = lastSentRaw && new Date(lastSentRaw) < sevenDaysAgo
-    ? new Date(lastSentRaw)
-    : sevenDaysAgo;
-  const sinceIso = since.toISOString();
+ const sql = neon(dbUrl);
+ const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
+ const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+ // Always look back at least 7 days — if the cron ran recently and set the lock
+ // to today, using that as `since` would produce an empty window.
+ const since = lastSentRaw && new Date(lastSentRaw) < sevenDaysAgo
+ ? new Date(lastSentRaw)
+ : sevenDaysAgo;
+ const sinceIso = since.toISOString();
 
-  const rows = await sql`
-    SELECT * FROM products
-    WHERE created_at IS NOT NULL
-      AND created_at >= ${sinceIso}
-      AND created_at <= NOW() - interval '24 hours'
-      AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
-      AND title NOT ILIKE '%gift card%'
-      AND image IS NOT NULL AND image != ''
-      AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
-    ORDER BY created_at DESC
-    LIMIT 50
-  `;
+ const rows = await sql`
+ SELECT * FROM products
+ WHERE created_at IS NOT NULL
+ AND created_at >= ${sinceIso}
+ AND created_at <= NOW() - interval '24 hours'
+ AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+ AND title NOT ILIKE '%gift card%'
+ AND image IS NOT NULL AND image != ''
+ AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
+ ORDER BY created_at DESC
+ LIMIT 50
+ `;
 
-  const products = rows as DBProduct[];
+ const products = rows as DBProduct[];
 
-  if (preview) {
-    return NextResponse.json({ preview: true, since: sinceIso, products: products.length });
-  }
+ if (preview) {
+ return NextResponse.json({ preview: true, since: sinceIso, products: products.length });
+ }
 
-  if (products.length === 0) {
-    return NextResponse.json({ ok: true, message: "No new arrivals in window.", since: sinceIso, products: 0, sent: 0 });
-  }
+ if (products.length === 0) {
+ return NextResponse.json({ ok: true, message: "No new arrivals in window.", since: sinceIso, products: 0, sent: 0 });
+ }
 
-  const emails = testEmail ? [testEmail] : await getApprovedPilotEmails();
+ const emails = testEmail ? [testEmail] : await getApprovedPilotEmails();
 
-  if (emails.length === 0) {
-    return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
-  }
+ if (emails.length === 0) {
+ return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
+ }
 
-  const { sent, failed } = await sendNewArrivalsEmail(emails, products);
+ const { sent, failed } = await sendNewArrivalsEmail(emails, products);
 
-  // Reset the cron lock so the scheduled job won't double-send this week
-  if (sendForReal) {
-    await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
-  }
+ // Reset the cron lock so the scheduled job won't double-send this week
+ if (sendForReal) {
+ await saveSetting("new_arrivals_last_sent_at", new Date().toISOString());
+ }
 
-  return NextResponse.json({
-    ok: true,
-    since: sinceIso,
-    products: products.length,
-    emails: emails.length,
-    sent,
-    failed,
-    test: !!testEmail,
-  });
+ return NextResponse.json({
+ ok: true,
+ since: sinceIso,
+ products: products.length,
+ emails: emails.length,
+ sent,
+ failed,
+ test: !!testEmail,
+ });
 }

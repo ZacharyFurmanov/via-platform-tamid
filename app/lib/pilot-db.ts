@@ -315,6 +315,43 @@ export async function getWaitlistLeaderboard(): Promise<{
 }
 
 /**
+ * When a referral signup happens, checks if the referrer has now hit 2 referrals.
+ * If so, marks them as an insider (first time only) and returns their info for the welcome email.
+ */
+export async function checkAndGrantInsider(referralCode: string): Promise<{
+  email: string;
+  firstName: string | null;
+} | null> {
+  await ensureTable();
+  const sql = getDb();
+  await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS is_insider BOOLEAN DEFAULT FALSE`;
+  await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS insider_since TIMESTAMP WITH TIME ZONE`;
+
+  const countRows = await sql`
+    SELECT COUNT(*) AS cnt FROM pilot_access WHERE referred_by = ${referralCode}
+  `;
+  if (Number(countRows[0].cnt) < 2) return null;
+
+  const rows = await sql`
+    UPDATE pilot_access
+    SET is_insider = TRUE, insider_since = COALESCE(insider_since, NOW())
+    WHERE referral_code = ${referralCode}
+      AND (is_insider IS NULL OR is_insider = FALSE)
+    RETURNING email, first_name
+  `;
+  if (rows.length === 0) return null;
+  return { email: rows[0].email as string, firstName: rows[0].first_name as string | null };
+}
+
+export async function getPilotIsInsider(email: string): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT is_insider FROM pilot_access WHERE email = ${email.toLowerCase().trim()} LIMIT 1
+  `;
+  return rows[0]?.is_insider === true;
+}
+
+/**
  * After a new referral signup, returns the referrer's info so a notification
  * email can be sent. No longer instantly approves — the cron picks them up
  * sooner based on their referral tier (1=5d, 2=4d, 3+=3d).

@@ -48,7 +48,7 @@ export default function AdminLoginClient() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#F7F3EA" }}>
+    <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#FFFDF8" }}>
       <div className="w-full max-w-md px-6">
         <div className="bg-white p-10 shadow-sm">
           <div className="text-center mb-8">
@@ -125,7 +125,7 @@ export default function AdminLoginClient() {
               type="submit"
               disabled={loading || (step === "password" ? !password : !totpCode)}
               className="w-full py-3 text-sm uppercase tracking-wide transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
+              style={{ backgroundColor: "#5D0F17", color: "#FFFDF8" }}
             >
               {loading ? "Verifying…" : step === "password" ? "Continue" : "Sign In"}
             </button>

@@ -168,7 +168,7 @@ export default function AcceptOfferSection({
                 onClick={() => handleAccept(offer.id)}
                 disabled={accepting === offer.id}
                 className="w-full py-2.5 text-xs uppercase tracking-widest transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: "#5D0F17", color: "#F7F3EA" }}
+                style={{ backgroundColor: "#5D0F17", color: "#FFFDF8" }}
               >
                 {accepting === offer.id ? "Accepting…" : "Accept This Offer"}
               </button>

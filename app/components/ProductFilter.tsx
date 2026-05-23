@@ -300,7 +300,7 @@ export default function ProductFilter({
           <span className="text-xs uppercase tracking-wide text-[#5D0F17]/60 font-medium">
             {label}
             {activeCount ? (
-              <span className="ml-2 bg-[#5D0F17] text-[#F7F3EA] text-[10px] px-1.5 py-0.5">
+              <span className="ml-2 bg-[#5D0F17] text-[#FFFDF8] text-[10px] px-1.5 py-0.5">
                 {activeCount}
               </span>
             ) : null}
@@ -317,7 +317,7 @@ export default function ProductFilter({
 
   return (
     <>
-    <div className="sticky top-[88px] z-[45] bg-[#F7F3EA] py-3 mb-4">
+    <div className="bg-[#FFFDF8] py-3 mb-4">
       <div className="inline-flex flex-col gap-2">
         {/* Search — same width as the buttons row below */}
         <div className="relative">
@@ -353,7 +353,7 @@ export default function ProductFilter({
           {mobileFiltersOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setMobileFiltersOpen(false)} />
-              <div className="absolute top-full left-0 mt-1 z-50 w-72 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg max-h-[70vh] overflow-y-auto">
+              <div className="absolute top-full left-0 mt-1 z-50 w-72 bg-[#FFFDF8] border border-[#5D0F17]/20 shadow-lg max-h-[70vh] overflow-y-auto">
                 <div className="px-4">
               {/* Price Range */}
               <MobileSection
@@ -368,8 +368,8 @@ export default function ProductFilter({
                       onClick={() => togglePrice(range)}
                       className={`px-3 py-2 text-sm border transition ${
                         filters.selectedPrices.includes(range)
-                          ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                          : "border-[#5D0F17]/20 bg-[#F7F3EA] hover:border-[#5D0F17]"
+                          ? "border-[#5D0F17] bg-[#5D0F17] text-[#FFFDF8]"
+                          : "border-[#5D0F17]/20 bg-[#FFFDF8] hover:border-[#5D0F17]"
                       }`}
                     >
                       {priceRangeLabels[range]}
@@ -415,8 +415,8 @@ export default function ProductFilter({
                         onClick={() => toggleColor(color)}
                         className={`px-3 py-2 text-sm border transition text-left ${
                           filters.selectedColors.includes(color)
-                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
-                            : "border-[#5D0F17]/20 bg-[#F7F3EA] hover:border-[#5D0F17]"
+                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#FFFDF8]"
+                            : "border-[#5D0F17]/20 bg-[#FFFDF8] hover:border-[#5D0F17]"
                         }`}
                       >
                         {color}
@@ -473,7 +473,7 @@ export default function ProductFilter({
                             className={`flex items-center gap-2 text-sm transition font-medium ${mySizesActive ? "text-[#5D0F17]" : "text-[#5D0F17]/50"}`}
                           >
                             {mySizesActive
-                              ? <span className="w-4 h-4 bg-[#5D0F17] text-[#F7F3EA] flex items-center justify-center text-[10px]">✓</span>
+                              ? <span className="w-4 h-4 bg-[#5D0F17] text-[#FFFDF8] flex items-center justify-center text-[10px]">✓</span>
                               : <span className="w-4 h-4 border border-[#5D0F17]/20 inline-block" />
                             }
                             My Sizes
@@ -563,7 +563,7 @@ export default function ProductFilter({
               )}
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                className="flex-1 py-2.5 text-sm bg-[#5D0F17] text-[#F7F3EA]"
+                className="flex-1 py-2.5 text-sm bg-[#5D0F17] text-[#FFFDF8]"
               >
                 Apply Filters
               </button>
@@ -587,7 +587,7 @@ export default function ProductFilter({
           {sortDropdownOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setSortDropdownOpen(false)} />
-              <div className="absolute top-full left-0 mt-1 z-50 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg min-w-[170px]">
+              <div className="absolute top-full left-0 mt-1 z-50 bg-[#FFFDF8] border border-[#5D0F17]/20 shadow-lg min-w-[170px]">
                 {(Object.keys(sortLabels) as SortOption[]).map((option) => (
                   <button
                     key={option}
@@ -619,7 +619,7 @@ export default function ProductFilter({
     {showSizePicker && (
       <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
         <div className="fixed inset-0 bg-black/40" onClick={() => setShowSizePicker(false)} />
-        <div className="relative bg-[#F7F3EA] w-full sm:max-w-lg sm:mx-4 max-h-[90vh] flex flex-col">
+        <div className="relative bg-[#FFFDF8] w-full sm:max-w-lg sm:mx-4 max-h-[90vh] flex flex-col">
           {/* Header */}
           <div className="flex items-start justify-between px-6 py-5 border-b border-[#5D0F17]/10">
             <div>
@@ -653,7 +653,7 @@ export default function ProductFilter({
                         }
                         className={`px-3 py-2 text-sm border transition-all ${
                           selected
-                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#F7F3EA]"
+                            ? "border-[#5D0F17] bg-[#5D0F17] text-[#FFFDF8]"
                             : "border-[#5D0F17]/20 text-[#5D0F17] hover:border-[#5D0F17]"
                         }`}
                       >
@@ -677,7 +677,7 @@ export default function ProductFilter({
             <button
               onClick={handleSaveMySizes}
               disabled={savingMySizes}
-              className="flex-1 py-3 text-sm bg-[#5D0F17] text-[#F7F3EA] disabled:opacity-50 transition"
+              className="flex-1 py-3 text-sm bg-[#5D0F17] text-[#FFFDF8] disabled:opacity-50 transition"
             >
               {savingMySizes ? "Saving…" : pickerSizes.length > 0 ? `Save (${pickerSizes.length})` : "Save"}
             </button>

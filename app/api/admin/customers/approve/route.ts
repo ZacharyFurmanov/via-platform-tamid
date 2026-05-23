@@ -4,39 +4,39 @@ import { sendPilotApprovalEmail } from "@/app/lib/email";
 import crypto from "crypto";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return false;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${adminPassword}`) return true;
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  return !!adminToken && adminToken === crypto.createHash("sha256").update(adminPassword).digest("hex");
+ const adminPassword = process.env.ADMIN_PASSWORD;
+ if (!adminPassword) return false;
+ const authHeader = request.headers.get("authorization");
+ if (authHeader === `Bearer ${adminPassword}`) return true;
+ const adminToken = request.cookies.get("via_admin_token")?.value;
+ return !!adminToken && adminToken === crypto.createHash("sha256").update(adminPassword).digest("hex");
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthenticated(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+ if (!isAdminAuthenticated(request)) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
 
-  const { email, firstName } = await request.json();
-  if (!email) {
-    return NextResponse.json({ error: "Email required" }, { status: 400 });
-  }
+ const { email, firstName } = await request.json();
+ if (!email) {
+ return NextResponse.json({ error: "Email required" }, { status: 400 });
+ }
 
-  try {
-    await approvePilotUser(email);
-  } catch (err) {
-    console.error("[approve] DB error:", err);
-    return NextResponse.json({ error: "Failed to approve" }, { status: 500 });
-  }
+ try {
+ await approvePilotUser(email);
+ } catch (err) {
+ console.error("[approve] DB error:", err);
+ return NextResponse.json({ error: "Failed to approve" }, { status: 500 });
+ }
 
-  let emailError: string | null = null;
-  try {
-    await sendPilotApprovalEmail(email, firstName ?? undefined);
-    console.log(`[approve] Approval email sent to ${email}`);
-  } catch (emailErr) {
-    emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
-    console.error("[approve] Email failed:", emailErr);
-  }
+ let emailError: string | null = null;
+ try {
+ await sendPilotApprovalEmail(email, firstName ?? undefined);
+ console.log(`[approve] Approval email sent to ${email}`);
+ } catch (emailErr) {
+ emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+ console.error("[approve] Email failed:", emailErr);
+ }
 
-  return NextResponse.json({ ok: true, emailSent: !emailError, emailError });
+ return NextResponse.json({ ok: true, emailSent: !emailError, emailError });
 }

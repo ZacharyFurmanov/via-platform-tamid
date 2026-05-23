@@ -5,28 +5,28 @@ import { getOpenSourcingRequests, getSourcingRequestsByStore } from "@/app/lib/s
 import { getOffersByStoreSlug } from "@/app/lib/sourcing-offers-db";
 
 function getStoreSlugFromEmail(email: string): string | null {
-  for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
-    if (storeEmail && storeEmail.toLowerCase() === email.toLowerCase()) return slug;
-  }
-  return null;
+ for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
+ if (storeEmail && storeEmail.toLowerCase() === email.toLowerCase()) return slug;
+ }
+ return null;
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+ const session = await auth();
+ if (!session?.user?.email) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
 
-  const storeSlug = getStoreSlugFromEmail(session.user.email);
-  if (!storeSlug) {
-    return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
-  }
+ const storeSlug = getStoreSlugFromEmail(session.user.email);
+ if (!storeSlug) {
+ return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
+ }
 
-  const [open, mine, myOffers] = await Promise.all([
-    getOpenSourcingRequests(storeSlug),
-    getSourcingRequestsByStore(storeSlug),
-    getOffersByStoreSlug(storeSlug),
-  ]);
+ const [open, mine, myOffers] = await Promise.all([
+ getOpenSourcingRequests(storeSlug),
+ getSourcingRequestsByStore(storeSlug),
+ getOffersByStoreSlug(storeSlug),
+ ]);
 
-  return NextResponse.json({ open, mine, myOffers });
+ return NextResponse.json({ open, mine, myOffers });
 }

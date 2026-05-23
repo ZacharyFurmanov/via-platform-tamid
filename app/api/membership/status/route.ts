@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  return NextResponse.json({ isMember: false, memberSince: null });
+ return NextResponse.json({ isMember: false, memberSince: null });
 }

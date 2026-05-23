@@ -43,7 +43,7 @@ export default function ForYouTab({ hasFavorites }: Props) {
       <div className="text-center py-16">
         <p className="font-serif text-lg mb-1">Nothing here yet</p>
         <p className="text-sm text-[#5D0F17]/50 mb-6">Save some favorites and we&apos;ll find things you&apos;ll love.</p>
-        <Link href="/categories" className="inline-block bg-[#5D0F17] text-[#F7F3EA] px-6 py-3 text-xs uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition">
+        <Link href="/categories" className="inline-block bg-[#5D0F17] text-[#FFFDF8] px-6 py-3 text-xs uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition">
           Browse Products
         </Link>
       </div>

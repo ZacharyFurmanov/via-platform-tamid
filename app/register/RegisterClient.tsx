@@ -114,7 +114,7 @@ export default function RegisterClient() {
 
               {/* Referral — move up the waitlist (only for pending users) */}
               {!approved && myReferralCode && (
-                <div className="bg-[#F7F3EA] px-6 py-6 mb-4">
+                <div className="bg-[#FFFDF8] px-6 py-6 mb-4">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-1">Move up faster</p>
                   <p className="font-serif text-lg text-[#5D0F17] mb-1">Refer friends to skip the wait</p>
                   <p className="text-xs text-[#5D0F17]/60 leading-relaxed mb-4">
@@ -156,7 +156,7 @@ export default function RegisterClient() {
 
               {/* Google */}
               {isInApp ? (
-                <div className="w-full border border-[#5D0F17]/15 bg-[#F7F3EA]/60 px-4 py-3.5 text-center mb-6">
+                <div className="w-full border border-[#5D0F17]/15 bg-[#FFFDF8]/60 px-4 py-3.5 text-center mb-6">
                   <p className="text-xs text-[#5D0F17]/70 leading-relaxed">
                     Google sign-in isn&apos;t available inside apps like Instagram or Threads.
                   </p>
@@ -233,7 +233,7 @@ export default function RegisterClient() {
                     Phone number
                   </label>
                   <div className="flex border border-[#5D0F17]/20 focus-within:border-[#5D0F17] transition">
-                    <div className="flex items-center gap-1.5 px-3 border-r border-[#5D0F17]/20 text-sm text-[#5D0F17]/60 bg-[#F7F3EA]/50 select-none">
+                    <div className="flex items-center gap-1.5 px-3 border-r border-[#5D0F17]/20 text-sm text-[#5D0F17]/60 bg-[#FFFDF8]/50 select-none">
                       <span>🇺🇸</span>
                       <span>+1</span>
                     </div>
@@ -300,7 +300,7 @@ export default function RegisterClient() {
                 <button
                   type="submit"
                   disabled={loading || !firstName.trim() || !email.trim()}
-                  className="w-full bg-[#5D0F17] text-[#F7F3EA] py-3.5 text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/85 transition disabled:opacity-50 mt-2"
+                  className="w-full bg-[#5D0F17] text-[#FFFDF8] py-3.5 text-sm uppercase tracking-[0.12em] hover:bg-[#5D0F17]/85 transition disabled:opacity-50 mt-2"
                 >
                   {loading ? "Submitting..." : "Submit"}
                 </button>

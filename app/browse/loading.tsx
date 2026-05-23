@@ -1,6 +1,6 @@
 export default function BrowseLoading() {
   return (
-    <div className="bg-[#F7F3EA] min-h-screen">
+    <div className="bg-[#FFFDF8] min-h-screen">
       {/* Filter bar skeleton */}
       <div className="border-b border-[#5D0F17]/10 py-4 px-6">
         <div className="max-w-7xl mx-auto flex gap-3 overflow-hidden">

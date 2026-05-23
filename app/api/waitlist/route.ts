@@ -3,139 +3,139 @@ import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
 
 function getDatabaseUrl() {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) {
-    throw new Error(
-      "DATABASE_URL or POSTGRES_URL environment variable is not set."
-    );
-  }
-  return url;
+ const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!url) {
+ throw new Error(
+ "DATABASE_URL or POSTGRES_URL environment variable is not set."
+ );
+ }
+ return url;
 }
 
 async function ensureTable() {
-  const sql = neon(getDatabaseUrl());
-  await sql`
-    CREATE TABLE IF NOT EXISTS waitlist (
-      id SERIAL PRIMARY KEY,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      signup_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-      source VARCHAR(50) DEFAULT 'waitlist'
-    )
-  `;
+ const sql = neon(getDatabaseUrl());
+ await sql`
+ CREATE TABLE IF NOT EXISTS waitlist (
+ id SERIAL PRIMARY KEY,
+ email VARCHAR(255) NOT NULL UNIQUE,
+ signup_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+ source VARCHAR(50) DEFAULT 'waitlist'
+ )
+ `;
 }
 
 function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+ return emailRegex.test(email);
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { email, source } = body;
+ try {
+ const body = await request.json();
+ const { email, source } = body;
 
-    if (!email || typeof email !== "string") {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
-    }
+ if (!email || typeof email !== "string") {
+ return NextResponse.json(
+ { error: "Email is required" },
+ { status: 400 }
+ );
+ }
 
-    const normalizedEmail = email.trim().toLowerCase();
+ const normalizedEmail = email.trim().toLowerCase();
 
-    if (!isValidEmail(normalizedEmail)) {
-      return NextResponse.json(
-        { error: "Please enter a valid email address" },
-        { status: 400 }
-      );
-    }
+ if (!isValidEmail(normalizedEmail)) {
+ return NextResponse.json(
+ { error: "Please enter a valid email address" },
+ { status: 400 }
+ );
+ }
 
-    await ensureTable();
-    const sql = neon(getDatabaseUrl());
+ await ensureTable();
+ const sql = neon(getDatabaseUrl());
 
-    // Check for duplicate
-    const existing = await sql`
-      SELECT email FROM waitlist WHERE email = ${normalizedEmail}
-    `;
+ // Check for duplicate
+ const existing = await sql`
+ SELECT email FROM waitlist WHERE email = ${normalizedEmail}
+ `;
 
-    if (existing.length > 0) {
-      return NextResponse.json(
-        { message: "You're already on the waitlist!" },
-        { status: 200 }
-      );
-    }
+ if (existing.length > 0) {
+ return NextResponse.json(
+ { message: "You're already on the waitlist!" },
+ { status: 200 }
+ );
+ }
 
-    await sql`
-      INSERT INTO waitlist (email, signup_date, source)
-      VALUES (${normalizedEmail}, NOW(), ${source || "waitlist"})
-    `;
+ await sql`
+ INSERT INTO waitlist (email, signup_date, source)
+ VALUES (${normalizedEmail}, NOW(), ${source || "waitlist"})
+ `;
 
-    console.log(`[Waitlist] New signup: ${normalizedEmail}`);
+ console.log(`[Waitlist] New signup: ${normalizedEmail}`);
 
-    return NextResponse.json(
-      { message: "You're on the list! We'll be in touch soon." },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("[Waitlist] Error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
-  }
+ return NextResponse.json(
+ { message: "You're on the list! We'll be in touch soon." },
+ { status: 201 }
+ );
+ } catch (error) {
+ console.error("[Waitlist] Error:", error);
+ return NextResponse.json(
+ { error: "Something went wrong. Please try again." },
+ { status: 500 }
+ );
+ }
 }
 
 function isAdminAuthenticated(request: NextRequest): boolean {
-  const expectedToken = process.env.ADMIN_PASSWORD;
-  if (!expectedToken) return false;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${expectedToken}`) return true;
-  const adminToken = request.cookies.get("via_admin_token")?.value;
-  if (!adminToken) return false;
-  const expected = crypto.createHash("sha256").update(expectedToken).digest("hex");
-  return adminToken === expected;
+ const expectedToken = process.env.ADMIN_PASSWORD;
+ if (!expectedToken) return false;
+ const authHeader = request.headers.get("authorization");
+ if (authHeader === `Bearer ${expectedToken}`) return true;
+ const adminToken = request.cookies.get("via_admin_token")?.value;
+ if (!adminToken) return false;
+ const expected = crypto.createHash("sha256").update(expectedToken).digest("hex");
+ return adminToken === expected;
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthenticated(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  try {
-    await ensureTable();
-    const sql = neon(getDatabaseUrl());
+ if (!isAdminAuthenticated(request)) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
+ try {
+ await ensureTable();
+ const sql = neon(getDatabaseUrl());
 
-    const [waitlistRows, pilotRows] = await Promise.all([
-      sql`SELECT email, signup_date AS signed_up, source FROM waitlist`,
-      sql`SELECT email, created_at AS signed_up, status FROM pilot_access`.catch(() => []),
-    ]);
+ const [waitlistRows, pilotRows] = await Promise.all([
+ sql`SELECT email, signup_date AS signed_up, source FROM waitlist`,
+ sql`SELECT email, created_at AS signed_up, status FROM pilot_access`.catch(() => []),
+ ]);
 
-    const seen = new Set<string>();
-    const emails: { email: string; signupDate: string; source: string }[] = [];
+ const seen = new Set<string>();
+ const emails: { email: string; signupDate: string; source: string }[] = [];
 
-    for (const row of waitlistRows) {
-      const e = row.email.toLowerCase();
-      if (!seen.has(e)) {
-        seen.add(e);
-        emails.push({ email: e, signupDate: row.signed_up, source: row.source || "waitlist" });
-      }
-    }
+ for (const row of waitlistRows) {
+ const e = row.email.toLowerCase();
+ if (!seen.has(e)) {
+ seen.add(e);
+ emails.push({ email: e, signupDate: row.signed_up, source: row.source || "waitlist" });
+ }
+ }
 
-    for (const row of pilotRows) {
-      const e = row.email.toLowerCase();
-      if (!seen.has(e)) {
-        seen.add(e);
-        emails.push({ email: e, signupDate: row.signed_up, source: `pilot-${row.status}` });
-      }
-    }
+ for (const row of pilotRows) {
+ const e = row.email.toLowerCase();
+ if (!seen.has(e)) {
+ seen.add(e);
+ emails.push({ email: e, signupDate: row.signed_up, source: `pilot-${row.status}` });
+ }
+ }
 
-    emails.sort((a, b) => new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime());
+ emails.sort((a, b) => new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime());
 
-    return NextResponse.json({ count: emails.length, emails });
-  } catch (error) {
-    console.error("[Waitlist] Error fetching emails:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch emails" },
-      { status: 500 }
-    );
-  }
+ return NextResponse.json({ count: emails.length, emails });
+ } catch (error) {
+ console.error("[Waitlist] Error fetching emails:", error);
+ return NextResponse.json(
+ { error: "Failed to fetch emails" },
+ { status: 500 }
+ );
+ }
 }

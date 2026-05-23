@@ -5,251 +5,251 @@ import { useRouter } from "next/navigation";
 import { stores } from "@/app/lib/stores";
 
 type Product = {
-  id: number;
-  storeSlug: string;
-  storeName: string;
-  title: string;
-  price: number;
-  image: string | null;
+ id: number;
+ storeSlug: string;
+ storeName: string;
+ title: string;
+ price: number;
+ image: string | null;
 };
 
 type Pick = {
-  pickId: number;
-  position: number;
-  product: Product & { images: string | null; size: string | null; externalUrl: string | null };
+ pickId: number;
+ position: number;
+ product: Product & { images: string | null; size: string | null; externalUrl: string | null };
 };
 
 export default function EditorsPicks() {
-  const router = useRouter();
-  const [picks, setPicks] = useState<Pick[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [storeFilter, setStoreFilter] = useState("");
-  const [query, setQuery] = useState("");
-  const [loadingPicks, setLoadingPicks] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [toggling, setToggling] = useState<number | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+ const router = useRouter();
+ const [picks, setPicks] = useState<Pick[]>([]);
+ const [products, setProducts] = useState<Product[]>([]);
+ const [storeFilter, setStoreFilter] = useState("");
+ const [query, setQuery] = useState("");
+ const [loadingPicks, setLoadingPicks] = useState(true);
+ const [loadingProducts, setLoadingProducts] = useState(false);
+ const [toggling, setToggling] = useState<number | null>(null);
+ const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadPicks = useCallback(async () => {
-    setLoadingPicks(true);
-    try {
-      const res = await fetch("/api/admin/editors-picks");
-      if (res.status === 401) {
-        router.replace("/admin/login?redirect=/admin/editors-picks");
-        return;
-      }
-      const data = await res.json();
-      setPicks(data.picks ?? []);
-    } finally {
-      setLoadingPicks(false);
-    }
-  }, [router]);
+ const loadPicks = useCallback(async () => {
+ setLoadingPicks(true);
+ try {
+ const res = await fetch("/api/admin/editors-picks");
+ if (res.status === 401) {
+ router.replace("/admin/login?redirect=/admin/editors-picks");
+ return;
+ }
+ const data = await res.json();
+ setPicks(data.picks ?? []);
+ } finally {
+ setLoadingPicks(false);
+ }
+ }, [router]);
 
-  useEffect(() => { loadPicks(); }, [loadPicks]);
+ useEffect(() => { loadPicks(); }, [loadPicks]);
 
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
+ useEffect(() => {
+ if (searchTimer.current) clearTimeout(searchTimer.current);
 
-    const doLoad = async () => {
-      setLoadingProducts(true);
-      try {
-        const params = new URLSearchParams();
-        if (query.trim()) params.set("q", query.trim());
-        if (storeFilter) params.set("store", storeFilter);
-        const res = await fetch(`/api/admin/editors-picks/search?${params}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data.products ?? []);
-        }
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
+ const doLoad = async () => {
+ setLoadingProducts(true);
+ try {
+ const params = new URLSearchParams();
+ if (query.trim()) params.set("q", query.trim());
+ if (storeFilter) params.set("store", storeFilter);
+ const res = await fetch(`/api/admin/editors-picks/search?${params}`);
+ if (res.ok) {
+ const data = await res.json();
+ setProducts(data.products ?? []);
+ }
+ } finally {
+ setLoadingProducts(false);
+ }
+ };
 
-    if (query.trim()) {
-      searchTimer.current = setTimeout(doLoad, 250);
-    } else {
-      doLoad();
-    }
+ if (query.trim()) {
+ searchTimer.current = setTimeout(doLoad, 250);
+ } else {
+ doLoad();
+ }
 
-    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
-  }, [query, storeFilter]);
+ return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+ }, [query, storeFilter]);
 
-  const pickedIds = new Set(picks.map((p) => p.product.id));
+ const pickedIds = new Set(picks.map((p) => p.product.id));
 
-  const handleToggle = async (product: Product) => {
-    if (toggling === product.id) return;
-    setToggling(product.id);
-    try {
-      if (pickedIds.has(product.id)) {
-        const res = await fetch("/api/admin/editors-picks", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId: product.id }),
-        });
-        if (!res.ok) {
-          const d = await res.json();
-          alert(d.error ?? "Failed to remove");
-          return;
-        }
-      } else {
-        const res = await fetch("/api/admin/editors-picks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId: product.id }),
-        });
-        if (!res.ok) {
-          const d = await res.json();
-          alert(d.error ?? "Failed to add");
-          return;
-        }
-      }
-      await loadPicks();
-    } finally {
-      setToggling(null);
-    }
-  };
+ const handleToggle = async (product: Product) => {
+ if (toggling === product.id) return;
+ setToggling(product.id);
+ try {
+ if (pickedIds.has(product.id)) {
+ const res = await fetch("/api/admin/editors-picks", {
+ method: "DELETE",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ productId: product.id }),
+ });
+ if (!res.ok) {
+ const d = await res.json();
+ alert(d.error ?? "Failed to remove");
+ return;
+ }
+ } else {
+ const res = await fetch("/api/admin/editors-picks", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ productId: product.id }),
+ });
+ if (!res.ok) {
+ const d = await res.json();
+ alert(d.error ?? "Failed to add");
+ return;
+ }
+ }
+ await loadPicks();
+ } finally {
+ setToggling(null);
+ }
+ };
 
-  return (
-    <main style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+ return (
+ <main style={{ minHeight: "100vh", background: "#f8f9fa" }}>
 
-      {/* Page title */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>
-              Editor&apos;s Picks
-            </h1>
-            <p style={{ fontSize: 14, color: "#71717a" }}>
-              Curate featured products shown on the homepage.
-            </p>
-          </div>
-          <span style={{ fontSize: 14, color: "#09090b", fontWeight: 600 }}>
-            {loadingPicks ? "…" : picks.length} selected
-          </span>
-        </div>
-      </section>
+ {/* Page title */}
+ <section style={{ background: "#fff", borderBottom: "1px solid #e4e4e7" }}>
+ <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+ <div>
+ <h1 style={{ fontSize: 20, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>
+ Editor&apos;s Picks
+ </h1>
+ <p style={{ fontSize: 14, color: "#71717a" }}>
+ Curate featured products shown on the homepage.
+ </p>
+ </div>
+ <span style={{ fontSize: 14, color: "#09090b", fontWeight: 600 }}>
+ {loadingPicks ? "…" : picks.length} selected
+ </span>
+ </div>
+ </section>
 
-      {/* Content */}
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
+ {/* Content */}
+ <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
 
-        {/* Selected strip */}
-        {!loadingPicks && picks.length > 0 && (
-          <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 12 }}>
-              Current Selections
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {picks.map((pick) => (
-                <div
-                  key={pick.pickId}
-                  className="relative group cursor-pointer"
-                  onClick={() => handleToggle(pick.product)}
-                  title={pick.product.title}
-                >
-                  <div className="w-16 h-20 bg-[#f4f4f5] overflow-hidden">
-                    {pick.product.image
-                      ? <img src={pick.product.image} alt="" className="w-full h-full object-cover" />
-                      : <div className="w-full h-full" />
-                    }
-                  </div>
-                  <div className="absolute inset-0 bg-[#09090b]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-[10px] uppercase tracking-wide">Remove</span>
-                  </div>
-                  <div className="absolute top-1 left-1 w-4 h-4 bg-[#18181b] flex items-center justify-center">
-                    <span className="text-white text-[9px] leading-none">{pick.position + 1}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+ {/* Selected strip */}
+ {!loadingPicks && picks.length > 0 && (
+ <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
+ <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 12 }}>
+ Current Selections
+ </p>
+ <div className="flex flex-wrap gap-2">
+ {picks.map((pick) => (
+ <div
+ key={pick.pickId}
+ className="relative group cursor-pointer"
+ onClick={() => handleToggle(pick.product)}
+ title={pick.product.title}
+ >
+ <div className="w-16 h-20 bg-[#f4f4f5] overflow-hidden">
+ {pick.product.image
+ ? <img src={pick.product.image} alt="" className="w-full h-full object-cover" />
+ : <div className="w-full h-full" />
+ }
+ </div>
+ <div className="absolute inset-0 bg-[#09090b]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+ <span className="text-white text-[10px] uppercase tracking-wide">Remove</span>
+ </div>
+ <div className="absolute top-1 left-1 w-4 h-4 bg-[#18181b] flex items-center justify-center">
+ <span className="text-white text-[9px] leading-none">{pick.position + 1}</span>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
 
-        {/* Filters */}
-        <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
-          <div className="flex gap-3">
-            <select
-              value={storeFilter}
-              onChange={(e) => { setStoreFilter(e.target.value); setQuery(""); }}
-              className="px-4 py-2.5 text-sm outline-none"
-              style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
-            >
-              <option value="">All Stores</option>
-              {stores.map((s) => (
-                <option key={s.slug} value={s.slug}>{s.name}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter by name…"
-              className="flex-1 px-4 py-2.5 text-sm outline-none"
-              style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
-            />
-          </div>
-        </div>
+ {/* Filters */}
+ <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
+ <div className="flex gap-3">
+ <select
+ value={storeFilter}
+ onChange={(e) => { setStoreFilter(e.target.value); setQuery(""); }}
+ className="px-4 py-2.5 text-sm outline-none"
+ style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
+ >
+ <option value="">All Stores</option>
+ {stores.map((s) => (
+ <option key={s.slug} value={s.slug}>{s.name}</option>
+ ))}
+ </select>
+ <input
+ type="text"
+ value={query}
+ onChange={(e) => setQuery(e.target.value)}
+ placeholder="Filter by name…"
+ className="flex-1 px-4 py-2.5 text-sm outline-none"
+ style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
+ />
+ </div>
+ </div>
 
-        {/* Product grid */}
-        {loadingProducts ? (
-          <p style={{ fontSize: 13, color: "#a1a1aa" }}>Loading products…</p>
-        ) : products.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#a1a1aa" }}>No products found.</p>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-            {products.map((product) => {
-              const isPicked = pickedIds.has(product.id);
-              const isToggling = toggling === product.id;
+ {/* Product grid */}
+ {loadingProducts ? (
+ <p style={{ fontSize: 13, color: "#a1a1aa" }}>Loading products…</p>
+ ) : products.length === 0 ? (
+ <p style={{ fontSize: 13, color: "#a1a1aa" }}>No products found.</p>
+ ) : (
+ <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+ {products.map((product) => {
+ const isPicked = pickedIds.has(product.id);
+ const isToggling = toggling === product.id;
 
-              return (
-                <button
-                  key={product.id}
-                  onClick={() => handleToggle(product)}
-                  disabled={isToggling}
-                  className="relative text-left group transition cursor-pointer"
-                >
-                  <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#18181b]" : ""}`}>
-                    {product.image
-                      ? <img src={product.image} alt="" className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-[#f4f4f5]" />
-                    }
+ return (
+ <button
+ key={product.id}
+ onClick={() => handleToggle(product)}
+ disabled={isToggling}
+ className="relative text-left group transition cursor-pointer"
+ >
+ <div className={`relative w-full aspect-[3/4] overflow-hidden ${isPicked ? "ring-2 ring-[#18181b]" : ""}`}>
+ {product.image
+ ? <img src={product.image} alt="" className="w-full h-full object-cover" />
+ : <div className="w-full h-full bg-[#f4f4f5]" />
+ }
 
-                    {!isPicked && (
-                      <div className="absolute inset-0 bg-[#09090b]/0 group-hover:bg-[#09090b]/20 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 text-white text-[10px] uppercase tracking-wide transition-opacity bg-[#18181b] px-2 py-1">
-                          + Pick
-                        </span>
-                      </div>
-                    )}
+ {!isPicked && (
+ <div className="absolute inset-0 bg-[#09090b]/0 group-hover:bg-[#09090b]/20 transition-colors flex items-center justify-center">
+ <span className="opacity-0 group-hover:opacity-100 text-white text-[10px] uppercase tracking-wide transition-opacity bg-[#18181b] px-2 py-1">
+ + Pick
+ </span>
+ </div>
+ )}
 
-                    {isPicked && (
-                      <div className="absolute inset-0 bg-[#09090b]/10 group-hover:bg-[#09090b]/30 transition-colors flex items-center justify-center">
-                        <div className="w-7 h-7 bg-[#18181b] flex items-center justify-center opacity-80 group-hover:hidden">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
-                        <span className="hidden group-hover:inline text-white text-[10px] uppercase tracking-wide bg-[#18181b] px-2 py-1">
-                          Remove
-                        </span>
-                      </div>
-                    )}
+ {isPicked && (
+ <div className="absolute inset-0 bg-[#09090b]/10 group-hover:bg-[#09090b]/30 transition-colors flex items-center justify-center">
+ <div className="w-7 h-7 bg-[#18181b] flex items-center justify-center opacity-80 group-hover:hidden">
+ <span className="text-white text-sm">✓</span>
+ </div>
+ <span className="hidden group-hover:inline text-white text-[10px] uppercase tracking-wide bg-[#18181b] px-2 py-1">
+ Remove
+ </span>
+ </div>
+ )}
 
-                    {isToggling && (
-                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-[#18181b] border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
+ {isToggling && (
+ <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+ <div className="w-4 h-4 border-2 border-[#18181b] border-t-transparent rounded-full animate-spin" />
+ </div>
+ )}
+ </div>
 
-                  <div className="pt-1.5">
-                    <p className="text-[10px] leading-snug text-[#09090b] line-clamp-2">{product.title}</p>
-                    <p className="text-[9px] text-[#71717a] mt-0.5">${Math.round(product.price)}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </main>
-  );
+ <div className="pt-1.5">
+ <p className="text-[10px] leading-snug text-[#09090b] line-clamp-2">{product.title}</p>
+ <p className="text-[9px] text-[#71717a] mt-0.5">${Math.round(product.price)}</p>
+ </div>
+ </button>
+ );
+ })}
+ </div>
+ )}
+ </div>
+ </main>
+ );
 }

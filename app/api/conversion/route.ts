@@ -4,152 +4,152 @@ import { markCartItemsPurchased } from "@/app/lib/cart-db";
 import { stores } from "@/app/lib/stores";
 
 const ALLOWED_ORIGINS = new Set([
-  "https://vyaplatform.com",
-  "https://www.vyaplatform.com",
-  ...stores.map((s) => s.website.replace(/\/$/, "")),
+ "https://vyaplatform.com",
+ "https://www.vyaplatform.com",
+ ...stores.map((s) => s.website.replace(/\/$/, "")),
 ]);
 
 function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return false;
-  const normalized = origin.replace(/\/$/, "");
-  return ALLOWED_ORIGINS.has(normalized);
+ if (!origin) return false;
+ const normalized = origin.replace(/\/$/, "");
+ return ALLOWED_ORIGINS.has(normalized);
 }
 
 function generateConversionId(): string {
-  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+ return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 // POST - Record a conversion (from store's checkout)
 export async function POST(request: NextRequest) {
-  try {
-    const origin = request.headers.get("origin");
+ try {
+ const origin = request.headers.get("origin");
 
-    if (!isAllowedOrigin(origin)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+ if (!isAllowedOrigin(origin)) {
+ return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+ }
 
-    const body = await request.json();
-    const {
-      orderId,
-      orderTotal,
-      currency = "USD",
-      items = [],
-      viaClickId,
-      storeSlug,
-      storeName,
-    } = body;
+ const body = await request.json();
+ const {
+ orderId,
+ orderTotal,
+ currency = "USD",
+ items = [],
+ viaClickId,
+ storeSlug,
+ storeName,
+ } = body;
 
-    if (!orderId || !storeSlug || !storeName) {
-      return NextResponse.json(
-        { error: "Missing required fields: orderId, storeSlug, storeName" },
-        { status: 400 }
-      );
-    }
+ if (!orderId || !storeSlug || !storeName) {
+ return NextResponse.json(
+ { error: "Missing required fields: orderId, storeSlug, storeName" },
+ { status: 400 }
+ );
+ }
 
-    if (typeof orderTotal !== "number" || orderTotal <= 0) {
-      return NextResponse.json(
-        { error: "orderTotal must be a positive number" },
-        { status: 400 }
-      );
-    }
+ if (typeof orderTotal !== "number" || orderTotal <= 0) {
+ return NextResponse.json(
+ { error: "orderTotal must be a positive number" },
+ { status: 400 }
+ );
+ }
 
-    // Try to match the viaClickId to a click record
-    let matched = false;
-    let matchedClickData: { clickId: string; clickTimestamp: string; productName: string } | undefined;
-    let userId: string | null = null;
+ // Try to match the viaClickId to a click record
+ let matched = false;
+ let matchedClickData: { clickId: string; clickTimestamp: string; productName: string } | undefined;
+ let userId: string | null = null;
 
-    if (viaClickId) {
-      const matchingClick = await getClickByClickId(viaClickId);
-      if (matchingClick) {
-        matched = true;
-        userId = matchingClick.userId ?? null;
-        matchedClickData = {
-          clickId: matchingClick.clickId,
-          clickTimestamp: matchingClick.timestamp,
-          productName: matchingClick.productName,
-        };
-      }
-    }
+ if (viaClickId) {
+ const matchingClick = await getClickByClickId(viaClickId);
+ if (matchingClick) {
+ matched = true;
+ userId = matchingClick.userId ?? null;
+ matchedClickData = {
+ clickId: matchingClick.clickId,
+ clickTimestamp: matchingClick.timestamp,
+ productName: matchingClick.productName,
+ };
+ }
+ }
 
-    const result = await saveConversion({
-      conversionId: generateConversionId(),
-      timestamp: new Date().toISOString(),
-      orderId,
-      orderTotal,
-      currency,
-      items,
-      viaClickId: viaClickId || null,
-      storeSlug,
-      storeName,
-      matched,
-      userId,
-      matchedClickData,
-    });
+ const result = await saveConversion({
+ conversionId: generateConversionId(),
+ timestamp: new Date().toISOString(),
+ orderId,
+ orderTotal,
+ currency,
+ items,
+ viaClickId: viaClickId || null,
+ storeSlug,
+ storeName,
+ matched,
+ userId,
+ matchedClickData,
+ });
 
-    if (matched && userId) {
-      markCartItemsPurchased(userId, storeSlug).catch(() => {});
-    }
+ if (matched && userId) {
+ markCartItemsPurchased(userId, storeSlug).catch(() => {});
+ }
 
-    if (result.duplicate) {
-      const response = NextResponse.json(
-        { message: "Conversion already recorded", duplicate: true },
-        { status: 200 }
-      );
-      if (origin) response.headers.set("Access-Control-Allow-Origin", origin);
-      return response;
-    }
+ if (result.duplicate) {
+ const response = NextResponse.json(
+ { message: "Conversion already recorded", duplicate: true },
+ { status: 200 }
+ );
+ if (origin) response.headers.set("Access-Control-Allow-Origin", origin);
+ return response;
+ }
 
-    const response = NextResponse.json(
-      { success: true, matched },
-      { status: 201 }
-    );
+ const response = NextResponse.json(
+ { success: true, matched },
+ { status: 201 }
+ );
 
-    if (origin) {
-      response.headers.set("Access-Control-Allow-Origin", origin);
-    }
+ if (origin) {
+ response.headers.set("Access-Control-Allow-Origin", origin);
+ }
 
-    return response;
-  } catch (error) {
-    console.error("Conversion tracking error:", error);
-    return NextResponse.json(
-      { error: "Failed to record conversion" },
-      { status: 500 }
-    );
-  }
+ return response;
+ } catch (error) {
+ console.error("Conversion tracking error:", error);
+ return NextResponse.json(
+ { error: "Failed to record conversion" },
+ { status: 500 }
+ );
+ }
 }
 
 // OPTIONS - Handle CORS preflight
 export async function OPTIONS(request: NextRequest) {
-  const origin = request.headers.get("origin");
+ const origin = request.headers.get("origin");
 
-  if (!isAllowedOrigin(origin)) {
-    return new NextResponse(null, { status: 403 });
-  }
+ if (!isAllowedOrigin(origin)) {
+ return new NextResponse(null, { status: 403 });
+ }
 
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": origin!,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400",
-    },
-  });
+ return new NextResponse(null, {
+ status: 200,
+ headers: {
+ "Access-Control-Allow-Origin": origin!,
+ "Access-Control-Allow-Methods": "POST, OPTIONS",
+ "Access-Control-Allow-Headers": "Content-Type",
+ "Access-Control-Max-Age": "86400",
+ },
+ });
 }
 
 // GET - Retrieve conversions (for admin dashboard)
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "all";
+ try {
+ const { searchParams } = new URL(request.url);
+ const range = searchParams.get("range") || "all";
 
-    const data = await getConversionAnalytics(range);
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("Error fetching conversions:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch conversions" },
-      { status: 500 }
-    );
-  }
+ const data = await getConversionAnalytics(range);
+ return NextResponse.json(data);
+ } catch (error) {
+ console.error("Error fetching conversions:", error);
+ return NextResponse.json(
+ { error: "Failed to fetch conversions" },
+ { status: 500 }
+ );
+ }
 }

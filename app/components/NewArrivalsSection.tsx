@@ -12,7 +12,7 @@ export default async function NewArrivalsSection() {
   if (products.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="bg-[#F7F3EA] pt-16 pb-10 sm:pt-24 sm:pb-14 border-t border-[#5D0F17]/10">
+    <section id="new-arrivals" className="bg-[#FFFDF8] pt-16 pb-10 sm:pt-24 sm:pb-14 border-t border-[#5D0F17]/10">
       <div className="max-w-7xl mx-auto">
         <div className="px-6 mb-8 sm:mb-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

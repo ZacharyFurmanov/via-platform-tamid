@@ -4,35 +4,35 @@ import { storeContactEmails } from "@/app/lib/stores";
 import { rescindSourcingOffer } from "@/app/lib/sourcing-offers-db";
 
 function getStoreSlugFromEmail(email: string): string | null {
-  for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
-    if (storeEmail && storeEmail.toLowerCase() === email.toLowerCase()) return slug;
-  }
-  return null;
+ for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
+ if (storeEmail && storeEmail.toLowerCase() === email.toLowerCase()) return slug;
+ }
+ return null;
 }
 
 export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string; offerId: string }> }
+ _request: NextRequest,
+ { params }: { params: Promise<{ id: string; offerId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+ const session = await auth();
+ if (!session?.user?.email) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
 
-  const storeSlug = getStoreSlugFromEmail(session.user.email);
-  if (!storeSlug) {
-    return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
-  }
+ const storeSlug = getStoreSlugFromEmail(session.user.email);
+ if (!storeSlug) {
+ return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
+ }
 
-  const { offerId } = await params;
+ const { offerId } = await params;
 
-  const rescinded = await rescindSourcingOffer(offerId, storeSlug);
-  if (!rescinded) {
-    return NextResponse.json(
-      { error: "Offer not found, already actioned, or does not belong to your store." },
-      { status: 404 }
-    );
-  }
+ const rescinded = await rescindSourcingOffer(offerId, storeSlug);
+ if (!rescinded) {
+ return NextResponse.json(
+ { error: "Offer not found, already actioned, or does not belong to your store." },
+ { status: 404 }
+ );
+ }
 
-  return NextResponse.json({ ok: true });
+ return NextResponse.json({ ok: true });
 }

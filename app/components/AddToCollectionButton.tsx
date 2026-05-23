@@ -86,7 +86,7 @@ export default function AddToCollectionButton({ productId, snapshot }: Props) {
       </button>
 
       {open && (
-        <div className="absolute bottom-full mb-2 left-0 right-0 bg-[#F7F3EA] border border-[#5D0F17]/20 shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute bottom-full mb-2 left-0 right-0 bg-[#FFFDF8] border border-[#5D0F17]/20 shadow-lg z-50 max-h-64 overflow-y-auto">
           {loading ? (
             <p className="p-4 text-sm text-[#5D0F17]/50">Loading...</p>
           ) : (

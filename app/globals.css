@@ -1,7 +1,7 @@
 /* ================================
-   Fonts — Almarai (via Google Fonts)
+   Fonts
 ================================ */
-@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Abyssinica+SIL&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
 
 @import "tailwindcss";
 
@@ -34,20 +34,21 @@
    Design tokens
 ================================ */
 :root {
-  --background: #F7F3EA;
+  --background: #FFFDF8;
   --foreground: #5D0F17;
   --via-red: #5D0F17;
   --via-tan: #D8CABD;
-  --via-cream: #F7F3EA;
+  --via-cream: #FFFDF8;
 }
 
 /* ================================
    Tailwind v4 theme overrides
 ================================ */
 @theme {
-  --font-serif: 'PP Eiko', 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Almarai', system-ui, sans-serif;
-  --font-logo: 'Dreame Avenue', 'PP Eiko', Georgia, serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Abyssinica SIL', system-ui, sans-serif;
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-logo: 'Dreame Avenue', 'Playfair Display', Georgia, serif;
 }
 
 /* ================================
@@ -63,13 +64,13 @@ html.lenis, html.lenis body {
 }
 
 html {
-  scroll-padding-top: 104px; /* announcement bar (32px) + header (72px) */
+  scroll-padding-top: 56px;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, 'Almarai', sans-serif);
+  font-family: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

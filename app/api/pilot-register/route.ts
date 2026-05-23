@@ -5,8 +5,9 @@ import {
   getPilotReferralCode,
   createPilotEntry,
   checkAndApproveReferrer,
+  checkAndGrantInsider,
 } from "@/app/lib/pilot-db";
-import { sendPilotApprovalEmail, sendWaitlistConfirmationEmail } from "@/app/lib/email";
+import { sendPilotApprovalEmail, sendWaitlistConfirmationEmail, sendReferralInsiderWelcomeEmail } from "@/app/lib/email";
 
 // Promo codes grant instant approval and are tracked in the promo_code column
 const PROMO_CODES: Record<string, string> = {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If signed up via a referral code, approve the referrer immediately
+    // If signed up via a referral code, approve the referrer and check for insider status
     if (normalizedReferralCode) {
       const approved = await checkAndApproveReferrer(normalizedReferralCode);
       if (approved) {
@@ -107,6 +108,17 @@ export async function POST(request: NextRequest) {
           (err) => console.error("[PilotRegister] Referrer approval email failed:", err)
         );
       }
+
+      // Grant insider if referrer now has 2+ referrals (fires once, on the 2nd signup)
+      checkAndGrantInsider(normalizedReferralCode)
+        .then((insider) => {
+          if (insider) {
+            sendReferralInsiderWelcomeEmail(insider.email, insider.firstName ?? undefined).catch(
+              (err) => console.error("[PilotRegister] Insider welcome email failed:", err)
+            );
+          }
+        })
+        .catch((err) => console.error("[PilotRegister] checkAndGrantInsider failed:", err));
     }
 
     return NextResponse.json({ status, referralCode: myReferralCode });
