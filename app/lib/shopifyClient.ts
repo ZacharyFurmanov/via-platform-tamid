@@ -57,6 +57,7 @@ type ShopifyProductNode = {
  productType: string;
  availableForSale: boolean;
  totalInventory: number;
+ tags: string[];
  priceRange: {
  minVariantPrice: ShopifyPriceV2;
  };
