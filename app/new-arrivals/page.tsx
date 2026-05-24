@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { getNewArrivals } from "@/app/lib/db";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";

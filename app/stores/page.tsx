@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
 
 export default function StoresPage() {

@@ -1083,6 +1083,14 @@ export const stores = [
  },
 ];
 
+/** Stores shown on the public site — only those with a Shopify Collabs ID for commission tracking. */
+export const visibleStores = stores.filter(s => 'collabsStoreId' in s);
+
+/** Slugs of stores hidden from the public site (no Collabs ID yet). */
+export const HIDDEN_STORE_SLUGS: string[] = stores
+ .filter(s => !('collabsStoreId' in s))
+ .map(s => s.slug);
+
 /**
  * Commission tiers (% of sale price that VYA earns).
  * Applies to all stores regardless of payout method.

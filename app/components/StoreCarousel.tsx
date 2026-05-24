@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import Image from "next/image";
-import { stores } from "../lib/stores";
+import { visibleStores as stores } from "../lib/stores";
 import TrackedStoreLink from "./TrackedStoreLink";
 
 // Auto-scroll speed in px per animation frame (~60fps) — 1.0px ≈ 60px/s

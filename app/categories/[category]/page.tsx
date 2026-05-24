@@ -6,7 +6,7 @@ import { getInventory } from "@/app/lib/inventory";
 import { categories, clothingSubcategories } from "@/app/lib/categories";
 import { displayCategories, clothingSlugs, shoesSlugs, bagsSlugs, accessoriesSlugs, categoryMap } from "@/app/lib/categoryMap";
 import type { CategorySlug } from "@/app/lib/categoryMap";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 import CategoryContent from "@/app/components/CategoryContent";
 import PageTracker from "@/app/components/PageTracker";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";

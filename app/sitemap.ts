@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 
 const BASE_URL = "https://vyaplatform.com";
 

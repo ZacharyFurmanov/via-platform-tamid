@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getInventory } from "@/app/lib/inventory";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 import { categories } from "@/app/lib/categories";
 import { categoryMap } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";

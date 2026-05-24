@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getInventory } from "@/app/lib/inventory";
-import { stores } from "@/app/lib/stores";
+import { visibleStores as stores } from "@/app/lib/stores";
 import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import FilteredProductGrid from "@/app/components/FilteredProductGrid";
