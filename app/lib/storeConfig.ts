@@ -86,6 +86,12 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
  slug: "sassy-so-what",
  shopUrl: "https://www.sassysowhat.com/shopall/available-1",
  },
+ {
+ type: "squarespace",
+ name: "Keepin It Real Luxe",
+ slug: "keepin-it-real-luxe",
+ shopUrl: "https://www.keepinitrealluxe.com/shop",
+ },
 ];
 
 // Shopify stores (Storefront API)

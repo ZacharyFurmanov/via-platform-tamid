@@ -390,6 +390,28 @@ export const stores = [
  "All sales are final. Please review all item details and photos carefully before purchasing.",
  },
  {
+ slug: "keepin-it-real-luxe",
+ dashboardToken: "kirl-5f3a9c2e1d7b",
+ name: "Keepin It Real Luxe",
+ location: "San Francisco, CA",
+ description:
+  "They say fashion is a passion, but for me, it's always been a lifestyle. For years, I lived in that relatable tug-of-war: a deep, unshakeable love for designer craftsmanship versus the reality of adulting. Life happens—bills, family, and long-term commitments naturally took the driver's seat when it came to where my paycheck went. But while my budget was being responsible, my soul was still craving that specific rush that only luxury fashion provides. I realized I didn't just want what was 'trending' on a department store shelf. I wanted the pieces with a story. I craved the rare, the hard-to-find, and the 'how did you get your hands on that?' items that define a personal collection. I started Keepin' It Real Luxe to bridge that gap for people just like me. I spent years mastering the art of the 'luxe budget'—learning how to source authentic, rare designer pieces without compromising my financial priorities.",
+ website: "https://www.keepinitrealluxe.com",
+ contactEmail: "info@keepinitrealluxe.com",
+ dataSource: "keepin-it-real-luxe",
+ image: "/stores/keepin-it-real-luxe.jpg",
+ logo: "/stores/keepin-it-real-luxe.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "squarespace-manual" as const,
+ authenticityPolicy:
+  "Every piece at Keepin' It Real Luxe is personally sourced and authenticated before listing. Each item is hand-selected with years of expertise in sourcing authentic, rare designer pieces — accurately described so you can shop with confidence.",
+ shippingPolicy:
+  "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
+ returnPolicy:
+  "All sales are final. Please review all item details and photos carefully before purchasing. Use the form below with any pre-purchase questions.",
+ },
+ {
  slug: "lei-vintage",
  dashboardToken: "lv-f4a8b2c1d9e3",
  name: "LEI Vintage",
@@ -1107,6 +1129,7 @@ export const storeContactEmails: Record<string, string> = {
  "chill-boutique": "info@chillboutiqueconsignment.com",
  "honey-bear-vintage": "honeybearvintagenyc@gmail.com",
  "jade-vintage": "hello@jadevintage.ca",
+ "keepin-it-real-luxe": "info@keepinitrealluxe.com",
  "blodas-choice": "annabloda@gmail.com",
  "carroll-street-vintage": "kittyzeldis@gmail.com",
  // Styelled — not yet on the site but included in sourcing notifications
