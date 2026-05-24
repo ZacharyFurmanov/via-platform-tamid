@@ -439,7 +439,7 @@ export async function fetchShopifyProducts(
  continue;
  }
 
- if ((node.tags as string[] | undefined)?.map((t) => t.toLowerCase()).includes("no-vya")) {
+ if (node.tags?.map((t) => t.toLowerCase()).includes("no-vya")) {
  console.log(`[Shopify API] Skipping "${node.title}" - tagged no-vya`);
  skippedCount++;
  continue;
@@ -661,7 +661,10 @@ export async function fetchShopifyProductsPublic(
  continue;
  }
 
- const productTags = (product.tags as string ?? "").split(",").map((t: string) => t.trim().toLowerCase());
+ const rawTags = product.tags as string[] | string | undefined;
+ const productTags = Array.isArray(rawTags)
+ ? rawTags.map((t) => t.toLowerCase())
+ : (rawTags ?? "").split(",").map((t) => t.trim().toLowerCase());
  if (productTags.includes("no-vya")) {
  console.log(`[Shopify] Skipping "${product.title}" - tagged no-vya`);
  skippedCount++;

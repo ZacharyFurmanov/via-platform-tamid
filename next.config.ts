@@ -56,6 +56,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.shopfortheglobe.com" },
       // Carroll Street Vintage (images served from their own domain /assets/)
       { protocol: "https", hostname: "carrollstreetvintage.com" },
+      // Wix (Nello Vintage)
+      { protocol: "https", hostname: "**.wixstatic.com" },
       // Vercel Blob (sourcing request image uploads)
       { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
     ],

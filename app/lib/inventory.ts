@@ -6,6 +6,74 @@ import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFrom
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
+const SHOE_RE = /shoe|boot|heel|sneaker|flat|sandal|loafer|pump|mule|slipper|clog/i;
+
+const EU_SHOE_TO_US: Record<string, string> = {
+ "35": "5", "35.5": "5",
+ "36": "5.5", "36.5": "6",
+ "37": "6.5", "37.5": "7",
+ "38": "7.5", "38.5": "8",
+ "39": "8.5", "39.5": "9",
+ "40": "9.5", "40.5": "10",
+ "41": "10.5", "41.5": "11",
+ "42": "11", "42.5": "11.5",
+ "43": "12", "44": "13",
+};
+
+function fmtNum(n: number): string {
+ return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/**
+ * Convert a raw size string to a US size label, using category context to
+ * distinguish shoe EU/UK sizes from clothing EU/UK sizes.
+ * Returns null if no conversion applies (caller should display the raw/normalized value).
+ */
+export function convertSizeToUS(raw: string, categorySlug: string): string | null {
+ const s = raw.trim();
+ const normalized = normalizeSize(s);
+ const isShoe = SHOE_RE.test(categorySlug);
+
+ // EU/IT/FR/DE → normalizeSize outputs "EU XX"
+ const euMatch = /^EU\s*(\d+(?:\.\d+)?)$/.exec(normalized);
+ if (euMatch) {
+ const num = euMatch[1];
+ if (isShoe) {
+  const us = EU_SHOE_TO_US[num];
+  return us ? `US ${us}` : null;
+ }
+ // Women's clothing: EU - 32 = US
+ const eu = parseFloat(num);
+ const us = eu - 32;
+ if (us >= 0 && us <= 20) return `US ${us}`;
+ return null;
+ }
+
+ // UK prefix (normalizeSize strips it, so check original)
+ const ukMatch = /^UK\s*(\d+(?:\.\d+)?)$/i.exec(s);
+ if (ukMatch) {
+ const num = parseFloat(ukMatch[1]);
+ if (isShoe) return `US ${fmtNum(num + 2)}`;
+ const us = num - 4;
+ if (us >= 0) return `US ${fmtNum(us)}`;
+ return null;
+ }
+
+ // Bare numeric — infer from category
+ if (/^\d+(?:\.\d+)?$/.test(normalized)) {
+ const num = parseFloat(normalized);
+ if (isShoe && num >= 35 && num <= 44) {
+  const us = EU_SHOE_TO_US[normalized];
+  return us ? `US ${us}` : null;
+ }
+ if (!isShoe && num >= 32 && num <= 52 && num % 2 === 0) {
+  return `US ${num - 32}`;
+ }
+ }
+
+ return null;
+}
+
 export function normalizeSize(raw: string): string {
  // Strip leading/trailing whitespace and trailing punctuation
  const s = raw.trim().replace(/[.,]+$/, "").trim();

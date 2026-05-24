@@ -6,7 +6,7 @@ import { stores } from "@/app/lib/stores";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { categories } from "@/app/lib/categories";
 import BackButton from "@/app/components/BackButton";
-import { deriveSize } from "@/app/lib/inventory";
+import { deriveSize, convertSizeToUS } from "@/app/lib/inventory";
 import { inferCategoryFromTitle, inferItemTypeFromTitle, inferColorFromTitle, inferBrandFromTitle, inferBrandKeywordFromTitle, inferItemTypeKeyword } from "@/app/lib/loadStoreProducts";
 import ImageCarousel from "@/app/components/ImageCarousel";
 import FavoriteButton from "@/app/components/FavoriteButton";
@@ -29,19 +29,19 @@ type ProductPageProps = {
 // Guard against non-size values (like colors) that may have been stored as size in older syncs
 const VALID_SIZE_RE = /^(?:(?:US|UK|EU|IT)\s*)?\d[\d.]*$|^(?:XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\s+Size)$/i;
 
-function expandSize(size: string): string {
- const map: Record<string, string> = {
- XS: "Extra Small",
- S: "Small",
- M: "Medium",
- L: "Large",
- XL: "Extra Large",
- XXL: "XXL",
- XXXL: "XXXL",
- OS: "One Size",
- OSFM: "One Size",
- };
- return map[size.toUpperCase()] ?? size;
+const LETTER_SIZE_LABELS: Record<string, string> = {
+ XS: "Extra Small (XS)", S: "Small (S)", M: "Medium (M)", L: "Large (L)",
+ XL: "Extra Large (XL)", XXL: "XXL", XXXL: "XXXL", OS: "One Size", OSFM: "One Size",
+};
+
+function expandSize(size: string, categorySlug?: string): string {
+ const upper = size.toUpperCase();
+ if (LETTER_SIZE_LABELS[upper]) return LETTER_SIZE_LABELS[upper];
+ if (categorySlug) {
+ const converted = convertSizeToUS(size, categorySlug);
+ if (converted) return converted;
+ }
+ return size;
 }
 
 // Shopify storefront UI strings that occasionally leak into scraped descriptions.
@@ -195,7 +195,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
  // Use deriveSize to extract the correct size (checks title first, then description, then DB)
  const rawSize = deriveSize(product);
- const displaySize = rawSize ? expandSize(rawSize) : null;
+ const displaySize = rawSize ? expandSize(rawSize, currentCategorySlug) : null;
 
  // Parse images from DB
  let productImages: string[] = [];

@@ -689,6 +689,29 @@ export const stores = [
  "All sales are final. As a curated vintage boutique specializing in one-of-a-kind pre-loved pieces, please review all item details and photos carefully before purchasing.",
  },
  {
+ slug: "sablier-vintage",
+ dashboardToken: "tvc-5e2b8f1a9c3d",
+ name: "Sablier Vintage",
+ location: "New York, NY",
+ description:
+ "Sablier consists of a curation of high-quality vintage garments focused on timeless staples and statement pieces. Our diverse collections offer custom made upcycled designs, reviving vintage fabrics into modern and chic styles.",
+ website: "https://sabliervintage.com",
+ dataSource: "sablier-vintage",
+ image: "/stores/sablier-vintage.jpg",
+ logo: "/stores/placeholder.svg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "1234",
+ collabsStoreId: "231753",
+ authenticityPolicy:
+ "Every piece at Sablier Vintage is hand-selected and inspected by the team — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and described with full condition details, with sustainability and individuality at the core of every selection.",
+ shippingPolicy:
+ "Ships from New York, NY. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. If there is an issue with your order, contact the team and they will do their best to help.",
+ },
+ {
  slug: "sarah-does",
  dashboardToken: "sd-7a1c4e9f2b8d",
  name: "SarahDoes",
@@ -895,29 +918,6 @@ export const stores = [
  "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
  returnPolicy:
  "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Use the form below to initiate a return.",
- },
- {
- slug: "sablier-vintage",
- dashboardToken: "tvc-5e2b8f1a9c3d",
- name: "Sablier Vintage",
- location: "New York, NY",
- description:
- "Sablier consists of a curation of high-quality vintage garments focused on timeless staples and statement pieces. Our diverse collections offer custom made upcycled designs, reviving vintage fabrics into modern and chic styles.",
- website: "https://sabliervintage.com",
- dataSource: "sablier-vintage",
- image: "/stores/sablier-vintage.jpg",
- logo: "/stores/placeholder.svg",
- logoBg: "#ffffff",
- currency: "USD",
- commissionType: "shopify-collabs" as const,
- affiliatePath: "1234",
- collabsStoreId: "231753",
- authenticityPolicy:
- "Every piece at Sablier Vintage is hand-selected and inspected by the team — from timeless vintage staples and statement pieces to custom designs reconstructed from second-hand fabrics. Each item is authentic, quality-checked, and described with full condition details, with sustainability and individuality at the core of every selection.",
- shippingPolicy:
- "Ships from New York, NY. Shipping rates are calculated at checkout.",
- returnPolicy:
- "All sales are final. If there is an issue with your order, contact the team and they will do their best to help.",
  },
  {
  slug: "to-us-vintage",

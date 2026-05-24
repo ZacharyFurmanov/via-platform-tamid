@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
 import ImageCarousel from "./ImageCarousel";
 import FavoriteButton from "./FavoriteButton";
-import { normalizeSize } from "@/app/lib/inventory";
+import { normalizeSize, convertSizeToUS } from "@/app/lib/inventory";
 import { trackSelectItem } from "@/app/lib/firebase-analytics";
 
 const SIZE_LABELS: Record<string, string> = {
- XS: "Extra Small",
- S: "Small",
- M: "Medium",
- L: "Large",
- XL: "Extra Large",
+ XS: "XS",
+ S: "S",
+ M: "M",
+ L: "L",
+ XL: "XL",
  XXL: "XXL",
  XXXL: "XXXL",
  "One Size": "One Size",
@@ -21,13 +21,23 @@ const SIZE_LABELS: Record<string, string> = {
 
 const CLOTHING_SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL"]);
 
+const SHOE_RE = /shoe|boot|heel|sneaker|flat|sandal|loafer|pump|mule|slipper|clog/i;
+
 function expandSize(size: string, category?: string, title?: string): string {
+ const cat = category ?? "";
  const normalized = normalizeSize(size);
 
- // For shoes: if stored size is a clothing label but title has a numeric shoe size, prefer that
- if (category === "Shoes" && CLOTHING_SIZES.has(normalized) && title) {
+ // Try EU/UK → US conversion via shared utility
+ const converted = convertSizeToUS(size, cat);
+ if (converted) return converted;
+
+ // For shoes: if stored as a letter size but title has a numeric EU size, extract and convert it
+ if (SHOE_RE.test(cat) && CLOTHING_SIZES.has(normalized) && title) {
  const match = title.match(/\b(\d{2}(?:\.\d)?)\s*$/);
- if (match) return match[1];
+ if (match) {
+  const us = convertSizeToUS(match[1], cat);
+  return us ?? match[1];
+ }
  }
 
  return SIZE_LABELS[normalized] ?? normalized;
@@ -154,9 +164,16 @@ export default function ProductCard({
  )}
  </div>
 
- <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60 mt-1">
+ <div className="flex items-center justify-between mt-1">
+ <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60">
  {storeName}
  </p>
+ {size && (
+ <p className="text-[9px] sm:text-[10px] text-[#5D0F17]/50 flex-shrink-0">
+ {expandSize(size, String(category), name)}
+ </p>
+ )}
+ </div>
  </div>
  </Link>
 
