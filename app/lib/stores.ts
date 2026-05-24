@@ -1083,12 +1083,14 @@ export const stores = [
  },
 ];
 
-/** Stores shown on the public site — only those with a Shopify Collabs ID for commission tracking. */
-export const visibleStores = stores.filter(s => 'collabsStoreId' in s);
+/** Stores shown on the public site — Shopify Collabs stores must have a collabsStoreId; other types (Squarespace, Square, Wix, custom) are always shown. */
+export const visibleStores = stores.filter(s =>
+ s.commissionType !== "shopify-collabs" || 'collabsStoreId' in s
+);
 
-/** Slugs of stores hidden from the public site (no Collabs ID yet). */
+/** Shopify Collabs stores without a collabsStoreId — hidden site-wide until onboarded. */
 export const HIDDEN_STORE_SLUGS: string[] = stores
- .filter(s => !('collabsStoreId' in s))
+ .filter(s => s.commissionType === "shopify-collabs" && !('collabsStoreId' in s))
  .map(s => s.slug);
 
 /**
