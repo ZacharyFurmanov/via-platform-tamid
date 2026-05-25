@@ -1,9 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 import { unstable_cache } from "next/cache";
 import { HIDDEN_STORE_SLUGS } from "./stores";
+import { SHOPIFY_STORES } from "./storeConfig";
 
 // Products from these slugs are hidden site-wide: manually disabled + stores without Collabs ID.
 export const DISABLED_STORE_SLUGS: string[] = ["velvet-archive", ...HIDDEN_STORE_SLUGS];
+
+// Slugs of Shopify-powered stores. Used to gate collabs_link requirement — only Shopify
+// products need a collabs_link to be visible; non-Shopify products are always shown.
+const SHOPIFY_STORE_SLUGS: string[] = SHOPIFY_STORES.map((s) => s.slug);
 
 // Stores excluded from New Arrivals only (products still appear in browse/search).
 const NEW_ARRIVALS_EXCLUDED_SLUGS: string[] = ["chill-boutique"];
@@ -469,10 +474,7 @@ export async function getProductsByStore(storeSlug: string): Promise<DBProduct[]
  const result = await sql`
  SELECT * FROM products
  WHERE store_slug = ${storeSlug}
- AND (
- shopify_product_id IS NULL
- OR collabs_link IS NOT NULL
- )
+ AND (store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR collabs_link IS NOT NULL)
  AND title NOT ILIKE '%gift card%'
  AND image IS NOT NULL AND image != ''
  ORDER BY id
@@ -489,7 +491,7 @@ export async function getProductById(id: number): Promise<DBProduct | null> {
  const result = await sql`
  SELECT * FROM products
  WHERE id = ${id}
- AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
+ AND (store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR collabs_link IS NOT NULL)
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
  LIMIT 1
  `;
@@ -503,10 +505,7 @@ const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
  const sql = neon(getDatabaseUrl());
  const query = async () => sql`
  SELECT * FROM products
- WHERE (
- shopify_product_id IS NULL
- OR collabs_link IS NOT NULL
- )
+ WHERE (store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR collabs_link IS NOT NULL)
  AND title NOT ILIKE '%gift card%'
  AND image IS NOT NULL AND image != ''
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
@@ -539,10 +538,7 @@ export async function getRecommendedProducts(
  const result = await sql`
  SELECT * FROM products TABLESAMPLE BERNOULLI(50)
  WHERE id != ${excludeId}
- AND (
- shopify_product_id IS NULL
- OR collabs_link IS NOT NULL
- )
+ AND (store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR collabs_link IS NOT NULL)
  AND title NOT ILIKE '%gift card%'
  AND image IS NOT NULL AND image != ''
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
@@ -566,10 +562,7 @@ export async function getProductsByTitleKeyword(
  SELECT * FROM products
  WHERE id != ${excludeId}
  AND title ILIKE ${pattern}
- AND (
- shopify_product_id IS NULL
- OR collabs_link IS NOT NULL
- )
+ AND (store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR collabs_link IS NOT NULL)
  AND title NOT ILIKE '%gift card%'
  AND image IS NOT NULL AND image != ''
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))

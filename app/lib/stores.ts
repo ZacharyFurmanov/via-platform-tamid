@@ -1089,8 +1089,8 @@ export const visibleStores = stores.filter(s =>
 );
 
 /** Shopify Collabs stores without a collabsStoreId — hidden site-wide until onboarded. */
-export const HIDDEN_STORE_SLUGS: string[] = stores
- .filter(s => s.commissionType === "shopify-collabs" && !('collabsStoreId' in s))
+export const HIDDEN_STORE_SLUGS: string[] = (stores as Array<{ commissionType: string; slug: string; collabsStoreId?: string }>)
+ .filter(s => s.commissionType === "shopify-collabs" && !s.collabsStoreId)
  .map(s => s.slug);
 
 /**
