@@ -214,8 +214,8 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  name: "Bag Crush",
  slug: "bag-crush",
  storeDomain: "mybagcrush.com",
- skipSoldOutFilter: true,
  scrapeProductPage: true,
+ excludeTitles: ["Bag Charm (Standard)"],
  },
  {
  type: "shopify",

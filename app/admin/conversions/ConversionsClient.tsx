@@ -85,6 +85,9 @@ export default function AdminConversionsPage() {
  const [newOrder, setNewOrder] = useState({ storeSlug: "", storeName: "", orderId: "", orderTotal: "", currency: "USD", userEmail: "", timestamp: "" });
  const [savingOrder, setSavingOrder] = useState(false);
  const [saveOrderError, setSaveOrderError] = useState<string | null>(null);
+ const [liveSoldOut, setLiveSoldOut] = useState<{ title: string; price: number; currency: string; image: string | null; url: string }[]>([]);
+ const [liveSoldOutLoading, setLiveSoldOutLoading] = useState(false);
+ const [liveSoldOutFetched, setLiveSoldOutFetched] = useState(false);
 
  const load = useCallback(() => {
  setLoading(true);
@@ -95,6 +98,17 @@ export default function AdminConversionsPage() {
  }, [filter]);
 
  useEffect(() => { load(); }, [load]);
+
+ async function fetchLiveSoldOut(conv: Conversion) {
+ setLiveSoldOutLoading(true);
+ setLiveSoldOutFetched(false);
+ const params = new URLSearchParams({ store: conv.storeSlug, currency: conv.currency });
+ if (conv.orderTotal > 0) params.set("price", String(conv.orderTotal));
+ const res = await fetch(`/api/admin/shopify-soldout?${params}`).then((r) => r.json()).catch(() => ({ products: [] }));
+ setLiveSoldOut(res.products ?? []);
+ setLiveSoldOutLoading(false);
+ setLiveSoldOutFetched(true);
+ }
 
  function openPanel(conv: Conversion) {
  setSelected(conv);
@@ -107,6 +121,8 @@ export default function AdminConversionsPage() {
  setNearbyOrders([]);
  setEmailStatus(null);
  setEmailErrorMsg(null);
+ setLiveSoldOut([]);
+ setLiveSoldOutFetched(false);
  setCandidatesLoading(true);
  setProductSearchLoading(true);
 
@@ -665,7 +681,47 @@ export default function AdminConversionsPage() {
  {candidatesLoading ? (
  <p style={{ fontSize: 13, color: "#a1a1aa" }}>Loading clicks…</p>
  ) : candidates.length === 0 ? (
- <p style={{ fontSize: 13, color: "#a1a1aa" }}>No clicks found in this window.</p>
+ <div>
+ <p style={{ fontSize: 13, color: "#a1a1aa", marginBottom: 10 }}>No clicks found in this window.</p>
+ <button
+ onClick={() => fetchLiveSoldOut(selected)}
+ disabled={liveSoldOutLoading}
+ style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, borderRadius: 6, border: "1px solid #e4e4e7", background: liveSoldOutLoading ? "#f4f4f5" : "#fff", color: "#09090b", cursor: liveSoldOutLoading ? "default" : "pointer", marginBottom: 10 }}
+ >
+ {liveSoldOutLoading ? "Fetching from live site…" : "Fetch sold-out items from live site"}
+ </button>
+ {liveSoldOutFetched && (
+ liveSoldOut.length === 0 ? (
+ <p style={{ fontSize: 12, color: "#a1a1aa" }}>No sold-out items found near ${selected.orderTotal} {selected.currency}.</p>
+ ) : (
+ <div>
+ <p style={{ fontSize: 11, color: "#a1a1aa", margin: "0 0 8px" }}>
+ {liveSoldOut.length} sold-out item{liveSoldOut.length !== 1 ? "s" : ""} near this order amount:
+ </p>
+ <div style={{ border: "1px solid #e4e4e7", borderRadius: 6, overflow: "hidden", maxHeight: 300, overflowY: "auto" }}>
+ {liveSoldOut.map((p) => (
+ <div key={p.url} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderBottom: "1px solid #f4f4f5", background: "#fff" }}>
+ {p.image && <img src={p.image} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />}
+ <div style={{ flex: 1, minWidth: 0 }}>
+ <div style={{ fontSize: 13, fontWeight: 500, color: "#09090b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
+ <div style={{ fontSize: 11, color: "#a1a1aa", marginTop: 1 }}>
+ {p.price.toFixed(2)} {p.currency} · <a href={p.url} target="_blank" rel="noreferrer" style={{ color: "#71717a" }}>view ↗</a>
+ </div>
+ </div>
+ <button
+ onClick={() => setProduct(p.title)}
+ disabled={settingProduct}
+ style={{ padding: "5px 10px", background: "#18181b", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}
+ >
+ Link
+ </button>
+ </div>
+ ))}
+ </div>
+ </div>
+ )
+ )}
+ </div>
  ) : (
  candidates.map((click) => (
  <div key={click.clickId} style={{

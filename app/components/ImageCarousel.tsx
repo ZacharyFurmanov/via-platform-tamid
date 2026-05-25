@@ -284,7 +284,7 @@ export default function ImageCarousel({
  <>
  <div>
  <div
- className="relative aspect-square md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-zoom-in active:cursor-grabbing"
+ className="relative aspect-[4/5] md:aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/30 cursor-zoom-in active:cursor-grabbing"
  style={{ touchAction: "pan-y" }}
  onTouchStart={onTouchStart}
  onTouchEnd={hasMultiple ? onTouchEnd : undefined}

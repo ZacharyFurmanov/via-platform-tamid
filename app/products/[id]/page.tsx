@@ -45,7 +45,7 @@ function expandSize(size: string, categorySlug?: string): string {
 }
 
 // Shopify storefront UI strings that occasionally leak into scraped descriptions.
-const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*/i;
+const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*|subscribe\s+to\s+our\s+emails?|payment\s+methods?|american\s+express|apple\s+pay|diners\s+club|google\s+pay|mastercard|paypal|shop\s+pay|venmo|^(email|instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat)(\s+(instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat|email))*$/i;
 
 /** Converts plain text to basic HTML and strips ecom UI junk lines. */
 function sanitizeDescription(html: string | null): string | null {

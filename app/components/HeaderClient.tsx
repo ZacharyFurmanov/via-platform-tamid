@@ -25,8 +25,8 @@ const MENU_TOP = HEADER_H;
 
 const NAV_ITEM = "text-[12px] uppercase tracking-[0.1em] text-[#5D0F17] hover:text-[#5D0F17]/50 transition-colors duration-200 whitespace-nowrap";
 const DROP_PANEL = "bg-white border border-gray-200 shadow-md";
-const DROP_LINK = "block px-4 py-1.5 text-[12px] text-[#5D0F17] normal-case tracking-normal hover:bg-gray-50 transition-colors";
-const DROP_FOOT = "border-t border-gray-100 px-4 py-2 text-[10px] uppercase tracking-[0.1em] text-[#5D0F17]/50 hover:text-[#5D0F17] hover:bg-gray-50 transition-colors block";
+const DROP_LINK = "block px-4 py-1.5 text-[14px] text-[#5D0F17] normal-case tracking-normal hover:bg-gray-50 transition-colors";
+const DROP_FOOT = "border-t border-gray-100 px-4 py-2 text-[11px] uppercase tracking-[0.1em] text-[#5D0F17]/50 hover:text-[#5D0F17] hover:bg-gray-50 transition-colors block";
 
 export default function HeaderClient({
  categories,
@@ -47,10 +47,7 @@ export default function HeaderClient({
  const [query, setQuery] = useState("");
  const [activeIndex, setActiveIndex] = useState(-1);
  const searchInputRef = useRef<HTMLInputElement>(null);
- const [storesOpen, setStoresOpen] = useState(false);
- const [catsOpen, setCatsOpen] = useState(false);
- const [designersOpen, setDesignersOpen] = useState(false);
- const [colsOpen, setColsOpen] = useState(false);
+ const [activeNavDrawer, setActiveNavDrawer] = useState<"stores" | "categories" | "designers" | "collections" | null>(null);
  const [mobileStores, setMobileStores] = useState(false);
  const [mobileCats, setMobileCats] = useState(false);
  const [mobileDesigners, setMobileDesigners] = useState(false);
@@ -60,21 +57,6 @@ export default function HeaderClient({
  const { items: cartItems, itemCount, removeItem } = useCart();
  const { pendingCount } = useFriends();
 
- const storesRef = useRef<HTMLDivElement>(null);
- const catsRef = useRef<HTMLDivElement>(null);
- const designersRef = useRef<HTMLDivElement>(null);
- const colsRef = useRef<HTMLDivElement>(null);
-
- useEffect(() => {
- const h = (e: MouseEvent) => {
- if (storesRef.current && !storesRef.current.contains(e.target as Node)) setStoresOpen(false);
- if (catsRef.current && !catsRef.current.contains(e.target as Node)) setCatsOpen(false);
- if (designersRef.current && !designersRef.current.contains(e.target as Node)) setDesignersOpen(false);
- if (colsRef.current && !colsRef.current.contains(e.target as Node)) setColsOpen(false);
- };
- document.addEventListener("mousedown", h);
- return () => document.removeEventListener("mousedown", h);
- }, []);
 
  useEffect(() => {
  const h = () => { if (window.innerWidth >= 768) setMobileMenuOpen(false); };
@@ -155,7 +137,7 @@ export default function HeaderClient({
  if (href) router.push(href);
  };
 
- const closeDropdowns = () => { setStoresOpen(false); setCatsOpen(false); setDesignersOpen(false); setColsOpen(false); };
+ const closeNavDrawer = () => setActiveNavDrawer(null);
 
  return (
  <>
@@ -176,123 +158,15 @@ export default function HeaderClient({
 
  {/* Desktop Nav */}
  <nav className="hidden md:flex items-center gap-7 flex-1" style={FONT}>
-
- {/* Stores */}
- <div
- className="relative flex items-center"
- ref={storesRef}
- onMouseEnter={() => { setStoresOpen(true); setCatsOpen(false); setDesignersOpen(false); setColsOpen(false); }}
- onMouseLeave={() => setStoresOpen(false)}
+ {(["stores", "categories", "designers", "collections"] as const).map((key) => (
+ <button
+ key={key}
+ onClick={() => setActiveNavDrawer(activeNavDrawer === key ? null : key)}
+ className={`${NAV_ITEM} ${activeNavDrawer === key ? "opacity-50" : ""}`}
  >
- <button onClick={() => { closeDropdowns(); setStoresOpen(true); }} className={NAV_ITEM}>
- Stores
+ {key.charAt(0).toUpperCase() + key.slice(1)}
  </button>
- <div className={`absolute left-0 top-full pt-3 z-50 transition-all duration-200 ${storesOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"}`}>
- <div className={DROP_PANEL} style={{ minWidth: `${Math.ceil(stores.length / 8) * 200}px` }}>
- <div className="py-2 grid grid-flow-col" style={{ gridTemplateRows: "repeat(8, auto)" }}>
- {stores.map((s) => (
- <Link key={s.slug} href={`/stores/${s.slug}`} onClick={() => setStoresOpen(false)} className={DROP_LINK}>
- <span className="font-medium">{s.name}</span>
- <span className="block text-[11px] text-[#5D0F17]/40 mt-0.5">{s.location}</span>
- </Link>
  ))}
- </div>
- <Link href="/stores" onClick={() => setStoresOpen(false)} className={DROP_FOOT}>View All Stores</Link>
- </div>
- </div>
- </div>
-
- {/* Categories */}
- <div
- className="relative flex items-center"
- ref={catsRef}
- onMouseEnter={() => { setCatsOpen(true); setStoresOpen(false); setDesignersOpen(false); setColsOpen(false); }}
- onMouseLeave={() => setCatsOpen(false)}
- >
- <button onClick={() => { closeDropdowns(); setCatsOpen(true); }} className={NAV_ITEM}>
- Categories
- </button>
- <div className={`absolute left-0 top-full pt-3 z-50 transition-all duration-200 ${catsOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"}`}>
- <div className={`${DROP_PANEL} w-max`}>
- <div className="flex gap-0 py-4 px-2">
- {navCategoryGroups.map((group) => (
- <div key={group.slug} className="px-4 min-w-[130px]">
- <Link
- href={`/categories/${group.slug}`}
- onClick={() => setCatsOpen(false)}
- className="block text-[11px] uppercase tracking-[0.12em] font-semibold text-[#5D0F17] mb-2 hover:text-[#5D0F17]/60 transition-colors"
- >
- {group.label}
- </Link>
- <div className="space-y-0.5">
- {group.subs.map((sub) => (
- <Link
- key={sub.slug}
- href={`/categories/${sub.slug}`}
- onClick={() => setCatsOpen(false)}
- className="block py-1 text-[12px] text-[#5D0F17]/70 normal-case tracking-normal hover:text-[#5D0F17] transition-colors"
- >
- {sub.label}
- </Link>
- ))}
- </div>
- </div>
- ))}
- </div>
- <Link href="/categories" onClick={() => setCatsOpen(false)} className={DROP_FOOT}>All Categories</Link>
- </div>
- </div>
- </div>
-
- {/* Designers */}
- <div
-  className="relative flex items-center"
-  ref={designersRef}
-  onMouseEnter={() => { setDesignersOpen(true); setStoresOpen(false); setCatsOpen(false); setColsOpen(false); }}
-  onMouseLeave={() => setDesignersOpen(false)}
- >
-  <button onClick={() => { closeDropdowns(); setDesignersOpen(true); }} className={NAV_ITEM}>
-   Designers
-  </button>
-  <div className={`absolute left-0 top-full pt-3 z-50 transition-all duration-200 ${designersOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"}`}>
-   <div className={`${DROP_PANEL} min-w-[160px]`}>
-    <div className="py-1">
-     {topDesigners.map((d) => (
-      <Link key={d.slug} href={`/brands/${d.slug}`} onClick={() => setDesignersOpen(false)} className={DROP_LINK}>
-       {d.label}
-      </Link>
-     ))}
-    </div>
-    <Link href="/brands" onClick={() => setDesignersOpen(false)} className={DROP_FOOT}>All Designers</Link>
-   </div>
-  </div>
- </div>
-
- {/* Collections */}
- <div
- className="relative flex items-center"
- ref={colsRef}
- onMouseEnter={() => { setColsOpen(true); setStoresOpen(false); setCatsOpen(false); setDesignersOpen(false); }}
- onMouseLeave={() => setColsOpen(false)}
- >
- <button onClick={() => { closeDropdowns(); setColsOpen(true); }} className={NAV_ITEM}>
- Collections
- </button>
- <div className={`absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50 transition-all duration-200 ${colsOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"}`}>
- <div className={`${DROP_PANEL} min-w-[200px]`}>
- <div className="py-2">
- {COLLECTIONS.filter((col, i) => activeCollectionSlugs.has(col.slug) || i === COLLECTIONS.length - 1).map((col) => (
- <Link key={col.slug} href={col.href ?? `/collections/${col.slug}`} onClick={() => setColsOpen(false)} className={DROP_LINK}>
- {col.name}
- {col.curatedBy && <span className="block text-[10px] text-[#5D0F17]/40 mt-0.5">by {col.curatedBy}</span>}
- </Link>
- ))}
- </div>
- <Link href="/collections" onClick={() => setColsOpen(false)} className={DROP_FOOT}>View All Collections</Link>
- </div>
- </div>
- </div>
-
  </nav>
 
 
@@ -371,18 +245,27 @@ export default function HeaderClient({
  </div>
 
  {/* ── Mobile Menu ───────────────────────────────────────── */}
- {mobileMenuOpen && (
- <div className="fixed inset-0 z-50 md:hidden">
+ <div className="md:hidden">
+ {/* Backdrop */}
  <div
- className="absolute left-0 right-0 bottom-0 bg-black/10"
- style={{ top: MENU_TOP }}
+ className={`fixed inset-0 z-[64] bg-black/20 transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
  onClick={() => setMobileMenuOpen(false)}
  />
+ {/* Left-side panel */}
  <nav
- className="absolute left-0 right-0 bottom-0 bg-white overflow-y-auto"
- style={{ top: MENU_TOP, ...FONT }}
+ className={`fixed left-0 top-0 bottom-0 z-[65] w-full max-w-sm bg-white shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+ style={FONT}
  >
- <div className="px-6 py-8">
+ {/* Panel header */}
+ <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+ <span className="text-[11px] uppercase tracking-[0.15em] text-[#5D0F17]">Menu</span>
+ <button onClick={() => setMobileMenuOpen(false)} className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors">
+ <X size={16} strokeWidth={1.5} />
+ </button>
+ </div>
+
+ <div className="overflow-y-auto flex-1">
+ <div className="px-6 py-4">
  <ul className="space-y-1">
 
  <li className="border-b border-gray-100">
@@ -433,15 +316,15 @@ export default function HeaderClient({
 
  <li className="border-b border-gray-100">
  <button onClick={() => setMobileDesigners(!mobileDesigners)} className="w-full flex items-center justify-between py-4 text-[13px] text-[#5D0F17] uppercase tracking-[0.08em]">
-  Designers <span className={`text-[#5D0F17]/40 text-xs transition-transform duration-200 ${mobileDesigners ? "rotate-180" : ""}`}>▾</span>
+ Designers <span className={`text-[#5D0F17]/40 text-xs transition-transform duration-200 ${mobileDesigners ? "rotate-180" : ""}`}>▾</span>
  </button>
  <div className={`overflow-hidden transition-all duration-300 ease-out ${mobileDesigners ? "max-h-[9999px] opacity-100" : "max-h-0 opacity-0"}`}>
-  <div className="pb-4 pl-4 space-y-1">
-   {topDesigners.map((d) => (
-    <Link key={d.slug} href={`/brands/${d.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[13px] text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors">{d.label}</Link>
-   ))}
-   <Link href="/brands" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[11px] uppercase tracking-[0.08em] text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors">All Designers</Link>
-  </div>
+ <div className="pb-4 pl-4 space-y-1">
+ {topDesigners.map((d) => (
+ <Link key={d.slug} href={`/brands/${d.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[13px] text-[#5D0F17]/70 hover:text-[#5D0F17] transition-colors">{d.label}</Link>
+ ))}
+ <Link href="/brands" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[11px] uppercase tracking-[0.08em] text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors">All Designers</Link>
+ </div>
  </div>
  </li>
 
@@ -449,14 +332,14 @@ export default function HeaderClient({
  <button onClick={() => setMobileCols(!mobileCols)} className="w-full flex items-center justify-between py-4 text-[13px] text-[#5D0F17] uppercase tracking-[0.08em]">
  Collections <span className={`text-[#5D0F17]/40 text-xs transition-transform duration-200 ${mobileCols ? "rotate-180" : ""}`}>▾</span>
  </button>
- {mobileCols && (
+ <div className={`overflow-hidden transition-all duration-300 ease-out ${mobileCols ? "max-h-[9999px] opacity-100" : "max-h-0 opacity-0"}`}>
  <div className="pb-2 pl-4">
  {COLLECTIONS.filter((col, i) => activeCollectionSlugs.has(col.slug) || i === COLLECTIONS.length - 1).map((col) => (
  <Link key={col.slug} href={col.href ?? `/collections/${col.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2.5 text-[13px] text-[#5D0F17]/70">{col.name}</Link>
  ))}
  <Link href="/collections" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 text-[11px] uppercase tracking-[0.08em] text-[#5D0F17]/40">View All</Link>
  </div>
- )}
+ </div>
  </li>
 
  </ul>
@@ -467,8 +350,78 @@ export default function HeaderClient({
  </Link>
  </div>
  </div>
+ </div>
  </nav>
  </div>
+
+ {/* ── Left-side Nav Drawer (Stores / Categories / Designers / Collections) ── */}
+ {activeNavDrawer && (
+ <>
+ <div className="fixed inset-0 z-[65] bg-black/20" onClick={closeNavDrawer} />
+ <div className="fixed left-0 top-0 bottom-0 z-[70] w-full max-w-sm bg-white shadow-2xl flex flex-col" style={FONT}>
+ <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+ <span className="text-[11px] uppercase tracking-[0.15em] text-[#5D0F17]">
+ {activeNavDrawer.charAt(0).toUpperCase() + activeNavDrawer.slice(1)}
+ </span>
+ <button onClick={closeNavDrawer} className="text-[#5D0F17]/40 hover:text-[#5D0F17] transition-colors">
+ <X size={16} strokeWidth={1.5} />
+ </button>
+ </div>
+ <div className="overflow-y-auto flex-1">
+ {activeNavDrawer === "stores" && (
+ <div className="py-2">
+ {stores.map((s) => (
+ <Link key={s.slug} href={`/stores/${s.slug}`} onClick={closeNavDrawer} className={DROP_LINK}>
+ <span className="font-medium">{s.name}</span>
+ <span className="block text-[12px] text-[#5D0F17]/40 mt-0.5">{s.location}</span>
+ </Link>
+ ))}
+ <Link href="/stores" onClick={closeNavDrawer} className={DROP_FOOT}>View All Stores</Link>
+ </div>
+ )}
+ {activeNavDrawer === "categories" && (
+ <div className="py-4">
+ {navCategoryGroups.map((group) => (
+ <div key={group.slug} className="px-6 mb-5">
+ <Link href={`/categories/${group.slug}`} onClick={closeNavDrawer} className="block text-[13px] uppercase tracking-[0.12em] font-semibold text-[#5D0F17] mb-2 hover:text-[#5D0F17]/60 transition-colors">
+ {group.label}
+ </Link>
+ <div className="space-y-0.5">
+ {group.subs.map((sub) => (
+ <Link key={sub.slug} href={`/categories/${sub.slug}`} onClick={closeNavDrawer} className="block py-1 text-[14px] text-[#5D0F17]/70 normal-case tracking-normal hover:text-[#5D0F17] transition-colors">
+ {sub.label}
+ </Link>
+ ))}
+ </div>
+ </div>
+ ))}
+ <Link href="/categories" onClick={closeNavDrawer} className={DROP_FOOT}>All Categories</Link>
+ </div>
+ )}
+ {activeNavDrawer === "designers" && (
+ <div className="py-2">
+ {topDesigners.map((d) => (
+ <Link key={d.slug} href={`/brands/${d.slug}`} onClick={closeNavDrawer} className={DROP_LINK}>
+ {d.label}
+ </Link>
+ ))}
+ <Link href="/brands" onClick={closeNavDrawer} className={DROP_FOOT}>All Designers</Link>
+ </div>
+ )}
+ {activeNavDrawer === "collections" && (
+ <div className="py-2">
+ {COLLECTIONS.filter((col, i) => activeCollectionSlugs.has(col.slug) || i === COLLECTIONS.length - 1).map((col) => (
+ <Link key={col.slug} href={col.href ?? `/collections/${col.slug}`} onClick={closeNavDrawer} className={DROP_LINK}>
+ {col.name}
+ {col.curatedBy && <span className="block text-[11px] text-[#5D0F17]/40 mt-0.5">by {col.curatedBy}</span>}
+ </Link>
+ ))}
+ <Link href="/collections" onClick={closeNavDrawer} className={DROP_FOOT}>View All Collections</Link>
+ </div>
+ )}
+ </div>
+ </div>
+ </>
  )}
 
  {/* ── Right-side Drawer (Search / Cart / Account) ───────── */}
