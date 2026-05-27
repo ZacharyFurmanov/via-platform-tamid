@@ -197,7 +197,7 @@ export default function ShopifySetupPage() {
  <div className="mt-3">
  <WebhookUrlInput />
  </div>
- <p className="text-sm mt-3">Leave <strong>Webhook API version</strong> as the default. Click <strong>Save</strong>.</p>
+ <p className="text-sm mt-3">For <strong>Webhook API version</strong>, select <strong>Latest</strong> (not Unstable). Click <strong>Save</strong>.</p>
  </div>
 
  <div>

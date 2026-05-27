@@ -165,14 +165,14 @@ export default function ProductCard({
  </div>
 
  <div className="flex items-center justify-between mt-1">
- <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60">
- {storeName}
- </p>
  {size && (
- <p className="text-[9px] sm:text-[10px] text-[#5D0F17]/50 flex-shrink-0">
+ <p className="text-[11px] sm:text-xs text-[#5D0F17]/50 flex-shrink-0">
  {expandSize(size, String(category), name)}
  </p>
  )}
+ <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60">
+ {storeName}
+ </p>
  </div>
  </div>
  </Link>

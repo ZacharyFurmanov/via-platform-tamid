@@ -21,14 +21,39 @@ function normalizeSource(s: string): string {
 function inferPageType(pathname: string): string {
  if (pathname === "/") return "homepage";
  if (pathname.startsWith("/stores/")) return "store";
+ if (pathname === "/stores") return "stores-list";
  if (pathname.startsWith("/categories/")) return "category";
+ if (pathname === "/categories") return "categories-list";
  if (pathname.startsWith("/products/")) return "product";
  if (pathname.startsWith("/browse")) return "browse";
  if (pathname.startsWith("/search")) return "search";
  if (pathname.startsWith("/new-arrivals")) return "new-arrivals";
- if (pathname.startsWith("/brands")) return "brands";
+ if (pathname.startsWith("/brands/")) return "brand";
+ if (pathname === "/brands") return "brands";
  if (pathname.startsWith("/collections/")) return "collection";
+ if (pathname === "/collections") return "collections-list";
  if (pathname.startsWith("/account")) return "account";
+ if (pathname.startsWith("/stories/")) return "story";
+ if (pathname === "/stories") return "stories";
+ if (pathname.startsWith("/editors-picks")) return "editors-picks";
+ if (pathname.startsWith("/you-might-like")) return "you-might-like";
+ if (pathname.startsWith("/sourcing")) return "sourcing";
+ if (pathname.startsWith("/membership")) return "membership";
+ if (pathname.startsWith("/partner-with-vya")) return "partner";
+ if (pathname.startsWith("/for-stores")) return "for-stores";
+ if (pathname.startsWith("/store/")) return "store-portal";
+ if (pathname.startsWith("/login")) return "login";
+ if (pathname.startsWith("/register")) return "register";
+ if (pathname.startsWith("/waitlist")) return "waitlist";
+ if (pathname.startsWith("/cart")) return "cart";
+ if (pathname.startsWith("/out/")) return "outbound";
+ if (pathname.startsWith("/faqs")) return "faqs";
+ if (pathname.startsWith("/privacy")) return "privacy";
+ if (pathname.startsWith("/terms")) return "terms";
+ if (pathname.startsWith("/trust")) return "trust";
+ if (pathname.startsWith("/unsubscribe")) return "unsubscribe";
+ if (pathname.startsWith("/pilot-pending")) return "pilot-pending";
+ if (pathname.startsWith("/admin")) return "admin";
  return "other";
 }
 

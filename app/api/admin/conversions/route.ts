@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
           ${utmJoin}
-          WHERE (c.matched = false OR c.matched IS NULL) AND c.store_slug = ${storeSlug}
+          WHERE (c.user_id IS NULL AND c.via_click_id IS NULL) AND c.order_total > 0 AND (c.returned IS NULL OR c.returned = false) AND c.store_slug = ${storeSlug}
           ORDER BY c.timestamp DESC
           LIMIT 10000
         `
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
           FROM conversions c
           LEFT JOIN users u ON u.id::text = c.user_id
           ${utmJoin}
-          WHERE (c.matched = false OR c.matched IS NULL)
+          WHERE (c.user_id IS NULL AND c.via_click_id IS NULL) AND c.order_total > 0 AND (c.returned IS NULL OR c.returned = false)
           ORDER BY c.timestamp DESC
           LIMIT 10000
         `;
