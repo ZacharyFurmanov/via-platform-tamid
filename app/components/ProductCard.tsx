@@ -164,7 +164,7 @@ export default function ProductCard({
  )}
  </div>
 
- <div className="flex items-center justify-between mt-1">
+ <div className="flex items-center gap-2 mt-1">
  {size && (
  <p className="text-[11px] sm:text-xs text-[#5D0F17]/50 flex-shrink-0">
  {expandSize(size, String(category), name)}
