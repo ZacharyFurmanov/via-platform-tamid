@@ -20,6 +20,7 @@ import {
  X,
  GitBranch,
  Search,
+ Zap,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -58,6 +59,7 @@ const NAV_SECTIONS = [
  label: "Operations",
  items: [
  { label: "Sync", href: "/admin/sync", icon: RefreshCw },
+ { label: "Webhooks", href: "/admin/webhooks", icon: Zap },
  { label: "Collabs", href: "/admin/collabs-links", icon: Link2 },
  { label: "Stores", href: "/admin/stores", icon: Store },
  ],
