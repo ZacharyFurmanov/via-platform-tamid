@@ -65,6 +65,14 @@ export async function POST(request: NextRequest) {
  compareAtPrice: ("compareAtPrice" in p && typeof (p as { compareAtPrice?: unknown }).compareAtPrice === "number" ? (p as { compareAtPrice: number }).compareAtPrice : null) ?? undefined,
  }));
 
+ if (products.length === 0) {
+ return NextResponse.json({
+ success: false,
+ error: "0 products returned from store — sync skipped to prevent data loss",
+ skippedCount,
+ });
+ }
+
  // Create store slug from store name (kebab-case)
  const storeSlug = storeName
  .toLowerCase()
@@ -72,15 +80,16 @@ export async function POST(request: NextRequest) {
  .replace(/^-|-$/g, "");
 
  // Sync products to database
- const { count: productCount } = await syncProducts(storeSlug, storeName, products);
+ const { count: productCount, inserted, updated } = await syncProducts(storeSlug, storeName, products);
 
  return NextResponse.json({
  success: true,
  message: `Synced ${productCount} products from ${storeName}`,
  productCount,
+ inserted,
+ updated,
  skippedCount,
  storeSlug,
- products,
  });
  } catch (error) {
  console.error("Squarespace sync error:", error);

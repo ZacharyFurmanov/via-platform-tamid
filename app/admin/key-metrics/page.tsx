@@ -461,7 +461,7 @@ export default function KeyMetricsPage() {
  href="/admin/emails"
  />
  <MetricCard
- label="Revenue per Buying User"
+ label="Revenue per Order"
  value={fmt$(data.revenuePerUser.value)}
  sub={`${fmtNum(data.revenuePerUser.buyingUsers)} buyers in ${data.period?.label ?? "this period"}`}
  trend={data.revenuePerUser.prevPeriodValue != null && data.revenuePerUser.prevPeriodValue > 0

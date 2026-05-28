@@ -451,15 +451,18 @@ export async function syncProducts(
  `.catch(() => {}); // non-fatal on first run
  }
 
- // Remove products that are no longer in the feed
+ // Remove products that are no longer in the feed.
+ // Skip deletion entirely when 0 products come back — that almost always means
+ // a transient API failure (rate limit, brief outage, empty JSON response).
+ // Deleting all rows in that case would make every product look brand-new on
+ // the next successful sync. If a store genuinely goes to 0 products, use the
+ // manual purge in /admin/sync.
  if (titles.length > 0) {
  await sql`
  DELETE FROM products
  WHERE store_slug = ${storeSlug}
  AND title != ALL(${titles})
  `;
- } else {
- await sql`DELETE FROM products WHERE store_slug = ${storeSlug}`;
  }
 
  return { count: products.length, inserted: insertedCount, updated: updatedCount, priceDrops };

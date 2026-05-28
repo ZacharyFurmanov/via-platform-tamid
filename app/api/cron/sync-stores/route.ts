@@ -265,7 +265,13 @@ export async function GET(request: Request) {
  size: p.size ?? undefined,
  }));
 
- const { count: productCount } = await syncProducts(storeSlug, store.name, products);
+ if (products.length === 0) {
+ console.warn(`[Sync Stores] ${store.name}: 0 products from feed, skipping sync to avoid data loss`);
+ results.push({ store: store.name, success: false, error: "0 products returned — skipped to prevent data loss" });
+ continue;
+ }
+
+ const { count: productCount } = await syncProducts(store.slug, store.name, products);
  results.push({ store: store.name, success: true, productCount });
  }
 

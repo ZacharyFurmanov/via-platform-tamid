@@ -152,10 +152,14 @@ export default function ProductCard({
  <ImageCarousel images={carouselImages} alt={name} variant="card" isEditorsPick={isEditorsPick} onAllImagesFailed={onImageFail} priority={priority} />
 
  {/* Product info */}
- <div className="pt-3 pb-1 sm:pb-2">
- <h3 className="font-semibold text-xs sm:text-sm text-[#5D0F17] leading-snug line-clamp-2 mb-1">
+ <div className="pt-3 pb-1 sm:pb-2 flex flex-col gap-0.5">
+ <h3 className="font-semibold text-xs sm:text-sm text-[#5D0F17] leading-snug line-clamp-2">
  {stripSizeFromTitle(name, size)}
  </h3>
+
+ <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60">
+ {storeName}
+ </p>
 
  <div className="flex items-baseline gap-2">
  <p className="text-xs sm:text-sm font-medium text-[#5D0F17]">{price}</p>
@@ -164,16 +168,11 @@ export default function ProductCard({
  )}
  </div>
 
- <div className="flex items-center gap-2 mt-1">
  {size && (
- <p className="text-[11px] sm:text-xs text-[#5D0F17]/50 flex-shrink-0">
- {expandSize(size, String(category), name)}
+ <p className="text-[11px] sm:text-xs text-[#5D0F17]/50">
+ Size: {expandSize(size, String(category), name)}
  </p>
  )}
- <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-[#5D0F17]/60">
- {storeName}
- </p>
- </div>
  </div>
  </Link>
 
