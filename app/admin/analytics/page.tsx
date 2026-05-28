@@ -134,6 +134,14 @@ type AnalyticsData = {
  conversionsBySource: ConversionsBySource[];
 };
 
+type CohortPoint = {
+ cohort: string;
+ period: number;
+ activeUsers: number;
+ cohortSize: number;
+ retentionPct: number;
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatRevenue(n: number): string {
@@ -266,6 +274,7 @@ export default function DeepAnalyticsPage() {
  const [data, setData] = useState<AnalyticsData | null>(null);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
+ const [cohortData, setCohortData] = useState<CohortPoint[]>([]);
 
  const fetchData = useCallback(async (r: DateRange, silent = false) => {
  if (!silent) setLoading(true);
@@ -303,6 +312,14 @@ export default function DeepAnalyticsPage() {
  document.addEventListener("visibilitychange", onVisible);
  return () => document.removeEventListener("visibilitychange", onVisible);
  }, [range, fetchData]);
+
+ // Cohort data is range-independent — fetch once on mount
+ useEffect(() => {
+ fetch("/api/admin/cohort-retention")
+  .then((r) => r.json())
+  .then((j) => setCohortData(j.cohorts ?? []))
+  .catch(() => {});
+ }, []);
 
  // ── Render ────────────────────────────────────────────────────────────────
 
@@ -546,6 +563,12 @@ export default function DeepAnalyticsPage() {
  <div style={{ marginBottom: 36 }}>
  <SectionTitle>Top Stores</SectionTitle>
  <StoresTable stores={data.topStores} />
+ </div>
+
+ {/* ── Cohort Retention ─────────────────────────────────────────── */}
+ <div style={{ marginBottom: 36 }}>
+ <SectionTitle>Buyer Cohort Retention</SectionTitle>
+ <CohortRetentionChart data={cohortData} />
  </div>
 
  {/* ── Conversions ──────────────────────────────────────────────── */}
@@ -1001,6 +1024,195 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
  </div>
  )}
  </div>
+ </div>
+ );
+}
+
+// ── CohortRetentionChart ──────────────────────────────────────────────────────
+
+const COHORT_COLORS = [
+ "#09090b", "#2563eb", "#16a34a", "#dc2626",
+ "#7c3aed", "#ea580c", "#0891b2", "#db2777",
+];
+
+function fmtCohortLabel(ym: string): string {
+ const [y, m] = ym.split("-");
+ const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+ return `${months[parseInt(m, 10) - 1]} '${y.slice(2)}`;
+}
+
+function retentionColor(pct: number): string {
+ if (pct >= 75) return "#dcfce7";
+ if (pct >= 50) return "#bbf7d0";
+ if (pct >= 25) return "#fef9c3";
+ if (pct > 0)  return "#fef3c7";
+ return "#f4f4f5";
+}
+
+function CohortRetentionChart({ data }: { data: CohortPoint[] }) {
+ if (data.length === 0) {
+ return (
+  <div style={{ padding: "32px 0", color: MUTED, fontSize: 13, textAlign: "center" }}>
+   No repeat-buyer data yet — needs at least two purchases from the same user across different months.
+  </div>
+ );
+ }
+
+ // Group by cohort
+ const cohortMap = new Map<string, CohortPoint[]>();
+ for (const pt of data) {
+ const arr = cohortMap.get(pt.cohort) ?? [];
+ arr.push(pt);
+ cohortMap.set(pt.cohort, arr);
+ }
+ const cohorts = Array.from(cohortMap.keys()).sort();
+ const maxPeriod = Math.max(...data.map((d) => d.period));
+ const periods = Array.from({ length: maxPeriod + 1 }, (_, i) => i);
+
+ // ── SVG line chart ────────────────────────────────────────────────────────
+ const W = 640, H = 260;
+ const PAD = { top: 16, right: 24, bottom: 44, left: 44 };
+ const cW = W - PAD.left - PAD.right;
+ const cH = H - PAD.top - PAD.bottom;
+ const xOf = (p: number) => maxPeriod === 0 ? cW / 2 : (p / maxPeriod) * cW;
+ const yOf = (pct: number) => cH - (pct / 100) * cH;
+
+ const gridPcts = [0, 25, 50, 75, 100];
+
+ return (
+ <div>
+  {/* Line chart */}
+  <div style={{ overflowX: "auto", marginBottom: 20 }}>
+   <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 320, maxWidth: W, display: "block" }}>
+   <g transform={`translate(${PAD.left},${PAD.top})`}>
+    {/* Grid lines */}
+    {gridPcts.map((pct) => (
+    <g key={pct}>
+     <line x1={0} y1={yOf(pct)} x2={cW} y2={yOf(pct)} stroke={BORDER} strokeWidth={1} />
+     <text x={-6} y={yOf(pct) + 4} textAnchor="end" fontSize={9} fill={MUTED}>{pct}%</text>
+    </g>
+    ))}
+    {/* X-axis labels */}
+    {periods.map((p) => (
+    <text key={p} x={xOf(p)} y={cH + 18} textAnchor="middle" fontSize={9} fill={MUTED}>
+     {p === 0 ? "M+0" : `M+${p}`}
+    </text>
+    ))}
+    <text x={cW / 2} y={cH + 34} textAnchor="middle" fontSize={9} fill={MUTED}>
+     months since first purchase
+    </text>
+    {/* Cohort lines */}
+    {cohorts.map((cohort, ci) => {
+    const pts = cohortMap.get(cohort) ?? [];
+    const color = COHORT_COLORS[ci % COHORT_COLORS.length];
+    const pointMap = new Map(pts.map((p) => [p.period, p]));
+    // Build connected segments (skip gaps)
+    const segments: string[] = [];
+    let current = "";
+    for (const p of periods) {
+     const pt = pointMap.get(p);
+     if (pt) {
+     const x = xOf(p), y = yOf(pt.retentionPct);
+     current += current === "" ? `M${x},${y}` : ` L${x},${y}`;
+     } else if (current !== "") {
+     segments.push(current);
+     current = "";
+     }
+    }
+    if (current) segments.push(current);
+    return (
+     <g key={cohort}>
+     {segments.map((d, i) => (
+      <path key={i} d={d} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+     ))}
+     {pts.map((pt) => (
+      <circle key={pt.period} cx={xOf(pt.period)} cy={yOf(pt.retentionPct)} r={3.5} fill={color}>
+      <title>{fmtCohortLabel(cohort)} · M+{pt.period}: {pt.retentionPct}% ({pt.activeUsers}/{pt.cohortSize})</title>
+      </circle>
+     ))}
+     </g>
+    );
+    })}
+   </g>
+   </svg>
+  </div>
+
+  {/* Legend */}
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginBottom: 20 }}>
+   {cohorts.map((cohort, ci) => {
+   const pts = cohortMap.get(cohort) ?? [];
+   const cohortSize = pts[0]?.cohortSize ?? 0;
+   return (
+    <div key={cohort} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: DARK }}>
+    <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: COHORT_COLORS[ci % COHORT_COLORS.length], flexShrink: 0 }} />
+    <span>{fmtCohortLabel(cohort)}</span>
+    <span style={{ color: MUTED }}>n={cohortSize}</span>
+    </div>
+   );
+   })}
+  </div>
+
+  {/* Cohort table — heatmap grid */}
+  <div style={{ overflowX: "auto" }}>
+   <table style={{ borderCollapse: "collapse", fontSize: 12, width: "100%" }}>
+   <thead>
+    <tr>
+    <th style={{ padding: "6px 12px", textAlign: "left", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
+     Cohort
+    </th>
+    <th style={{ padding: "6px 10px", textAlign: "center", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
+     Size
+    </th>
+    {periods.map((p) => (
+     <th key={p} style={{ padding: "6px 10px", textAlign: "center", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
+     M+{p}
+     </th>
+    ))}
+    </tr>
+   </thead>
+   <tbody>
+    {cohorts.map((cohort, ci) => {
+    const pts = cohortMap.get(cohort) ?? [];
+    const pointMap = new Map(pts.map((p) => [p.period, p]));
+    const cohortSize = pts[0]?.cohortSize ?? 0;
+    return (
+     <tr key={cohort} style={{ borderBottom: `1px solid ${BORDER}` }}>
+     <td style={{ padding: "8px 12px", whiteSpace: "nowrap", fontWeight: 600, color: COHORT_COLORS[ci % COHORT_COLORS.length] }}>
+      {fmtCohortLabel(cohort)}
+     </td>
+     <td style={{ padding: "8px 10px", textAlign: "center", color: GRAY, fontSize: 11 }}>
+      {cohortSize}
+     </td>
+     {periods.map((p) => {
+      const pt = pointMap.get(p);
+      return (
+      <td
+       key={p}
+       style={{
+       padding: "8px 10px",
+       textAlign: "center",
+       backgroundColor: pt ? retentionColor(pt.retentionPct) : "transparent",
+       color: pt ? DARK : MUTED,
+       fontWeight: pt && p === 0 ? 700 : 400,
+       fontSize: 12,
+       whiteSpace: "nowrap",
+       }}
+      >
+       {pt ? `${pt.retentionPct}%` : "—"}
+      </td>
+      );
+     })}
+     </tr>
+    );
+    })}
+   </tbody>
+   </table>
+  </div>
+
+  <p style={{ fontSize: 11, color: MUTED, marginTop: 10 }}>
+   M+0 = acquisition month (always 100%). M+1 = % of buyers who returned the following month.
+   A curve that flattens above 0% indicates a retained loyal core.
+  </p>
  </div>
  );
 }

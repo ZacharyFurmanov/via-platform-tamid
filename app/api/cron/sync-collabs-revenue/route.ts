@@ -61,14 +61,20 @@ function calculateOrderTotal(commissionUsd: number, rules: CommissionRule[]): nu
  const rates = [...new Set(rules.map((r) => r.value / 100))].sort((a, b) => b - a);
  if (rates.length === 1) return commissionUsd / rates[0]; // Flat rate — exact
 
- // Tiered: try each rate; pick the first one where the implied price is plausibly
- // within that tier. We use $1k and $5k as standard breakpoints.
+ // Tiered: check every rate for self-consistency (implied price fits within that
+ // tier's [floor, ceiling) range). When multiple tiers are valid — e.g. $52.50
+ // commission is consistent with both $750@7% and $1050@5% — prefer the LAST
+ // valid tier (lower rate, higher implied price). This avoids underreporting
+ // order value when a commission falls right at a tier boundary.
  const tierCeilings = [1000, 5000]; // upper bound for each tier index
+ let lastValid: number | null = null;
  for (let i = 0; i < rates.length; i++) {
  const implied = commissionUsd / rates[i];
  const ceiling = tierCeilings[i] ?? Infinity;
- if (implied < ceiling) return implied;
+ const floor = i === 0 ? 0 : (tierCeilings[i - 1] ?? 0);
+ if (implied >= floor && implied < ceiling) lastValid = implied;
  }
+ if (lastValid !== null) return lastValid;
  return commissionUsd / rates[rates.length - 1];
 }
 

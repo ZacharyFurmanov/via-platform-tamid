@@ -656,6 +656,81 @@ export async function getInventoryStats(): Promise<InventoryStats> {
  };
 }
 
+// ── Cohort Retention ─────────────────────────────────────────────────────────
+
+export type CohortPoint = {
+ cohort: string;       // "2025-03"
+ period: number;       // months since first purchase (0 = acquisition month)
+ activeUsers: number;  // users in this cohort who purchased in this period
+ cohortSize: number;   // total users in the cohort
+ retentionPct: number; // activeUsers / cohortSize * 100
+};
+
+/**
+ * Compute monthly cohort retention from the conversions table.
+ * Groups buyers by their first-purchase month, then tracks what % return
+ * in each subsequent month. Period 0 is always 100% (the acquisition month).
+ */
+export async function getCohortRetention(): Promise<CohortPoint[]> {
+ const sql = neon(getDatabaseUrl());
+ try {
+ const rows = await sql`
+  WITH first_purchase AS (
+   SELECT
+    user_id,
+    DATE_TRUNC('month', MIN(timestamp)) AS cohort_month
+   FROM conversions
+   WHERE user_id IS NOT NULL
+   GROUP BY user_id
+  ),
+  cohort_sizes AS (
+   SELECT cohort_month, COUNT(*) AS cohort_size
+   FROM first_purchase
+   GROUP BY cohort_month
+  ),
+  activity AS (
+   SELECT
+    fp.user_id,
+    fp.cohort_month,
+    DATE_TRUNC('month', c.timestamp) AS activity_month
+   FROM first_purchase fp
+   JOIN conversions c ON c.user_id = fp.user_id
+   GROUP BY fp.user_id, fp.cohort_month, DATE_TRUNC('month', c.timestamp)
+  ),
+  retention AS (
+   SELECT
+    a.cohort_month,
+    (
+     (DATE_PART('year', a.activity_month) - DATE_PART('year', a.cohort_month)) * 12 +
+     (DATE_PART('month', a.activity_month) - DATE_PART('month', a.cohort_month))
+    )::integer AS period,
+    COUNT(DISTINCT a.user_id) AS active_users
+   FROM activity a
+   GROUP BY a.cohort_month, period
+  )
+  SELECT
+   TO_CHAR(r.cohort_month, 'YYYY-MM') AS cohort,
+   r.period,
+   r.active_users::integer AS active_users,
+   cs.cohort_size::integer AS cohort_size,
+   ROUND(r.active_users::numeric / cs.cohort_size * 100, 1) AS retention_pct
+  FROM retention r
+  JOIN cohort_sizes cs ON cs.cohort_month = r.cohort_month
+  WHERE r.period >= 0
+  ORDER BY r.cohort_month, r.period
+ `;
+ return rows.map((r) => ({
+  cohort: r.cohort as string,
+  period: r.period as number,
+  activeUsers: r.active_users as number,
+  cohortSize: r.cohort_size as number,
+  retentionPct: parseFloat(r.retention_pct as string),
+ }));
+ } catch {
+ return [];
+ }
+}
+
 function mapConversionRow(row: Record<string, unknown>): ConversionRecord {
  return {
  conversionId: row.conversion_id as string,
