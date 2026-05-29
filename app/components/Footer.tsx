@@ -138,6 +138,42 @@ export default function Footer() {
  </div>
  </div>
 
+ {/* Press Bar */}
+ <div className="border-t border-[#5D0F17]/10">
+ <div className="max-w-7xl mx-auto px-6 py-8">
+ <p className="text-[9px] uppercase tracking-[0.25em] text-[#5D0F17]/40 text-center mb-5">As Seen In</p>
+ <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
+ <a
+  href="https://www.glossy.co/fashion/why-its-thrift-stores-time-to-shine/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group flex flex-col items-center gap-1.5 text-center"
+ >
+  <span className="text-sm font-semibold tracking-wide text-[#5D0F17]/60 group-hover:text-[#5D0F17] transition-colors duration-200">
+  Glossy
+  </span>
+  <span className="text-[11px] text-[#5D0F17]/40 group-hover:text-[#5D0F17]/60 transition-colors duration-200 max-w-[180px] leading-snug">
+  Why it&apos;s thrift stores&apos; time to shine
+  </span>
+ </a>
+ <div className="w-px h-8 bg-[#5D0F17]/10 hidden sm:block" />
+ <a
+  href="https://www.businessinsider.com/college-senior-built-vintage-marketplace-claude-2026-5"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group flex flex-col items-center gap-1.5 text-center"
+ >
+  <span className="text-sm font-semibold tracking-wide text-[#5D0F17]/60 group-hover:text-[#5D0F17] transition-colors duration-200">
+  Business Insider
+  </span>
+  <span className="text-[11px] text-[#5D0F17]/40 group-hover:text-[#5D0F17]/60 transition-colors duration-200 max-w-[200px] leading-snug">
+  A college senior built a vintage marketplace with Claude
+  </span>
+ </a>
+ </div>
+ </div>
+ </div>
+
  {/* Bottom Bar */}
  <div className="border-t border-[#5D0F17]/15">
  <div className="max-w-7xl mx-auto px-6 py-6">

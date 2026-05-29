@@ -64,9 +64,5 @@
       "path": "/api/cron/last-chance",
       "schedule": "0 19 * * *"
     },
-    {
-      "path": "/api/cron/cleanup-squarespace",
-      "schedule": "0 3 * * *"
-    }
   ]
 }
