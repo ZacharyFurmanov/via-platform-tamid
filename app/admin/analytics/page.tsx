@@ -1030,10 +1030,8 @@ function InventoryTab({ inv }: { inv: InventoryStats }) {
 
 // ── CohortRetentionChart ──────────────────────────────────────────────────────
 
-const COHORT_COLORS = [
- "#09090b", "#2563eb", "#16a34a", "#dc2626",
- "#7c3aed", "#ea580c", "#0891b2", "#db2777",
-];
+const COHORT_COLORS = ["#2563eb", "#16a34a", "#7c3aed", "#ea580c", "#0891b2", "#db2777"];
+const MIN_COHORT_SIZE = 5; // cohorts smaller than this are shown in table but not charted
 
 function fmtCohortLabel(ym: string): string {
  const [y, m] = ym.split("-");
@@ -1042,8 +1040,7 @@ function fmtCohortLabel(ym: string): string {
 }
 
 function retentionColor(pct: number): string {
- if (pct >= 75) return "#dcfce7";
- if (pct >= 50) return "#bbf7d0";
+ if (pct >= 50) return "#dcfce7";
  if (pct >= 25) return "#fef9c3";
  if (pct > 0)  return "#fef3c7";
  return "#f4f4f5";
@@ -1052,8 +1049,8 @@ function retentionColor(pct: number): string {
 function CohortRetentionChart({ data }: { data: CohortPoint[] }) {
  if (data.length === 0) {
  return (
-  <div style={{ padding: "32px 0", color: MUTED, fontSize: 13, textAlign: "center" }}>
-   No repeat-buyer data yet — needs at least two purchases from the same user across different months.
+  <div style={{ padding: "24px 0", color: MUTED, fontSize: 13 }}>
+   No repeat-buyer data yet. This populates once the same user makes purchases in two different calendar months.
   </div>
  );
  }
@@ -1069,149 +1066,168 @@ function CohortRetentionChart({ data }: { data: CohortPoint[] }) {
  const maxPeriod = Math.max(...data.map((d) => d.period));
  const periods = Array.from({ length: maxPeriod + 1 }, (_, i) => i);
 
- // ── SVG line chart ────────────────────────────────────────────────────────
- const W = 640, H = 260;
- const PAD = { top: 16, right: 24, bottom: 44, left: 44 };
+ // Cohorts large enough to chart AND that have at least M+1 data
+ let colorIdx = 0;
+ const cohortColorMap = new Map<string, string>();
+ const chartableCohorts = cohorts.filter((cohort) => {
+ const pts = cohortMap.get(cohort) ?? [];
+ const size = pts[0]?.cohortSize ?? 0;
+ const hasReturnData = pts.some((p) => p.period > 0);
+ return size >= MIN_COHORT_SIZE && hasReturnData;
+ });
+ for (const cohort of chartableCohorts) {
+ cohortColorMap.set(cohort, COHORT_COLORS[colorIdx++ % COHORT_COLORS.length]);
+ }
+
+ // ── SVG line chart (only when we have something meaningful to show) ────────
+ const showChart = chartableCohorts.length > 0 && maxPeriod >= 1;
+ const W = 580, H = 220;
+ const PAD = { top: 16, right: 16, bottom: 40, left: 44 };
  const cW = W - PAD.left - PAD.right;
  const cH = H - PAD.top - PAD.bottom;
- const xOf = (p: number) => maxPeriod === 0 ? cW / 2 : (p / maxPeriod) * cW;
+ const xOf = (p: number) => maxPeriod <= 1 ? (p === 0 ? 0 : cW) : (p / maxPeriod) * cW;
  const yOf = (pct: number) => cH - (pct / 100) * cH;
-
- const gridPcts = [0, 25, 50, 75, 100];
 
  return (
  <div>
-  {/* Line chart */}
-  <div style={{ overflowX: "auto", marginBottom: 20 }}>
-   <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 320, maxWidth: W, display: "block" }}>
-   <g transform={`translate(${PAD.left},${PAD.top})`}>
+  {showChart ? (
+  <>
+   <div style={{ overflowX: "auto", marginBottom: 12 }}>
+   <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 280, maxWidth: W, display: "block" }}>
+    <g transform={`translate(${PAD.left},${PAD.top})`}>
     {/* Grid lines */}
-    {gridPcts.map((pct) => (
-    <g key={pct}>
+    {[0, 25, 50, 75, 100].map((pct) => (
+     <g key={pct}>
      <line x1={0} y1={yOf(pct)} x2={cW} y2={yOf(pct)} stroke={BORDER} strokeWidth={1} />
      <text x={-6} y={yOf(pct) + 4} textAnchor="end" fontSize={9} fill={MUTED}>{pct}%</text>
-    </g>
+     </g>
     ))}
     {/* X-axis labels */}
     {periods.map((p) => (
-    <text key={p} x={xOf(p)} y={cH + 18} textAnchor="middle" fontSize={9} fill={MUTED}>
-     {p === 0 ? "M+0" : `M+${p}`}
-    </text>
+     <text key={p} x={xOf(p)} y={cH + 16} textAnchor="middle" fontSize={10} fill={GRAY}>
+     {p === 0 ? "M+0\nacquisition" : `M+${p}`}
+     </text>
     ))}
-    <text x={cW / 2} y={cH + 34} textAnchor="middle" fontSize={9} fill={MUTED}>
-     months since first purchase
-    </text>
-    {/* Cohort lines */}
-    {cohorts.map((cohort, ci) => {
-    const pts = cohortMap.get(cohort) ?? [];
-    const color = COHORT_COLORS[ci % COHORT_COLORS.length];
-    const pointMap = new Map(pts.map((p) => [p.period, p]));
-    // Build connected segments (skip gaps)
-    const segments: string[] = [];
-    let current = "";
-    for (const p of periods) {
-     const pt = pointMap.get(p);
-     if (pt) {
-     const x = xOf(p), y = yOf(pt.retentionPct);
-     current += current === "" ? `M${x},${y}` : ` L${x},${y}`;
-     } else if (current !== "") {
-     segments.push(current);
-     current = "";
+    {/* Lines — only chartable cohorts, connected points only (no gap-jumping) */}
+    {chartableCohorts.map((cohort) => {
+     const pts = (cohortMap.get(cohort) ?? []).sort((a, b) => a.period - b.period);
+     const color = cohortColorMap.get(cohort)!;
+     // Only connect consecutive periods
+     const pathParts: string[] = [];
+     for (let i = 0; i < pts.length; i++) {
+     const pt = pts[i];
+     const x = xOf(pt.period), y = yOf(pt.retentionPct);
+     const prevPt = pts[i - 1];
+     if (i === 0 || !prevPt || pt.period !== prevPt.period + 1) {
+      pathParts.push(`M${x.toFixed(1)},${y.toFixed(1)}`);
+     } else {
+      pathParts.push(`L${x.toFixed(1)},${y.toFixed(1)}`);
      }
-    }
-    if (current) segments.push(current);
-    return (
+     }
+     return (
      <g key={cohort}>
-     {segments.map((d, i) => (
-      <path key={i} d={d} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-     ))}
-     {pts.map((pt) => (
-      <circle key={pt.period} cx={xOf(pt.period)} cy={yOf(pt.retentionPct)} r={3.5} fill={color}>
-      <title>{fmtCohortLabel(cohort)} · M+{pt.period}: {pt.retentionPct}% ({pt.activeUsers}/{pt.cohortSize})</title>
+      <path d={pathParts.join(" ")} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((pt) => (
+      <circle key={pt.period} cx={xOf(pt.period)} cy={yOf(pt.retentionPct)} r={4} fill={color} stroke="#fff" strokeWidth={1.5}>
+       <title>{fmtCohortLabel(cohort)} · M+{pt.period}: {pt.retentionPct}% ({pt.activeUsers} of {pt.cohortSize})</title>
       </circle>
-     ))}
+      ))}
      </g>
-    );
+     );
     })}
-   </g>
+    </g>
    </svg>
-  </div>
-
-  {/* Legend */}
-  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginBottom: 20 }}>
-   {cohorts.map((cohort, ci) => {
-   const pts = cohortMap.get(cohort) ?? [];
-   const cohortSize = pts[0]?.cohortSize ?? 0;
-   return (
+   </div>
+   {/* Legend */}
+   <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", marginBottom: 20 }}>
+   {chartableCohorts.map((cohort) => {
+    const size = cohortMap.get(cohort)?.[0]?.cohortSize ?? 0;
+    const color = cohortColorMap.get(cohort)!;
+    return (
     <div key={cohort} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: DARK }}>
-    <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: COHORT_COLORS[ci % COHORT_COLORS.length], flexShrink: 0 }} />
-    <span>{fmtCohortLabel(cohort)}</span>
-    <span style={{ color: MUTED }}>n={cohortSize}</span>
+     <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+     <span style={{ fontWeight: 500 }}>{fmtCohortLabel(cohort)}</span>
+     <span style={{ color: MUTED }}>n={size}</span>
     </div>
-   );
+    );
    })}
+   </div>
+  </>
+  ) : (
+  <div style={{ padding: "16px 0 20px", color: MUTED, fontSize: 13 }}>
+   Chart will appear once a cohort has ≥{MIN_COHORT_SIZE} buyers and at least one month of return data.
   </div>
+  )}
 
-  {/* Cohort table — heatmap grid */}
+  {/* Heatmap table — shows every cohort */}
   <div style={{ overflowX: "auto" }}>
-   <table style={{ borderCollapse: "collapse", fontSize: 12, width: "100%" }}>
+  <table style={{ borderCollapse: "collapse", fontSize: 12, width: "100%", border: `1px solid ${BORDER}`, borderRadius: 8 }}>
    <thead>
-    <tr>
-    <th style={{ padding: "6px 12px", textAlign: "left", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
-     Cohort
+   <tr style={{ background: "#fafafa" }}>
+    <th style={{ padding: "8px 14px", textAlign: "left", fontSize: 10, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}` }}>
+    Cohort
     </th>
-    <th style={{ padding: "6px 10px", textAlign: "center", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
-     Size
+    <th style={{ padding: "8px 12px", textAlign: "center", fontSize: 10, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}` }}>
+    Buyers
     </th>
-    {periods.map((p) => (
-     <th key={p} style={{ padding: "6px 10px", textAlign: "center", fontSize: 10, fontWeight: 500, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
-     M+{p}
-     </th>
+    {periods.filter((p) => p > 0).map((p) => (
+    <th key={p} style={{ padding: "8px 12px", textAlign: "center", fontSize: 10, fontWeight: 600, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>
+     Month +{p}
+    </th>
     ))}
-    </tr>
+   </tr>
    </thead>
    <tbody>
-    {cohorts.map((cohort, ci) => {
+   {cohorts.map((cohort, rowIdx) => {
     const pts = cohortMap.get(cohort) ?? [];
     const pointMap = new Map(pts.map((p) => [p.period, p]));
     const cohortSize = pts[0]?.cohortSize ?? 0;
+    const isTiny = cohortSize < MIN_COHORT_SIZE;
+    const color = cohortColorMap.get(cohort);
     return (
-     <tr key={cohort} style={{ borderBottom: `1px solid ${BORDER}` }}>
-     <td style={{ padding: "8px 12px", whiteSpace: "nowrap", fontWeight: 600, color: COHORT_COLORS[ci % COHORT_COLORS.length] }}>
-      {fmtCohortLabel(cohort)}
+    <tr key={cohort} style={{ borderBottom: rowIdx < cohorts.length - 1 ? `1px solid ${BORDER}` : "none", opacity: isTiny ? 0.65 : 1 }}>
+     <td style={{ padding: "10px 14px", whiteSpace: "nowrap", fontWeight: 600, color: color ?? DARK }}>
+     {fmtCohortLabel(cohort)}
+     {isTiny && <span style={{ fontSize: 10, color: MUTED, fontWeight: 400, marginLeft: 6 }}>small sample</span>}
      </td>
-     <td style={{ padding: "8px 10px", textAlign: "center", color: GRAY, fontSize: 11 }}>
-      {cohortSize}
+     <td style={{ padding: "10px 12px", textAlign: "center", color: GRAY, fontWeight: 500 }}>
+     {cohortSize}
      </td>
-     {periods.map((p) => {
-      const pt = pointMap.get(p);
-      return (
+     {periods.filter((p) => p > 0).map((p) => {
+     const pt = pointMap.get(p);
+     return (
       <td
-       key={p}
-       style={{
-       padding: "8px 10px",
+      key={p}
+      style={{
+       padding: "10px 12px",
        textAlign: "center",
        backgroundColor: pt ? retentionColor(pt.retentionPct) : "transparent",
        color: pt ? DARK : MUTED,
-       fontWeight: pt && p === 0 ? 700 : 400,
-       fontSize: 12,
+       fontWeight: pt ? 600 : 400,
        whiteSpace: "nowrap",
-       }}
+      }}
       >
-       {pt ? `${pt.retentionPct}%` : "—"}
+      {pt ? (
+       <span title={`${pt.activeUsers} of ${pt.cohortSize} buyers returned`}>
+       {pt.retentionPct}%
+       </span>
+      ) : (
+       <span style={{ fontSize: 11 }}>—</span>
+      )}
       </td>
-      );
+     );
      })}
-     </tr>
+    </tr>
     );
-    })}
+   })}
    </tbody>
-   </table>
+  </table>
   </div>
 
-  <p style={{ fontSize: 11, color: MUTED, marginTop: 10 }}>
-   M+0 = acquisition month (always 100%). M+1 = % of buyers who returned the following month.
-   A curve that flattens above 0% indicates a retained loyal core.
+  <p style={{ fontSize: 11, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>
+  Month +1 = % of that cohort&apos;s buyers who made another purchase the following month.
+  {" "}A number that stays above 0% as months increase = a loyal retained core.
+  {" "}Cohorts under {MIN_COHORT_SIZE} buyers (marked &ldquo;small sample&rdquo;) are shown for completeness but aren&apos;t statistically meaningful yet.
   </p>
  </div>
  );

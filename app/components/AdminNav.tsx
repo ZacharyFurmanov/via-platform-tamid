@@ -21,12 +21,14 @@ import {
  GitBranch,
  Search,
  Zap,
+ Activity,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
  {
  label: "Analytics",
  items: [
+ { label: "Command Center", href: "/admin/summary", icon: Activity },
  { label: "Overview", href: "/admin/key-metrics", icon: BarChart3 },
  { label: "Analytics", href: "/admin/analytics", icon: LineChart },
  { label: "Session Flows", href: "/admin/session-flows", icon: GitBranch },
