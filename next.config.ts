@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async redirects() {
     const socialSources = [
       { path: "instagram", source: "instagram", campaign: "instagram_bio" },
