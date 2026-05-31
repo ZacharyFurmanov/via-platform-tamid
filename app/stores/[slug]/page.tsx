@@ -15,7 +15,6 @@ import { inferBrandFromTitle } from "@/app/lib/loadStoreProducts";
 import { brandMap } from "@/app/lib/brandData";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import TrackStoreView from "@/app/components/TrackStoreView";
-import PageTracker from "@/app/components/PageTracker";
 import VyaVerifiedBadge from "@/app/components/VyaVerifiedBadge";
 
 type StorePageProps = {
@@ -146,7 +145,6 @@ export default async function StorePage({ params }: StorePageProps) {
 
  return (
  <main className="bg-[#FFFDF8] min-h-screen text-[#5D0F17]">
- <PageTracker pageType="store" pageSlug={store.slug} />
  <TrackStoreView
  storeSlug={store.slug}
  storeName={store.name}

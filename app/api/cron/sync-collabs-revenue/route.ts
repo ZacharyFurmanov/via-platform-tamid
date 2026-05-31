@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { saveSetting, getSetting } from "@/app/lib/settings-db";
 import { stores, convertCurrencyToUSD } from "@/app/lib/stores";
+import { markCartItemsPurchased } from "@/app/lib/cart-db";
 
 export const maxDuration = 60;
 
@@ -345,6 +346,12 @@ async function saveCollabsConversions(
  )
  ON CONFLICT (order_id, store_slug) DO NOTHING
  `;
+
+ // Mark cart items purchased so the user won't get an abandoned-cart email
+ const clickUserId = click ? (click.user_id as string | null) : null;
+ if (clickUserId) {
+ markCartItemsPurchased(clickUserId, storeSlug).catch(() => {});
+ }
  }
  return true;
  }

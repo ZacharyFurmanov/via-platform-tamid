@@ -231,6 +231,24 @@ export async function recordTrendingNotificationSent(userId: string, productId: 
 }
 
 /**
+ * Atomically claim trending notification slots for a user's products.
+ * Returns the product IDs that were successfully claimed (inserted).
+ * If another cron instance already claimed them, those IDs are excluded.
+ * Use this BEFORE sending to prevent duplicate emails from concurrent runs.
+ */
+export async function claimTrendingNotificationSlots(userId: string, productIds: number[]): Promise<number[]> {
+ if (productIds.length === 0) return [];
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`
+ INSERT INTO trending_notifications (user_id, product_id)
+ SELECT ${userId}, unnest(${productIds}::int[])
+ ON CONFLICT (user_id, product_id) DO NOTHING
+ RETURNING product_id
+ `;
+ return (rows as { product_id: number }[]).map((r) => r.product_id);
+}
+
+/**
  * Get how many notification emails a user has received today (for daily cap).
  */
 export async function getNotificationsSentTodayCount(userId: string): Promise<number> {

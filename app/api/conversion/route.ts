@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
  matchedClickData,
  });
 
- if (matched && userId) {
+ if (userId) {
  markCartItemsPurchased(userId, storeSlug).catch(() => {});
  }
 

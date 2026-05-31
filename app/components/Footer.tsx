@@ -7,7 +7,7 @@ export default function Footer() {
  <footer className="bg-[#FFFDF8] text-[#5D0F17]">
  {/* Main Footer Content */}
  <div className="max-w-7xl mx-auto px-6 py-16">
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
  {/* Brand Column */}
  <div className="lg:col-span-1">
  <Link href="/" className="inline-flex items-start gap-1.5 mb-5">
@@ -135,42 +135,37 @@ export default function Footer() {
  </ul>
  </div>
 
- </div>
- </div>
-
- {/* Press Bar */}
- <div className="border-t border-[#5D0F17]/10">
- <div className="max-w-7xl mx-auto px-6 py-8">
- <p className="text-[9px] uppercase tracking-[0.25em] text-[#5D0F17]/40 text-center mb-5">As Seen In</p>
- <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
+ {/* Press Column */}
+ <div>
+ <h4 className="text-xs uppercase tracking-[0.2em] text-[#5D0F17]/50 mb-6">
+ As Seen In
+ </h4>
+ <ul className="space-y-5">
+ <li>
  <a
   href="https://www.glossy.co/fashion/why-its-thrift-stores-time-to-shine/"
   target="_blank"
   rel="noopener noreferrer"
-  className="group flex flex-col items-center gap-1.5 text-center"
+  className="group"
  >
-  <span className="text-sm font-semibold tracking-wide text-[#5D0F17]/60 group-hover:text-[#5D0F17] transition-colors duration-200">
-  Glossy
-  </span>
-  <span className="text-[11px] text-[#5D0F17]/40 group-hover:text-[#5D0F17]/60 transition-colors duration-200 max-w-[180px] leading-snug">
-  Why it&apos;s thrift stores&apos; time to shine
-  </span>
+  <p className="text-sm font-semibold text-[#5D0F17]/75 group-hover:text-[#5D0F17] transition-colors duration-200">Glossy</p>
+  <p className="text-[11px] text-[#5D0F17]/45 group-hover:text-[#5D0F17]/60 transition-colors duration-200 leading-snug mt-0.5">Why it&apos;s thrift stores&apos; time to shine</p>
  </a>
- <div className="w-px h-8 bg-[#5D0F17]/10 hidden sm:block" />
+ </li>
+ <li>
  <a
   href="https://www.businessinsider.com/college-senior-built-vintage-marketplace-claude-2026-5"
   target="_blank"
   rel="noopener noreferrer"
-  className="group flex flex-col items-center gap-1.5 text-center"
+  className="group"
  >
-  <span className="text-sm font-semibold tracking-wide text-[#5D0F17]/60 group-hover:text-[#5D0F17] transition-colors duration-200">
-  Business Insider
-  </span>
-  <span className="text-[11px] text-[#5D0F17]/40 group-hover:text-[#5D0F17]/60 transition-colors duration-200 max-w-[200px] leading-snug">
-  A college senior built a vintage marketplace with Claude
-  </span>
+  <p className="text-sm font-semibold text-[#5D0F17]/75 group-hover:text-[#5D0F17] transition-colors duration-200">Business Insider</p>
+  <p className="text-[11px] text-[#5D0F17]/45 group-hover:text-[#5D0F17]/60 transition-colors duration-200 leading-snug mt-0.5">A college senior built a vintage marketplace with Claude</p>
  </a>
+ </li>
+ </ul>
  </div>
+
  </div>
  </div>
 

@@ -381,6 +381,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  storeDomain: "sarahdoes.shop",
  scrapeProductPage: true,
  },
+ {
+ type: "shopify",
+ name: "Situations Vintage",
+ slug: "situations-vintage",
+ storeDomain: "situationsvintage.com",
+ scrapeProductPage: true,
+ },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

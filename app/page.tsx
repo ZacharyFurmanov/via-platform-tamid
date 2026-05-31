@@ -8,16 +8,16 @@ import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
 import FeaturedDesignerSection from "./components/FeaturedDesignerSection";
 import EditorsPicksSection from "./components/EditorsPicksSection";
-import PageTracker from "./components/PageTracker";
 import { Suspense } from "react";
+import HomepageScrollTracker from "./components/HomepageScrollTracker";
 
 export default function HomePage() {
  return (
  <main className="w-full">
- <PageTracker pageType="homepage" />
+ <HomepageScrollTracker />
 
  {/* ================= HERO — MOBILE ================= */}
- <div className="md:hidden">
+ <div data-section="hero" className="md:hidden">
  <section className="relative overflow-hidden" style={{ height: "85vh" }}>
  <Image
  src="/hero-v7.jpg"
@@ -88,7 +88,7 @@ export default function HomePage() {
  </section>
 
  {/* ================= HOW IT WORKS ================= */}
- <section className="bg-[#FFFDF8] py-8 sm:py-12">
+ <section data-section="how-it-works" className="bg-[#FFFDF8] py-8 sm:py-12">
  <div className="max-w-7xl mx-auto px-6 sm:px-10">
  <div className="max-w-xl">
  <p className="text-lg sm:text-xl md:text-2xl font-serif text-[#5D0F17] leading-snug">
@@ -102,12 +102,14 @@ export default function HomePage() {
  </section>
 
  {/* ================= EVERYONE'S FAVORITES ================= */}
+ <div data-section="favorites">
  <Suspense fallback={<div className="bg-[#FFFDF8] py-16 sm:py-24 h-64" />}>
  <EditorsPicksSection />
  </Suspense>
 
+ </div>
  {/* ================= EDITORIAL SPLIT PANELS ================= */}
- <section className="">
+ <section data-section="collections" className="">
  <div className="flex flex-col sm:flex-row">
  <Link
  href="/collections/summer-edit"
@@ -158,7 +160,7 @@ export default function HomePage() {
  </section>
 
  {/* ================= SHOP BY STORE ================= */}
- <section className="bg-[#FFFDF8] py-12 sm:py-16">
+ <section data-section="stores" className="bg-[#FFFDF8] py-12 sm:py-16">
  <div className="max-w-7xl mx-auto">
  <div className="px-6 mb-8 flex items-end justify-between">
  <div>
@@ -182,12 +184,14 @@ export default function HomePage() {
  </Suspense>
 
  {/* ================= NEW ARRIVALS ================= */}
+ <div data-section="new-arrivals">
  <Suspense fallback={<div className="bg-[#FFFDF8] py-16 sm:py-24 h-64" />}>
  <NewArrivalsSection />
  </Suspense>
+ </div>
 
  {/* ================= CATEGORY ================= */}
- <section className="bg-[#FFFDF8] py-16 sm:py-24">
+ <section data-section="categories" className="bg-[#FFFDF8] py-16 sm:py-24">
  <div className="max-w-7xl mx-auto">
  <div className="px-6 mb-10 sm:mb-14 flex items-end justify-between">
  <div>

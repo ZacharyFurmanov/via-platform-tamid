@@ -8,7 +8,6 @@ import { displayCategories, clothingSlugs, shoesSlugs, bagsSlugs, accessoriesSlu
 import type { CategorySlug } from "@/app/lib/categoryMap";
 import { visibleStores as stores } from "@/app/lib/stores";
 import CategoryContent from "@/app/components/CategoryContent";
-import PageTracker from "@/app/components/PageTracker";
 import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
 import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { computeProductScore } from "@/app/lib/productRanking";
@@ -173,7 +172,6 @@ export default async function CategoryPage({
 
  return (
  <>
- <PageTracker pageType="category" pageSlug={category} />
  <CategoryContent
  label={label}
  products={filteredProducts}

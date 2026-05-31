@@ -361,21 +361,25 @@ export default function SummaryPage() {
   const [session, setSession] = useState<SessionData | null>(null);
   const [cohort, setCohort] = useState<CohortPoint[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [scrollReport, setScrollReport] = useState<{ section: string; unique: number; reachPct: number }[]>([]);
 
   const fetchAll = useCallback(async () => {
-    const [aRes, sRes, cRes] = await Promise.allSettled([
+    const [aRes, sRes, cRes, srRes] = await Promise.allSettled([
       fetch("/api/admin/analytics-deep?range=7d").then((r) => r.json()),
       fetch("/api/admin/session-flows").then((r) => r.json()),
       fetch("/api/admin/cohort-retention").then((r) => r.json()),
+      fetch("/api/admin/homepage-scroll-report?days=30").then((r) => r.json()),
     ]);
 
     const a: AnalyticsData | null = aRes.status === "fulfilled" ? aRes.value : null;
     const s: SessionData | null   = sRes.status === "fulfilled" ? sRes.value : null;
     const c: CohortPoint[]        = cRes.status === "fulfilled" ? (cRes.value?.cohorts ?? []) : [];
+    const sr = srRes.status === "fulfilled" ? (srRes.value?.sections ?? []) : [];
 
     setAnalytics(a);
     setSession(s);
     setCohort(c);
+    setScrollReport(sr);
     setAlerts(generateAlerts(a, s, c));
     setLastRefresh(new Date());
     setLoading(false);
@@ -583,6 +587,55 @@ export default function SummaryPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* ── Homepage Scroll Depth ────────────────────────────────────────── */}
+        <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "20px 24px", marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED, margin: 0 }}>
+                Homepage — How Far Do People Scroll?
+              </p>
+              <p style={{ fontSize: 11, color: MUTED, margin: "4px 0 0" }}>% of homepage visitors who reach each section (last 30 days)</p>
+            </div>
+          </div>
+          {scrollReport.length === 0 || scrollReport.every(s => s.unique === 0) ? (
+            <p style={{ fontSize: 13, color: MUTED }}>No data yet — will populate after first homepage visits post-deploy.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {scrollReport.map((s, i) => {
+                const label: Record<string, string> = {
+                  "hero": "Hero (above fold)",
+                  "how-it-works": "How It Works",
+                  "favorites": "Everyone's Favorites",
+                  "collections": "Collections",
+                  "stores": "Shop by Store",
+                  "new-arrivals": "New Arrivals",
+                  "categories": "Shop by Category",
+                };
+                const isFirst = i === 0;
+                const prev = i > 0 ? scrollReport[i - 1].reachPct : 100;
+                const drop = isFirst ? 0 : prev - s.reachPct;
+                const isBad = drop > 30;
+                return (
+                  <div key={s.section}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: DARK }}>{label[s.section] ?? s.section}</span>
+                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                        {!isFirst && drop > 0 && (
+                          <span style={{ fontSize: 11, color: isBad ? "#dc2626" : GRAY }}>↓ {drop.toFixed(0)}% leave here</span>
+                        )}
+                        <span style={{ fontSize: 12, fontWeight: 600, color: DARK }}>{s.reachPct}%</span>
+                      </div>
+                    </div>
+                    <div style={{ height: 6, background: BORDER, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${s.reachPct}%`, borderRadius: 3, background: isFirst ? DARK : isBad ? "#dc2626" : "#16a34a", transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── Store Health ──────────────────────────────────────────────────── */}

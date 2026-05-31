@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTrendingCandidates, recordTrendingNotificationSent } from "@/app/lib/notification-db";
+import { getTrendingCandidates, claimTrendingNotificationSlots } from "@/app/lib/notification-db";
 import { sendTrendingItemEmail, type TrendingEmailProduct } from "@/app/lib/email";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
@@ -30,9 +30,22 @@ export async function GET(request: Request) {
  // Sort by favorite count desc so the hottest items lead the email
  items.sort((a, b) => b.favorite_count - a.favorite_count);
 
- // Show top MAX_ITEMS_PER_EMAIL in the email; mark ALL as sent so they won't re-trigger
- const toShow = items.slice(0, MAX_ITEMS_PER_EMAIL);
  const email = items[0].email;
+ const allProductIds = items.map((c) => c.product_id);
+
+ // Atomically claim notification slots before sending. If another cron
+ // instance (e.g. from a concurrent deployment) already claimed these
+ // products for this user, claimed will be empty and we skip — preventing
+ // duplicate emails when two instances race.
+ const claimed = await claimTrendingNotificationSlots(userId, allProductIds);
+ if (claimed.length === 0) {
+  skipped++;
+  continue;
+ }
+
+ // Only show claimed products (up to max), preserving sort order
+ const claimedSet = new Set(claimed);
+ const toShow = items.filter((c) => claimedSet.has(c.product_id)).slice(0, MAX_ITEMS_PER_EMAIL);
 
  const products: TrendingEmailProduct[] = toShow.map((c) => ({
  title: c.product_title,
@@ -46,11 +59,6 @@ export async function GET(request: Request) {
 
  try {
  await sendTrendingItemEmail(email, products);
- // Record every trending item for this user as sent (not just the ones shown)
- // so the full list doesn't re-queue on the next run
- await Promise.all(
- items.map((c) => recordTrendingNotificationSent(userId, c.product_id))
- );
  sent++;
  } catch (err) {
  console.error(`Trending email failed for ${email}:`, err);

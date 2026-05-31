@@ -1081,6 +1081,30 @@ export const stores = [
  returnPolicy:
  "All sales are final. Please review all item details and photos carefully before purchasing.",
  },
+ {
+ slug: "situations-vintage",
+ dashboardToken: "sv-4e8c1a9f3b2d",
+ name: "Situations Vintage",
+ location: "New York, NY",
+ description:
+ "Situations Vintage is a New York-based vintage shop offering carefully curated secondhand and vintage finds.",
+ website: "https://situationsvintage.com",
+ contactEmail: "",
+ dataSource: "situations-vintage",
+ image: "/stores/situations-vintage.jpg",
+ logo: "/stores/situations-vintage.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "242143",
+ authenticityPolicy:
+ "Every piece is personally sourced and curated. Items are accurately described with full condition details.",
+ shippingPolicy:
+ "Ships from New York, NY. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. Please review all item details and photos carefully before purchasing.",
+ },
 ];
 
 /** Stores shown on the public site — Shopify Collabs stores must have a collabsStoreId; other types (Squarespace, Square, Wix, custom) are always shown. */

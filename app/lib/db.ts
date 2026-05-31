@@ -603,6 +603,7 @@ const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore 
  AND p.image IS NOT NULL AND p.image != ''
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
  AND p.store_slug != ALL(${NEW_ARRIVALS_EXCLUDED_SLUGS})
+ AND (p.store_slug != ALL(${SHOPIFY_STORE_SLUGS}) OR p.collabs_link IS NOT NULL)
  )
  SELECT * FROM pool
  WHERE store_rank <= ${maxPerStore}

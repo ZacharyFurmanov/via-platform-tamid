@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
  ),
  session_agg AS (
  SELECT sess_id,
- MAX(CASE WHEN page_type IN ('browse','new-arrivals','search','store','collection','brands') THEN 1 ELSE 0 END) AS browsed,
+ MAX(CASE WHEN page_type IN ('browse','new-arrivals','search','store','stores-list','collection','collections-list','brands','brand','category','categories-list','editors-picks','you-might-like') THEN 1 ELSE 0 END) AS browsed,
  MAX(CASE WHEN page_type = 'product' THEN 1 ELSE 0 END) AS viewed_product
  FROM sessions GROUP BY sess_id
  )
