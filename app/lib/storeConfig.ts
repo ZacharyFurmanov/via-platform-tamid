@@ -84,13 +84,13 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
  type: "squarespace",
  name: "Sassy So What",
  slug: "sassy-so-what",
- shopUrl: "https://www.sassysowhat.com/shopall/available-1",
+ shopUrl: "https://www.sassysowhat.com/shopall",
  },
  {
  type: "squarespace",
  name: "Keepin It Real Luxe",
  slug: "keepin-it-real-luxe",
- shopUrl: "https://www.keepinitrealluxe.com/shop",
+ shopUrl: "https://www.keepinitrealluxe.com/collection",
  },
 ];
 

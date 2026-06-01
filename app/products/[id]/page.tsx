@@ -79,23 +79,41 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
  const price = `$${Math.round(Number(product.price))}`;
- const description = `${price} — ${product.store_name}`;
+ const categorySlug = inferCategoryFromTitle(product.title);
+ const brandName = inferBrandFromTitle(product.title);
+ const itemType = inferItemTypeFromTitle(product.title);
+
+ // Rich description with brand, category, price, and store for keyword matching
+ const descParts = [
+ brandName ? `${brandName} ` : "",
+ itemType ? `${itemType} ` : "",
+ `${price}`,
+ product.store_name ? ` — ${product.store_name}` : "",
+ categorySlug ? `. Shop vintage ${categorySlug} on VYA.` : ". Shop vintage & secondhand on VYA.",
+ ].join("").trim();
+
  const ogImageUrl = `${BASE_URL}/products/${compositeId}/opengraph-image`;
 
  return {
  title: `${product.title} — VYA`,
- description,
+ description: descParts,
+ keywords: [
+ product.title,
+ ...(brandName ? [brandName, `vintage ${brandName}`, `${brandName} vintage`] : []),
+ ...(itemType ? [`vintage ${itemType}`, `secondhand ${itemType}`] : []),
+ "vintage", "secondhand", "VYA", product.store_name,
+ ].filter(Boolean),
  openGraph: {
- title: product.title,
- description,
+ title: `${product.title} — VYA`,
+ description: descParts,
  url: `${BASE_URL}/products/${compositeId}`,
  type: "website",
  images: [{ url: ogImageUrl, width: 1200, height: 630, alt: product.title }],
  },
  twitter: {
  card: "summary_large_image",
- title: product.title,
- description,
+ title: `${product.title} — VYA`,
+ description: descParts,
  images: [ogImageUrl],
  },
  };
@@ -220,8 +238,32 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  }
  const descriptionHtml = sanitizeDescription(product.description);
 
+ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const brandName = inferBrandFromTitle(product.title);
+ const jsonLd = {
+ "@context": "https://schema.org",
+ "@type": "Product",
+ "name": product.title,
+ "description": product.description
+  ? product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 500)
+  : `${product.title} — vintage & secondhand at VYA`,
+ "image": productImages,
+ "url": `${BASE_URL}/products/${compositeId}`,
+ ...(brandName ? { "brand": { "@type": "Brand", "name": brandName } } : {}),
+ "offers": {
+  "@type": "Offer",
+  "price": Number(product.price).toFixed(2),
+  "priceCurrency": product.currency || "USD",
+  "availability": "https://schema.org/InStock",
+  "url": `${BASE_URL}/products/${compositeId}`,
+  "seller": { "@type": "Organization", "name": store.name, "url": (store as any).website ?? "" },
+ },
+ "itemCondition": "https://schema.org/UsedCondition",
+ };
+
  return (
  <main className="bg-[#FFFDF8] min-h-screen">
+ <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
  <TrackProductView
  productId={compositeId}
  title={product.title}

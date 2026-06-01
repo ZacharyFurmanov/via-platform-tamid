@@ -163,12 +163,7 @@ export async function getPendingUsersToApprove(): Promise<
         GROUP BY referred_by
       ) refs ON refs.referred_by = pa.referral_code
       WHERE pa.status = 'pending'
-
-      UNION ALL
-
-      SELECT w.email, NULL AS first_name, w.signup_date AS created_at, 0 AS ref_count
-      FROM waitlist w
-      WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
+      AND pa.created_at < NOW() - INTERVAL '24 hours'
     ) combined
     ORDER BY ref_count DESC, created_at ASC
     LIMIT 20

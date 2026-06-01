@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -34,8 +34,24 @@ export default function FavoriteButton({
 
  const iconSize = size === "sm" ? 16 : 22;
 
+ // Track the user's own contribution to the count so it updates instantly.
+ // Compare current favorited state to what it was when we last saw a server-fresh count.
+ const initialFavoritedRef = useRef(isFavorited);
+ useEffect(() => {
+ // When the server prop changes, treat the current favorited state as the new baseline
+ initialFavoritedRef.current = isFavorited;
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [favoriteCount]);
+
+ const baseCount = favoriteCount ?? 0;
+ let displayCount = baseCount;
+ if (type === "product") {
+ if (isFavorited && !initialFavoritedRef.current) displayCount = baseCount + 1;
+ else if (!isFavorited && initialFavoritedRef.current) displayCount = Math.max(0, baseCount - 1);
+ }
+
  // Show count for products only, and only if > 0
- const showCount = type === "product" && favoriteCount != null && favoriteCount > 0;
+ const showCount = type === "product" && favoriteCount != null && displayCount > 0;
 
  function handleClick(e: React.MouseEvent) {
  e.preventDefault();
@@ -79,7 +95,7 @@ export default function FavoriteButton({
  }`}
  />
  <span className={`font-medium text-black/60 ${size === "sm" ? "text-[11px]" : "text-xs"}`}>
- {favoriteCount}
+ {displayCount}
  </span>
  </button>
  {showSignInHint && (
