@@ -558,7 +558,7 @@ export const stores = [
  description:
  "NELLO Vintage is a curated luxury thrift house based in Atlanta, GA, founded by Chanelle Harris. The name NELLO is a union of Chanelle's own name and the symbolism of the lotus flower, born from a deeply personal spiritual journey toward radical self-love and fearless creative expression.\n\nNELLO presents an intentionally curated collection of rare vintage and sustainable pieces spanning tops, bottoms, dresses, outerwear, sets, accessories, and beyond, including coveted designer archive finds sourced directly from their previous owners. Every piece is thoughtfully acquired, carefully treated, and preserved at the highest standard, honoring the craftsmanship and history each garment carries. At NELLO, style is timeless.\n\nThe ethos of NELLO transcends clothing. The brand invites collectors to choose style over fashion, to step away from the noise of fleeting trends and embrace an entirely personal, boundary-free expression of self. Inspired by the icons and barrier-breakers of previous generations, Chanelle built NELLO as a sanctuary for those who understand that what you wear is a direct reflection of who you are and who you are becoming.",
  website: "https://www.nellovintage.com",
- contactEmail: "",
+ contactEmail: "nellovintage@gmail.com",
  dataSource: "nello-vintage",
  image: "/stores/placeholder.svg",
  logo: "/stores/placeholder.svg",
@@ -834,7 +834,7 @@ export const stores = [
  description:
  "Situations Vintage is a New York-based vintage shop offering carefully curated secondhand and vintage finds.",
  website: "https://situationsvintage.com",
- contactEmail: "",
+ contactEmail: "info@situationsvintage.com",
  dataSource: "situations-vintage",
  image: "/stores/situations-vintage.jpg",
  logo: "/stores/situations-vintage.jpg",
@@ -1190,7 +1190,8 @@ export const storeContactEmails: Record<string, string> = {
  "ange-archive": "info@angearchive.com",
  "bag-crush": "info@shopbagcrush.com",
  "dear-muse": "rachel.dearmuse@gmail.com",
- "nello-vintage": "",
+ "nello-vintage": "nellovintage@gmail.com",
+ "situations-vintage": "info@situationsvintage.com",
  // VYA admin test account — sees all requests
  "via-admin": "hana@vyaplatform.com",
 };
