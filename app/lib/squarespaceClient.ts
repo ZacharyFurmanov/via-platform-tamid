@@ -72,9 +72,11 @@ function extractSizeFromText(text: string | null): string | null {
 }
 
 /**
- * Checks if a product appears to be sold out based on title or tags
+ * Checks if a product appears to be sold out based on title or tags.
+ * Variant stock is only trusted when the store actually tracks inventory —
+ * detected at the caller level via `trustVariantStock`.
  */
-function isSoldOut(item: SquarespaceItem): boolean {
+function isSoldOut(item: SquarespaceItem, trustVariantStock: boolean): boolean {
  const title = (item.title || "").toLowerCase();
  const tags = (item.tags || []).map((t) => t.toLowerCase());
 
@@ -91,13 +93,17 @@ function isSoldOut(item: SquarespaceItem): boolean {
  if (soldPatterns.some((p) => p.test(title))) return true;
  if (tags.some((t) => soldPatterns.some((p) => p.test(t)))) return true;
 
- // Check variant stock — if all variants have 0 stock and aren't unlimited
+ // Variant stock check — only meaningful for stores that actually track inventory.
+ // Some Squarespace stores leave qtyInStock at 0 across the board and rely on the
+ // title/tags to indicate sold status. Trusting qtyInStock there would hide every product.
+ if (trustVariantStock) {
  const variants = item.variants || [];
  if (
- variants.length > 0 &&
- variants.every((v) => !v.unlimited && v.qtyInStock === 0)
+  variants.length > 0 &&
+  variants.every((v) => !v.unlimited && v.qtyInStock === 0)
  ) {
- return true;
+  return true;
+ }
  }
 
  return false;
@@ -120,9 +126,8 @@ export async function parseSquarespaceJSON(
  // Derive base URL from the shop URL (e.g., "https://www.leivintage.com")
  const baseUrl = new URL(shopUrl).origin;
 
- // Squarespace returns all items from the offset onwards, but caps each
- // response at ~120 items. Paginate by setting offset = total items received
- // so far, until we get an empty response.
+ // Pass 1: fetch all items from all pages
+ const allItems: SquarespaceItem[] = [];
  const seenTitles = new Set<string>();
  let offset = 0;
  let totalFetched = 0;
@@ -149,7 +154,6 @@ export async function parseSquarespaceJSON(
  if (items.length === 0) break;
 
  totalFetched += items.length;
- // Deduplicate across pages (Squarespace may overlap on page boundaries)
  let newItemsOnPage = 0;
 
  for (const item of items) {
@@ -158,6 +162,24 @@ export async function parseSquarespaceJSON(
  if (seenTitles.has(title)) continue;
  seenTitles.add(title);
  newItemsOnPage++;
+ allItems.push(item);
+ }
+
+ if (newItemsOnPage === 0) break;
+ offset = totalFetched;
+ }
+
+ // Detect whether the store actually tracks variant inventory.
+ // If every variant across the entire catalog has qtyInStock === 0 and !unlimited,
+ // the store isn't using inventory tracking — fall back to title/tag sold detection only.
+ const trustVariantStock = allItems.some((item) =>
+ (item.variants || []).some((v) => v.unlimited || (v.qtyInStock ?? 0) > 0)
+ );
+
+ // Pass 2: transform items into products
+ for (const item of allItems) {
+ const title = item.title?.trim();
+ if (!title) continue;
 
  // Get price from first variant (Squarespace stores prices in cents)
  const variant = item.variants?.[0];
@@ -168,7 +190,7 @@ export async function parseSquarespaceJSON(
  if (price <= 0) continue;
 
  // Skip sold-out items
- if (isSoldOut(item)) {
+ if (isSoldOut(item, trustVariantStock)) {
  skippedCount++;
  continue;
  }
@@ -200,13 +222,6 @@ export async function parseSquarespaceJSON(
  ?? extractSizeFromText(description);
 
  products.push({ title, price, compareAtPrice, image, images, externalUrl, store: storeName, description, size });
- }
-
- // If this page had no new items, we've reached the end
- if (newItemsOnPage === 0) break;
-
- // Advance offset to fetch items beyond what we've received so far
- offset = totalFetched;
  }
 
  return { products, skippedCount };

@@ -1166,8 +1166,6 @@ export const storeContactEmails: Record<string, string> = {
  "keepin-it-real-luxe": "info@keepinitrealluxe.com",
  "blodas-choice": "annabloda@gmail.com",
  "carroll-street-vintage": "kittyzeldis@gmail.com",
- // Styelled — not yet on the site but included in sourcing notifications
- "styelled": "Amandasweetwood@gmail.com",
  "porters-preloved": "porterspreloved@gmail.com",
  "petria-vintage": "petriavintage@gmail.com",
  "promised-vintage": "kellanmccormick@gmail.com",
