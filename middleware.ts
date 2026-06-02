@@ -34,6 +34,7 @@ const PUBLIC_ROUTES = [
   "/api/admin/send-new-arrivals",
   "/api/editors-picks",
   "/api/public",
+  "/api/mobile",
   "/api/admin/editors-picks",
   "/api/store/me",
   "/api/store/analytics",

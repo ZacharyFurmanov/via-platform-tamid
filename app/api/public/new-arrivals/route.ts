@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
