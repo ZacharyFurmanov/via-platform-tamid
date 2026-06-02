@@ -3,16 +3,14 @@ import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
+import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Public new-arrivals feed for the mobile app.
- * Sorted by created_at DESC, last 30 days.
- */
 export async function GET(request: Request) {
  const { searchParams } = new URL(request.url);
  const limit = Math.min(parseInt(searchParams.get("limit") ?? "80"), 200);
+ const filters = parseFilters(searchParams);
 
  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
  if (!dbUrl) return NextResponse.json({ products: [] });
@@ -21,21 +19,69 @@ export async function GET(request: Request) {
  const shopifySlugs = SHOPIFY_STORES.map((s) => s.slug);
  const hidden = ["velvet-archive", ...HIDDEN_STORE_SLUGS];
 
- try {
- const rows = await sql`
- SELECT id, store_slug, store_name, title, price, currency, image, images
- FROM products
- WHERE image IS NOT NULL AND image != ''
- AND title NOT ILIKE '%gift card%'
- AND created_at IS NOT NULL
- AND created_at >= NOW() - INTERVAL '30 days'
- AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
- AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
- ORDER BY created_at DESC, id DESC
- LIMIT ${limit}
- `;
+ const sizesUpper = filters.sizes.map((s) => s.toUpperCase());
+ const useSizes = sizesUpper.length > 0;
+ const useStores = filters.stores.length > 0;
+ const usePriceMin = filters.priceMin != null;
+ const usePriceMax = filters.priceMax != null;
+ const priceMin = filters.priceMin ?? 0;
+ const priceMax = filters.priceMax ?? 1e12;
 
- const products = (rows as Array<Record<string, unknown>>).map((p) => {
+ const fetchLimit = filters.categories.length > 0 ? Math.min(limit * 5, 500) : limit;
+
+ try {
+ let rows: Array<Record<string, unknown>>;
+ if (filters.sort === "priceAsc") {
+ rows = await sql`
+  SELECT id, store_slug, store_name, title, price, currency, image, images
+  FROM products
+  WHERE image IS NOT NULL AND image != ''
+  AND title NOT ILIKE '%gift card%'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
+  AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
+  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!usePriceMin} OR price >= ${priceMin})
+  AND (${!usePriceMax} OR price <= ${priceMax})
+  ORDER BY price ASC, id DESC
+  LIMIT ${fetchLimit}
+ ` as Array<Record<string, unknown>>;
+ } else if (filters.sort === "priceDesc") {
+ rows = await sql`
+  SELECT id, store_slug, store_name, title, price, currency, image, images
+  FROM products
+  WHERE image IS NOT NULL AND image != ''
+  AND title NOT ILIKE '%gift card%'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
+  AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
+  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!usePriceMin} OR price >= ${priceMin})
+  AND (${!usePriceMax} OR price <= ${priceMax})
+  ORDER BY price DESC, id DESC
+  LIMIT ${fetchLimit}
+ ` as Array<Record<string, unknown>>;
+ } else {
+ rows = await sql`
+  SELECT id, store_slug, store_name, title, price, currency, image, images
+  FROM products
+  WHERE image IS NOT NULL AND image != ''
+  AND title NOT ILIKE '%gift card%'
+  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '30 days'
+  AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
+  AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
+  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!usePriceMin} OR price >= ${priceMin})
+  AND (${!usePriceMax} OR price <= ${priceMax})
+  ORDER BY created_at DESC, id DESC
+  LIMIT ${fetchLimit}
+ ` as Array<Record<string, unknown>>;
+ }
+
+ let products = rows.map((p) => {
  let parsedImages: string[] | undefined;
  try {
   parsedImages = p.images ? JSON.parse(p.images as string) : undefined;
@@ -50,6 +96,8 @@ export async function GET(request: Request) {
   images: parsedImages,
  };
  });
+
+ products = applyJsFilters(products, filters).slice(0, limit);
 
  return NextResponse.json({ products });
  } catch {
