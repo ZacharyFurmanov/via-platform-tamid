@@ -9,7 +9,7 @@ import {
  scrapeProductPageSections,
 } from "@/app/lib/shopifyClient";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
-import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
+import { parseSquarespaceJSON, type SquarespaceProduct } from "@/app/lib/squarespaceClient";
 import { parseBigCartelJSON } from "@/app/lib/bigcartelClient";
 import { fetchSquareProducts } from "@/app/lib/squareClient";
 import { fetchStripeProducts } from "@/app/lib/stripeClient";
@@ -241,7 +241,25 @@ export async function GET(request: Request) {
  } else {
  // Squarespace
  let rawProducts;
- if (store.shopUrl) {
+ if (store.shopUrls && store.shopUrls.length > 0) {
+ // Multi-URL store — fetch each, merge, dedupe by title
+ const seen = new Set<string>();
+ const merged: SquarespaceProduct[] = [];
+ for (const url of store.shopUrls) {
+ try {
+  const result = await parseSquarespaceJSON(url, store.name);
+  for (const p of result.products) {
+  if (!seen.has(p.title)) {
+   seen.add(p.title);
+   merged.push(p);
+  }
+  }
+ } catch (err) {
+  console.error(`[Sync Stores] ${store.name}: failed ${url}:`, err);
+ }
+ }
+ rawProducts = merged;
+ } else if (store.shopUrl) {
  const result = await parseSquarespaceJSON(store.shopUrl, store.name);
  rawProducts = result.products;
  } else if (store.rssUrl) {

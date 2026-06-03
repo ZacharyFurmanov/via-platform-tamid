@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { getProductById } from "@/app/lib/db";
 import { deriveSize } from "@/app/lib/inventory";
 import { formatPrice } from "@/app/lib/formatPrice";
+import { stores } from "@/app/lib/stores";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Public single-product endpoint for the mobile app.
  * Param: id = composite (e.g. "lei-vintage-42") or numeric DB id
+ * Returns product details + the store's authenticity / shipping / return
+ * policies so the app can render them in accordions.
  */
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
  const { id: rawId } = await ctx.params;
@@ -28,6 +31,16 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
  }
  if (images.length === 0 && p.image) images = [p.image];
 
+ // Pull store policies if available
+ const storeInfo = stores.find((s) => s.slug === p.store_slug);
+ const storePolicies = storeInfo
+ ? {
+  authenticity: (storeInfo as { authenticityPolicy?: string }).authenticityPolicy ?? null,
+  shipping: (storeInfo as { shippingPolicy?: string }).shippingPolicy ?? null,
+  returns: (storeInfo as { returnPolicy?: string }).returnPolicy ?? null,
+ }
+ : { authenticity: null, shipping: null, returns: null };
+
  return NextResponse.json({
  id: p.id,
  compositeId: `${p.store_slug}-${p.id}`,
@@ -41,9 +54,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
  images,
  size: deriveSize(p),
  brand: p.product_type,
+ variantId: p.variant_id,
  storeSlug: p.store_slug,
  storeName: p.store_name,
+ storeWebsite: storeInfo?.website ?? null,
  externalUrl: p.external_url,
  collabsLink: p.collabs_link,
+ storePolicies,
  });
 }

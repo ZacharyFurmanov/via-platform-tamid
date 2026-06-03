@@ -92,6 +92,29 @@ export const stores = [
  "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
  },
  {
+ slug: "capsule-edit",
+ dashboardToken: "ce-7d3a9c1f5e8b",
+ name: "Capsule Édit",
+ location: "Melbourne, Australia",
+ description:
+ "We believe luxury should be timeless, not disposable. Capsule Édit is a curated collection of vintage and pre-owned designer pieces, selected for their design, quality craftsmanship, and long-term wearability.\n\nWe prioritise intention over excess. Choosing pieces that are not trends and are designed to be worn, loved, and passed on. By extending the life of our finds, we support a more conscious approach to fashion and help reduce unnecessary waste.\n\nFor the selective collector who values quality over quantity, rarity over mass production, and timeless style over everchanging fashion.",
+ website: "https://capsuledit.com",
+ dataSource: "capsule-edit",
+ image: "/stores/capsule-edit.jpg",
+ logo: "/stores/capsule-edit.jpg",
+ logoBg: "#ffffff",
+ currency: "AUD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "242449",
+ authenticityPolicy:
+ "Every piece at Capsule Édit is curated for design integrity, quality craftsmanship, and long-term wearability. Each item is carefully selected and accurately described so collectors can shop with confidence.",
+ shippingPolicy:
+ "Ships from Melbourne, Australia. International shipping available — rates calculated at checkout.",
+ returnPolicy:
+ "All sales are final. As a curated vintage and pre-owned designer boutique, each piece is one-of-a-kind. Please review all item details and photos carefully before purchasing.",
+ },
+ {
  slug: "carroll-street-vintage",
  dashboardToken: "csw-9f2a4c8e1b7d",
  name: "Carroll Street Vintage",

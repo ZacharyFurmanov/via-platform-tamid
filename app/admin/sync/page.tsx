@@ -102,6 +102,7 @@ export default function SyncAdminPage() {
  body: JSON.stringify({
  storeName: store.name,
  shopUrl: store.shopUrl,
+ shopUrls: store.shopUrls,
  rssUrl: store.rssUrl,
  }),
  });
@@ -261,7 +262,9 @@ export default function SyncAdminPage() {
  <div style={{ flex: 1, minWidth: 0 }}>
  <h3 style={{ fontSize: 14, fontWeight: 600, color: "#09090b", marginBottom: 4 }}>{store.name}</h3>
  <p style={{ fontSize: 12, color: "#71717a", wordBreak: "break-all" }}>
- {store.shopUrl || store.rssUrl}
+ {store.shopUrls && store.shopUrls.length > 0
+ ? `${store.shopUrls.length} pages: ${store.shopUrls.join(", ")}`
+ : store.shopUrl || store.rssUrl}
  </p>
  </div>
  <button

@@ -2,7 +2,10 @@ export type SquarespaceStore = {
  type: "squarespace";
  name: string;
  slug: string;
+ /** Single shop URL — used by stores where one page lists all products. */
  shopUrl?: string;
+ /** Multiple URLs to fetch & merge — for stores that split products across category pages. */
+ shopUrls?: string[];
  rssUrl?: string;
 };
 
@@ -90,7 +93,13 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
  type: "squarespace",
  name: "Keepin It Real Luxe",
  slug: "keepin-it-real-luxe",
- shopUrl: "https://www.keepinitrealluxe.com/collection",
+ // Site has no "all products" page — categories must be fetched separately and merged.
+ shopUrls: [
+ "https://www.keepinitrealluxe.com/handbags",
+ "https://www.keepinitrealluxe.com/accessories",
+ "https://www.keepinitrealluxe.com/shoes",
+ "https://www.keepinitrealluxe.com/mens",
+ ],
  },
 ];
 
@@ -386,6 +395,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  name: "Situations Vintage",
  slug: "situations-vintage",
  storeDomain: "situationsvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Capsule Édit",
+ slug: "capsule-edit",
+ storeDomain: "capsuledit.com",
  scrapeProductPage: true,
  },
 ];

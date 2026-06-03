@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseRSSFeed } from "@/app/lib/rssFeedParser";
-import { parseSquarespaceJSON } from "@/app/lib/squarespaceClient";
+import { parseSquarespaceJSON, type SquarespaceProduct } from "@/app/lib/squarespaceClient";
 import { syncProducts, initDatabase } from "@/app/lib/db";
 
 export async function POST(request: NextRequest) {
  try {
  const body = await request.json();
- const { storeName, rssUrl, shopUrl } = body;
+ const { storeName, rssUrl, shopUrl, shopUrls } = body as {
+ storeName?: string;
+ rssUrl?: string;
+ shopUrl?: string;
+ shopUrls?: string[];
+ };
 
- // Validate inputs
  if (!storeName || typeof storeName !== "string") {
  return NextResponse.json(
  { error: "Missing or invalid 'storeName' parameter" },
@@ -16,38 +20,59 @@ export async function POST(request: NextRequest) {
  );
  }
 
+ const hasMultiUrls = Array.isArray(shopUrls) && shopUrls.length > 0;
  const url = shopUrl || rssUrl;
- if (!url || typeof url !== "string") {
+ if (!hasMultiUrls && (!url || typeof url !== "string")) {
  return NextResponse.json(
- { error: "Missing or invalid 'shopUrl' or 'rssUrl' parameter" },
+ { error: "Missing or invalid 'shopUrl', 'shopUrls', or 'rssUrl' parameter" },
  { status: 400 }
  );
  }
 
  // Validate URL format
+ const urlsToValidate = hasMultiUrls ? shopUrls! : [url!];
+ for (const u of urlsToValidate) {
  try {
- new URL(url);
+  new URL(u);
  } catch {
- return NextResponse.json(
- { error: "Invalid URL format" },
- { status: 400 }
- );
+  return NextResponse.json(
+  { error: `Invalid URL format: ${u}` },
+  { status: 400 }
+  );
+ }
  }
 
  // Ensure database table exists
  await initDatabase();
 
  let rawProducts;
- let skippedCount: number;
+ let skippedCount = 0;
 
- if (shopUrl) {
- // Use JSON API (recommended — includes prices from Squarespace Commerce)
+ if (hasMultiUrls) {
+ // Multi-URL store — fetch each, merge, dedupe by title
+ const seen = new Set<string>();
+ const merged: SquarespaceProduct[] = [];
+ for (const u of shopUrls!) {
+ try {
+  const result = await parseSquarespaceJSON(u, storeName);
+  skippedCount += result.skippedCount;
+  for (const p of result.products) {
+  if (!seen.has(p.title)) {
+   seen.add(p.title);
+   merged.push(p);
+  }
+  }
+ } catch (err) {
+  console.error(`[sync-squarespace] Failed ${u}:`, err);
+ }
+ }
+ rawProducts = merged;
+ } else if (shopUrl) {
  const result = await parseSquarespaceJSON(shopUrl, storeName);
  rawProducts = result.products;
  skippedCount = result.skippedCount;
  } else {
- // Fallback to RSS feed
- const result = await parseRSSFeed(rssUrl, storeName);
+ const result = await parseRSSFeed(rssUrl!, storeName);
  rawProducts = result.products;
  skippedCount = result.skippedCount;
  }
