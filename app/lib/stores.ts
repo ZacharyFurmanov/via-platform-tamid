@@ -99,11 +99,15 @@ export const stores = [
  description:
  "We believe luxury should be timeless, not disposable. Capsule Édit is a curated collection of vintage and pre-owned designer pieces, selected for their design, quality craftsmanship, and long-term wearability.\n\nWe prioritise intention over excess. Choosing pieces that are not trends and are designed to be worn, loved, and passed on. By extending the life of our finds, we support a more conscious approach to fashion and help reduce unnecessary waste.\n\nFor the selective collector who values quality over quantity, rarity over mass production, and timeless style over everchanging fashion.",
  website: "https://capsuledit.com",
+ contactEmail: "capsuledit@gmail.com",
  dataSource: "capsule-edit",
  image: "/stores/capsule-edit.jpg",
  logo: "/stores/capsule-edit.jpg",
  logoBg: "#ffffff",
- currency: "AUD",
+ // Capsule Édit is based in Melbourne but their Shopify base currency is
+ // USD (their site auto-displays USD via Shopify Markets). The products.json
+ // API returns USD numbers — so no conversion needed.
+ currency: "USD",
  commissionType: "shopify-collabs" as const,
  affiliatePath: "VYA",
  collabsStoreId: "242449",
@@ -855,7 +859,7 @@ export const stores = [
  name: "Situations Vintage",
  location: "New York, NY",
  description:
- "Situations Vintage is a New York-based vintage shop offering carefully curated secondhand and vintage finds.",
+ "Situations Vintage is all about finding your next situation! We believe vintage items are more than just clothes — they're stories, moods, and moments waiting to happen. Founded by two best friends in New York City, we source and curate archival 90s and early 2000s pieces.",
  website: "https://situationsvintage.com",
  contactEmail: "info@situationsvintage.com",
  dataSource: "situations-vintage",
@@ -1213,6 +1217,7 @@ export const storeContactEmails: Record<string, string> = {
  "dear-muse": "rachel.dearmuse@gmail.com",
  "nello-vintage": "nellovintage@gmail.com",
  "situations-vintage": "info@situationsvintage.com",
+ "capsule-edit": "capsuledit@gmail.com",
  // VYA admin test account — sees all requests
  "via-admin": "hana@vyaplatform.com",
 };
