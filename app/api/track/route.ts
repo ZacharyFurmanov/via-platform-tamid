@@ -112,36 +112,23 @@ export async function GET(request: NextRequest) {
  utmSource: utmSource || null,
  }).catch(console.error);
 
- // ---- Cart URLs ----
- if (isCartUrl(parsedUrl) && storeSlug) {
- // If the store has a webhook configured, embed via_click_id as a Shopify cart
- // attribute. Shopify passes it through to note_attributes on the order, giving
- // the webhook handler an exact click match — no guessing, no last-click fallback.
- const hasWebhook = !!(await getSetting(`shopify_webhook_secret_${storeSlug}`).catch(() => null));
- if (hasWebhook) {
- parsedUrl.searchParams.set("attributes[via_click_id]", clickId);
- return NextResponse.redirect(parsedUrl.toString(), 302);
- }
+ const storeHasWebhook = storeSlug
+ ? !!(await getSetting(`shopify_webhook_secret_${storeSlug}`).catch(() => null))
+ : false;
 
- // No webhook → route through the product's collabs.shop link for commission tracking.
- if (productId) {
- const match = productId.match(/(\d+)$/);
- const numericId = match ? parseInt(match[1], 10) : NaN;
- if (!isNaN(numericId)) {
- const productCollabsLink = await getCollabsLink(numericId).catch(() => null);
- if (productCollabsLink && !parsedUrl.pathname.includes(",")) {
- return NextResponse.redirect(productCollabsLink, 302);
- }
- }
- }
-
- console.error(`[track] No collabs link for product "${productId}" (store: "${storeSlug}") — this product should not be on VYA.`);
- parsedUrl.searchParams.set("via_click_id", clickId);
- return NextResponse.redirect(parsedUrl.toString(), 302);
- }
-
- // ---- Single product URLs (no variant_id → can't build cart URL) ----
- // Redirect through the product's collabs.shop link so dt_id is set.
+ // ============ PRIMARY: Shopify Collabs ============
+ // Always route through the product's collabs.shop link if we have one. This
+ // is how stores credit VYA with commission, regardless of whether the buyer
+ // is going to a single product or a multi-item cart. For multi-item carts
+ // we route through the *first* item's collabs link — the Collabs session
+ // cookie that gets set applies to all subsequent purchases on the store
+ // within the cookie window (typically 30 days), so a buyer rebuilding their
+ // cart at the store will still get attributed.
+ //
+ // The webhook (if configured) is supplementary tracking — it will still fire
+ // on checkout regardless of how the buyer arrived. The webhook handler has
+ // last-click + email-match fallbacks for orders without the via_click_id
+ // attribute, so we still capture the order details for analytics.
  if (productId) {
  const match = productId.match(/(\d+)$/);
  const numericId = match ? parseInt(match[1], 10) : NaN;
@@ -151,6 +138,20 @@ export async function GET(request: NextRequest) {
  return NextResponse.redirect(collabsLink, 302);
  }
  }
+ }
+
+ // ============ FALLBACK: no collabs_link found ============
+ // If the product is missing a collabs_link, fall back to either:
+ // (a) the cart URL with the webhook attribute (still get conversion in DB)
+ // (b) the direct URL with our click ID (worst case — basically untracked)
+ if (isCartUrl(parsedUrl) && storeSlug) {
+ if (storeHasWebhook) {
+ parsedUrl.searchParams.set("attributes[via_click_id]", clickId);
+ return NextResponse.redirect(parsedUrl.toString(), 302);
+ }
+ console.error(`[track] No collabs link for product "${productId}" (store: "${storeSlug}") — this product should not be on VYA.`);
+ parsedUrl.searchParams.set("via_click_id", clickId);
+ return NextResponse.redirect(parsedUrl.toString(), 302);
  }
 
  // Fallback: apply discount code if store has one, otherwise redirect directly.
