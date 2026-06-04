@@ -157,7 +157,7 @@ body, table, td { background-color: ${BG} !important; }
   <img src="https://vyaplatform.com/vya-logo.png" alt="VYA" width="160"
   style="display:block;margin:0 auto;width:160px;height:auto;border:0;" border="0" />
   <p style="margin:16px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};">
-  The Vintage Fashion Guide for VYA Insiders
+  via VYA, the vintage fashion guide for VYA insiders
   </p>
  </td>
  </tr>

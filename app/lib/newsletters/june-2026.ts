@@ -82,6 +82,38 @@ function productCard(args: {
 }
 
 /**
+ * Outfit mood-board with linked piece list — used in Natalie's styling section.
+ * Big square outfit image at the top, followed by a clean list of small
+ * underlined links to each individual piece.
+ */
+function outfitCard(args: {
+ image: string;
+ alt: string;
+ pieces: { label: string; href: string }[];
+}): string {
+ const safeImg = args.image.replace(/&/g, "&amp;");
+ const piecesHtml = args.pieces
+ .map(
+ (p) => `
+ <li style="font-family:${SERIF};font-size:14px;color:${TEXT};line-height:1.7;margin:0 0 6px;list-style:none;">
+  <a href="${p.href.replace(/&/g, "&amp;")}" style="color:${TEXT};text-decoration:underline;text-underline-offset:3px;">${p.label}</a>
+ </li>`,
+ )
+ .join("");
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 32px;">
+ <tr><td bgcolor="${ROSE}" align="center" style="padding:0;">
+ <img src="${safeImg}" alt="${args.alt.replace(/"/g, "&quot;")}" width="512"
+  style="display:block;width:100%;max-width:512px;height:auto;border:0;" border="0" />
+ </td></tr>
+ <tr><td bgcolor="${ROSE}" style="padding:18px 4px 0;">
+ <p style="font-family:${SERIF};font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">Shop The Look</p>
+ <ul style="margin:0;padding:0;">${piecesHtml}</ul>
+ </td></tr>
+ </table>`;
+}
+
+/**
  * Two-column product row for showcasing pairs.
  */
 function productRow(left: Parameters<typeof productCard>[0], right: Parameters<typeof productCard>[0]): string {
@@ -125,10 +157,10 @@ const IMG = {
  dgMiniSkirt: "https://cdn.shopify.com/s/files/1/0933/2454/2227/files/IMG_3858.jpg?v=1761759623",
 };
 
-export const JUNE_2026_NEWSLETTER_SUBJECT = "VYA — The Vintage Fashion Guide for VYA Insiders · June";
+export const JUNE_2026_NEWSLETTER_SUBJECT = "via VYA — the vintage fashion guide for VYA insiders · June";
 
 export const JUNE_2026_NEWSLETTER_HTML = `
- ${para(`Welcome to the first <em>VYA Insider</em> Newsletter. We built this for the people who actually use the platform &mdash; the buyers, the regulars, the people inviting friends. Your monthly drop of what we&rsquo;re loving, who we&rsquo;re featuring, and what&rsquo;s coming next.`)}
+ ${para(`Welcome to the first <em>via VYA</em>. Built for our top community members to get the inside scoop &mdash; what we&rsquo;re loving, who we&rsquo;re featuring, and what&rsquo;s coming next.`)}
 
  ${ornamentDivider()}
 
@@ -233,25 +265,34 @@ export const JUNE_2026_NEWSLETTER_HTML = `
 
  ${h3("For Dinner")}
  ${para(`&ldquo;I'd pair these colorful statement accessories with an airy white top and vintage Levi's for an elevated summer dinner look. The Fendi baguette and vintage Dolce &amp; Gabbana heels do all the work &mdash; sometimes the best outfits start with incredible accessories.&rdquo;`)}
- ${productRow(
- { image: IMG.dgSandals, title: "Dolce &amp; Gabbana Strappy Heels", store: "Vintage Archives LA", href: PRODUCT("vintage-archives-la-241") },
- { image: IMG.fendiBaguette, title: "Fendi Baguette", store: "Porter's Preloved", href: PRODUCT("porters-preloved-889840") },
- )}
+ ${outfitCard({
+ image: "https://vyaplatform.com/newsletter/natalie-dinner.png",
+ alt: "Natalie's dinner outfit",
+ pieces: [
+ { label: "Dolce &amp; Gabbana Strappy Heels &mdash; Vintage Archives LA", href: PRODUCT("vintage-archives-la-241") },
+ { label: "Fendi Baguette &mdash; Porter's Preloved", href: PRODUCT("porters-preloved-889840") },
+ ],
+ })}
 
  ${h3("For Brunch")}
  ${para(`&ldquo;I'd style these statement floral jeans with a simple white tank, satin mules, a mini shoulder bag, and a chunky gold bangle. The look feels effortless but cool &mdash; perfect for a summer brunch.&rdquo;`)}
- ${productRow(
- { image: IMG.cavalliJeans, title: "Cavalli Floral Jeans", store: "Bloda's Choice", href: PRODUCT("blodas-choice-23622") },
- { image: IMG.daytonJaneBangle, title: "Vintage Gold Metal Bangle", store: "Dayton Jane", href: PRODUCT("dayton-jane-54691") },
- )}
+ ${outfitCard({
+ image: "https://vyaplatform.com/newsletter/natalie-brunch.png",
+ alt: "Natalie's brunch outfit",
+ pieces: [
+ { label: "Cavalli Floral Jeans &mdash; Bloda's Choice", href: PRODUCT("blodas-choice-23622") },
+ { label: "Vintage Gold Metal Bangle &mdash; Dayton Jane", href: PRODUCT("dayton-jane-54691") },
+ ],
+ })}
 
  ${h3("For a European Beach Day")}
  ${para(`&ldquo;This vintage mini skirt was made for a European summer. I'd style it with a bright bikini, jelly flip-flops, retro-inspired sunglasses, and a crochet beach bag for a look that takes you from the beach club straight to lunch by the water.&rdquo;`)}
- ${productCard({
- image: IMG.dgMiniSkirt,
- title: "D&amp;G Vintage Tropical Mini Skirt",
- store: "Club Fleur Vintage",
- href: PRODUCT("club-fleur-46675"),
+ ${outfitCard({
+ image: "https://vyaplatform.com/newsletter/natalie-beach.png",
+ alt: "Natalie's European beach day outfit",
+ pieces: [
+ { label: "D&amp;G Vintage Tropical Mini Skirt &mdash; Club Fleur Vintage", href: PRODUCT("club-fleur-46675") },
+ ],
  })}
 
  ${quote(`&ldquo;My favorite outfits always start with a statement piece. Whether it's a vintage Fendi baguette or a pair of Dolce &amp; Gabbana heels, the best vintage finds don't just complete an outfit &mdash; they inspire it.&rdquo;`)}
