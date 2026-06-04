@@ -108,6 +108,80 @@ u + .body .email-inner { background-color: #FFFDF8 !important; }
  return minifyHtml(html);
 }
 
+/**
+ * Insider Newsletter shell — same layout as viaShell, but with a dusty-rose
+ * background (#C08A8A) and the same brand burgundy text (#5D0F17).
+ * Used for the curated insider newsletter sent to highly-engaged members.
+ */
+function insiderShell(content: string, unsubscribeUrl?: string): string {
+ const year = new Date().getFullYear();
+ const unsubUrl = unsubscribeUrl || `${BASE_URL}/account`;
+ const BG = "#C08A8A";
+ const TEXT = "#5D0F17";
+ const html = `<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+<style>
+:root { color-scheme: light only; }
+body { margin: 0; padding: 0; background-color: ${BG} !important; font-family: Georgia, 'Times New Roman', serif; }
+u + .body { background-color: ${BG} !important; }
+u + .body .email-wrapper { background-color: ${BG} !important; }
+u + .body .email-inner { background-color: ${BG} !important; }
+[data-ogsc] body { background-color: ${BG} !important; }
+[data-ogsc] .email-wrapper { background-color: ${BG} !important; }
+[data-ogsc] .email-inner { background-color: ${BG} !important; }
+[data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] h1, [data-ogsc] h2 { color: ${TEXT} !important; }
+[data-ogsc] a[style*="background:${TEXT}"] { color: ${BG} !important; }
+@media (prefers-color-scheme: dark) {
+ body, .email-wrapper, .email-inner { background-color: ${BG} !important; }
+ p, span, h1, h2 { color: ${TEXT} !important; }
+ a { color: ${TEXT} !important; }
+ a[style*="background:${TEXT}"] { color: ${BG} !important; }
+}
+</style>
+</head>
+<body class="body" style="margin:0;padding:0;background-color:${BG};" bgcolor="${BG}">
+<div class="email-wrapper" style="background-color:${BG};padding:52px 24px 48px;" bgcolor="${BG}">
+ <div class="email-inner" style="max-width:560px;margin:0 auto;background-color:${BG};" bgcolor="${BG}">
+
+ <!-- Header: logo -->
+ <div style="text-align:center;margin-bottom:40px;">
+ <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="160"
+ style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
+ <p style="margin:14px 0 0;font-size:10px;letter-spacing:0.3em;color:${TEXT};
+ text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;">
+ The Vintage Fashion Guide for VYA Insiders
+ </p>
+ </div>
+
+ <!-- Body -->
+ ${content}
+
+ <!-- Footer -->
+ <div style="text-align:center;margin-top:64px;">
+ <p style="margin:0;font-size:12px;color:${TEXT};font-family:Georgia,'Times New Roman',serif;line-height:2;">
+ <a href="${BASE_URL}" style="color:${TEXT};text-decoration:none;">vyaplatform.com</a><br />
+ IG: <a href="https://www.instagram.com/vyaplatform" style="color:${TEXT};text-decoration:none;">@vyaplatform</a>
+ </p>
+ <p style="margin:18px 0 0;font-size:12px;color:${TEXT};font-family:Georgia,'Times New Roman',serif;">
+ <a href="${unsubUrl}" style="color:${TEXT};text-decoration:underline;">Unsubscribe here</a>
+ </p>
+ <p style="margin:10px 0 0;font-size:10px;color:rgba(93,15,23,0.55);font-family:Georgia,'Times New Roman',serif;">
+ &copy; ${year} VYA.
+ </p>
+ </div>
+
+ </div>
+</div>
+</body>
+</html>`;
+ return minifyHtml(html);
+}
+
 function emailShell(content: string): string {
  const year = new Date().getFullYear();
  const html = `<!DOCTYPE html>
@@ -2149,4 +2223,46 @@ export async function sendLastChanceEmail(
  subject: items.length === 1 ? "You saved this — it's still here" : "Your saved items are still here",
  html: viaShell("Still Here", content),
  });
+}
+
+
+// ============================================================================
+// Insider Newsletter — curated email for highly-engaged members.
+// ============================================================================
+
+/**
+ * Sends the insider newsletter to a list of emails using the rose-background
+ * shell. The `contentHtml` is dropped directly into the body of the email
+ * between the logo and the footer — it should be already-formatted HTML.
+ *
+ * Use the helper `getInsiderAudienceEmails()` to pull the audience.
+ */
+export async function sendInsiderNewsletterEmail(
+ emails: string[],
+ subject: string,
+ contentHtml: string,
+): Promise<{ sent: number; failed: number }> {
+ if (emails.length === 0) return { sent: 0, failed: 0 };
+ const resend = getResend();
+ let sent = 0;
+ let failed = 0;
+
+ for (const email of emails) {
+ const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+ const html = insiderShell(contentHtml, unsubUrl);
+ try {
+ await resend.emails.send({
+ from: FROM_EMAIL,
+ to: email,
+ subject,
+ html,
+ });
+ sent++;
+ await new Promise((r) => setTimeout(r, 100));
+ } catch {
+ failed++;
+ }
+ }
+
+ return { sent, failed };
 }

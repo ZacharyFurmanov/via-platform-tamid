@@ -156,8 +156,9 @@ type Metrics = {
  stickiness: { current: number; prev: number; mauUsed?: number };
  returningUsers: { last7d: number; last30d: number };
  buyerRetention: { totalBuyers: number; returnedAfterPurchase: number; boughtAgain: number; returnRate: number | null; repeatPurchaseRate: number | null };
+ retentionByWindow: { window: string; label: string; cohort: number; retained: number; rate: number | null }[];
  saveToPurchase: { rate: number; totalSavers: number; saversBought: number };
- revenuePerUser: { value: number; buyingUsers: number; allTimeValue: number; allTimeBuyingUsers: number; prevPeriodValue?: number; prevPeriodBuyingUsers?: number };
+ revenuePerUser: { value: number; orders: number; buyingUsers: number; allTimeValue: number; allTimeOrders: number; allTimeBuyingUsers: number; prevPeriodValue?: number; prevPeriodOrders?: number; prevPeriodBuyingUsers?: number };
  gmvByWeek: { week: string; gmv: number }[];
  totalCommission: number;
  users: { registered: number; waitlist: number; approved: number };
@@ -461,14 +462,14 @@ export default function KeyMetricsPage() {
  href="/admin/emails"
  />
  <MetricCard
- label="Revenue per Order"
+ label="Revenue per Order (AOV)"
  value={fmt$(data.revenuePerUser.value)}
- sub={`${fmtNum(data.revenuePerUser.buyingUsers)} buyers in ${data.period?.label ?? "this period"}`}
+ sub={`${fmtNum(data.revenuePerUser.orders)} orders in ${data.period?.label ?? "this period"}`}
  trend={data.revenuePerUser.prevPeriodValue != null && data.revenuePerUser.prevPeriodValue > 0
  ? <TrendBadge current={data.revenuePerUser.value} prev={data.revenuePerUser.prevPeriodValue} fmtFn={fmt$} />
  : undefined}
- note={`Period GMV ÷ distinct buyers · Prev period: ${fmt$(data.revenuePerUser.prevPeriodValue ?? 0)} · All time: ${fmt$(data.revenuePerUser.allTimeValue)}`}
- href="/admin/customers"
+ note={`Period GMV ÷ orders · Prev period: ${fmt$(data.revenuePerUser.prevPeriodValue ?? 0)} · All time: ${fmt$(data.revenuePerUser.allTimeValue)}`}
+ href="/admin/conversions"
  />
  <MetricCard
  label="Save-to-Purchase Rate"
@@ -768,6 +769,45 @@ export default function KeyMetricsPage() {
  </div>
  </div>
  </section>
+
+ {/* ── Retention by window ──────────────────────────────── */}
+ {data.retentionByWindow && data.retentionByWindow.length > 0 && (
+ <section>
+ <h2 style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED_TEXT, fontWeight: 500, margin: "0 0 14px" }}>
+ N-Day Retention
+ </h2>
+ <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "20px 28px" }}>
+ <p style={{ fontSize: 13, color: GRAY, margin: "0 0 16px" }}>
+ % of buyers (whose first purchase was N+ days ago) who made a second purchase within N days. Since-launch is all-time repeat rate.
+ </p>
+ <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
+ {data.retentionByWindow.map((r) => {
+ const color =
+  r.rate == null ? MUTED_TEXT :
+  r.rate >= 0.15 ? "#15803d" :
+  r.rate >= 0.05 ? "#92400e" :
+  "#b91c1c";
+ return (
+  <div key={r.window} style={{ background: "#fafafa", borderRadius: 8, padding: "16px 18px" }}>
+  <p style={{ fontSize: 11, color: MUTED_TEXT, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>
+   {r.label}
+  </p>
+  <p style={{ fontSize: 26, fontWeight: 700, color: r.rate == null ? MUTED_TEXT : DARK, margin: "0 0 4px", lineHeight: 1 }}>
+   {r.rate == null ? "—" : fmtPct(r.rate)}
+  </p>
+  <p style={{ fontSize: 11, color: GRAY, margin: 0 }}>
+   {r.retained} of {r.cohort} buyer{r.cohort === 1 ? "" : "s"}
+  </p>
+  <p style={{ fontSize: 10, color, marginTop: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+   {r.rate == null ? "" : r.rate >= 0.15 ? "Healthy" : r.rate >= 0.05 ? "Okay" : "Needs work"}
+  </p>
+  </div>
+ );
+ })}
+ </div>
+ </div>
+ </section>
+ )}
 
  {/* ── Activity breakdown ──────────────────────────────── */}
  {data.activityBreakdown && (

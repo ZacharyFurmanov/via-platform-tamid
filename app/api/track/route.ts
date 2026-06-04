@@ -5,6 +5,11 @@ import { stores } from "@/app/lib/stores";
 import { getCollabsLink } from "@/app/lib/db";
 import { getSetting } from "@/app/lib/settings-db";
 import { auth } from "@/app/lib/auth";
+import {
+ getDtIdForProduct,
+ buildCartUrlWithDtId,
+ buildMultiCartUrlWithDtId,
+} from "@/app/lib/collabsDtId";
 
 /** POST /api/track — record a product page view (fire-and-forget from client) */
 export async function POST(request: NextRequest) {
@@ -116,34 +121,67 @@ export async function GET(request: NextRequest) {
  ? !!(await getSetting(`shopify_webhook_secret_${storeSlug}`).catch(() => null))
  : false;
 
- // ============ PRIMARY: Shopify Collabs ============
- // Always route through the product's collabs.shop link if we have one. This
- // is how stores credit VYA with commission, regardless of whether the buyer
- // is going to a single product or a multi-item cart. For multi-item carts
- // we route through the *first* item's collabs link — the Collabs session
- // cookie that gets set applies to all subsequent purchases on the store
- // within the cookie window (typically 30 days), so a buyer rebuilding their
- // cart at the store will still get attributed.
+ // Resolve product DB id from the composite "store-slug-123" → 123
+ const numericProductId: number | null = (() => {
+ if (!productId) return null;
+ const m = productId.match(/(\d+)$/);
+ const n = m ? parseInt(m[1], 10) : NaN;
+ return Number.isFinite(n) ? n : null;
+ })();
+
+ // ============ PRIMARY: Shopify Collabs + direct-to-cart ============
+ // We do NOT redirect through `collabs.shop` anymore. Instead we extract the
+ // product's `dt_id` value (the Shopify Collabs attribution token) from the
+ // collabs link and append it to the cart URL directly. This drops the Collabs
+ // tracking cookie via Shopify's own pixel AND lands the buyer at the cart
+ // with the item already added — one tap to checkout.
  //
- // The webhook (if configured) is supplementary tracking — it will still fire
- // on checkout regardless of how the buyer arrived. The webhook handler has
- // last-click + email-match fallbacks for orders without the via_click_id
- // attribute, so we still capture the order details for analytics.
- if (productId) {
- const match = productId.match(/(\d+)$/);
- const numericId = match ? parseInt(match[1], 10) : NaN;
- if (!isNaN(numericId)) {
- const collabsLink = await getCollabsLink(numericId).catch(() => null);
+ // Confirmed: a URL like `store.com/cart/{variantId}:1?dt_id=X` registers a
+ // Collabs visit just as if the buyer came from `collabs.shop`.
+ //
+ // The webhook (if configured) still fires on checkout — it handles the rich
+ // order data (customer, items, total). Two systems complement each other.
+ if (numericProductId != null && isCartUrl(parsedUrl)) {
+ const dtId = await getDtIdForProduct(numericProductId).catch(() => null);
+ if (dtId) {
+ const isMulti = parsedUrl.pathname.includes(",");
+ const variantSpec = parsedUrl.pathname.replace(/^\/cart\//, "");
+ const cartWithDtId = isMulti
+  ? buildMultiCartUrlWithDtId({
+   storeOrigin: parsedUrl.origin,
+   variantSpec,
+   dtId,
+  })
+  : buildCartUrlWithDtId({
+   storeOrigin: parsedUrl.origin,
+   variantId: variantSpec.split(":")[0],
+   dtId,
+  });
+ if (cartWithDtId) {
+  // Also attach via_click_id if the store has a webhook — gives webhook
+  // handler an exact click match in addition to Collabs cookie.
+  const final = new URL(cartWithDtId);
+  if (storeHasWebhook) {
+  final.searchParams.set("attributes[via_click_id]", clickId);
+  }
+  return NextResponse.redirect(final.toString(), 302);
+ }
+ }
+ // No dt_id found but we have a cart URL — fall through to the legacy
+ // collabs.shop redirect below.
+ }
+
+ // If the destination isn't a cart URL (single product page), legacy redirect
+ // through collabs.shop is still the right move so the cookie drops on a real
+ // store page.
+ if (numericProductId != null) {
+ const collabsLink = await getCollabsLink(numericProductId).catch(() => null);
  if (collabsLink) {
  return NextResponse.redirect(collabsLink, 302);
  }
  }
- }
 
- // ============ FALLBACK: no collabs_link found ============
- // If the product is missing a collabs_link, fall back to either:
- // (a) the cart URL with the webhook attribute (still get conversion in DB)
- // (b) the direct URL with our click ID (worst case — basically untracked)
+ // ============ FALLBACK: no collabs_link / no dt_id ============
  if (isCartUrl(parsedUrl) && storeSlug) {
  if (storeHasWebhook) {
  parsedUrl.searchParams.set("attributes[via_click_id]", clickId);

@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
     waitlistByMonthRows,
     activityBreakdownRows,
     churnRows,
+    retentionWindowRows,
     emailCtrRows,
     returningUsersRows,
     favoritesVolumeRows,
@@ -198,15 +199,20 @@ export async function GET(request: NextRequest) {
         )
     `,
 
-    // Revenue per buying user — scoped to the selected period AND all-time for context
+    // Revenue / orders / buyers — scoped to the selected period AND all-time for context.
+    // Adds order counts so we can compute true AOV (revenue / orders), not just
+    // revenue / unique buyers.
     sql`
       SELECT
         COALESCE(SUM(order_total), 0)::float                                                                                                      AS total_gmv,
+        COUNT(*)::int                                                                                                                              AS total_orders,
         (COUNT(DISTINCT user_id) + COUNT(*) FILTER (WHERE user_id IS NULL))::int                                                                  AS buying_users,
         COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd}), 0)::float                                        AS period_gmv,
+        COUNT(*) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd})::int                                                                AS period_orders,
         (COUNT(DISTINCT user_id) FILTER (WHERE timestamp >= ${pStart} AND timestamp < ${pEnd})
          + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${pStart} AND timestamp < ${pEnd}))::int                                       AS period_buying_users,
         COALESCE(SUM(order_total) FILTER (WHERE timestamp >= ${prevPStart} AND timestamp < ${prevPEnd}), 0)::float                                AS prev_period_gmv,
+        COUNT(*) FILTER (WHERE timestamp >= ${prevPStart} AND timestamp < ${prevPEnd})::int                                                       AS prev_period_orders,
         (COUNT(DISTINCT user_id) FILTER (WHERE timestamp >= ${prevPStart} AND timestamp < ${prevPEnd})
          + COUNT(*) FILTER (WHERE user_id IS NULL AND timestamp >= ${prevPStart} AND timestamp < ${prevPEnd}))::int                               AS prev_period_buying_users
       FROM conversions
@@ -320,6 +326,45 @@ export async function GET(request: NextRequest) {
       FROM period_buyers pb
       LEFT JOIN returned_buyers rb  ON rb.uid  = pb.uid
       LEFT JOIN repeat_buyers   rep ON rep.uid = pb.uid
+    `,
+
+    // N-day retention across multiple windows (7, 14, 30, since launch 2026-03-19).
+    // Definition: of buyers whose first purchase was N+ days ago (so they had a
+    // full N-day window to come back), what % made a second purchase within
+    // N days of that first purchase. "Since launch" = % of all-time buyers
+    // who have ever bought 2+ times.
+    sql`
+      WITH buyer_purchases AS (
+        SELECT
+          user_id::text AS uid,
+          timestamp,
+          MIN(timestamp) OVER (PARTITION BY user_id) AS first_at
+        FROM conversions
+        WHERE user_id IS NOT NULL
+          AND order_total > 0
+          AND (returned IS NULL OR returned = false)
+      ),
+      buyer_flags AS (
+        SELECT
+          uid,
+          first_at,
+          MAX(CASE WHEN timestamp > first_at AND timestamp <= first_at + INTERVAL '7 days'  THEN 1 ELSE 0 END) AS retained_7d,
+          MAX(CASE WHEN timestamp > first_at AND timestamp <= first_at + INTERVAL '14 days' THEN 1 ELSE 0 END) AS retained_14d,
+          MAX(CASE WHEN timestamp > first_at AND timestamp <= first_at + INTERVAL '30 days' THEN 1 ELSE 0 END) AS retained_30d,
+          MAX(CASE WHEN timestamp > first_at                                                 THEN 1 ELSE 0 END) AS retained_ever
+        FROM buyer_purchases
+        GROUP BY uid, first_at
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE first_at <= NOW() - INTERVAL '7 days')::int                AS cohort_7d,
+        COALESCE(SUM(retained_7d)  FILTER (WHERE first_at <= NOW() - INTERVAL '7 days'),  0)::int AS retained_7d,
+        COUNT(*) FILTER (WHERE first_at <= NOW() - INTERVAL '14 days')::int               AS cohort_14d,
+        COALESCE(SUM(retained_14d) FILTER (WHERE first_at <= NOW() - INTERVAL '14 days'), 0)::int AS retained_14d,
+        COUNT(*) FILTER (WHERE first_at <= NOW() - INTERVAL '30 days')::int               AS cohort_30d,
+        COALESCE(SUM(retained_30d) FILTER (WHERE first_at <= NOW() - INTERVAL '30 days'), 0)::int AS retained_30d,
+        COUNT(*)::int                                                                      AS cohort_all,
+        COALESCE(SUM(retained_ever), 0)::int                                              AS retained_all
+      FROM buyer_flags
     `,
 
     // Email stats — from email_events table (created by Resend webhook)
@@ -464,18 +509,23 @@ export async function GET(request: NextRequest) {
       totalSavers,
       saversBought,
     },
+    // True AOV = revenue / orders. Includes legacy buyingUsers fields so the
+    // frontend that wants "per-buyer" math still has them.
     revenuePerUser: {
-      value: (rev.period_buying_users as number) > 0
-        ? (rev.period_gmv as number) / (rev.period_buying_users as number)
+      value: (rev.period_orders as number) > 0
+        ? (rev.period_gmv as number) / (rev.period_orders as number)
         : 0,
+      orders: rev.period_orders as number,
       buyingUsers: rev.period_buying_users as number,
-      allTimeValue: (rev.buying_users as number) > 0
-        ? (rev.total_gmv as number) / (rev.buying_users as number)
+      allTimeValue: (rev.total_orders as number) > 0
+        ? (rev.total_gmv as number) / (rev.total_orders as number)
         : 0,
+      allTimeOrders: rev.total_orders as number,
       allTimeBuyingUsers: rev.buying_users as number,
-      prevPeriodValue: (rev.prev_period_buying_users as number) > 0
-        ? (rev.prev_period_gmv as number) / (rev.prev_period_buying_users as number)
+      prevPeriodValue: (rev.prev_period_orders as number) > 0
+        ? (rev.prev_period_gmv as number) / (rev.prev_period_orders as number)
         : 0,
+      prevPeriodOrders: rev.prev_period_orders as number,
       prevPeriodBuyingUsers: rev.prev_period_buying_users as number,
     },
     gmvByWeek: gmvByWeekRows,
@@ -510,6 +560,20 @@ export async function GET(request: NextRequest) {
         ? (churnRows[0]?.bought_again as number) / (churnRows[0]?.total_buyers as number)
         : null,
     },
+    retentionByWindow: (() => {
+      const r = retentionWindowRows?.[0] ?? {};
+      const make = (cohort: number, retained: number) => ({
+        cohort,
+        retained,
+        rate: cohort > 0 ? retained / cohort : null,
+      });
+      return [
+        { window: "7d",    label: "7-day",         ...make((r.cohort_7d as number) ?? 0,   (r.retained_7d as number) ?? 0) },
+        { window: "14d",   label: "14-day",        ...make((r.cohort_14d as number) ?? 0,  (r.retained_14d as number) ?? 0) },
+        { window: "30d",   label: "30-day",        ...make((r.cohort_30d as number) ?? 0,  (r.retained_30d as number) ?? 0) },
+        { window: "all",   label: "Since launch",  ...make((r.cohort_all as number) ?? 0,  (r.retained_all as number) ?? 0) },
+      ];
+    })(),
     emailCtr: {
       opens7d: ec.opens_7d,
       clicks7d: ec.clicks_7d,

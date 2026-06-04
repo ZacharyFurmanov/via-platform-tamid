@@ -192,6 +192,41 @@ export async function getApprovedPilotEmails(): Promise<string[]> {
   return rows.map((r) => r.email as string);
 }
 
+/**
+ * Returns emails of "insider" users — anyone who has done at least one of:
+ *  - made a purchase (conversions)
+ *  - successfully invited a friend (someone signed up with their referral_code)
+ *  - clicked through to a store (clicks)
+ *  - favorited a product (product_favorites)
+ *
+ * Respects email unsubscribe / notification settings.
+ */
+export async function getInsiderAudienceEmails(): Promise<string[]> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT DISTINCT LOWER(u.email) AS email
+    FROM users u
+    WHERE u.email IS NOT NULL AND u.email != ''
+      AND COALESCE(u.notification_emails_enabled, TRUE) = TRUE
+      AND (
+        -- Purchased
+        EXISTS (SELECT 1 FROM conversions WHERE user_id::text = u.id::text)
+        -- Invited a friend who signed up
+        OR EXISTS (
+          SELECT 1 FROM pilot_access pa1
+          JOIN pilot_access pa2 ON pa2.referred_by = pa1.referral_code
+          WHERE LOWER(pa1.email) = LOWER(u.email)
+        )
+        -- Clicked at least 3 times (meaningful engagement, not a one-off)
+        OR (SELECT COUNT(*) FROM clicks WHERE user_id::text = u.id::text) >= 3
+        -- Favorited a product
+        OR EXISTS (SELECT 1 FROM product_favorites WHERE user_id::text = u.id::text)
+      )
+    ORDER BY email
+  `;
+  return rows.map((r) => r.email as string);
+}
+
 /** Returns emails of users who have been active (clicked, saved, viewed, or ordered) at least once. */
 export async function getActiveUserEmails(): Promise<string[]> {
   const sql = getDb();
