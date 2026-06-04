@@ -2,245 +2,288 @@
  * June 2026 Insider Newsletter — drop-in HTML for the insider rose-background shell.
  * Pass `JUNE_2026_NEWSLETTER_HTML` as `contentHtml` to /api/admin/send-insider-newsletter.
  *
- * Product links use search URLs by default (vyaplatform.com/search?q=...) so they
- * always resolve. Swap in exact product URLs by editing the `href` on each card.
+ * Uses a table-based layout with explicit bgcolor attributes on every cell so
+ * Gmail, Outlook, Apple Mail all render the solid rose background (CSS-only
+ * backgrounds get stripped by some clients).
  */
 
+const ROSE = "#C08A8A";
 const TEXT = "#5D0F17";
 const TEXT_MUTED = "rgba(93,15,23,0.7)";
-const ACCENT_BG = "rgba(93,15,23,0.08)"; // subtle box on rose
 const BTN_BG = "#5D0F17";
 const BTN_TEXT = "#FFFDF8";
 const SERIF = "Georgia, 'Times New Roman', serif";
 
 function h2(text: string): string {
-  return `<h2 style="font-family:${SERIF};font-size:24px;color:${TEXT};margin:0 0 14px;font-weight:normal;line-height:1.3;">${text}</h2>`;
+ return `<h2 style="font-family:${SERIF};font-size:28px;color:${TEXT};margin:0 0 14px;font-weight:normal;line-height:1.2;letter-spacing:-0.01em;">${text}</h2>`;
 }
 
 function h3(text: string): string {
-  return `<h3 style="font-family:${SERIF};font-size:18px;color:${TEXT};margin:24px 0 8px;font-weight:600;line-height:1.3;">${text}</h3>`;
+ return `<h3 style="font-family:${SERIF};font-size:20px;color:${TEXT};margin:28px 0 10px;font-weight:600;line-height:1.3;">${text}</h3>`;
 }
 
 function eyebrow(text: string): string {
-  return `<p style="font-family:${SERIF};font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:${TEXT};margin:0 0 8px;">${text}</p>`;
+ return `<p style="font-family:${SERIF};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">${text}</p>`;
 }
 
 function para(text: string): string {
-  return `<p style="font-family:${SERIF};font-size:14px;color:${TEXT};line-height:1.7;margin:0 0 14px;">${text}</p>`;
+ return `<p style="font-family:${SERIF};font-size:15px;color:${TEXT};line-height:1.7;margin:0 0 16px;">${text}</p>`;
 }
 
-function divider(): string {
-  return `<div style="border-top:1px solid rgba(93,15,23,0.25);margin:40px 0;"></div>`;
+function quote(text: string): string {
+ return `<p style="font-family:${SERIF};font-size:16px;color:${TEXT};line-height:1.65;margin:0 0 18px;font-style:italic;border-left:2px solid ${TEXT};padding-left:16px;">${text}</p>`;
+}
+
+function ornamentDivider(): string {
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}">
+ <tr><td bgcolor="${ROSE}" align="center" style="padding:36px 0;">
+ <span style="font-family:${SERIF};font-size:18px;color:${TEXT};letter-spacing:1em;">&#9670;&nbsp;&nbsp;&nbsp;&#9670;&nbsp;&nbsp;&nbsp;&#9670;</span>
+ </td></tr>
+ </table>`;
 }
 
 function ctaButton(label: string, url: string): string {
-  return `<a href="${url}" style="display:inline-block;background:${BTN_BG};color:${BTN_TEXT} !important;padding:12px 28px;text-decoration:none;font-family:${SERIF};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">${label}</a>`;
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+ <tr><td bgcolor="${BTN_BG}" style="background:${BTN_BG};padding:14px 32px;">
+ <a href="${url}" style="display:block;color:${BTN_TEXT};text-decoration:none;font-family:${SERIF};font-size:11px;letter-spacing:0.2em;text-transform:uppercase;font-weight:600;">${label}</a>
+ </td></tr>
+ </table>`;
 }
 
 /**
- * Product card — text/CTA only (no image; placeholder for now).
- * Once you have exact product URLs, drop them into `href`.
+ * Product card with image. Image fills the card width.
  */
-function productCard(args: { title: string; store: string; href: string; note?: string }): string {
-  return `
-    <div style="background:${ACCENT_BG};padding:20px 22px;margin:0 0 14px;">
-      <p style="font-family:${SERIF};font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${TEXT};margin:0 0 6px;">${args.store}</p>
-      <p style="font-family:${SERIF};font-size:15px;color:${TEXT};margin:0 0 12px;line-height:1.4;">${args.title}</p>
-      ${args.note ? `<p style="font-family:${SERIF};font-size:12px;color:${TEXT_MUTED};margin:0 0 12px;font-style:italic;">${args.note}</p>` : ""}
-      <a href="${args.href}" style="display:inline-block;border:1px solid ${TEXT};color:${TEXT} !important;padding:8px 18px;text-decoration:none;font-family:${SERIF};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;">Shop Now</a>
-    </div>
-  `;
+function productCard(args: {
+ image: string;
+ title: string;
+ store: string;
+ href: string;
+ note?: string;
+}): string {
+ const safeImg = args.image.replace(/&/g, "&amp;");
+ const safeHref = args.href.replace(/&/g, "&amp;");
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 24px;">
+ <tr><td bgcolor="${ROSE}" style="padding:0;">
+ <a href="${safeHref}" style="display:block;text-decoration:none;">
+ <img src="${safeImg}" alt="${args.title.replace(/&[a-z]+;/g, "").replace(/"/g, "&quot;")}" width="512"
+  style="display:block;width:100%;max-width:512px;height:auto;border:0;outline:none;text-decoration:none;" border="0" />
+ </a>
+ </td></tr>
+ <tr><td bgcolor="${ROSE}" style="padding:14px 4px 8px;">
+ <p style="font-family:${SERIF};font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${TEXT};margin:0 0 6px;font-weight:600;">${args.store}</p>
+ <p style="font-family:${SERIF};font-size:16px;color:${TEXT};margin:0 0 ${args.note ? "10px" : "14px"};line-height:1.4;">${args.title}</p>
+ ${args.note ? `<p style="font-family:${SERIF};font-size:13px;color:${TEXT_MUTED};margin:0 0 14px;font-style:italic;line-height:1.5;">${args.note}</p>` : ""}
+ <a href="${safeHref}" style="display:inline-block;border:1px solid ${TEXT};color:${TEXT};padding:9px 20px;text-decoration:none;font-family:${SERIF};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">Shop The Piece</a>
+ </td></tr>
+ </table>`;
 }
 
 /**
- * Event card — for upcoming markets / happenings.
+ * Two-column product row for showcasing pairs.
  */
+function productRow(left: Parameters<typeof productCard>[0], right: Parameters<typeof productCard>[0]): string {
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 12px;">
+ <tr>
+ <td bgcolor="${ROSE}" width="50%" valign="top" style="padding:0 10px 0 0;">${productCard(left)}</td>
+ <td bgcolor="${ROSE}" width="50%" valign="top" style="padding:0 0 0 10px;">${productCard(right)}</td>
+ </tr>
+ </table>`;
+}
+
 function eventCard(args: { name: string; bullets: string[]; date?: string }): string {
-  const bulletHtml = args.bullets
-    .map((b) => `<li style="font-family:${SERIF};font-size:13px;color:${TEXT};line-height:1.6;margin:0 0 6px;">${b}</li>`)
-    .join("");
-  return `
-    <div style="margin:0 0 24px;">
-      <p style="font-family:${SERIF};font-size:16px;color:${TEXT};margin:0 0 4px;font-weight:600;">${args.name}</p>
-      ${args.date ? `<p style="font-family:${SERIF};font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;">${args.date}</p>` : ""}
-      <ul style="margin:6px 0 0;padding-left:20px;">${bulletHtml}</ul>
-    </div>
-  `;
+ const bulletHtml = args.bullets
+ .map((b) => `<li style="font-family:${SERIF};font-size:14px;color:${TEXT};line-height:1.65;margin:0 0 6px;">${b}</li>`)
+ .join("");
+ return `
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 28px;">
+ <tr><td bgcolor="${ROSE}" style="padding:0;">
+ <p style="font-family:${SERIF};font-size:18px;color:${TEXT};margin:0 0 4px;font-weight:600;">${args.name}</p>
+ ${args.date ? `<p style="font-family:${SERIF};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${TEXT};margin:0 0 12px;font-weight:600;">${args.date}</p>` : ""}
+ <ul style="margin:6px 0 0;padding-left:22px;">${bulletHtml}</ul>
+ </td></tr>
+ </table>`;
 }
 
 const PRODUCT = (compositeId: string) => `https://vyaplatform.com/products/${compositeId}`;
 
+// Product image URLs (pre-fetched from /api/public/product/{id})
+const IMG = {
+ dgSandals: "https://cdn.shopify.com/s/files/1/0661/9342/4562/files/C4EF4851-484A-4F8D-9644-2CAE6562C06C.jpg?v=1743474717",
+ gucciJacket: "https://cdn.shopify.com/s/files/1/0922/3274/5207/files/IMG-0437.png?v=1775931887",
+ chloePaddington: "https://cdn.shopify.com/s/files/1/0618/1054/0619/files/IMG-6832.png?v=1778735493",
+ etroSkirt: "https://cdn.shopify.com/s/files/1/0907/1335/8617/files/IMG_4300_a9a17c9c-6953-441f-a51a-ea909f52d790.jpg?v=1779653423",
+ etroShoes: "https://cdn.shopify.com/s/files/1/0739/2421/5029/files/IMG_1084_bb8ab1d7-dd63-4d30-84aa-2fb758f939b2.jpg?v=1774612712",
+ colorPop: "https://cdn.shopify.com/s/files/1/0991/0321/1834/files/A03C446E-3FF0-441C-9729-19B12ABC00FE.jpg?v=1779387842",
+ diorMalice: "https://cdn.shopify.com/s/files/1/0945/1762/5199/files/da7ef475-777c-49c3-8ec7-aa0f0991ae15.jpg?v=1774023697",
+ fendiBaguette: "https://cdn.shopify.com/s/files/1/0618/1054/0619/files/IMG-5841.png?v=1777568634",
+ cavalliJeans: "https://cdn.shopify.com/s/files/1/2541/8476/files/Photoroom_20260107_151925.png?v=1767823431",
+ daytonJaneBangle: "https://cdn.shopify.com/s/files/1/0681/7687/1469/files/IMG_6138.jpg?v=1772676253",
+ dgMiniSkirt: "https://cdn.shopify.com/s/files/1/0933/2454/2227/files/IMG_3858.jpg?v=1761759623",
+};
+
 export const JUNE_2026_NEWSLETTER_SUBJECT = "VYA — The Vintage Fashion Guide for VYA Insiders · June";
 
 export const JUNE_2026_NEWSLETTER_HTML = `
-  ${para(`Welcome to the first VYA Insider Newsletter. We built this for the people who actually use the platform — the buyers, the regulars, the people inviting friends. This is your monthly drop of what we're loving, who we're featuring, and what's coming next.`)}
+ ${para(`Welcome to the first <em>VYA Insider</em> Newsletter. We built this for the people who actually use the platform &mdash; the buyers, the regulars, the people inviting friends. Your monthly drop of what we&rsquo;re loving, who we&rsquo;re featuring, and what&rsquo;s coming next.`)}
 
-  ${divider()}
+ ${ornamentDivider()}
 
-  ${eyebrow("Hana's Top Picks")}
-  ${h2("VYA Founder's Edit")}
-  ${para("My three favorite finds on the platform this month — each from a different store, each unmistakably summer.")}
+ ${eyebrow("Hana's Top Picks")}
+ ${h2("Founder's Edit")}
+ ${para("Three pieces I'm obsessed with right now &mdash; each from a different store, each unmistakably summer.")}
 
-  ${productCard({
-    title: "Dolce &amp; Gabbana Strappy Sandals",
-    store: "Vintage Archives LA",
-    href: PRODUCT("vintage-archives-la-241"),
-  })}
+ ${productCard({
+ image: IMG.dgSandals,
+ title: "Dolce &amp; Gabbana Strappy Sandals",
+ store: "Vintage Archives LA",
+ href: PRODUCT("vintage-archives-la-241"),
+ })}
 
-  ${productCard({
-    title: "Gucci Red Leather Peplum Jacket &mdash; Frida Giannini Era",
-    store: "Edited Archive",
-    href: PRODUCT("edited-archive-1225604"),
-  })}
+ ${productCard({
+ image: IMG.gucciJacket,
+ title: "Gucci Red Leather Peplum Jacket &mdash; Frida Giannini Era",
+ store: "Edited Archive",
+ href: PRODUCT("edited-archive-1225604"),
+ })}
 
-  ${productCard({
-    title: "Chlo&eacute; Paddington Red Bag",
-    store: "Porter's Preloved",
-    href: PRODUCT("porters-preloved-1247886"),
-  })}
+ ${productCard({
+ image: IMG.chloePaddington,
+ title: "Chlo&eacute; Paddington Red Bag",
+ store: "Porter's Preloved",
+ href: PRODUCT("porters-preloved-1247886"),
+ })}
 
-  ${divider()}
+ ${ornamentDivider()}
 
-  ${eyebrow("This Month In Vintage")}
-  ${h2("Upcoming Happenings")}
+ ${eyebrow("This Month In Vintage")}
+ ${h2("Upcoming Happenings")}
 
-  ${eventCard({
-    name: "The Boston Open Market",
-    date: "Every Saturday · May–October",
-    bullets: [
-      "Vibrant open-air market featuring 50 local artists and small businesses",
-      "Boylston Street entrance to the Boston Public Garden",
-      "Stunning jewelry, fashion accessories, pottery, and one-of-a-kind home decor",
-    ],
-  })}
+ ${eventCard({
+ name: "The Boston Open Market",
+ date: "Every Saturday &middot; May–October",
+ bullets: [
+ "Vibrant open-air market featuring 50 local artists and small businesses",
+ "Boylston Street entrance to the Boston Public Garden",
+ "Stunning jewelry, fashion accessories, pottery, and one-of-a-kind home decor",
+ ],
+ })}
 
-  ${eventCard({
-    name: "Fredrick VNTG Fest (DC)",
-    date: "June 20 · 11am–5pm",
-    bullets: [
-      "Shop 120+ curated vendors across 3 buildings and 20,000 sqft",
-      "Y2K / 90s clothing, jewelry, music, home decor, local art, tattoos &amp; more",
-    ],
-  })}
+ ${eventCard({
+ name: "Fredrick VNTG Fest (DC)",
+ date: "June 20 &middot; 11am–5pm",
+ bullets: [
+ "Shop 120+ curated vendors across 3 buildings and 20,000 sqft",
+ "Y2K / 90s clothing, jewelry, music, home decor, local art, tattoos &amp; more",
+ ],
+ })}
 
-  ${eventCard({
-    name: "NY Archive — Open Now",
-    bullets: [
-      "Every piece is sold by one of their vendors",
-      "Space for regular shopping appointments, stylist pulls, creative shoots, and community events",
-      "Rotating vendors every 3 months across 15 iconic brands",
-    ],
-  })}
+ ${eventCard({
+ name: "NY Archive — Open Now",
+ bullets: [
+ "Every piece is sold by one of their vendors",
+ "Space for shopping appointments, stylist pulls, creative shoots, and community events",
+ "Rotating vendors every 3 months across 15 iconic brands",
+ ],
+ })}
 
-  ${divider()}
+ ${ornamentDivider()}
 
-  ${eyebrow("What's Coming")}
-  ${h2("Trends We're Watching")}
+ ${eyebrow("What's Coming")}
+ ${h2("Trends We're Watching")}
 
-  ${h3("ETRO summer instead of Pucci summer?")}
-  ${para("The print obsession is shifting. We're already seeing demand pivot toward ETRO's painterly motifs over Pucci's psychedelic geometry.")}
-  ${productCard({
-    title: "ETRO Printed Skirt",
-    store: "Sourced by Scottie",
-    href: PRODUCT("sourced-by-scottie-1734674"),
-  })}
-  ${productCard({
-    title: "ETRO Shoes",
-    store: "The Objects of Affection",
-    href: PRODUCT("the-objects-of-affection-176848"),
-  })}
+ ${h3("ETRO summer instead of Pucci summer?")}
+ ${para("The print obsession is shifting. We're already seeing demand pivot toward ETRO's painterly motifs over Pucci's psychedelic geometry.")}
+ ${productRow(
+ { image: IMG.etroSkirt, title: "ETRO Printed Skirt", store: "Sourced by Scottie", href: PRODUCT("sourced-by-scottie-1734674") },
+ { image: IMG.etroShoes, title: "ETRO Shoes", store: "The Objects of Affection", href: PRODUCT("the-objects-of-affection-176848") },
+ )}
 
-  ${h3("Less leopard, more color")}
-  ${para("Vibrant solids and bold mono-tones are pulling ahead of animal prints for the first time in two seasons.")}
-  ${productCard({
-    title: "A color-forward piece worth knowing",
-    store: "Situations Vintage",
-    href: PRODUCT("situations-vintage-1736931"),
-  })}
+ ${h3("Less leopard, more color")}
+ ${para("Vibrant solids and bold mono-tones are pulling ahead of animal prints for the first time in two seasons.")}
+ ${productCard({
+ image: IMG.colorPop,
+ title: "A color-forward piece worth knowing",
+ store: "Situations Vintage",
+ href: PRODUCT("situations-vintage-1736931"),
+ })}
 
-  ${h3("The Dior Malice bag")}
-  ${para("Get one now &mdash; prices are climbing fast.")}
-  ${productCard({
-    title: "Dior Malice Bag",
-    store: "Petria Vintage",
-    href: PRODUCT("petria-vintage-102595"),
-  })}
+ ${h3("The Dior Malice bag")}
+ ${para("Get one now &mdash; prices are climbing fast.")}
+ ${productCard({
+ image: IMG.diorMalice,
+ title: "Dior Malice Bag",
+ store: "Petria Vintage",
+ href: PRODUCT("petria-vintage-102595"),
+ })}
 
-  <div style="text-align:center;margin:24px 0 12px;">
-    ${ctaButton("Browse New Arrivals", "https://vyaplatform.com/new-arrivals")}
-  </div>
+ <div style="text-align:center;margin:24px 0 12px;">
+ ${ctaButton("Browse New Arrivals", "https://vyaplatform.com/new-arrivals")}
+ </div>
 
-  ${divider()}
+ ${ornamentDivider()}
 
-  ${eyebrow("Designer of the Month")}
-  ${h2("Phoebe Philo")}
+ ${eyebrow("Stylist Spotlight")}
+ ${h2("Natalie Granader's Summer Edit")}
 
-  ${para("There are designers who follow culture, and then there are those who quietly rewire it. Phoebe Philo belongs to the latter. The nature of her influence is difficult to quantify, but it&rsquo;s something far more enduring and long-lasting. Philo essentially founded minimalism in fashion before it was rebranded as &ldquo;quiet luxury.&rdquo;")}
+ ${quote(`&ldquo;Summer dressing is all about finding standout pieces that can inspire an entire outfit. This month I pulled some of my favorite finds from VYA and styled them for some of my favorite summer occasions.&rdquo;`)}
 
-  ${para("Born in Paris but raised in London, that duality placed her between two of fashion&rsquo;s most influential capitals and ultimately led her to Central Saint Martins. After graduating, she joined Stella McCartney at Chlo&eacute;, where she refined her vision for practical femininity. It wasn&rsquo;t long before she took the helm as creative director, boosting Chlo&eacute;&rsquo;s sales by over 60% in under five years.")}
+ ${h3("For Dinner")}
+ ${para(`&ldquo;I'd pair these colorful statement accessories with an airy white top and vintage Levi's for an elevated summer dinner look. The Fendi baguette and vintage Dolce &amp; Gabbana heels do all the work &mdash; sometimes the best outfits start with incredible accessories.&rdquo;`)}
+ ${productRow(
+ { image: IMG.dgSandals, title: "Dolce &amp; Gabbana Strappy Heels", store: "Vintage Archives LA", href: PRODUCT("vintage-archives-la-241") },
+ { image: IMG.fendiBaguette, title: "Fendi Baguette", store: "Porter's Preloved", href: PRODUCT("porters-preloved-889840") },
+ )}
 
-  ${para("It was at C&eacute;line, beginning in 2008, that her vision fully materialized. Philo had a tenacious rejection of overt sexuality &mdash; what we now call &ldquo;the male gaze&rdquo; &mdash; and instead offered structured, functional alternatives. Oversized silhouettes, sophisticated tailoring, restrained neutral palettes. These were clothes that assumed a woman&rsquo;s interior life was rich, complex, and worthy of consideration.")}
+ ${h3("For Brunch")}
+ ${para(`&ldquo;I'd style these statement floral jeans with a simple white tank, satin mules, a mini shoulder bag, and a chunky gold bangle. The look feels effortless but cool &mdash; perfect for a summer brunch.&rdquo;`)}
+ ${productRow(
+ { image: IMG.cavalliJeans, title: "Cavalli Floral Jeans", store: "Bloda's Choice", href: PRODUCT("blodas-choice-23622") },
+ { image: IMG.daytonJaneBangle, title: "Vintage Gold Metal Bangle", store: "Dayton Jane", href: PRODUCT("dayton-jane-54691") },
+ )}
 
-  ${para("The &ldquo;Philo woman&rdquo; became industry shorthand, though never easily defined. Independent, self-possessed, dressing only for herself. When she stepped down in 2018, her influence threaded through The Row, Toteme, Matthieu Blazy at Chanel, Michael Rider at C&eacute;line, Peter Do at Helmut Lang. In 2021 she returned with her self-titled label &mdash; a continuation of her legacy.")}
+ ${h3("For a European Beach Day")}
+ ${para(`&ldquo;This vintage mini skirt was made for a European summer. I'd style it with a bright bikini, jelly flip-flops, retro-inspired sunglasses, and a crochet beach bag for a look that takes you from the beach club straight to lunch by the water.&rdquo;`)}
+ ${productCard({
+ image: IMG.dgMiniSkirt,
+ title: "D&amp;G Vintage Tropical Mini Skirt",
+ store: "Club Fleur Vintage",
+ href: PRODUCT("club-fleur-46675"),
+ })}
 
-  ${para("To Philo, minimalism was a philosophy rooted in respect, not an aesthetic or a trend. She didn&rsquo;t just design clothes &mdash; she redefined the relationship between a woman and her wardrobe.")}
+ ${quote(`&ldquo;My favorite outfits always start with a statement piece. Whether it's a vintage Fendi baguette or a pair of Dolce &amp; Gabbana heels, the best vintage finds don't just complete an outfit &mdash; they inspire it.&rdquo;`)}
 
-  ${para(`<em>&ldquo;A woman should never be a mannequin for clothes. She should bring her own personality to them.&rdquo;</em>`)}
+ ${ornamentDivider()}
 
-  <div style="text-align:center;margin:24px 0 12px;">
-    ${ctaButton("Read The Full Article", "https://vyaplatform.substack.com/p/icons-in-fashion-phoebe-philo")}
-  </div>
+ ${eyebrow("Designer of the Month")}
+ ${h2("Phoebe Philo")}
 
-  ${divider()}
+ ${para("There are designers who follow culture, and then there are those who quietly rewire it. Phoebe Philo belongs to the latter. The nature of her influence is difficult to quantify, but it&rsquo;s something far more enduring and long-lasting. Philo essentially founded minimalism in fashion before it was rebranded as &ldquo;quiet luxury.&rdquo;")}
 
-  ${eyebrow("Stylist Spotlight")}
-  ${h2("Natalie Granader's Summer Edit")}
+ ${para("Born in Paris but raised in London, that duality placed her between two of fashion&rsquo;s most influential capitals and ultimately led her to Central Saint Martins. After graduating, she joined Stella McCartney at Chlo&eacute;, where she refined her vision for practical femininity. It wasn&rsquo;t long before she took the helm as creative director, boosting Chlo&eacute;&rsquo;s sales by over 60% in under five years.")}
 
-  ${para(`<em>&ldquo;Summer dressing is all about finding standout pieces that can inspire an entire outfit. This month I pulled some of my favorite finds from VYA and styled them for some of my favorite summer occasions.&rdquo;</em>`)}
+ ${para("It was at C&eacute;line, beginning in 2008, that her vision fully materialized. Philo had a tenacious rejection of overt sexuality &mdash; what we now call &ldquo;the male gaze&rdquo; &mdash; and instead offered structured, functional alternatives. Oversized silhouettes, sophisticated tailoring, restrained neutral palettes. These were clothes that assumed a woman&rsquo;s interior life was rich, complex, and worthy of consideration.")}
 
-  ${h3("For Dinner")}
-  ${para(`&ldquo;I'd pair these colorful statement accessories with an airy white top and vintage Levi's for an elevated summer dinner look. The Fendi baguette and vintage Dolce &amp; Gabbana heels do all the work &mdash; sometimes the best outfits start with incredible accessories.&rdquo;`)}
-  ${productCard({
-    title: "Dolce &amp; Gabbana Strappy Heels",
-    store: "Vintage Archives LA",
-    href: PRODUCT("vintage-archives-la-241"),
-  })}
-  ${productCard({
-    title: "Fendi Baguette",
-    store: "Porter's Preloved",
-    href: PRODUCT("porters-preloved-889840"),
-  })}
+ ${para("The &ldquo;Philo woman&rdquo; became industry shorthand, though never easily defined. Independent, self-possessed, dressing only for herself. When she stepped down in 2018, her influence threaded through The Row, Toteme, Matthieu Blazy at Chanel, Michael Rider at C&eacute;line, Peter Do at Helmut Lang. In 2021 she returned with her self-titled label &mdash; a continuation of her legacy.")}
 
-  ${h3("For Brunch")}
-  ${para(`&ldquo;I'd style these statement floral jeans with a simple white tank, satin mules, a mini shoulder bag, and a chunky gold bangle. The look feels effortless but cool &mdash; perfect for a summer brunch.&rdquo;`)}
-  ${productCard({
-    title: "Cavalli Floral Jeans",
-    store: "Bloda's Choice",
-    href: PRODUCT("blodas-choice-23622"),
-  })}
-  ${productCard({
-    title: "Vintage Gold Metal Bangle",
-    store: "Dayton Jane",
-    href: PRODUCT("dayton-jane-54691"),
-  })}
+ ${para("To Philo, minimalism was a philosophy rooted in respect, not an aesthetic or a trend. She didn&rsquo;t just design clothes &mdash; she redefined the relationship between a woman and her wardrobe.")}
 
-  ${h3("For a European Beach Day")}
-  ${para(`&ldquo;This vintage mini skirt was made for a European summer. I'd style it with a bright bikini, jelly flip-flops, retro-inspired sunglasses, and a crochet beach bag for a look that takes you from the beach club straight to lunch by the water.&rdquo;`)}
-  ${productCard({
-    title: "D&amp;G Vintage Tropical Mini Skirt",
-    store: "Club Fleur Vintage",
-    href: PRODUCT("club-fleur-46675"),
-  })}
+ ${quote(`&ldquo;A woman should never be a mannequin for clothes. She should bring her own personality to them.&rdquo; <span style="display:block;font-style:normal;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin-top:8px;">&mdash; Phoebe Philo</span>`)}
 
-  ${para(`<em>&ldquo;My favorite outfits always start with a statement piece. Whether it's a vintage Fendi baguette or a pair of Dolce &amp; Gabbana heels, the best vintage finds don't just complete an outfit &mdash; they inspire it.&rdquo;</em>`)}
+ <div style="text-align:center;margin:28px 0 0;">
+ ${ctaButton("Read The Full Article", "https://vyaplatform.substack.com/p/icons-in-fashion-phoebe-philo")}
+ </div>
 
-  ${divider()}
+ ${ornamentDivider()}
 
-  ${eyebrow("Customer Spotlight")}
-  ${h2("Where Should We Pop Up Next?")}
-  ${para("We want to bring VYA into your city. DM us where you want to see our next community event.")}
+ ${eyebrow("Customer Spotlight")}
+ ${h2("Where Should We Pop Up Next?")}
+ ${para("We want to bring VYA into your city. DM us where you want to see our next community event.")}
 
-  <div style="text-align:center;margin:24px 0 8px;">
-    ${ctaButton("DM @vyaplatform", "https://www.instagram.com/vyaplatform")}
-  </div>
+ <div style="text-align:center;margin:24px 0 8px;">
+ ${ctaButton("DM @vyaplatform", "https://www.instagram.com/vyaplatform")}
+ </div>
 `;

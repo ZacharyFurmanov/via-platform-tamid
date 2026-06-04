@@ -118,6 +118,8 @@ function insiderShell(content: string, unsubscribeUrl?: string): string {
  const unsubUrl = unsubscribeUrl || `${BASE_URL}/account`;
  const BG = "#C08A8A";
  const TEXT = "#5D0F17";
+ // Note: table-based layout with bgcolor attrs on every cell is required —
+ // Gmail strips CSS backgrounds, only honors bgcolor reliably.
  const html = `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
@@ -125,58 +127,70 @@ function insiderShell(content: string, unsubscribeUrl?: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light" />
 <meta name="supported-color-schemes" content="light" />
+<title>VYA Insider</title>
 <style>
 :root { color-scheme: light only; }
-body { margin: 0; padding: 0; background-color: ${BG} !important; font-family: Georgia, 'Times New Roman', serif; }
-u + .body { background-color: ${BG} !important; }
-u + .body .email-wrapper { background-color: ${BG} !important; }
-u + .body .email-inner { background-color: ${BG} !important; }
-[data-ogsc] body { background-color: ${BG} !important; }
-[data-ogsc] .email-wrapper { background-color: ${BG} !important; }
-[data-ogsc] .email-inner { background-color: ${BG} !important; }
-[data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] h1, [data-ogsc] h2 { color: ${TEXT} !important; }
-[data-ogsc] a[style*="background:${TEXT}"] { color: ${BG} !important; }
+body, table, td { background-color: ${BG} !important; }
+.body { background-color: ${BG} !important; }
+[data-ogsc] body, [data-ogsc] .body, [data-ogsc] table, [data-ogsc] td { background-color: ${BG} !important; }
+[data-ogsc] p, [data-ogsc] span, [data-ogsc] a, [data-ogsc] h1, [data-ogsc] h2, [data-ogsc] h3, [data-ogsc] li { color: ${TEXT} !important; }
 @media (prefers-color-scheme: dark) {
- body, .email-wrapper, .email-inner { background-color: ${BG} !important; }
- p, span, h1, h2 { color: ${TEXT} !important; }
+ body, .body, table, td { background-color: ${BG} !important; }
+ p, span, h1, h2, h3, li { color: ${TEXT} !important; }
  a { color: ${TEXT} !important; }
- a[style*="background:${TEXT}"] { color: ${BG} !important; }
 }
 </style>
 </head>
-<body class="body" style="margin:0;padding:0;background-color:${BG};" bgcolor="${BG}">
-<div class="email-wrapper" style="background-color:${BG};padding:52px 24px 48px;" bgcolor="${BG}">
- <div class="email-inner" style="max-width:560px;margin:0 auto;background-color:${BG};" bgcolor="${BG}">
+<body class="body" bgcolor="${BG}" style="margin:0;padding:0;background-color:${BG};font-family:Georgia,'Times New Roman',serif;">
 
- <!-- Header: logo -->
- <div style="text-align:center;margin-bottom:40px;">
- <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="160"
- style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
- <p style="margin:14px 0 0;font-size:10px;letter-spacing:0.3em;color:${TEXT};
- text-transform:uppercase;font-family:Georgia,'Times New Roman',serif;">
- The Vintage Fashion Guide for VYA Insiders
- </p>
- </div>
+<!-- 100% width outer table — forces rose all the way to the email-client edges -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${BG}" style="background-color:${BG};">
+ <tr>
+ <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:48px 16px;">
+
+ <!-- Constrained inner table — actual content column -->
+ <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" bgcolor="${BG}" style="background-color:${BG};max-width:560px;width:100%;">
+
+ <!-- Header -->
+ <tr>
+ <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:0 0 40px;">
+  <img src="https://vyaplatform.com/vya-logo.png" alt="VYA" width="160"
+  style="display:block;margin:0 auto;width:160px;height:auto;border:0;" border="0" />
+  <p style="margin:16px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};">
+  The Vintage Fashion Guide for VYA Insiders
+  </p>
+ </td>
+ </tr>
 
  <!-- Body -->
- ${content}
+ <tr>
+ <td bgcolor="${BG}" style="background-color:${BG};padding:0;">
+  ${content}
+ </td>
+ </tr>
 
  <!-- Footer -->
- <div style="text-align:center;margin-top:64px;">
- <p style="margin:0;font-size:12px;color:${TEXT};font-family:Georgia,'Times New Roman',serif;line-height:2;">
- <a href="${BASE_URL}" style="color:${TEXT};text-decoration:none;">vyaplatform.com</a><br />
- IG: <a href="https://www.instagram.com/vyaplatform" style="color:${TEXT};text-decoration:none;">@vyaplatform</a>
- </p>
- <p style="margin:18px 0 0;font-size:12px;color:${TEXT};font-family:Georgia,'Times New Roman',serif;">
- <a href="${unsubUrl}" style="color:${TEXT};text-decoration:underline;">Unsubscribe here</a>
- </p>
- <p style="margin:10px 0 0;font-size:10px;color:rgba(93,15,23,0.55);font-family:Georgia,'Times New Roman',serif;">
- &copy; ${year} VYA.
- </p>
- </div>
+ <tr>
+ <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:64px 0 0;">
+  <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:${TEXT};line-height:2;">
+  <a href="${BASE_URL}" style="color:${TEXT};text-decoration:none;">vyaplatform.com</a><br />
+  IG: <a href="https://www.instagram.com/vyaplatform" style="color:${TEXT};text-decoration:none;">@vyaplatform</a>
+  </p>
+  <p style="margin:18px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:${TEXT};">
+  <a href="${unsubUrl}" style="color:${TEXT};text-decoration:underline;">Unsubscribe here</a>
+  </p>
+  <p style="margin:10px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10px;color:rgba(93,15,23,0.55);">
+  &copy; ${year} VYA.
+  </p>
+ </td>
+ </tr>
 
- </div>
-</div>
+ </table>
+
+ </td>
+ </tr>
+</table>
+
 </body>
 </html>`;
  return minifyHtml(html);
