@@ -1,44 +1,45 @@
 /**
- * June 2026 Insider Newsletter — drop-in HTML for the insider rose-background shell.
+ * June 2026 Insider Newsletter — drop-in HTML for the insider shell.
  * Pass `JUNE_2026_NEWSLETTER_HTML` as `contentHtml` to /api/admin/send-insider-newsletter.
  *
- * Uses a table-based layout with explicit bgcolor attributes on every cell so
- * Gmail, Outlook, Apple Mail all render the solid rose background (CSS-only
- * backgrounds get stripped by some clients).
+ * Uses brand fonts: Playfair Display for headlines + Cormorant Garamond for body,
+ * with Georgia as fallback for clients that don't load web fonts.
  */
 
-const ROSE = "#C08A8A";
+const CREAM = "#FFFDF8";
 const TEXT = "#5D0F17";
 const TEXT_MUTED = "rgba(93,15,23,0.7)";
+const RULE = "rgba(93,15,23,0.18)";
 const BTN_BG = "#5D0F17";
 const BTN_TEXT = "#FFFDF8";
-const SERIF = "Georgia, 'Times New Roman', serif";
+const HEAD = "'Playfair Display', Georgia, 'Times New Roman', serif";
+const BODY = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 
 function h2(text: string): string {
- return `<h2 style="font-family:${SERIF};font-size:28px;color:${TEXT};margin:0 0 14px;font-weight:normal;line-height:1.2;letter-spacing:-0.01em;">${text}</h2>`;
+ return `<h2 style="font-family:${HEAD};font-size:30px;color:${TEXT};margin:0 0 14px;font-weight:500;line-height:1.15;letter-spacing:-0.01em;">${text}</h2>`;
 }
 
 function h3(text: string): string {
- return `<h3 style="font-family:${SERIF};font-size:20px;color:${TEXT};margin:28px 0 10px;font-weight:600;line-height:1.3;">${text}</h3>`;
+ return `<h3 style="font-family:${HEAD};font-size:21px;color:${TEXT};margin:28px 0 10px;font-weight:500;line-height:1.3;">${text}</h3>`;
 }
 
 function eyebrow(text: string): string {
- return `<p style="font-family:${SERIF};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">${text}</p>`;
+ return `<p style="font-family:${BODY};font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">${text}</p>`;
 }
 
 function para(text: string): string {
- return `<p style="font-family:${SERIF};font-size:15px;color:${TEXT};line-height:1.7;margin:0 0 16px;">${text}</p>`;
+ return `<p style="font-family:${BODY};font-size:17px;color:${TEXT};line-height:1.65;margin:0 0 16px;font-weight:400;">${text}</p>`;
 }
 
 function quote(text: string): string {
- return `<p style="font-family:${SERIF};font-size:16px;color:${TEXT};line-height:1.65;margin:0 0 18px;font-style:italic;border-left:2px solid ${TEXT};padding-left:16px;">${text}</p>`;
+ return `<p style="font-family:${BODY};font-size:18px;color:${TEXT};line-height:1.55;margin:0 0 18px;font-style:italic;border-left:2px solid ${TEXT};padding-left:18px;font-weight:400;">${text}</p>`;
 }
 
 function ornamentDivider(): string {
  return `
- <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}">
- <tr><td bgcolor="${ROSE}" align="center" style="padding:36px 0;">
- <span style="font-family:${SERIF};font-size:18px;color:${TEXT};letter-spacing:1em;">&#9670;&nbsp;&nbsp;&nbsp;&#9670;&nbsp;&nbsp;&nbsp;&#9670;</span>
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${CREAM}">
+ <tr><td bgcolor="${CREAM}" align="center" style="padding:36px 0;">
+ <span style="font-family:${HEAD};font-size:16px;color:${TEXT};letter-spacing:1em;">&#9670;&nbsp;&nbsp;&nbsp;&#9670;&nbsp;&nbsp;&nbsp;&#9670;</span>
  </td></tr>
  </table>`;
 }
@@ -47,7 +48,7 @@ function ctaButton(label: string, url: string): string {
  return `
  <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
  <tr><td bgcolor="${BTN_BG}" style="background:${BTN_BG};padding:14px 32px;">
- <a href="${url}" style="display:block;color:${BTN_TEXT};text-decoration:none;font-family:${SERIF};font-size:11px;letter-spacing:0.2em;text-transform:uppercase;font-weight:600;">${label}</a>
+ <a href="${url}" style="display:block;color:${BTN_TEXT};text-decoration:none;font-family:${BODY};font-size:12px;letter-spacing:0.2em;text-transform:uppercase;font-weight:600;">${label}</a>
  </td></tr>
  </table>`;
 }
@@ -65,18 +66,18 @@ function productCard(args: {
  const safeImg = args.image.replace(/&/g, "&amp;");
  const safeHref = args.href.replace(/&/g, "&amp;");
  return `
- <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 24px;">
- <tr><td bgcolor="${ROSE}" style="padding:0;">
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${CREAM}" style="margin:0 0 24px;">
+ <tr><td bgcolor="${CREAM}" style="padding:0;">
  <a href="${safeHref}" style="display:block;text-decoration:none;">
  <img src="${safeImg}" alt="${args.title.replace(/&[a-z]+;/g, "").replace(/"/g, "&quot;")}" width="512"
   style="display:block;width:100%;max-width:512px;height:auto;border:0;outline:none;text-decoration:none;" border="0" />
  </a>
  </td></tr>
- <tr><td bgcolor="${ROSE}" style="padding:14px 4px 8px;">
- <p style="font-family:${SERIF};font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${TEXT};margin:0 0 6px;font-weight:600;">${args.store}</p>
- <p style="font-family:${SERIF};font-size:16px;color:${TEXT};margin:0 0 ${args.note ? "10px" : "14px"};line-height:1.4;">${args.title}</p>
- ${args.note ? `<p style="font-family:${SERIF};font-size:13px;color:${TEXT_MUTED};margin:0 0 14px;font-style:italic;line-height:1.5;">${args.note}</p>` : ""}
- <a href="${safeHref}" style="display:inline-block;border:1px solid ${TEXT};color:${TEXT};padding:9px 20px;text-decoration:none;font-family:${SERIF};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">Shop The Piece</a>
+ <tr><td bgcolor="${CREAM}" style="padding:14px 4px 8px;">
+ <p style="font-family:${BODY};font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:${TEXT};margin:0 0 6px;font-weight:600;">${args.store}</p>
+ <p style="font-family:${HEAD};font-size:18px;color:${TEXT};margin:0 0 ${args.note ? "10px" : "14px"};line-height:1.35;font-weight:500;">${args.title}</p>
+ ${args.note ? `<p style="font-family:${BODY};font-size:15px;color:${TEXT_MUTED};margin:0 0 14px;font-style:italic;line-height:1.5;">${args.note}</p>` : ""}
+ <a href="${safeHref}" style="display:inline-block;border:1px solid ${TEXT};color:${TEXT};padding:10px 22px;text-decoration:none;font-family:${BODY};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">Shop The Piece</a>
  </td></tr>
  </table>`;
 }
@@ -95,19 +96,19 @@ function outfitCard(args: {
  const piecesHtml = args.pieces
  .map(
  (p) => `
- <li style="font-family:${SERIF};font-size:14px;color:${TEXT};line-height:1.7;margin:0 0 6px;list-style:none;">
+ <li style="font-family:${BODY};font-size:16px;color:${TEXT};line-height:1.7;margin:0 0 6px;list-style:none;">
   <a href="${p.href.replace(/&/g, "&amp;")}" style="color:${TEXT};text-decoration:underline;text-underline-offset:3px;">${p.label}</a>
  </li>`,
  )
  .join("");
  return `
- <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 32px;">
- <tr><td bgcolor="${ROSE}" align="center" style="padding:0;">
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${CREAM}" style="margin:0 0 32px;">
+ <tr><td bgcolor="${CREAM}" align="center" style="padding:0;">
  <img src="${safeImg}" alt="${args.alt.replace(/"/g, "&quot;")}" width="512"
   style="display:block;width:100%;max-width:512px;height:auto;border:0;" border="0" />
  </td></tr>
- <tr><td bgcolor="${ROSE}" style="padding:18px 4px 0;">
- <p style="font-family:${SERIF};font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">Shop The Look</p>
+ <tr><td bgcolor="${CREAM}" style="padding:18px 4px 0;">
+ <p style="font-family:${BODY};font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:${TEXT};margin:0 0 10px;font-weight:600;">Shop The Look</p>
  <ul style="margin:0;padding:0;">${piecesHtml}</ul>
  </td></tr>
  </table>`;
@@ -118,23 +119,23 @@ function outfitCard(args: {
  */
 function productRow(left: Parameters<typeof productCard>[0], right: Parameters<typeof productCard>[0]): string {
  return `
- <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 12px;">
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${CREAM}" style="margin:0 0 12px;">
  <tr>
- <td bgcolor="${ROSE}" width="50%" valign="top" style="padding:0 10px 0 0;">${productCard(left)}</td>
- <td bgcolor="${ROSE}" width="50%" valign="top" style="padding:0 0 0 10px;">${productCard(right)}</td>
+ <td bgcolor="${CREAM}" width="50%" valign="top" style="padding:0 10px 0 0;">${productCard(left)}</td>
+ <td bgcolor="${CREAM}" width="50%" valign="top" style="padding:0 0 0 10px;">${productCard(right)}</td>
  </tr>
  </table>`;
 }
 
 function eventCard(args: { name: string; bullets: string[]; date?: string }): string {
  const bulletHtml = args.bullets
- .map((b) => `<li style="font-family:${SERIF};font-size:14px;color:${TEXT};line-height:1.65;margin:0 0 6px;">${b}</li>`)
+ .map((b) => `<li style="font-family:${BODY};font-size:16px;color:${TEXT};line-height:1.65;margin:0 0 6px;">${b}</li>`)
  .join("");
  return `
- <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${ROSE}" style="margin:0 0 28px;">
- <tr><td bgcolor="${ROSE}" style="padding:0;">
- <p style="font-family:${SERIF};font-size:18px;color:${TEXT};margin:0 0 4px;font-weight:600;">${args.name}</p>
- ${args.date ? `<p style="font-family:${SERIF};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${TEXT};margin:0 0 12px;font-weight:600;">${args.date}</p>` : ""}
+ <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${CREAM}" style="margin:0 0 28px;">
+ <tr><td bgcolor="${CREAM}" style="padding:0;">
+ <p style="font-family:${HEAD};font-size:20px;color:${TEXT};margin:0 0 4px;font-weight:500;">${args.name}</p>
+ ${args.date ? `<p style="font-family:${BODY};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:${TEXT};margin:0 0 12px;font-weight:600;">${args.date}</p>` : ""}
  <ul style="margin:6px 0 0;padding-left:22px;">${bulletHtml}</ul>
  </td></tr>
  </table>`;

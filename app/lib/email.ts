@@ -109,15 +109,16 @@ u + .body .email-inner { background-color: #FFFDF8 !important; }
 }
 
 /**
- * Insider Newsletter shell — same layout as viaShell, but with a dusty-rose
- * background (#C08A8A) and the same brand burgundy text (#5D0F17).
- * Used for the curated insider newsletter sent to highly-engaged members.
+ * Insider Newsletter shell — cream background (#FFFDF8) with brand burgundy
+ * text (#5D0F17). Uses VYA brand fonts: Playfair Display (headlines) +
+ * Cormorant Garamond (body) via Google Fonts, with Georgia fallback.
  */
 function insiderShell(content: string, unsubscribeUrl?: string): string {
  const year = new Date().getFullYear();
  const unsubUrl = unsubscribeUrl || `${BASE_URL}/account`;
- const BG = "#C08A8A";
+ const BG = "#FFFDF8";
  const TEXT = "#5D0F17";
+ const BODY_FONT = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
  // Note: table-based layout with bgcolor attrs on every cell is required —
  // Gmail strips CSS backgrounds, only honors bgcolor reliably.
  const html = `<!DOCTYPE html>
@@ -127,7 +128,10 @@ function insiderShell(content: string, unsubscribeUrl?: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light" />
 <meta name="supported-color-schemes" content="light" />
-<title>VYA Insider</title>
+<title>via VYA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
 <style>
 :root { color-scheme: light only; }
 body, table, td { background-color: ${BG} !important; }
@@ -141,9 +145,9 @@ body, table, td { background-color: ${BG} !important; }
 }
 </style>
 </head>
-<body class="body" bgcolor="${BG}" style="margin:0;padding:0;background-color:${BG};font-family:Georgia,'Times New Roman',serif;">
+<body class="body" bgcolor="${BG}" style="margin:0;padding:0;background-color:${BG};font-family:${BODY_FONT};">
 
-<!-- 100% width outer table — forces rose all the way to the email-client edges -->
+<!-- 100% width outer table — forces cream all the way to the email-client edges -->
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${BG}" style="background-color:${BG};">
  <tr>
  <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:48px 16px;">
@@ -156,7 +160,7 @@ body, table, td { background-color: ${BG} !important; }
  <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:0 0 40px;">
   <img src="https://vyaplatform.com/vya-logo.png" alt="VYA" width="160"
   style="display:block;margin:0 auto;width:160px;height:auto;border:0;" border="0" />
-  <p style="margin:16px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${TEXT};">
+  <p style="margin:16px 0 0;font-family:${BODY_FONT};font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:${TEXT};font-weight:500;">
   via VYA, the vintage fashion guide for VYA insiders
   </p>
  </td>
@@ -172,14 +176,14 @@ body, table, td { background-color: ${BG} !important; }
  <!-- Footer -->
  <tr>
  <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:64px 0 0;">
-  <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:${TEXT};line-height:2;">
+  <p style="margin:0;font-family:${BODY_FONT};font-size:13px;color:${TEXT};line-height:2;">
   <a href="${BASE_URL}" style="color:${TEXT};text-decoration:none;">vyaplatform.com</a><br />
   IG: <a href="https://www.instagram.com/vyaplatform" style="color:${TEXT};text-decoration:none;">@vyaplatform</a>
   </p>
-  <p style="margin:18px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:${TEXT};">
+  <p style="margin:18px 0 0;font-family:${BODY_FONT};font-size:13px;color:${TEXT};">
   <a href="${unsubUrl}" style="color:${TEXT};text-decoration:underline;">Unsubscribe here</a>
   </p>
-  <p style="margin:10px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:10px;color:rgba(93,15,23,0.55);">
+  <p style="margin:10px 0 0;font-family:${BODY_FONT};font-size:11px;color:rgba(93,15,23,0.55);">
   &copy; ${year} VYA.
   </p>
  </td>
