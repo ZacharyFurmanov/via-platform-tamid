@@ -213,6 +213,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  },
  {
  type: "shopify",
+ name: "Mookie Studios",
+ slug: "mookie-studios",
+ storeDomain: "mookiestudios.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
  name: "Moonstruck Vintage",
  slug: "moonstruck-vintage",
  storeDomain: "moonstruckvintagenyc.com",

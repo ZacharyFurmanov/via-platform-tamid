@@ -225,40 +225,6 @@ export const JUNE_2026_NEWSLETTER_HTML = `
 
  ${ornamentDivider()}
 
- ${eyebrow("What's Coming")}
- ${h2("Trends We're Watching")}
-
- ${h3("ETRO summer instead of Pucci summer?")}
- ${para("The print obsession is shifting. We're already seeing demand pivot toward ETRO's painterly motifs over Pucci's psychedelic geometry.")}
- ${productRow(
- { image: IMG.etroSkirt, title: "ETRO Printed Skirt", store: "Sourced by Scottie", href: PRODUCT("sourced-by-scottie-1734674") },
- { image: IMG.etroShoes, title: "ETRO Shoes", store: "The Objects of Affection", href: PRODUCT("the-objects-of-affection-176848") },
- )}
-
- ${h3("Less leopard, more color")}
- ${para("Vibrant solids and bold mono-tones are pulling ahead of animal prints for the first time in two seasons.")}
- ${productCard({
- image: IMG.colorPop,
- title: "A color-forward piece worth knowing",
- store: "Situations Vintage",
- href: PRODUCT("situations-vintage-1736931"),
- })}
-
- ${h3("The Dior Malice bag")}
- ${para("Get one now &mdash; prices are climbing fast.")}
- ${productCard({
- image: IMG.diorMalice,
- title: "Dior Malice Bag",
- store: "Petria Vintage",
- href: PRODUCT("petria-vintage-102595"),
- })}
-
- <div style="text-align:center;margin:24px 0 12px;">
- ${ctaButton("Browse New Arrivals", "https://vyaplatform.com/new-arrivals")}
- </div>
-
- ${ornamentDivider()}
-
  ${eyebrow("Stylist Spotlight")}
  ${h2("Natalie Granader's Summer Edit")}
 
@@ -297,6 +263,40 @@ export const JUNE_2026_NEWSLETTER_HTML = `
  })}
 
  ${quote(`&ldquo;My favorite outfits always start with a statement piece. Whether it's a vintage Fendi baguette or a pair of Dolce &amp; Gabbana heels, the best vintage finds don't just complete an outfit &mdash; they inspire it.&rdquo;`)}
+
+ ${ornamentDivider()}
+
+ ${eyebrow("What's Coming")}
+ ${h2("Trends We're Watching")}
+
+ ${h3("ETRO summer instead of Pucci summer?")}
+ ${para("The print obsession is shifting. We're already seeing demand pivot toward ETRO's painterly motifs over Pucci's psychedelic geometry.")}
+ ${productRow(
+ { image: IMG.etroSkirt, title: "ETRO Printed Skirt", store: "Sourced by Scottie", href: PRODUCT("sourced-by-scottie-1734674") },
+ { image: IMG.etroShoes, title: "ETRO Shoes", store: "The Objects of Affection", href: PRODUCT("the-objects-of-affection-176848") },
+ )}
+
+ ${h3("Less leopard, more color")}
+ ${para("Vibrant solids and bold mono-tones are pulling ahead of animal prints for the first time in two seasons.")}
+ ${productCard({
+ image: IMG.colorPop,
+ title: "A color-forward piece worth knowing",
+ store: "Situations Vintage",
+ href: PRODUCT("situations-vintage-1736931"),
+ })}
+
+ ${h3("The Dior Malice bag")}
+ ${para("Get one now &mdash; prices are climbing fast.")}
+ ${productCard({
+ image: IMG.diorMalice,
+ title: "Dior Malice Bag",
+ store: "Petria Vintage",
+ href: PRODUCT("petria-vintage-102595"),
+ })}
+
+ <div style="text-align:center;margin:24px 0 12px;">
+ ${ctaButton("Browse New Arrivals", "https://vyaplatform.com/new-arrivals")}
+ </div>
 
  ${ornamentDivider()}
 

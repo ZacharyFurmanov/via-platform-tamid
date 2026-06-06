@@ -26,7 +26,7 @@ const PUBLIC_ROUTES = [
   "/api/access-code",
   "/api/promo-code",
   "/membership",
-  "/api/webhooks/stripe",
+  "/api/webhooks",
   "/api/admin/collabs-product-ids",
   "/api/admin/import-collabs-links",
   "/api/admin/import-collabs-links-by-shopify-id",

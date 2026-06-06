@@ -555,6 +555,29 @@ export const stores = [
  "All sales are final. As a curated luxury resale boutique, all pieces are one-of-a-kind pre-loved items. Please review all details carefully before purchasing. Use the form below with any questions.",
  },
  {
+ slug: "mookie-studios",
+ dashboardToken: "ms-9c2a4e7b1f8d",
+ name: "Mookie Studios",
+ location: "San Diego, CA",
+ description:
+ "Mookie Studios was founded by stylist Madeleine, whose decade of experience in the NYC fashion industry and lifelong love of collecting vintage helped shape the brand. Mookie was created when she noticed the San Diego fashion scene was lacking in vintage options for the girls. It was then her mission to bring a little bit of NYC shopping to Southern California.\n\nSpecializing in pieces from the 1960s to the early 2000s, Mookie blends a nostalgic feel with chic, sophisticated style, creating pieces that stand out from everyday fast fashion. From beaded Cache dresses to vintage Adidas track pants, every piece is carefully curated to help you feel like the best version of YOU.",
+ website: "https://mookiestudios.com",
+ dataSource: "mookie-studios",
+ image: "/stores/mookie-studios.jpg",
+ logo: "/stores/placeholder.svg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "242294",
+ authenticityPolicy:
+ "Every piece at Mookie Studios is hand-selected by founder Madeleine, drawing on a decade in the NYC fashion industry and a lifelong love of collecting vintage. Each item from the 1960s to the early 2000s is carefully curated and accurately described before listing.",
+ shippingPolicy:
+ "Ships from San Diego, CA. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. Each piece is hand-selected and personally inspected by Madeleine. Please review all item details and photos carefully before purchasing — email madeleine@mookiestudios.com with any pre-purchase questions.",
+ },
+ {
  slug: "moonstruck-vintage",
  dashboardToken: "mv-7e2a9c4b1d8f",
  name: "Moonstruck Vintage",
@@ -1218,6 +1241,7 @@ export const storeContactEmails: Record<string, string> = {
  "nello-vintage": "nellovintage@gmail.com",
  "situations-vintage": "info@situationsvintage.com",
  "capsule-edit": "capsuledit@gmail.com",
+ "mookie-studios": "madeleine@mookiestudios.com",
  // VYA admin test account — sees all requests
  "via-admin": "hana@vyaplatform.com",
 };

@@ -155,15 +155,20 @@ body, table, td { background-color: ${BG} !important; }
  <!-- Constrained inner table — actual content column -->
  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" bgcolor="${BG}" style="background-color:${BG};max-width:560px;width:100%;">
 
- <!-- Header -->
+ <!-- Header — always white, never inherits cream/transparent -->
  <tr>
- <td bgcolor="${BG}" align="center" style="background-color:${BG};padding:0 0 40px;">
+ <td bgcolor="#FFFFFF" align="center" style="background-color:#FFFFFF !important;padding:40px 24px;">
   <img src="https://vyaplatform.com/vya-logo.png" alt="VYA" width="160"
   style="display:block;margin:0 auto;width:160px;height:auto;border:0;" border="0" />
   <p style="margin:16px 0 0;font-family:${BODY_FONT};font-size:11px;letter-spacing:0.28em;text-transform:uppercase;color:${TEXT};font-weight:500;">
   via VYA, the vintage fashion guide for VYA insiders
   </p>
  </td>
+ </tr>
+
+ <!-- Spacer between white header and cream body -->
+ <tr>
+ <td bgcolor="${BG}" style="background-color:${BG};height:32px;line-height:32px;font-size:0;">&nbsp;</td>
  </tr>
 
  <!-- Body -->
