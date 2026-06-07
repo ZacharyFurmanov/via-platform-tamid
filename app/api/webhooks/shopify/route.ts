@@ -118,19 +118,26 @@ export async function POST(request: NextRequest) {
  ((order.customer as Record<string, unknown> | null)?.email as string | null) ||
  null;
 
- // Extract via_click_id embedded by the VYA cart permalink
+ // Extract via_click_id embedded by the VYA cart permalink. This is the ONLY
+ // signal that the order actually came through VYA — we set this attribute in
+ // /api/track when generating cart URLs for webhook-enabled stores. Without
+ // it, the order is a direct sale and not ours to claim.
  // Shopify stores cart attributes in order.note_attributes: [{name, value}, ...]
  const noteAttributes = (order.note_attributes as Array<{ name: string; value: string }>) || [];
  const viaClickIdAttr = noteAttributes.find((a) => a.name === "via_click_id");
  const cartViaClickId = viaClickIdAttr?.value ?? null;
+
+ if (!cartViaClickId) {
+ // Direct sale (not via VYA) — acknowledge but do not record.
+ console.log(`[shopify-webhook] Skipped: store=${storeSlug}, order=${orderId} (no via_click_id — direct sale)`);
+ return NextResponse.json({ received: true, recorded: false });
+ }
 
  const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
 
  type ClickRow = { click_id: string; timestamp: unknown; product_name: string; user_id: string | null };
  let matchedClick: ClickRow | null = null;
 
- // 1. Exact match: via_click_id embedded in the cart at checkout (most precise)
- if (cartViaClickId) {
  try {
  const rows = await sql`
  SELECT click_id, timestamp, product_name, user_id
@@ -142,28 +149,17 @@ export async function POST(request: NextRequest) {
  } catch (err) {
  console.error(`[shopify-webhook] Failed to look up click by via_click_id:`, err);
  }
- }
 
- // 2. Fallback: most recent VYA click for this store within the last 7 days
  if (!matchedClick) {
- try {
- const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
- const rows = await sql`
- SELECT click_id, timestamp, product_name, user_id
- FROM clicks
- WHERE store_slug = ${storeSlug}
- AND timestamp >= ${cutoff}
- ORDER BY timestamp DESC
- LIMIT 1
- `;
- if (rows.length > 0) matchedClick = rows[0] as ClickRow;
- } catch (err) {
- console.error(`[shopify-webhook] Failed to query clicks for match:`, err);
- }
+ // via_click_id present but doesn't match any real click — likely spoofed
+ // or a stale link. Log and skip rather than save a phantom conversion.
+ console.warn(`[shopify-webhook] Skipped: store=${storeSlug}, order=${orderId} — via_click_id ${cartViaClickId} not found in clicks table`);
+ return NextResponse.json({ received: true, recorded: false });
  }
 
- // 3. Email match: find the VYA user account for this buyer
- let matchedUserId: string | null = matchedClick?.user_id ?? null;
+ // Email-link the user account if we can, but only as enrichment — the click
+ // is the source of truth for "this was a VYA conversion".
+ let matchedUserId: string | null = matchedClick.user_id;
  if (!matchedUserId && buyerEmail) {
  try {
  const userRows = await sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${buyerEmail}) LIMIT 1`;
@@ -172,11 +168,7 @@ export async function POST(request: NextRequest) {
  console.error(`[shopify-webhook] Failed to look up user by email:`, err);
  }
  }
- if (matchedClick && !matchedClick.user_id && matchedUserId) {
- matchedClick = { ...matchedClick, user_id: matchedUserId };
- }
 
- const isMatched = !!matchedClick || !!matchedUserId;
  const conversionId = `shopify-${storeSlug}-${orderId}`;
 
  try {
@@ -187,31 +179,27 @@ export async function POST(request: NextRequest) {
  orderTotal,
  currency: "USD",
  items,
- viaClickId: matchedClick ? String(matchedClick.click_id) : null,
+ viaClickId: String(matchedClick.click_id),
  userId: matchedUserId ?? undefined,
  storeSlug,
  storeName,
- matched: isMatched,
- matchedClickData: matchedClick
- ? {
+ matched: true,
+ matchedClickData: {
  clickId: String(matchedClick.click_id),
  clickTimestamp: (matchedClick.timestamp as Date)?.toISOString?.() || String(matchedClick.timestamp),
  productName: String(matchedClick.product_name),
- source: cartViaClickId ? "cart-attribute" : "last-click",
- }
- : matchedUserId
- ? { source: "email-match", userId: matchedUserId, buyerEmail: buyerEmail ?? undefined }
- : { source: "shopify-webhook-unmatched" },
+ source: "cart-attribute",
+ },
  });
 
  if (duplicate) {
  console.log(`[shopify-webhook] Duplicate: ${orderId} (${storeName})`);
  } else {
- console.log(`[shopify-webhook] Saved: store=${storeSlug}, order=${orderId}, total=USD ${orderTotal}, matched=${isMatched}, via_click_id=${cartViaClickId ?? "none"}`);
+ console.log(`[shopify-webhook] Saved: store=${storeSlug}, order=${orderId}, total=USD ${orderTotal}, via_click_id=${cartViaClickId}`);
  }
  } catch (err) {
  console.error(`[shopify-webhook] Failed to save conversion for order ${orderId}:`, err);
  }
 
- return NextResponse.json({ received: true });
+ return NextResponse.json({ received: true, recorded: true });
 }
