@@ -318,14 +318,4 @@ export const JUNE_2026_NEWSLETTER_HTML = `
  <div style="text-align:center;margin:28px 0 0;">
  ${ctaButton("Read The Full Article", "https://vyaplatform.substack.com/p/icons-in-fashion-phoebe-philo")}
  </div>
-
- ${ornamentDivider()}
-
- ${eyebrow("Customer Spotlight")}
- ${h2("Where Should We Pop Up Next?")}
- ${para("We want to bring VYA into your city. DM us where you want to see our next community event.")}
-
- <div style="text-align:center;margin:24px 0 8px;">
- ${ctaButton("DM @vyaplatform", "https://www.instagram.com/vyaplatform")}
- </div>
 `;
