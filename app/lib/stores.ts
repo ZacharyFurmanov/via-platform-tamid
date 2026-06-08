@@ -1168,6 +1168,27 @@ export const HIDDEN_STORE_SLUGS: string[] = (stores as Array<{ commissionType: s
  .map(s => s.slug);
 
 /**
+ * Maps an arbitrary store-slug string (from a webhook URL, checkout payload, admin
+ * input, etc.) to the canonical slug defined in the `stores` array. Matching ignores
+ * case, hyphens, and surrounding punctuation, so "sassysowhat", "Sassy So What", and
+ * "sassy-so-what," all resolve to "sassy-so-what". If no store matches, returns a
+ * best-effort cleaned slug (lowercased, punctuation collapsed to single hyphens) so we
+ * never lose data — but known stores are always normalized to their canonical slug.
+ */
+const slugByCanonKey: Map<string, string> = new Map(
+ stores.map((s) => [s.slug.toLowerCase().replace(/[^a-z0-9]/g, ""), s.slug])
+);
+export function canonicalStoreSlug(input: string | null | undefined): string {
+ const raw = (input ?? "").trim().toLowerCase();
+ if (!raw) return "unknown";
+ const key = raw.replace(/[^a-z0-9]/g, "");
+ const canonical = slugByCanonKey.get(key);
+ if (canonical) return canonical;
+ // Unknown store: clean to a slug shape rather than dropping the value.
+ return raw.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/**
  * Commission tiers (% of sale price that VYA earns).
  * Applies to all stores regardless of payout method.
  */

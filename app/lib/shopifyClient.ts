@@ -233,6 +233,40 @@ const WORD_SIZE_MAP: Record<string, string> = {
 };
 
 /**
+ * Extracts an explicit US fit size the seller calls out as how the item actually
+ * wears, e.g. "runs true to a 6", "true to size 6", "fits like a 6",
+ * "best fits a 6.5". This is the seller's real-world fit guidance and is treated
+ * as the most authoritative DISPLAY size — it intentionally beats a marked EU tag
+ * size (e.g. a shoe "Marked 36") because it tells a US buyer what to order.
+ *
+ * Requires an explicit number, so a bare "fits true to size" (no number) does NOT
+ * match, and a trailing-digit guard ignores years / measurements like "1960" or
+ * "40 inch". Returns "US N" or null.
+ */
+export function extractFitSizeFromDescription(description: string | null): string | null {
+ if (!description) return null;
+ const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+ const NUM = `(\\d{1,2}(?:\\.\\d)?)(?!\\d)`;
+ const CONN = `(?:a\\s+)?(?:size\\s+)?(?:us\\s*)?`;
+ const patterns = [
+ // "(runs) true to (a/size/US) N"
+ new RegExp(`\\btrue\\s+to\\s+${CONN}${NUM}`, "i"),
+ // "runs/fits/wears like a N"
+ new RegExp(`\\b(?:runs?|fits?|wears?)\\s+(?:best\\s+)?like\\s+a\\s+(?:us\\s*)?${NUM}`, "i"),
+ // "(best) fits a/size N" — requires a/size to avoid matching "fits 40 inch"
+ new RegExp(`\\b(?:best\\s+)?fits?\\s+(?:like\\s+)?(?:a\\s+|size\\s+)(?:us\\s*)?${NUM}`, "i"),
+ ];
+ for (const re of patterns) {
+ const m = re.exec(text);
+ if (m) {
+ const n = parseFloat(m[1]);
+ if (n >= 1 && n <= 49) return `US ${m[1]}`;
+ }
+ }
+ return null;
+}
+
+/**
  * Extracts size using ONLY authoritative label keywords: "tagged size", "labeled size",
  * "marked size", "label". Used as the top-priority source so "Tagged size: XS" always
  * beats "Size: Large [store bucket]" that appears earlier in the description.

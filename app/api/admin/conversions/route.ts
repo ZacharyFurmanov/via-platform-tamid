@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { canonicalStoreSlug } from "@/app/lib/stores";
 
 function hashPassword(password: string): string {
   const crypto = require("crypto");
@@ -112,10 +113,11 @@ export async function POST(request: NextRequest) {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
 
-  const { storeSlug, storeName, orderId, orderTotal, currency, userEmail, timestamp } = await request.json();
-  if (!storeSlug || !orderId || !orderTotal) {
+  const { storeSlug: rawStoreSlug, storeName, orderId, orderTotal, currency, userEmail, timestamp } = await request.json();
+  if (!rawStoreSlug || !orderId || !orderTotal) {
     return NextResponse.json({ error: "storeSlug, orderId, orderTotal required" }, { status: 400 });
   }
+  const storeSlug = canonicalStoreSlug(rawStoreSlug);
 
   const sql = neon(dbUrl);
 

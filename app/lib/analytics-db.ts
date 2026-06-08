@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { getProductFavoriteCounts } from "./favorites-db";
+import { canonicalStoreSlug } from "./stores";
 
 const getDatabaseUrl = () => {
  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -99,9 +100,10 @@ export async function saveClick(click: ClickRecord): Promise<void> {
  await initAnalyticsTables();
 
  const cartItemsJson = click.cartItems ? JSON.stringify(click.cartItems) : null;
+ const storeSlug = canonicalStoreSlug(click.storeSlug);
  await sql`
  INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id, cart_items, utm_source)
- VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${click.storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson}, ${click.utmSource || null})
+ VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson}, ${click.utmSource || null})
  ON CONFLICT (click_id) DO NOTHING
  `;
 }
@@ -197,9 +199,12 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  const sql = neon(getDatabaseUrl());
  await initAnalyticsTables();
 
+ // Normalize to the canonical store slug so dedup, analytics, and email lookups all match.
+ const storeSlug = canonicalStoreSlug(conversion.storeSlug);
+
  // Check for duplicate
  const existing = await sql`
- SELECT id, order_total FROM conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${conversion.storeSlug} LIMIT 1
+ SELECT id, order_total FROM conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${storeSlug} LIMIT 1
  `;
  if (existing.length > 0) {
  // If the first webhook saved with total=0 and we now have the real total, update it
@@ -207,7 +212,7 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  if (conversion.orderTotal > existingTotal) {
  await sql`
  UPDATE conversions SET order_total = ${conversion.orderTotal}
- WHERE order_id = ${conversion.orderId} AND store_slug = ${conversion.storeSlug}
+ WHERE order_id = ${conversion.orderId} AND store_slug = ${storeSlug}
  `;
  }
  return { duplicate: true };
@@ -223,7 +228,7 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  ${conversion.currency},
  ${JSON.stringify(conversion.items)},
  ${conversion.viaClickId},
- ${conversion.storeSlug},
+ ${storeSlug},
  ${conversion.storeName},
  ${conversion.matched},
  ${conversion.matchedClickData ? JSON.stringify(conversion.matchedClickData) : null},

@@ -34,11 +34,16 @@ async function trySendStoreSaleEmail(
  if (!conv) return false;
  if (!force && conv.sale_email_sent) return false;
 
- // Normalize slug in case DB has trailing punctuation (e.g. "dear-muse," from Collabs API)
+ // Match the DB slug against canonical store slugs ignoring hyphens/punctuation,
+ // since conversion rows may store "sassysowhat" while the config slug is "sassy-so-what"
+ // (and Collabs can append trailing punctuation, e.g. "dear-muse,").
  const rawSlug = (conv.store_slug as string) ?? "";
- const storeSlug = rawSlug.replace(/[^a-z0-9-]+$/i, "");
- const storeConfig = stores.find((s) => s.slug === storeSlug);
- const storeEmail = storeContactEmails[storeSlug];
+ const canon = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+ const rawCanon = canon(rawSlug);
+ const storeConfig = stores.find((s) => canon(s.slug) === rawCanon);
+ // Resolve the email by the canonical config slug so it works regardless of how the DB slug is formatted.
+ const storeSlug = storeConfig?.slug ?? rawSlug;
+ const storeEmail = storeConfig ? storeContactEmails[storeConfig.slug] : undefined;
  if (!storeConfig || !storeEmail) {
  throw new Error(`No email config for store_slug="${rawSlug}" (normalized="${storeSlug}", storeConfig=${!!storeConfig}, storeEmail=${!!storeEmail})`);
  }

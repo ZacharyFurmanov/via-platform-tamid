@@ -19,15 +19,16 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  ["boots", ["flat boot", "ankle boot", "knee-high boot", "thigh-high boot", "chelsea boot", "combat boot", "cowboy boot"]],
  ["sandals", ["wedge sandal", "thong sandal"]],
  ["heels", ["wedge heel", "kitten heel", "block heel", "cone heel"]],
- // Jewelry checked first — an earring/necklace/ring title should never be
+ // Jewelry NOUNS checked first — an earring/necklace/ring title should never be
  // misclassified as bags or clothing even if it shares a designer keyword.
+ // NOTE: gemstone/material words (ruby, emerald, pearl…) are intentionally NOT
+ // here — they double as colors ("ruby red", "pearl white") and are checked
+ // later (see "jewelry — gemstone" block below) so they don't steal shoes/bags.
  ["jewelry", [
  "earring", "necklace", "bracelet", "pendant",
  "brooch", "bangle", "choker", "locket", "cuff bracelet", "anklet",
  "ring", "rings", "signet", "lapel pin",
- "vermeil", "gemstone", "topaz", "sapphire", "diamond",
- "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
- "turquoise", "onyx", "charm bracelet",
+ "charm bracelet",
  "jewelry", "jewellery",
  ]],
  // Shoe subcategories — checked before the generic "shoes" catch-all
@@ -101,6 +102,15 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "lamp", "lantern", "cushion", "throw pillow", "blanket",
  "cutting board", "cheese board", "soap dish", "diffuser",
  "trinket", "trinket dish", "ashtray",
+ ]],
+ // Jewelry — gemstone/material words. Checked AFTER garment/shoe/bag nouns
+ // because they're commonly used as colors ("ruby red mules", "emerald green
+ // dress", "pearl white sandals"). A gemstone-only title (e.g. "Art Deco Sapphire
+ // Clip") still lands here as jewelry rather than falling through to accessories.
+ ["jewelry", [
+ "vermeil", "gemstone", "topaz", "sapphire", "diamond",
+ "ruby", "emerald", "pearl", "amethyst", "opal", "garnet",
+ "turquoise", "onyx",
  ]],
  // Accessory subcategories checked before generic "accessories" catch-all
  ["sunglasses", ["sunglasses", "sunglass", "eyewear", "spectacles"]],

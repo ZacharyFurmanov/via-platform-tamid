@@ -20,6 +20,8 @@ type SearchResult =
  | { type: "product"; name: string; href: string; meta: string; image?: string };
 
 const FONT: React.CSSProperties = { fontFamily: "'Cormorant Garamond', Georgia, serif" };
+const RECENT_KEY = "vya:recent-searches";
+const RECENT_MAX = 8;
 const HEADER_H = 56;
 const MENU_TOP = HEADER_H;
 
@@ -82,6 +84,42 @@ export default function HeaderClient({
  const [results, setResults] = useState<SearchResult[]>([]);
  const [searchLoading, setSearchLoading] = useState(false);
  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+ const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+ useEffect(() => {
+ try {
+ const raw = localStorage.getItem(RECENT_KEY);
+ if (raw) setRecentSearches(JSON.parse(raw));
+ } catch { /* ignore */ }
+ }, []);
+
+ const recordSearch = (term: string) => {
+ const t = term.trim();
+ if (!t) return;
+ setRecentSearches((prev) => {
+ const next = [t, ...prev.filter((s) => s.toLowerCase() !== t.toLowerCase())].slice(0, RECENT_MAX);
+ try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+ return next;
+ });
+ };
+
+ const removeRecentSearch = (term: string) => {
+ setRecentSearches((prev) => {
+ const next = prev.filter((s) => s !== term);
+ try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+ return next;
+ });
+ };
+
+ const clearRecentSearches = () => {
+ setRecentSearches([]);
+ try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ }
+ };
+
+ const runSearch = (term: string) => {
+ recordSearch(term);
+ closeSearch(`/search?q=${encodeURIComponent(term.trim())}`);
+ };
 
  useEffect(() => {
  setActiveIndex(-1);
@@ -120,6 +158,7 @@ export default function HeaderClient({
  } else {
  const q = query.trim().toLowerCase();
  const match = stores.find((s) => s.name.toLowerCase() === q || s.slug === q);
+ recordSearch(query.trim());
  router.push(match ? `/stores/${match.slug}` : `/search?q=${encodeURIComponent(query.trim())}`);
  }
  }
@@ -460,6 +499,25 @@ export default function HeaderClient({
    </div>
    <div className="overflow-y-auto flex-1 pb-4">
     {!query.trim() && (
+    recentSearches.length > 0 ? (
+    <div>
+     <div className="px-6 pt-4 pb-2 flex items-center justify-between">
+     <p className="text-[9px] uppercase tracking-[0.18em] text-gray-400 font-medium">Recent Searches</p>
+     <button onClick={clearRecentSearches} className="text-[9px] uppercase tracking-[0.12em] text-gray-400 hover:text-[#5D0F17] transition-colors">Clear</button>
+     </div>
+     {recentSearches.map((term) => (
+     <div key={term} className="group w-full px-6 py-2.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
+      <button onClick={() => runSearch(term)} className="flex items-center gap-3 flex-1 min-w-0 text-left text-[#5D0F17]">
+      <Search size={12} strokeWidth={1.5} className="text-gray-300 flex-shrink-0" />
+      <span className="truncate text-[13px]">{term}</span>
+      </button>
+      <button onClick={() => removeRecentSearch(term)} aria-label={`Remove ${term}`} className="text-gray-300 hover:text-[#5D0F17] transition-colors flex-shrink-0">
+      <X size={13} strokeWidth={1.5} />
+      </button>
+     </div>
+     ))}
+    </div>
+    ) : (
     <div>
      <p className="px-6 pt-4 pb-2 text-[9px] uppercase tracking-[0.18em] text-gray-400 font-medium">Browse by Category</p>
      <div className="px-6 pb-4 grid grid-cols-2 gap-2">
@@ -475,7 +533,7 @@ export default function HeaderClient({
      </button>
      ))}
     </div>
-    )}
+    ))}
     {searchLoading && results.length === 0 && <p className="text-[13px] text-gray-400 px-6 py-4">Searching...</p>}
     {!searchLoading && query.trim().length >= 2 && results.length === 0 && <p className="text-[13px] text-gray-400 px-6 py-4">No results found</p>}
     {(() => {
@@ -504,7 +562,7 @@ export default function HeaderClient({
      {storeResults.length > 0 && <div className="mb-1"><p className="px-6 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-gray-400 font-medium">Stores</p>{storeResults.map(renderItem)}</div>}
      {products.length > 0 && <div className="mb-1"><p className="px-6 pt-3 pb-1 text-[9px] uppercase tracking-[0.18em] text-gray-400 font-medium">Products</p>{products.map(renderItem)}</div>}
      {results.length > 0 && query.trim() && (
-      <button onClick={() => closeSearch(`/search?q=${encodeURIComponent(query.trim())}`)} className="w-full text-left px-6 py-3 mt-2 border-t border-gray-100 text-[12px] text-gray-500 hover:text-[#5D0F17] transition-colors">
+      <button onClick={() => runSearch(query.trim())} className="w-full text-left px-6 py-3 mt-2 border-t border-gray-100 text-[12px] text-gray-500 hover:text-[#5D0F17] transition-colors">
       See all results for &ldquo;{query.trim()}&rdquo;
       </button>
      )}

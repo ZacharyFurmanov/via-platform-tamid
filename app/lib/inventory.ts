@@ -2,7 +2,7 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
-import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
+import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, extractFitSizeFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
@@ -233,6 +233,11 @@ function parseImages(product: DBProduct): string[] {
 export function deriveSize(product: DBProduct): string | null {
  const dbSize = product.size && isValidSizeValue(product.size) ? product.size : null;
  const isGenericDb = dbSize != null && GENERIC_CLOTHING_SIZE.test(dbSize);
+
+ // 0. Explicit seller US fit note ("runs true to a 6", "fits like a 6.5") — the
+ // seller telling a US buyer what to order, so it beats a marked EU tag size.
+ const fitSize = extractFitSizeFromDescription(product.description);
+ if (fitSize) return fitSize;
 
  // 1. Tagged/labeled/marked size in description — most authoritative (actual garment tag)
  // Must run before title/DB to prevent "Size: Large [store bucket]" from winning
