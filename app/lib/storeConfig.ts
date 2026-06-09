@@ -220,6 +220,20 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  },
  {
  type: "shopify",
+ name: "California Boho Studio",
+ slug: "california-boho-studio",
+ storeDomain: "californiabohostudio.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Shiranka Vintage",
+ slug: "shiranka-vintage",
+ storeDomain: "shirankavintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
  name: "Moonstruck Vintage",
  slug: "moonstruck-vintage",
  storeDomain: "moonstruckvintagenyc.com",
