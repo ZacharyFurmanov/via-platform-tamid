@@ -1,5 +1,12 @@
 // Shared filter logic for /api/public/* product list endpoints.
 
+// Size matching ignores the regional prefix so a filter of "8" matches "US 8",
+// "EU 8", "UK 8", "8", etc. — we group by the bare size value. The SQL side strips
+// the same prefix from the stored size (see SIZE_CORE_SQL).
+export function stripSizePrefix(s: string): string {
+ return s.trim().toUpperCase().replace(/^(US|UK|EU|IT|FR|DE)\s*/, "").trim();
+}
+
 export type PublicFilters = {
  sizes: string[];      // e.g. ["S", "M", "38"]
  categories: string[]; // e.g. ["clothing", "shoes"]

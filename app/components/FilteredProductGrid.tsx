@@ -33,6 +33,10 @@ function extractColor(title: string): string | null {
  return null;
 }
 import { normalizeSize, sortSizes } from "@/app/lib/inventory";
+import { stripSizePrefix } from "@/app/lib/publicFilters";
+
+// Group sizes by their bare value so "US 8" / "EU 8" / "8" all match a filter of "8".
+const sizeKey = (s: string) => stripSizePrefix(normalizeSize(s));
 import ProductCard from "./ProductCard";
 import { formatPrice } from "@/app/lib/formatPrice";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
@@ -311,7 +315,7 @@ export default function FilteredProductGrid({
  // Size filter
  if (filters.selectedSizes.length > 0) {
  result = result.filter(
- (p) => p.size && filters.selectedSizes.includes(normalizeSize(p.size))
+ (p) => p.size && filters.selectedSizes.includes(sizeKey(p.size))
  );
  }
 
@@ -424,7 +428,7 @@ export default function FilteredProductGrid({
  const counts = new Map<string, number>();
  products.forEach((p) => {
  if (p.size) {
- const norm = normalizeSize(p.size);
+ const norm = sizeKey(p.size);
  counts.set(norm, (counts.get(norm) ?? 0) + 1);
  }
  });

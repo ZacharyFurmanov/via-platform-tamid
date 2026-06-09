@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
-import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
+import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
  const shopifySlugs = SHOPIFY_STORES.map((s) => s.slug);
  const hidden = ["velvet-archive", ...HIDDEN_STORE_SLUGS];
 
- const sizesUpper = filters.sizes.map((s) => s.toUpperCase());
+ const sizesUpper = filters.sizes.map(stripSizePrefix);
  const useSizes = sizesUpper.length > 0;
  const useStores = filters.stores.length > 0;
  const usePriceMin = filters.priceMin != null;
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
+  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})

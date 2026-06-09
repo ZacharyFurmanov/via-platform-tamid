@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { COLLECTIONS } from "@/app/lib/collections-config";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import { formatPrice } from "@/app/lib/formatPrice";
-import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
+import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -47,8 +47,8 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
 
  // Apply filters in JS (collections are typically small enough for this).
  if (filters.sizes.length > 0) {
- const wanted = filters.sizes.map((s) => s.toUpperCase());
- products = products.filter((p) => p.size && wanted.includes(p.size.toUpperCase()));
+ const wanted = filters.sizes.map(stripSizePrefix);
+ products = products.filter((p) => p.size && wanted.includes(stripSizePrefix(p.size)));
  }
  if (filters.priceMin != null) products = products.filter((p) => p.priceNum >= filters.priceMin!);
  if (filters.priceMax != null) products = products.filter((p) => p.priceNum <= filters.priceMax!);

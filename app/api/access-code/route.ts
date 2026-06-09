@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-
-const PRIMARY_CODE = process.env.VIA_ACCESS_CODE || "vyainsider";
-const VALID_CODES = new Set([PRIMARY_CODE.toLowerCase(), "lisa", "sophia", "matty", "mom", "projectpal", "vyafriend", "rachael"]);
+import { isValidAccessCode } from "@/app/lib/accessCodes";
 
 export async function POST(request: Request) {
   const { code } = await request.json();
 
-  if (typeof code !== "string" || !VALID_CODES.has(code.trim().toLowerCase())) {
+  if (!isValidAccessCode(code)) {
     return NextResponse.json({ error: "Invalid access code" }, { status: 401 });
   }
 

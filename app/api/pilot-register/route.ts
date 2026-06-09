@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { isValidAccessCode } from "@/app/lib/accessCodes";
 import {
   getPilotStatus,
   getPilotReferralCode,
@@ -67,9 +68,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: existingStatus, alreadyRegistered: true, referralCode: existingCode });
     }
 
-    // Check access code — valid code grants immediate approval
-    const ACCESS_CODES = new Set(["kendell", "elsa", "vintageedit", "kamryn"]);
-    const hasValidCode = isPromoCode || (accessCode && ACCESS_CODES.has(accessCode.trim().toLowerCase()));
+    // Check access code — a valid access code grants immediate approval (skips the
+    // waitlist). Uses the shared list so site-access and waitlist-skip never drift.
+    const hasValidCode = isPromoCode || isValidAccessCode(accessCode);
     const status = hasValidCode ? "approved" : "pending";
 
     const myReferralCode = await createPilotEntry({
