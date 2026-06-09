@@ -121,12 +121,14 @@ export async function GET(request: NextRequest) {
  ? !!(await getSetting(`shopify_webhook_secret_${storeSlug}`).catch(() => null))
  : false;
 
- // Some stores use Shop Pay express checkout, which auto-redirects the cart into
- // shop.app before the Collabs visit pixel can fire — so the dt_id-cart shortcut
- // silently loses the visit AND the commission. For these we route through
- // collabs.shop instead, which logs the visit server-side BEFORE any redirect.
- const forceCollabs = storeSlug
- ? (stores.find((s) => s.slug === storeSlug) as { collabsRedirect?: boolean } | undefined)?.collabsRedirect === true
+ // Attribution reliability: by DEFAULT we route every Collabs store through
+ // collabs.shop, which logs the visit + sets attribution server-side BEFORE the
+ // store can redirect. The dt_id direct-to-cart shortcut is faster (1-click) but
+ // silently loses the visit AND commission on any store with Shop Pay express
+ // (auto-redirects the cart to shop.app before the Collabs pixel fires) — which
+ // is most Shopify stores. So the shortcut is OPT-IN per store via `dtIdShortcut`.
+ const useDtIdShortcut = storeSlug
+ ? (stores.find((s) => s.slug === storeSlug) as { dtIdShortcut?: boolean } | undefined)?.dtIdShortcut === true
  : false;
 
  // Resolve product DB id from the composite "store-slug-123" → 123
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
  //
  // The webhook (if configured) still fires on checkout — it handles the rich
  // order data (customer, items, total). Two systems complement each other.
- if (numericProductId != null && isCartUrl(parsedUrl) && !forceCollabs) {
+ if (numericProductId != null && isCartUrl(parsedUrl) && useDtIdShortcut) {
  const dtId = await getDtIdForProduct(numericProductId).catch(() => null);
  if (dtId) {
  const isMulti = parsedUrl.pathname.includes(",");
