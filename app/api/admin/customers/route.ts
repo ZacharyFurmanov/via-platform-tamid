@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
  view_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM product_views WHERE user_id IS NOT NULL GROUP BY user_id::text),
  order_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
  page_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM page_type_views WHERE user_id IS NOT NULL GROUP BY user_id::text),
- ltv_amounts AS (SELECT user_id::text AS uid, SUM(order_total) AS total FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text)
+ ltv_amounts AS (SELECT user_id::text AS uid, SUM(order_total) AS total FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
+ first_source AS (SELECT DISTINCT ON (user_id) user_id AS uid, utm_source AS source FROM utm_visits WHERE user_id IS NOT NULL ORDER BY user_id, timestamp ASC)
  SELECT
  ac.email,
  ac.first_name,
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
  COALESCE(MAX(ord.cnt), 0) AS order_count,
  COALESCE(MAX(pg.cnt), 0) AS page_view_count,
  COALESCE(MAX(ltv.total), 0) AS total_spend,
+ MAX(fs.source) AS source,
  GREATEST(
  MAX(clk.last_at),
  MAX(vw.last_at),
@@ -110,6 +112,7 @@ export async function GET(request: NextRequest) {
  LEFT JOIN order_counts ord ON ord.uid = u.id::text
  LEFT JOIN page_counts pg ON pg.uid = u.id::text
  LEFT JOIN ltv_amounts ltv ON ltv.uid = u.id::text
+ LEFT JOIN first_source fs ON fs.uid = u.id::text
  GROUP BY
  ac.email, ac.first_name, ac.last_name, ac.phone,
  ac.status, ac.created_at, ac.approved_at,
@@ -139,6 +142,14 @@ export async function GET(request: NextRequest) {
  approvedAt: (r.approved_at as string | null) ?? null,
  referralCode: (r.referral_code as string | null) ?? null,
  referredBy: (r.referred_by as string | null) ?? null,
+ source: (() => {
+ let s = (r.source as string | null) ?? null;
+ if (!s && r.referred_by) s = "referral";
+ if (!s) return null;
+ const A: Record<string, string> = { ig: "instagram", fb: "facebook", tw: "twitter", tt: "tiktok", yt: "youtube", li: "linkedin" };
+ s = s.toLowerCase();
+ return A[s] ?? s;
+ })(),
  loginMethod,
  emailSubscribe: r.email_subscribe as boolean,
  activityScore: Number(r.activity_score ?? 0),

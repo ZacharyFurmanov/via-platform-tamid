@@ -17,6 +17,7 @@ type Profile = {
  status: string | null;
  signedUpAt: string | null;
  approvedAt: string | null;
+ acquisitionSource: string | null;
  referralCode: string | null;
  referredBy: string | null;
  promoCode: string | null;
@@ -203,6 +204,20 @@ export default function CustomerProfilePage() {
  <h1 style={{ fontSize: 20, fontWeight: 600, color: DARK, margin: 0 }}>{p.name || "—"}</h1>
  <p style={{ fontSize: 13, color: GRAY, margin: "4px 0 0" }}>{p.email}</p>
  {p.phone && <p style={{ fontSize: 12, color: MUTED, margin: "2px 0 0" }}>{p.phone}</p>}
+ {(() => {
+ const s = (p.acquisitionSource || "").toLowerCase();
+ const COLORS: Record<string, string> = { instagram: "#E1306C", tiktok: "#111", email: "#6366f1", substack: "#FF6719", direct: "#0ea5e9", referral: "#d4af37", linkedin: "#0a66c2" };
+ const LABELS: Record<string, string> = { instagram: "Instagram", tiktok: "TikTok", email: "Email", substack: "Substack", direct: "Direct", referral: "Referral", linkedin: "LinkedIn" };
+ const bg = COLORS[s] || "#64748b";
+ const label = s ? (LABELS[s] || s) : "Unknown";
+ return (
+ <div style={{ marginTop: 9 }}>
+ <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", padding: "3px 10px", fontWeight: 700, borderRadius: 99, background: bg, color: "#fff" }}>
+ ◍ From {label}
+ </span>
+ </div>
+ );
+ })()}
  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
  <span style={{
  fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", padding: "2px 10px", fontWeight: 600, borderRadius: 99,

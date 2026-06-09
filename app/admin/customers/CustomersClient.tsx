@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
+const SOURCE_COLORS: Record<string, string> = { instagram: "#E1306C", tiktok: "#111", email: "#6366f1", substack: "#FF6719", direct: "#0ea5e9", referral: "#d4af37", linkedin: "#0a66c2", facebook: "#1877f2", twitter: "#1d9bf0", youtube: "#ff0000", pinterest: "#bd081c", threads: "#111", reddit: "#ff4500" };
+function srcColor(s: string): string { return SOURCE_COLORS[s.toLowerCase()] ?? "#64748b"; }
+
 type Customer = {
  email: string;
  name: string | null;
@@ -13,6 +16,7 @@ type Customer = {
  approvedAt: string | null;
  referralCode: string | null;
  referredBy: string | null;
+ source: string | null;
  loginMethod: string;
  emailSubscribe: boolean;
  activityScore: number;
@@ -602,6 +606,11 @@ export default function CustomersClient() {
  )}
  {c.loginMethod}
  </span>
+ {c.source && (
+ <span style={{ marginLeft: 8, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.04em", padding: "2px 7px", borderRadius: 99, fontWeight: 700, background: srcColor(c.source), color: "#fff" }}>
+ {c.source}
+ </span>
+ )}
  </td>
  <td style={{ padding: "12px 16px", fontSize: 12 }}>
  {c.lastActiveAt ? (

@@ -266,6 +266,23 @@ export async function GET(
  .filter((o) => !o.returned)
  .reduce((sum, o) => sum + Number(o.order_total), 0);
 
+ // Acquisition source — where this account came from. First-touch = the earliest
+ // captured visit source (utm_visits, populated for every authenticated user with
+ // referrer + in-app-browser inference + a direct fallback). Falls back to the
+ // earliest UTM click, then to a referral.
+ const SRC_ALIAS: Record<string, string> = { ig: "instagram", fb: "facebook", tw: "twitter", tt: "tiktok", yt: "youtube", li: "linkedin" };
+ let acquisitionSource: string | null = null;
+ if (userId) {
+ const visitRows = await sql`SELECT utm_source FROM utm_visits WHERE user_id = ${userId} ORDER BY timestamp ASC LIMIT 1`;
+ acquisitionSource = (visitRows[0]?.utm_source as string) ?? null;
+ if (!acquisitionSource) {
+ const clickRows = await sql`SELECT utm_source FROM clicks WHERE user_id = ${userId} AND utm_source IS NOT NULL AND utm_source <> 'unknown' ORDER BY timestamp ASC LIMIT 1`;
+ acquisitionSource = (clickRows[0]?.utm_source as string) ?? null;
+ }
+ }
+ if (!acquisitionSource && pilot?.referred_by) acquisitionSource = "referral";
+ if (acquisitionSource) acquisitionSource = SRC_ALIAS[acquisitionSource.toLowerCase()] ?? acquisitionSource.toLowerCase();
+
  return NextResponse.json({
  profile: {
  email,
@@ -274,6 +291,7 @@ export async function GET(
  status: pilot?.status ?? null,
  signedUpAt: pilot?.created_at ?? null,
  approvedAt: pilot?.approved_at ?? null,
+ acquisitionSource,
  referralCode: pilot?.referral_code ?? null,
  referredBy: pilot?.referred_by ?? null,
  promoCode: pilot?.promo_code ?? null,
