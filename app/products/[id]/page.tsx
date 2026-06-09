@@ -20,6 +20,7 @@ import TrackProductView from "@/app/components/TrackProductView";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
 import AddToCollectionButton from "@/app/components/AddToCollectionButton";
 import { formatPrice } from "@/app/lib/formatPrice";
+import VyaVerifiedBadge from "@/app/components/VyaVerifiedBadge";
 
 type ProductPageProps = {
  params: Promise<{ id: string }>;
@@ -346,6 +347,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  {cartCount} {cartCount === 1 ? "person has" : "people have"} this in their cart
  </span>
  )}
+ </div>
+
+ {/* VYA Verified — links to the trust / authenticity page */}
+ <div className="-mt-2 mb-4 md:mb-8">
+ <VyaVerifiedBadge />
  </div>
 
  {/* Accordion details */}

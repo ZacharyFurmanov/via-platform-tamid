@@ -92,6 +92,29 @@ export const stores = [
  "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
  },
  {
+ slug: "california-boho-studio",
+ dashboardToken: "cbs-4e8b2f1a9c7d",
+ name: "California Boho Studio",
+ location: "San Francisco, CA",
+ description:
+ "California Boho Studio was founded by Charlette, a California native and lifelong vintage hunter who started the Studio out of a love for fashion and the thrill of the hunt — sourcing rare pieces for others the way she always has for herself.\n\nBuilt on that California energy of contrast, culture, and creativity, the Studio is about individuality without limits — vintage or modern, minimal or bold, never about following a rule. A maximalist at heart, Charlette is drawn to rare, one-of-a-kind pieces from discontinued and luxury houses like Bracher Emden and El Dantés, alongside bold names like Cavalli, Galliano-era Dior, and Y2K Baby Phat. Every piece is handpicked, something she'd wear herself, and every piece comes with a story.",
+ website: "https://californiabohostudio.com",
+ dataSource: "california-boho-studio",
+ image: "/stores/placeholder.svg",
+ logo: "/stores/placeholder.svg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "243222",
+ authenticityPolicy:
+ "Every piece at California Boho Studio is personally handpicked and inspected by founder Charlette, a lifelong vintage collector with an eye for rare, one-of-a-kind pieces. Each item is something she'd wear herself, accurately described with full condition details so you always know exactly what you're getting.",
+ shippingPolicy:
+ "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. Each piece is hand-selected and personally inspected by Charlette. Please review all item details and photos carefully before purchasing — email hello@californiabohostudio.com with any pre-purchase questions.",
+ },
+ {
  slug: "capsule-edit",
  dashboardToken: "ce-7d3a9c1f5e8b",
  name: "Capsule Édit",
@@ -877,6 +900,29 @@ export const stores = [
  "All sales are final. Due to the delicate and one-of-a-kind nature of vintage items, returns are not accepted. If there is an issue with your order, use the form below and the store will do everything possible to resolve it.",
  },
  {
+ slug: "shiranka-vintage",
+ dashboardToken: "shv-3a9f1c7e2b8d",
+ name: "Shiranka Vintage",
+ location: "San Francisco, CA",
+ description:
+ "Shiranka Vintage specializes in tracking down rare, highly coveted designer grails alongside curating wardrobe staples for the everyday girl who wants to wear something no one else has. We believe not all clothes are created equal — every piece is intentionally sourced to define eras, celebrate construction, and bring late-90s and 2000s archival luxury directly into your modern rotation.",
+ website: "https://shirankavintage.com",
+ dataSource: "shiranka-vintage",
+ image: "/stores/placeholder.svg",
+ logo: "/stores/placeholder.svg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "243667",
+ authenticityPolicy:
+ "Every piece at Shiranka Vintage is personally sourced and inspected, with a focus on rare designer grails and late-90s to 2000s archival luxury. Each item is accurately described with full condition details so you always know exactly what you're getting.",
+ shippingPolicy:
+ "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. Each piece is hand-selected and personally inspected. Please review all item details and photos carefully before purchasing — email info@shirankavintage.com with any pre-purchase questions.",
+ },
+ {
  slug: "situations-vintage",
  dashboardToken: "sv-4e8c1a9f3b2d",
  name: "Situations Vintage",
@@ -1263,6 +1309,8 @@ export const storeContactEmails: Record<string, string> = {
  "situations-vintage": "info@situationsvintage.com",
  "capsule-edit": "capsuledit@gmail.com",
  "mookie-studios": "madeleine@mookiestudios.com",
+ "california-boho-studio": "hello@californiabohostudio.com",
+ "shiranka-vintage": "info@shirankavintage.com",
  // VYA admin test account — sees all requests
  "via-admin": "hana@vyaplatform.com",
 };

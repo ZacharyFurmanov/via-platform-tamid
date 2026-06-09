@@ -4,21 +4,43 @@ import { visibleStores } from "@/app/lib/stores";
 export const dynamic = "force-dynamic";
 
 /**
- * Returns a deterministic "store of the day" — same store for everyone
- * on a given day, rotates daily based on the UTC date.
+ * Returns a deterministic "store of the day" — the same store for everyone on a
+ * given day, rotating one store per day. It walks a fixed shuffled order of every
+ * visible store, so NO store repeats until all of them have been featured once
+ * (then the cycle restarts). The shuffle is seeded by a constant, so the order is
+ * stable across requests/deploys but not alphabetical.
  */
-export async function GET() {
- const today = new Date();
- // YYYY-MM-DD as a simple seed
- const dayKey = `${today.getUTCFullYear()}${today.getUTCMonth()}${today.getUTCDate()}`;
 
- // Convert to a stable number from the string
- let seed = 0;
- for (let i = 0; i < dayKey.length; i++) {
- seed = (seed * 31 + dayKey.charCodeAt(i)) >>> 0;
+// Seeded PRNG (mulberry32) → deterministic, no Math.random.
+function mulberry32(seed: number): () => number {
+ return function () {
+ seed |= 0;
+ seed = (seed + 0x6d2b79f5) | 0;
+ let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+ t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+ return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+ };
+}
+
+// Fixed shuffled order of [0..n-1] using a constant seed.
+function fixedOrder(n: number): number[] {
+ const arr = Array.from({ length: n }, (_, i) => i);
+ const rand = mulberry32(0x5f3759df);
+ for (let i = n - 1; i > 0; i--) {
+ const j = Math.floor(rand() * (i + 1));
+ [arr[i], arr[j]] = [arr[j], arr[i]];
  }
- const idx = seed % visibleStores.length;
- const s = visibleStores[idx];
+ return arr;
+}
+
+export async function GET() {
+ const n = visibleStores.length;
+ if (n === 0) return NextResponse.json({ store: null });
+
+ // Whole-day index in UTC (days since the Unix epoch).
+ const dayIndex = Math.floor(Date.now() / 86_400_000);
+ const order = fixedOrder(n);
+ const s = visibleStores[order[((dayIndex % n) + n) % n]];
 
  return NextResponse.json({
  store: {

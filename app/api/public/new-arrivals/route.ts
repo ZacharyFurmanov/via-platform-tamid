@@ -7,13 +7,17 @@ import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
+// Paginated full-catalog feed (newest first). The mobile app loads this via
+// infinite scroll, so there is no 7-day window and no hard cap — every product
+// is reachable by paging with ?offset=. Page size is bounded per request.
 export async function GET(request: Request) {
  const { searchParams } = new URL(request.url);
- const limit = Math.min(parseInt(searchParams.get("limit") ?? "80"), 200);
+ const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "60"), 1), 100);
+ const offset = Math.max(parseInt(searchParams.get("offset") ?? "0"), 0);
  const filters = parseFilters(searchParams);
 
  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
- if (!dbUrl) return NextResponse.json({ products: [] });
+ if (!dbUrl) return NextResponse.json({ products: [], nextOffset: offset, hasMore: false });
 
  const sql = neon(dbUrl);
  const shopifySlugs = SHOPIFY_STORES.map((s) => s.slug);
@@ -27,8 +31,6 @@ export async function GET(request: Request) {
  const priceMin = filters.priceMin ?? 0;
  const priceMax = filters.priceMax ?? 1e12;
 
- const fetchLimit = filters.categories.length > 0 ? Math.min(limit * 5, 500) : limit;
-
  try {
  let rows: Array<Record<string, unknown>>;
  if (filters.sort === "priceAsc") {
@@ -37,7 +39,6 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
   ORDER BY price ASC, id DESC
-  LIMIT ${fetchLimit}
+  LIMIT ${limit} OFFSET ${offset}
  ` as Array<Record<string, unknown>>;
  } else if (filters.sort === "priceDesc") {
  rows = await sql`
@@ -53,7 +54,6 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
   ORDER BY price DESC, id DESC
-  LIMIT ${fetchLimit}
+  LIMIT ${limit} OFFSET ${offset}
  ` as Array<Record<string, unknown>>;
  } else {
  rows = await sql`
@@ -69,17 +69,18 @@ export async function GET(request: Request) {
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
-  AND created_at IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
-  ORDER BY created_at DESC, id DESC
-  LIMIT ${fetchLimit}
+  ORDER BY created_at DESC NULLS LAST, id DESC
+  LIMIT ${limit} OFFSET ${offset}
  ` as Array<Record<string, unknown>>;
  }
+
+ const rawCount = rows.length;
 
  let products = rows.map((p) => {
  let parsedImages: string[] | undefined;
@@ -97,10 +98,16 @@ export async function GET(request: Request) {
  };
  });
 
- products = applyJsFilters(products, filters).slice(0, limit);
+ // Category filtering happens in JS (title-keyword based). Offset advances by the
+ // raw rows consumed, not the filtered count, so paging stays consistent.
+ products = applyJsFilters(products, filters);
 
- return NextResponse.json({ products });
+ return NextResponse.json({
+  products,
+  nextOffset: offset + rawCount,
+  hasMore: rawCount === limit,
+ });
  } catch {
- return NextResponse.json({ products: [] });
+ return NextResponse.json({ products: [], nextOffset: offset, hasMore: false });
  }
 }
