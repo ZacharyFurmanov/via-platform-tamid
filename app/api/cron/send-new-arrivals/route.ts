@@ -24,18 +24,32 @@ export async function GET(request: Request) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
 
- try {
+ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!dbUrl) return NextResponse.json({ error: "No database URL" }, { status: 500 });
+ const sql = neon(dbUrl);
 
- // Read last-sent time first (used for the since window below)
+ // Read last-sent time first (used for the since window + rollback below)
  const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
 
+ // Tracks whether THIS invocation claimed the send slot, so we can roll the
+ // timestamp back if the send doesn't actually go out (no products / no
+ // recipients / error / 0 sent). Otherwise a failed run would burn the whole
+ // weekly window and silently skip for 120h.
+ let didClaim = false;
+ const restoreValue = lastSentRaw ?? new Date(0).toISOString();
+ const rollback = async () => {
+ if (!didClaim) return;
+ await sql`
+ UPDATE app_settings SET value = ${restoreValue}, updated_at = NOW()
+ WHERE key = 'new_arrivals_last_sent_at'
+ `.catch(() => {});
+ };
+
+ try {
  if (!testEmail) {
  // Atomically claim the send slot — prevents double-sends from concurrent
  // Vercel cron invocations. Only the first caller wins the UPDATE; any
  // concurrent duplicate sees 0 rows returned and skips immediately.
- const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
- if (!dbUrl) return NextResponse.json({ error: "No database URL" }, { status: 500 });
- const sql = neon(dbUrl);
  await sql`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW())`;
  const claimed = await sql`
  INSERT INTO app_settings (key, value, updated_at)
@@ -57,6 +71,7 @@ export async function GET(request: Request) {
  hoursSince,
  });
  }
+ didClaim = true;
  }
 
  // Test sends always look back 7 days so the window is useful regardless of when cron last ran
@@ -66,12 +81,6 @@ export async function GET(request: Request) {
  ? new Date(lastSentRaw)
  : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
- const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
- if (!dbUrl) {
- return NextResponse.json({ error: "No database URL" }, { status: 500 });
- }
-
- const sql = neon(dbUrl);
  const sinceIso = since.toISOString();
 
  const rows = await sql`
@@ -133,23 +142,29 @@ export async function GET(request: Request) {
  debug: { since: sinceIso, totalInWindow: unfiltered.total, afterShopifyFilter: unfiltered.after_shopify_filter },
  });
  }
- // Timestamp already claimed above — window resets from now
+ // Nothing to send — release the slot so the next run retries.
+ await rollback();
  return NextResponse.json({ ok: true, message: "No new arrivals this week.", sent: 0 });
  }
 
  const emails = testEmail ? [testEmail] : await getApprovedPilotEmails();
 
  if (emails.length === 0) {
+ await rollback();
  return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
  }
 
  const { sent, failed } = await sendNewArrivalsEmail(emails, products);
 
- // Timestamp already set atomically before sending (except for test sends which never claim)
+ // If nothing actually went out, release the slot so it retries next run.
+ if (!testEmail && sent === 0) {
+ await rollback();
+ }
 
  return NextResponse.json({ ok: true, since: sinceIso, products: products.length, sent, failed, test: !!testEmail });
  } catch (err) {
  console.error("New arrivals cron error:", err);
+ await rollback();
  return NextResponse.json({ error: "Internal error" }, { status: 500 });
  }
 }

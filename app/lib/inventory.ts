@@ -34,18 +34,26 @@ export function convertSizeToUS(raw: string, categorySlug: string): string | nul
  const normalized = normalizeSize(s);
  const isShoe = SHOE_RE.test(categorySlug);
 
- // EU/IT/FR/DE → normalizeSize outputs "EU XX"
- const euMatch = /^EU\s*(\d+(?:\.\d+)?)$/.exec(normalized);
- if (euMatch) {
- const num = euMatch[1];
+ // European sizing — read the ACTUAL system off the original string. Italian,
+ // French and German women's clothing use DIFFERENT US offsets, so collapsing
+ // them all to one "EU − 32" formula is wrong (e.g. Italian houses like Gucci/
+ // Prada label "IT 40", which is US 4, not US 8).
+ //   Italian (IT):  US = IT − 36   (IT 38→2, 40→4, 42→6…)
+ //   French (FR):   US = FR − 32   (FR 36→4, 38→6, 40→8…)
+ //   German (DE):   US = DE − 30   (DE 34→4, 36→6, 38→8…)
+ //   Generic "EU":  US = EU − 32   (defaults to the French scale)
+ // Shoe sizes are unified across the European systems, so they share one table.
+ const sysMatch = /^(IT|FR|DE|EU)\s*(\d+(?:\.\d+)?)$/i.exec(s);
+ if (sysMatch) {
+ const sys = sysMatch[1].toUpperCase();
+ const num = sysMatch[2];
  if (isShoe) {
   const us = EU_SHOE_TO_US[num];
   return us ? `US ${us}` : null;
  }
- // Women's clothing: EU - 32 = US
- const eu = parseFloat(num);
- const us = eu - 32;
- if (us >= 0 && us <= 20) return `US ${us}`;
+ const offset = sys === "IT" ? 36 : sys === "DE" ? 30 : 32;
+ const us = parseFloat(num) - offset;
+ if (us >= 0 && us <= 24) return `US ${fmtNum(us)}`;
  return null;
  }
 
@@ -220,12 +228,16 @@ function parseImages(product: DBProduct): string[] {
 }
 
 /**
- * Derive the best size for a product. Priority:
- * 1. Title extraction — store explicitly wrote size in listing title (e.g. "Dress – M", "(S/M)")
- * 2. Description label — "Size: M", "Tagged size: EU 38" (requires colon for bare "size")
- * 3. Non-generic DB size — numeric / EU/UK prefixed variant option
- * 4. Measurements fallback
- * 5. Generic DB size (S/M/L) — last resort
+ * Derive the best size for a product. The SELLER'S OWN DESCRIPTION wins — what
+ * they wrote about fit/size is trusted over the listing title and the raw
+ * Shopify variant size. Priority:
+ * 0. Seller US fit note in description — "runs true to a 6", "fits like a 6.5"
+ * 1. Tagged/labeled/marked size in description — "Tagged size: EU 38"
+ * 2. Any explicit size in the description — "Size: 4", "EU 38", "fits XS"
+ * 3. Title extraction — size written in the listing title (e.g. "Dress – M")
+ * 4. Non-generic DB size — Shopify variant (numeric / EU/UK prefixed)
+ * 5. Measurements fallback (bust/waist → S/M/L)
+ * 6. Generic DB size (S/M/L) — last resort
  *
  * Exported so it can be used by server components that work directly with DBProduct
  * (NewArrivalsSection, new-arrivals page, account favorites, etc.)
@@ -245,20 +257,22 @@ export function deriveSize(product: DBProduct): string | null {
  const taggedSize = extractTaggedSizeFromDescription(product.description);
  if (taggedSize) return taggedSize;
 
- // 2. Title — very explicit signal
+ // 2. Any explicit size the seller wrote in the description ("Size: 4",
+ // "EU 38", "fits XS"). The seller's own words take precedence over the
+ // listing title and the raw Shopify variant size.
+ const sizeFromDesc = extractSizeFromDescription(product.description);
+ if (sizeFromDesc) return sizeFromDesc;
+
+ // 3. Title — explicit size in the listing title
  const sizeFromTitle = extractSizeFromTitle(product.title);
  if (sizeFromTitle) return sizeFromTitle;
 
- // 3. Non-generic DB size (numeric, EU/UK prefixed)
+ // 4. Non-generic DB size (Shopify variant — numeric, EU/UK prefixed)
  if (dbSize && !isGenericDb) return dbSize;
 
- // 4. Measurements fallback
+ // 5. Measurements fallback (bust/waist → S/M/L)
  const sizeFromMeasurements = inferSizeFromMeasurements(product.description);
  if (sizeFromMeasurements) return sizeFromMeasurements;
-
- // 5. Bare description scan (lowest trust — may match store-category text)
- const sizeFromDesc = extractSizeFromDescription(product.description);
- if (sizeFromDesc) return sizeFromDesc;
 
  // 6. Generic DB size (S/M/L) as last resort
  return dbSize;

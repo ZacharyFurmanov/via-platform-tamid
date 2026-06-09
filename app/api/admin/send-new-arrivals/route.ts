@@ -5,9 +5,13 @@ import { sendNewArrivalsEmail } from "@/app/lib/email";
 import { getSetting, saveSetting } from "@/app/lib/settings-db";
 import type { DBProduct } from "@/app/lib/db";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
+import { brands as brandDefs } from "@/app/lib/brandData";
 import crypto from "crypto";
 
 export const maxDuration = 300;
+
+// Lowercase ILIKE patterns for all known designer brand keywords
+const DESIGNER_PATTERNS = brandDefs.flatMap((b) => b.keywords.map((k) => `%${k}%`));
 
 function hashPassword(password: string): string {
  return crypto.createHash("sha256").update(password).digest("hex");
@@ -60,8 +64,14 @@ export async function POST(request: NextRequest) {
  : sevenDaysAgo;
  const sinceIso = since.toISOString();
 
+ // Diversify across stores so the email highlights everyone — round-robin one
+ // item per store (rn=1) before any store's second item, instead of letting the
+ // most-recently-synced store fill the whole email.
  const rows = await sql`
- SELECT * FROM products
+ WITH base AS (
+ SELECT *,
+ CASE WHEN lower(title) LIKE ANY(${DESIGNER_PATTERNS}::text[]) THEN 1 ELSE 0 END AS is_designer
+ FROM products
  WHERE created_at IS NOT NULL
  AND created_at >= ${sinceIso}
  AND created_at <= NOW() - interval '24 hours'
@@ -69,7 +79,30 @@ export async function POST(request: NextRequest) {
  AND title NOT ILIKE '%gift card%'
  AND image IS NOT NULL AND image != ''
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
- ORDER BY created_at DESC
+ ),
+ store_scores AS (
+ SELECT store_slug,
+ COUNT(*)::int AS total_count,
+ SUM(is_designer)::int AS designer_count
+ FROM base
+ GROUP BY store_slug
+ ),
+ ranked AS (
+ SELECT b.*,
+ ROW_NUMBER() OVER (
+ PARTITION BY b.store_slug
+ ORDER BY b.is_designer DESC, b.created_at DESC
+ ) AS rn,
+ ss.designer_count,
+ ss.total_count
+ FROM base b
+ JOIN store_scores ss ON ss.store_slug = b.store_slug
+ )
+ SELECT id, store_slug, store_name, title, price, currency, compare_at_price,
+ image, images, external_url, size, variant_id, collabs_link,
+ shopify_product_id, created_at
+ FROM ranked
+ ORDER BY rn ASC, designer_count DESC, total_count DESC
  LIMIT 50
  `;
 

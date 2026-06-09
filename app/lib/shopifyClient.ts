@@ -235,32 +235,37 @@ const WORD_SIZE_MAP: Record<string, string> = {
 /**
  * Extracts an explicit US fit size the seller calls out as how the item actually
  * wears, e.g. "runs true to a 6", "true to size 6", "fits like a 6",
- * "best fits a 6.5". This is the seller's real-world fit guidance and is treated
- * as the most authoritative DISPLAY size — it intentionally beats a marked EU tag
- * size (e.g. a shoe "Marked 36") because it tells a US buyer what to order.
+ * "best fits a 6.5", "best fits US 2-4". This is the seller's real-world fit
+ * guidance and is treated as the most authoritative DISPLAY size — it beats a
+ * marked EU tag size because it tells a US buyer what to actually order.
  *
- * Requires an explicit number, so a bare "fits true to size" (no number) does NOT
- * match, and a trailing-digit guard ignores years / measurements like "1960" or
- * "40 inch". Returns "US N" or null.
+ * Handles ranges ("US 2-4", "2 to 4"). An explicit "US" lets it match without an
+ * "a"/"size" filler word; without "US" it still requires "a"/"size" so it won't
+ * grab measurements like "fits 40 inch". Requires a number (bare "true to size"
+ * doesn't match) and ignores years/large numbers. Returns "US N", "US N-M", or null.
  */
 export function extractFitSizeFromDescription(description: string | null): string | null {
  if (!description) return null;
  const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
- const NUM = `(\\d{1,2}(?:\\.\\d)?)(?!\\d)`;
- const CONN = `(?:a\\s+)?(?:size\\s+)?(?:us\\s*)?`;
+ // Captures a number and an optional second number (range), guarded against
+ // being part of a longer number (years, measurements).
+ const RANGE = `(\\d{1,2}(?:\\.\\d)?)(?:\\s*(?:[-–—/]|to)\\s*(\\d{1,2}(?:\\.\\d)?))?(?!\\d)`;
  const patterns = [
- // "(runs) true to (a/size/US) N"
- new RegExp(`\\btrue\\s+to\\s+${CONN}${NUM}`, "i"),
- // "runs/fits/wears like a N"
- new RegExp(`\\b(?:runs?|fits?|wears?)\\s+(?:best\\s+)?like\\s+a\\s+(?:us\\s*)?${NUM}`, "i"),
- // "(best) fits a/size N" — requires a/size to avoid matching "fits 40 inch"
- new RegExp(`\\b(?:best\\s+)?fits?\\s+(?:like\\s+)?(?:a\\s+|size\\s+)(?:us\\s*)?${NUM}`, "i"),
+ // "(runs) true to (a/size)? (us)? N(-M)?"
+ new RegExp(`\\btrue\\s+to\\s+(?:(?:a|size)\\s+)*(?:us\\s*)?${RANGE}`, "i"),
+ // "(best) fits/runs/wears (like)? (a/size)? US N(-M)?" — explicit US, filler optional
+ new RegExp(`\\b(?:best\\s+)?(?:fits?|runs?|wears?)\\s+(?:best\\s+)?(?:like\\s+)?(?:a\\s+|size\\s+)?us\\s*${RANGE}`, "i"),
+ // "(best) fits/runs/wears like a N(-M)?"
+ new RegExp(`\\b(?:fits?|runs?|wears?)\\s+(?:best\\s+)?like\\s+a\\s+(?:us\\s*)?${RANGE}`, "i"),
+ // "(best) fits/runs/wears a/size N(-M)?" — require a/size (1 or 2) when there's no "US"
+ new RegExp(`\\b(?:best\\s+)?(?:fits?|runs?|wears?)\\s+(?:like\\s+)?(?:(?:a|size)\\s+){1,2}(?:us\\s*)?${RANGE}`, "i"),
  ];
+ const valid = (s: string) => { const n = parseFloat(s); return n >= 1 && n <= 49; };
  for (const re of patterns) {
  const m = re.exec(text);
- if (m) {
- const n = parseFloat(m[1]);
- if (n >= 1 && n <= 49) return `US ${m[1]}`;
+ if (m && valid(m[1])) {
+ if (m[2] != null && valid(m[2])) return `US ${m[1]}-${m[2]}`;
+ return `US ${m[1]}`;
  }
  }
  return null;

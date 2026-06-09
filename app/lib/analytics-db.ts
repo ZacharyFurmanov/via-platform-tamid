@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { getProductFavoriteCounts } from "./favorites-db";
-import { canonicalStoreSlug } from "./stores";
+import { canonicalStoreSlug, convertCurrencyToUSD } from "./stores";
 
 const getDatabaseUrl = () => {
  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -73,6 +73,10 @@ export async function initAnalyticsTables() {
  // Migration: store UTM source on clicks for source attribution
  await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS utm_source TEXT`;
  await sql`CREATE INDEX IF NOT EXISTS idx_clicks_utm_source ON clicks(utm_source) WHERE utm_source IS NOT NULL`;
+ // Migration: conversions are always stored in USD (order_total/currency); the
+ // seller's original local amount/currency is preserved here for audit.
+ await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS original_total NUMERIC(10,2)`;
+ await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS original_currency VARCHAR(10)`;
 }
 
 export type CartItemSnapshot = {
@@ -202,16 +206,24 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  // Normalize to the canonical store slug so dedup, analytics, and email lookups all match.
  const storeSlug = canonicalStoreSlug(conversion.storeSlug);
 
+ // Always store conversions in USD. Non-US stores capture in their local currency
+ // (GBP/EUR/CAD/AUD); convert here so the conversions table + all revenue analytics
+ // are apples-to-apples. The original amount/currency is preserved for audit.
+ const origCurrency = conversion.currency || "USD";
+ const origTotal = conversion.orderTotal;
+ const usdTotal = origCurrency === "USD" ? origTotal : convertCurrencyToUSD(origTotal, origCurrency);
+
  // Check for duplicate
  const existing = await sql`
  SELECT id, order_total FROM conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${storeSlug} LIMIT 1
  `;
  if (existing.length > 0) {
- // If the first webhook saved with total=0 and we now have the real total, update it
+ // If the first webhook saved with total=0 and we now have the real (USD) total, update it
  const existingTotal = Number(existing[0].order_total ?? 0);
- if (conversion.orderTotal > existingTotal) {
+ if (usdTotal > existingTotal) {
  await sql`
- UPDATE conversions SET order_total = ${conversion.orderTotal}
+ UPDATE conversions
+ SET order_total = ${usdTotal}, currency = 'USD', original_total = ${origTotal}, original_currency = ${origCurrency}
  WHERE order_id = ${conversion.orderId} AND store_slug = ${storeSlug}
  `;
  }
@@ -219,13 +231,15 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  }
 
  await sql`
- INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id)
+ INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, original_total, original_currency, items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id)
  VALUES (
  ${conversion.conversionId},
  ${conversion.timestamp},
  ${conversion.orderId},
- ${conversion.orderTotal},
- ${conversion.currency},
+ ${usdTotal},
+ 'USD',
+ ${origTotal},
+ ${origCurrency},
  ${JSON.stringify(conversion.items)},
  ${conversion.viaClickId},
  ${storeSlug},
