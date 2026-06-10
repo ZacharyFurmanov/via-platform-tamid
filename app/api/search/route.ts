@@ -364,6 +364,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawQ = searchParams.get("q")?.trim() ?? "";
   const q = stripAccents(rawQ.toLowerCase());
+  // Only log COMMITTED searches (the /search page passes log=1). The header's
+  // live autocomplete fires on every keystroke, which would flood the analytics
+  // table with prefix fragments ("dr", "dre", "dres") and make Top Searches junk.
+  const shouldLog = searchParams.get("log") === "1";
 
   if (!q || q.length < 2) {
     return NextResponse.json({ products: [], designers: [], categories: [], stores: [] });
@@ -552,17 +556,19 @@ export async function GET(request: Request) {
       }
     }
 
-    // Fire-and-forget: log search analytics
-    sql`
-      CREATE TABLE IF NOT EXISTS searches (
-        id SERIAL PRIMARY KEY,
-        query TEXT NOT NULL,
-        results_count INT NOT NULL DEFAULT 0,
-        timestamp TIMESTAMPTZ DEFAULT NOW()
-      )
-    `.then(() =>
-      sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${allProducts.length})`
-    ).catch(() => {});
+    // Fire-and-forget: log search analytics — committed searches only.
+    if (shouldLog) {
+      sql`
+        CREATE TABLE IF NOT EXISTS searches (
+          id SERIAL PRIMARY KEY,
+          query TEXT NOT NULL,
+          results_count INT NOT NULL DEFAULT 0,
+          timestamp TIMESTAMPTZ DEFAULT NOW()
+        )
+      `.then(() =>
+        sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${allProducts.length})`
+      ).catch(() => {});
+    }
 
     return NextResponse.json({
       designers: matchedDesigners,

@@ -4,6 +4,7 @@ import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
+import { ensureSizeKeysColumn } from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
  const priceMax = filters.priceMax ?? 1e12;
 
  try {
+ await ensureSizeKeysColumn();
  // Fetch more than needed so JS-side category filtering still returns enough
  const fetchLimit = filters.categories.length > 0 ? Math.min(limit * 5, 500) : limit;
 
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
+  AND (${!useSizes} OR (CASE WHEN size_keys IS NOT NULL THEN size_keys && ${sizesUpper}::text[] ELSE regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}) END))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
@@ -56,7 +58,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
+  AND (${!useSizes} OR (CASE WHEN size_keys IS NOT NULL THEN size_keys && ${sizesUpper}::text[] ELSE regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}) END))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
@@ -71,7 +73,7 @@ export async function GET(request: Request) {
   AND title NOT ILIKE '%gift card%'
   AND (store_slug != ALL(${shopifySlugs}) OR collabs_link IS NOT NULL)
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
-  AND (${!useSizes} OR regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}))
+  AND (${!useSizes} OR (CASE WHEN size_keys IS NOT NULL THEN size_keys && ${sizesUpper}::text[] ELSE regexp_replace(UPPER(TRIM(size)), '^(US|UK|EU|IT|FR|DE)\\s*', '') = ANY(${sizesUpper}) END))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})

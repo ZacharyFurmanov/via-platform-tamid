@@ -3,6 +3,7 @@ import { COLLECTIONS } from "@/app/lib/collections-config";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
+import { expandSizeKeys } from "@/app/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -46,9 +47,10 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  });
 
  // Apply filters in JS (collections are typically small enough for this).
+ // A ranged size ("US 2-4") matches a filter for any size it covers.
  if (filters.sizes.length > 0) {
  const wanted = filters.sizes.map(stripSizePrefix);
- products = products.filter((p) => p.size && wanted.includes(stripSizePrefix(p.size)));
+ products = products.filter((p) => p.size && expandSizeKeys(p.size).some((k) => wanted.includes(k)));
  }
  if (filters.priceMin != null) products = products.filter((p) => p.priceNum >= filters.priceMin!);
  if (filters.priceMax != null) products = products.filter((p) => p.priceNum <= filters.priceMax!);

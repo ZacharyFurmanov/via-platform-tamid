@@ -447,10 +447,12 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  cutoff
  ? sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 AND timestamp >= ${cutoff} GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`
  : sql`SELECT item->>'productName' AS product_name, SUM((item->>'quantity')::int)::int AS total_qty FROM conversions, jsonb_array_elements(items) AS item WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND order_total > 0 GROUP BY item->>'productName' ORDER BY total_qty DESC LIMIT 100`,
- // Top searches are site-wide — useful context for stores regardless of range
+ // Top searches are site-wide — useful context for stores regardless of range.
+ // Normalise (trim/lower) and drop sub-3-char fragments so noisy keystroke
+ // prefixes don't outrank real queries; merge case/spacing variants.
  cutoff
- ? sql`SELECT query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoff} GROUP BY query ORDER BY count DESC LIMIT 20`.catch(() => [])
- : sql`SELECT query, COUNT(*)::int AS count FROM searches GROUP BY query ORDER BY count DESC LIMIT 20`.catch(() => []),
+ ? sql`SELECT lower(trim(query)) AS query, COUNT(*)::int AS count FROM searches WHERE timestamp >= ${cutoff} AND length(trim(query)) >= 3 GROUP BY lower(trim(query)) ORDER BY count DESC LIMIT 20`.catch(() => [])
+ : sql`SELECT lower(trim(query)) AS query, COUNT(*)::int AS count FROM searches WHERE length(trim(query)) >= 3 GROUP BY lower(trim(query)) ORDER BY count DESC LIMIT 20`.catch(() => []),
  ]);
 
  const totalClicks = clickCountRows[0].total as number;

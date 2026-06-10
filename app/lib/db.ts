@@ -108,6 +108,15 @@ export async function initDatabase() {
  ALTER TABLE products ADD COLUMN IF NOT EXISTS size TEXT
  `;
 
+ // The set of bare size tokens this product should match a size filter on —
+ // the DERIVED display size (deriveSize), expanded so a ranged fit like
+ // "US 2-4" → {2,3,4}. NULL means "not yet computed" (falls back to raw size
+ // matching); populated by the size-keys backfill. GIN index for fast overlap.
+ await sql`
+ ALTER TABLE products ADD COLUMN IF NOT EXISTS size_keys TEXT[]
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_products_size_keys ON products USING GIN (size_keys)`;
+
  // Add insider_notified column to track which products have been emailed to Insiders
  await sql`
  ALTER TABLE products ADD COLUMN IF NOT EXISTS insider_notified BOOLEAN DEFAULT FALSE
@@ -527,6 +536,26 @@ const _getAllProductsUncached = async (): Promise<DBProduct[]> => {
 
 // Not cached — result exceeds Next.js 2MB unstable_cache limit
 export const getAllProducts = _getAllProductsUncached;
+
+// Idempotently ensure products.size_keys exists. initDatabase only runs during
+// syncs, but the public list endpoints reference size_keys on every request —
+// and Postgres validates the column at parse time even when the size filter is
+// off — so they must guarantee it exists first. Memoised: the ALTER runs once
+// per server instance, then this resolves instantly.
+let _sizeKeysEnsured: Promise<void> | null = null;
+export function ensureSizeKeysColumn(): Promise<void> {
+ if (!_sizeKeysEnsured) {
+ const sql = neon(getDatabaseUrl());
+ _sizeKeysEnsured = (async () => {
+ await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS size_keys TEXT[]`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_products_size_keys ON products USING GIN (size_keys)`;
+ })().catch((e) => {
+ _sizeKeysEnsured = null; // allow retry on the next request
+ throw e;
+ });
+ }
+ return _sizeKeysEnsured;
+}
 
 /**
  * Get recommended products, excluding a specific product by ID.

@@ -42,6 +42,14 @@ export default function CollectionsAdminPage() {
  const [likesError, setLikesError] = useState<string | null>(null);
  const [bulkAdding, setBulkAdding] = useState(false);
 
+ // User collection import
+ const [colEmail, setColEmail] = useState("");
+ const [userCollections, setUserCollections] = useState<{ id: number; name: string; itemCount: number }[] | null>(null);
+ const [colLoading, setColLoading] = useState(false);
+ const [colError, setColError] = useState<string | null>(null);
+ const [importingId, setImportingId] = useState<number | null>(null);
+ const [importResult, setImportResult] = useState<string | null>(null);
+
  useEffect(() => {
  fetch("/api/admin/editors-picks?active=true")
  .then((r) => r.json())
@@ -171,6 +179,47 @@ export default function CollectionsAdminPage() {
  }
  };
 
+ const handleLoadUserCollections = async () => {
+ if (!colEmail.trim()) return;
+ setColLoading(true);
+ setColError(null);
+ setUserCollections(null);
+ setImportResult(null);
+ try {
+ const res = await fetch(`/api/admin/import-user-collection?email=${encodeURIComponent(colEmail.trim())}`);
+ if (res.status === 404) { setColError("No user found with that email."); return; }
+ if (!res.ok) { setColError("Failed to load collections."); return; }
+ const data = await res.json();
+ setUserCollections(data.collections ?? []);
+ if ((data.collections ?? []).length === 0) setColError("This user has no collections.");
+ } catch {
+ setColError("Failed to load collections.");
+ } finally {
+ setColLoading(false);
+ }
+ };
+
+ const handleImportCollection = async (sourceCollectionId: number) => {
+ if (importingId !== null) return;
+ setImportingId(sourceCollectionId);
+ setImportResult(null);
+ try {
+ const res = await fetch("/api/admin/import-user-collection", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ email: colEmail.trim(), targetSlug: activeCollection.slug, sourceCollectionId }),
+ });
+ const data = await res.json();
+ if (!res.ok) { setImportResult(data.error ?? "Import failed."); return; }
+ setImportResult(`Added ${data.added} of ${data.found} item${data.found !== 1 ? "s" : ""} to ${activeCollection.name}${data.missing ? ` (${data.missing} no longer in catalog)` : ""}.`);
+ await loadPicks(activeCollection.slug);
+ } catch {
+ setImportResult("Import failed.");
+ } finally {
+ setImportingId(null);
+ }
+ };
+
  return (
  <main style={{ minHeight: "100vh", background: "#f8f9fa" }}>
 
@@ -279,6 +328,56 @@ export default function CollectionsAdminPage() {
  </div>
  </div>
  )}
+
+ {/* From User Collection — import a user's own saved collection into this VYA collection */}
+ <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>
+ <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#a1a1aa", fontWeight: 500, marginBottom: 4 }}>
+ From User Collection
+ </p>
+ <p style={{ fontSize: 12, color: "#71717a", marginBottom: 12 }}>
+ Pull the products from a user&apos;s personal collection into <strong>{activeCollection.name}</strong>.
+ </p>
+ <div className="flex gap-3 mb-3">
+ <input
+ type="email"
+ value={colEmail}
+ onChange={(e) => { setColEmail(e.target.value); setUserCollections(null); setColError(null); setImportResult(null); }}
+ onKeyDown={(e) => e.key === "Enter" && handleLoadUserCollections()}
+ placeholder="user@example.com"
+ className="flex-1 px-4 py-2.5 text-sm outline-none"
+ style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: "#fff", color: "#09090b" }}
+ />
+ <button
+ onClick={handleLoadUserCollections}
+ disabled={colLoading || !colEmail.trim()}
+ className="px-5 py-2.5 text-sm uppercase tracking-wider transition-colors"
+ style={{ background: "#18181b", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 500, opacity: colLoading || !colEmail.trim() ? 0.5 : 1, border: "none", cursor: "pointer" }}
+ >
+ {colLoading ? "Loading…" : "Load collections"}
+ </button>
+ </div>
+ {colError && <p style={{ fontSize: 12, color: "#b91c1c", marginBottom: 8 }}>{colError}</p>}
+ {importResult && <p style={{ fontSize: 12, color: "#15803d", marginBottom: 8 }}>{importResult}</p>}
+ {userCollections && userCollections.length > 0 && (
+ <div className="flex flex-wrap gap-2">
+ {userCollections.map((c) => (
+ <button
+ key={c.id}
+ onClick={() => handleImportCollection(c.id)}
+ disabled={importingId !== null}
+ className="px-4 py-2 text-sm transition-colors"
+ style={{ border: "1px solid #e4e4e7", borderRadius: 6, background: importingId === c.id ? "#18181b" : "#fff", color: importingId === c.id ? "#fff" : "#09090b", cursor: importingId !== null ? "default" : "pointer", opacity: importingId !== null && importingId !== c.id ? 0.5 : 1 }}
+ >
+ {importingId === c.id ? "Importing…" : (
+ <>
+  {c.name} <span style={{ color: importingId === c.id ? "#d4d4d8" : "#a1a1aa", fontSize: 12 }}>· {c.itemCount} item{c.itemCount !== 1 ? "s" : ""} · import →</span>
+ </>
+ )}
+ </button>
+ ))}
+ </div>
+ )}
+ </div>
 
  {/* From User Likes */}
  <div style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: 8, padding: 20, marginBottom: 24 }}>

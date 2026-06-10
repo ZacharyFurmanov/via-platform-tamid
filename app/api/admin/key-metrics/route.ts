@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
     churnRows,
     retentionWindowRows,
     emailCtrRows,
+    emailFpClickRows,
     returningUsersRows,
     favoritesVolumeRows,
   ] = await Promise.all([
@@ -386,6 +387,20 @@ export async function GET(request: NextRequest) {
       WHERE category NOT IN ('magic_link', 'internal_alert')
     `.catch(() => [{ opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 }]),
 
+    // First-party email clicks — counted from our own utm-tagged landings
+    // (every email link carries utm_source=email via withUtm), NOT from Resend's
+    // email.clicked webhook. Resend click-tracking is off, so email.clicked is
+    // always 0; this is the reliable click signal. One row per email landing.
+    sql`
+      SELECT
+        COUNT(*) FILTER (WHERE timestamp >= ${shortStart}     AND timestamp < ${shortEnd})::int      AS clicks_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${shortPrevStart} AND timestamp < ${shortPrevEnd})::int  AS clicks_prev_7d,
+        COUNT(*) FILTER (WHERE timestamp >= ${pStart}         AND timestamp < ${pEnd})::int          AS clicks_period,
+        COUNT(*)::int                                                                                AS clicks_all
+      FROM utm_visits
+      WHERE lower(utm_source) = 'email' OR lower(utm_medium) = 'email'
+    `.catch(() => [{ clicks_7d: 0, clicks_prev_7d: 0, clicks_period: 0, clicks_all: 0 }]),
+
     // Returning users — scoped to the selected period
     sql`
       SELECT
@@ -464,7 +479,10 @@ export async function GET(request: NextRequest) {
     ? (wm.wau_prev as number) / (wm.mau_prev as number)
     : 0;
 
-  const ec = (emailCtrRows as { opens_7d: number; clicks_7d: number; delivered_7d: number; opens_prev_7d: number; clicks_prev_7d: number; delivered_prev_7d: number; opens_period: number; clicks_period: number; delivered_period: number; opens_all: number; clicks_all: number; delivered_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 };
+  const ecRaw = (emailCtrRows as { opens_7d: number; clicks_7d: number; delivered_7d: number; opens_prev_7d: number; clicks_prev_7d: number; delivered_prev_7d: number; opens_period: number; clicks_period: number; delivered_period: number; opens_all: number; clicks_all: number; delivered_all: number }[])[0] ?? { opens_7d: 0, clicks_7d: 0, delivered_7d: 0, opens_prev_7d: 0, clicks_prev_7d: 0, delivered_prev_7d: 0, opens_period: 0, clicks_period: 0, delivered_period: 0, opens_all: 0, clicks_all: 0, delivered_all: 0 };
+  // Override clicks with the first-party utm signal (Resend email.clicked is off → always 0).
+  const fp = (emailFpClickRows as { clicks_7d: number; clicks_prev_7d: number; clicks_period: number; clicks_all: number }[])[0] ?? { clicks_7d: 0, clicks_prev_7d: 0, clicks_period: 0, clicks_all: 0 };
+  const ec = { ...ecRaw, clicks_7d: fp.clicks_7d, clicks_prev_7d: fp.clicks_prev_7d, clicks_period: fp.clicks_period, clicks_all: fp.clicks_all };
 
   const fv = (favoritesVolumeRows as { period: number; prev_period: number; week: number; prev_week: number }[])[0] ?? { period: 0, prev_period: 0, week: 0, prev_week: 0 };
   const ru = registeredUsersRows[0] as { total: number; period_new: number; prev_period_new: number; week_new: number; prev_week_new: number };

@@ -50,7 +50,7 @@ function SearchResultsContent({ q }: { q: string }) {
  }
 
  queueMicrotask(() => setLoading(true));
- fetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
+ fetch(`/api/search?q=${encodeURIComponent(q.trim())}&log=1`)
  .then((res) => res.json())
  .then((data) => {
  setProducts(data.products || []);

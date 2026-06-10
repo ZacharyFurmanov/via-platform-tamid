@@ -32,11 +32,7 @@ function extractColor(title: string): string | null {
  }
  return null;
 }
-import { normalizeSize, sortSizes } from "@/app/lib/inventory";
-import { stripSizePrefix } from "@/app/lib/publicFilters";
-
-// Group sizes by their bare value so "US 8" / "EU 8" / "8" all match a filter of "8".
-const sizeKey = (s: string) => stripSizePrefix(normalizeSize(s));
+import { sortSizes, expandSizeKeys } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import { formatPrice } from "@/app/lib/formatPrice";
 import type { CategoryLabel } from "@/app/lib/categoryMap";
@@ -312,11 +308,14 @@ export default function FilteredProductGrid({
  );
  }
 
- // Size filter
+ // Size filter — a ranged size ("US 2-4") matches a filter for ANY size it
+ // covers, so a piece that fits a 2 or a 4 shows up under both.
  if (filters.selectedSizes.length > 0) {
- result = result.filter(
- (p) => p.size && filters.selectedSizes.includes(sizeKey(p.size))
- );
+ result = result.filter((p) => {
+ if (!p.size) return false;
+ const keys = expandSizeKeys(p.size);
+ return keys.some((k) => filters.selectedSizes.includes(k));
+ });
  }
 
  // Type filter (accessories)
@@ -432,8 +431,8 @@ export default function FilteredProductGrid({
  const seen = new Set<string>();
  products.forEach((p) => {
  if (p.size) {
- const k = sizeKey(p.size);
- if (k) seen.add(k);
+ // Expand ranges so a "US 2-4" piece offers BOTH 2 and 4 as filter options.
+ for (const k of expandSizeKeys(p.size)) if (k) seen.add(k);
  }
  });
  return sortSizes(Array.from(seen).filter(isValid));
