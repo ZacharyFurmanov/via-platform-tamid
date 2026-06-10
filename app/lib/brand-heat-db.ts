@@ -94,21 +94,30 @@ export async function getBrandHeatIndex(periodDays = 30, limit = 50): Promise<Br
  a.sC += r.cur; a.sP += r.prior;
  }
 
- // 3. Sold items per brand, current vs prior (designer column, else infer from title).
+ // 3. Real sales + GMV per brand from CONVERSIONS (actual tracked orders). We read
+ // each order's line items and infer the brand from the product name — far better
+ // coverage than the via_click_id→product join (whose click product_ids rarely
+ // match current products). Items named generically ("Item via Shopify Collabs",
+ // from the Collabs revenue sync) carry no brand, so they count toward store GMV
+ // but not brand GMV. (sold_items is a near-empty sync artifact — not used.)
  const sold = (await sql`
- SELECT designer, title, final_price, currency, sold_at
- FROM sold_items WHERE sold_at >= NOW() - ${prior}::interval
- `) as Array<{ designer: string | null; title: string; final_price: number; currency: string; sold_at: string | Date }>;
+ SELECT item->>'productName' AS pname, (item->>'price')::numeric AS price,
+  COALESCE((item->>'quantity')::int, 1) AS qty, c.timestamp AS ts
+ FROM conversions c, jsonb_array_elements(c.items) AS item
+ WHERE c.order_total > 0 AND c.timestamp >= NOW() - ${prior}::interval
+  AND jsonb_array_length(COALESCE(c.items, '[]'::jsonb)) > 0
+ `) as Array<{ pname: string | null; price: number; qty: number; ts: string | Date }>;
  const now = Date.now();
  const curMs = periodDays * 86_400_000;
  for (const r of sold) {
- const b = (r.designer && r.designer.trim()) ? r.designer.trim() : inferBrandFromTitle(r.title);
+ const b = r.pname ? inferBrandFromTitle(r.pname) : null;
  if (!b) continue;
  const a = get(b);
- const soldMs = new Date(r.sold_at).getTime();
- const isCurrent = now - soldMs <= curMs;
- if (isCurrent) { a.soldC += 1; a.gmv += Number(r.final_price) || 0; }
- else a.soldP += 1;
+ const qty = Number(r.qty) || 1;
+ const value = (Number(r.price) || 0) * qty;
+ const isCurrent = now - new Date(r.ts).getTime() <= curMs;
+ if (isCurrent) { a.soldC += qty; a.gmv += value; }
+ else a.soldP += qty;
  }
 
  // Score + momentum.
@@ -224,17 +233,19 @@ export async function getCategoryHeat(periodDays = 30, limit = 20): Promise<Grou
 
 export async function getStoreHeat(periodDays = 30, limit = 25): Promise<GroupHeat[]> {
  const map = await groupEngagement(periodDays, "store");
- // Stores also get sold-velocity, which sold_items carries directly by store_slug.
+ // Real sales + GMV per store from CONVERSIONS (actual orders), keyed by store_slug.
+ // Add stores that have sales even if they had no tracked views/favorites.
  const sql = db();
  const sold = (await sql`
- SELECT store_slug, final_price, sold_at FROM sold_items WHERE sold_at >= NOW() - ${`${periodDays * 2} days`}::interval
- `) as Array<{ store_slug: string; final_price: number; sold_at: string | Date }>;
+ SELECT store_slug, order_total AS amount, timestamp AS ts
+ FROM conversions WHERE order_total > 0 AND timestamp >= NOW() - ${`${periodDays * 2} days`}::interval
+ `) as Array<{ store_slug: string; amount: number; ts: string | Date }>;
  const now = Date.now();
  const curMs = periodDays * 86_400_000;
  for (const r of sold) {
- const g = map.get(r.store_slug);
- if (!g) continue;
- if (now - new Date(r.sold_at).getTime() <= curMs) { g.soldC += 1; g.gmv += Number(r.final_price) || 0; }
+ let g = map.get(r.store_slug);
+ if (!g) { g = { vC: 0, vP: 0, fC: 0, fP: 0, soldC: 0, soldP: 0, gmv: 0 }; map.set(r.store_slug, g); }
+ if (now - new Date(r.ts).getTime() <= curMs) { g.soldC += 1; g.gmv += Number(r.amount) || 0; }
  else g.soldP += 1;
  }
  return rankGroups(map, limit);
