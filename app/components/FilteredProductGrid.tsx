@@ -421,21 +421,22 @@ export default function FilteredProductGrid({
  return Array.from(bMap.values());
  }, [products]);
 
- // Get unique normalized sizes for the filter.
- // Show all letter sizes, but only include numeric sizes that appear on 3+ products.
+ // Get unique sizes for the filter. Show EVERY real size present — vintage pieces
+ // are usually one-of-a-kind, so a "3+ products" threshold would hide most sizes
+ // (a single size-4 or US-6 item would never be filterable). Junk values (years,
+ // measurements) are excluded by a plausibility check instead of a count gate.
  const availableSizes = useMemo(() => {
  const LETTER_SIZES = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"]);
- const counts = new Map<string, number>();
+ const isValid = (s: string) =>
+ LETTER_SIZES.has(s) || (/^\d{1,2}(\.\d)?$/.test(s) && parseFloat(s) <= 60);
+ const seen = new Set<string>();
  products.forEach((p) => {
  if (p.size) {
- const norm = sizeKey(p.size);
- counts.set(norm, (counts.get(norm) ?? 0) + 1);
+ const k = sizeKey(p.size);
+ if (k) seen.add(k);
  }
  });
- const filtered = Array.from(counts.entries())
- .filter(([size, count]) => LETTER_SIZES.has(size) || count >= 3)
- .map(([size]) => size);
- return sortSizes(filtered);
+ return sortSizes(Array.from(seen).filter(isValid));
  }, [products]);
 
  // Get unique accessory types from products for the filter
