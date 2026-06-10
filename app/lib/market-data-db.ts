@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { brands } from "@/app/lib/brandData";
 
-function inferBrandFromTitle(title: string): string | null {
+export function inferBrandFromTitle(title: string): string | null {
  const lower = title.toLowerCase();
  for (const brand of brands) {
  for (const kw of brand.keywords) {
@@ -290,7 +290,7 @@ export async function getTopBrands(limit = 50): Promise<BrandStat[]> {
 
 // Maps any Shopify product_type value → VYA canonical category label.
 // Returns null for non-category values that should be excluded.
-function normalizeCategory(raw: string): string | null {
+export function normalizeCategory(raw: string): string | null {
  const lower = raw.toLowerCase().trim();
 
  // Hard blocklist — business model labels, not product categories

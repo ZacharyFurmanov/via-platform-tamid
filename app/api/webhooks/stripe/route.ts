@@ -3,7 +3,13 @@ import { sendSourcingConfirmationToUser, sendSourcingRequestToStores } from "@/a
 import { markSourcingRequestPaid, getSourcingRequestBySession } from "@/app/lib/sourcing-db";
 import { getAllStoreEmails } from "@/app/lib/stores";
 import { saveConversion } from "@/app/lib/analytics-db";
+import { setStorePlan } from "@/app/lib/store-plans-db";
 import { neon } from "@neondatabase/serverless";
+
+function unixToIso(v: unknown): string | null {
+ const n = typeof v === "number" ? v : typeof v === "string" ? parseInt(v, 10) : NaN;
+ return Number.isFinite(n) ? new Date(n * 1000).toISOString() : null;
+}
 
 // Verify Stripe webhook signature without the SDK
 async function verifyStripeSignature(
@@ -63,6 +69,20 @@ export async function POST(request: NextRequest) {
  switch (event.type) {
  case "checkout.session.completed": {
  const session = event.data.object;
+
+ // Handle store VYA Pro (data layer) subscription
+ if (session.mode === "subscription" && (session.metadata as Record<string, string>)?.type === "store_pro") {
+ const slug = (session.metadata as Record<string, string>)?.store_slug;
+ if (slug) {
+ await setStorePlan(slug, {
+ plan: "pro",
+ status: "active",
+ stripeCustomerId: (session.customer as string | null) ?? null,
+ stripeSubscriptionId: (session.subscription as string | null) ?? null,
+ }).catch((err) => console.error("[stripe-webhook] store_pro activate error:", err));
+ }
+ break;
+ }
 
  // Handle sourcing request payment
  if (session.mode === "payment" && (session.metadata as Record<string, string>)?.type === "sourcing_request") {
@@ -146,6 +166,32 @@ export async function POST(request: NextRequest) {
  }).catch((err) => console.error("[stripe-webhook] Carroll Street save error:", err));
  }
 
+ break;
+ }
+
+ case "customer.subscription.updated": {
+ const sub = event.data.object;
+ const slug = (sub.metadata as Record<string, string>)?.store_slug;
+ if ((sub.metadata as Record<string, string>)?.type === "store_pro" && slug) {
+ await setStorePlan(slug, {
+ plan: "pro",
+ status: sub.status as string,
+ stripeSubscriptionId: sub.id as string,
+ stripeCustomerId: (sub.customer as string | null) ?? null,
+ currentPeriodEnd: unixToIso(sub.current_period_end),
+ }).catch((err) => console.error("[stripe-webhook] store_pro update error:", err));
+ }
+ break;
+ }
+
+ case "customer.subscription.deleted": {
+ const sub = event.data.object;
+ const slug = (sub.metadata as Record<string, string>)?.store_slug;
+ if ((sub.metadata as Record<string, string>)?.type === "store_pro" && slug) {
+ await setStorePlan(slug, { plan: "free", status: "canceled" }).catch((err) =>
+ console.error("[stripe-webhook] store_pro cancel error:", err),
+ );
+ }
  break;
  }
 

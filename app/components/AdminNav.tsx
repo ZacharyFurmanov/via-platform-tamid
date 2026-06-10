@@ -22,6 +22,7 @@ import {
  Search,
  Zap,
  Activity,
+ Database,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -34,6 +35,7 @@ const NAV_SECTIONS = [
  { label: "Session Flows", href: "/admin/session-flows", icon: GitBranch },
  { label: "Search", href: "/admin/search-analytics", icon: Search },
  { label: "Market Data", href: "/admin/market-data", icon: TrendingUp },
+ { label: "Data Layer", href: "/admin/data", icon: Database },
  { label: "Returns", href: "/admin/returns", icon: RotateCcw },
  ],
  },
