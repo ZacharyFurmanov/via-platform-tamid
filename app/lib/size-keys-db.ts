@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { deriveSize, expandSizeKeys } from "./inventory";
+import { deriveDisplaySize, expandSizeKeys } from "./inventory";
 import { ensureSizeKeysColumn, type DBProduct } from "./db";
 
 // ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ export async function backfillSizeKeys(
  // of statements (most items share a size) rather than one query per row.
  const groups = new Map<string, { keys: string[]; ids: number[] }>();
  for (const r of rows) {
- const derived = deriveSize({ title: r.title, description: r.description, size: r.size } as DBProduct);
+ const derived = deriveDisplaySize({ title: r.title, description: r.description, size: r.size } as DBProduct);
  const keys = derived ? expandSizeKeys(derived) : [];
  const sig = JSON.stringify(keys);
  const g = groups.get(sig);

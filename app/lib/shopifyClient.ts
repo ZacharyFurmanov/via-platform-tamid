@@ -272,6 +272,38 @@ export function extractFitSizeFromDescription(description: string | null): strin
 }
 
 /**
+ * Extracts a LETTER fit the seller explicitly states — "Best Fit M - XL",
+ * "fits like a large", "Fit: M-L", "best fits medium to large". Returns a single
+ * letter ("L") or a range ("M-XL"), normalized + uppercased. Like the numeric
+ * fit note this is the seller's own fit guidance, so it must beat a marked
+ * numeric/IT tag (which would otherwise be CONVERTED to a US number the seller
+ * never stated, e.g. IT 54 → "US 18"). Conservative on purpose — only clear
+ * "best fit / fits like a / fit:" phrasings — so we never guess a size.
+ */
+export function extractFitLetterFromDescription(description: string | null): string | null {
+ if (!description) return null;
+ const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+ // Longest tokens first so "medium" wins over "m", "large" over "l", etc.
+ const TOK = `extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large|xxxl|xxl|xl|xs|s|m|l`;
+ const re = new RegExp(
+ `\\b(?:best\\s+fits?|fits?\\s+like\\s+a|fit\\s*:)\\s+(?:a\\s+|size\\s+)?(${TOK})(?:\\s*(?:[-\\u2013\\u2014/]|to)\\s*(${TOK}))?`,
+ "i",
+ );
+ const m = re.exec(text);
+ if (!m) return null;
+ const norm = (s: string): string | null => {
+ const word = s.toLowerCase().replace(/\s+/g, " ").trim();
+ if (WORD_SIZE_MAP[word] || WORD_SIZE_MAP[word.replace(/-/g, "")]) return WORD_SIZE_MAP[word] ?? WORD_SIZE_MAP[word.replace(/-/g, "")];
+ const up = s.toUpperCase().replace(/[\s-]+/g, "");
+ return /^(XS|S|M|L|XL|XXL|XXXL)$/.test(up) ? up : null;
+ };
+ const a = norm(m[1]);
+ if (!a) return null;
+ const b = m[2] ? norm(m[2]) : null;
+ return b && b !== a ? `${a}-${b}` : a;
+}
+
+/**
  * Extracts size using ONLY authoritative label keywords: "tagged size", "labeled size",
  * "marked size", "label". Used as the top-priority source so "Tagged size: XS" always
  * beats "Size: Large [store bucket]" that appears earlier in the description.

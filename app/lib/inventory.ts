@@ -2,7 +2,7 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
-import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, extractFitSizeFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
+import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, extractFitSizeFromDescription, extractFitLetterFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
@@ -175,66 +175,6 @@ export function sortSizes(sizes: string[]): string[] {
  });
 }
 
-function inferSizeFromMeasurements(description: string | null): string | null {
- if (!description) return null;
- const text = description.replace(/<[^>]+>/g, " ");
-
- // Bust / chest — pit-to-pit is a FLAT measurement so double it for circumference
- // Reference: S=34-35", M=36-38", L=39-41", XL=42+"
- const chestMatch = /(?:chest|bust|pit[-\s]to[-\s]pit)\s*:?\s*(\d+(?:\.\d+)?)\s*("|in(?:ches?)?|cm)?/i.exec(text);
- if (chestMatch) {
- let v = parseFloat(chestMatch[1]);
- if (/cm/i.test(chestMatch[2] ?? "")) v /= 2.54;
- const isPitToPit = /pit/i.test(chestMatch[0]);
- if (isPitToPit) v *= 2; // flat → circumference
- if (v < 34) return "XS";
- if (v < 36) return "S";
- if (v < 39) return "M";
- if (v < 42) return "L";
- if (v < 46) return "XL";
- return "XXL";
- }
-
- // Waist — Reference: S=26-27", M=28-30", L=31-33", XL=34+"
- const waistMatch = /waist\s*:?\s*(\d+(?:\.\d+)?)\s*("|in(?:ches?)?|cm)?/i.exec(text);
- if (waistMatch) {
- let v = parseFloat(waistMatch[1]);
- if (/cm/i.test(waistMatch[2] ?? "")) v /= 2.54;
- if (v < 26) return "XS";
- if (v < 28) return "S";
- if (v < 31) return "M";
- if (v < 34) return "L";
- if (v < 38) return "XL";
- return "XXL";
- }
-
- // Hips — Reference: S=36-38", M=39-40", L=41-43", XL=44+"
- const hipMatch = /hip(?:s)?\s*:?\s*(\d+(?:\.\d+)?)\s*("|in(?:ches?)?|cm)?/i.exec(text);
- if (hipMatch) {
- let v = parseFloat(hipMatch[1]);
- if (/cm/i.test(hipMatch[2] ?? "")) v /= 2.54;
- if (v < 36) return "XS";
- if (v < 39) return "S";
- if (v < 41) return "M";
- if (v < 44) return "L";
- if (v < 48) return "XL";
- return "XXL";
- }
-
- // Shoe size from insole length
- const footMatch = /(?:insole|foot\s*length)\s*:?\s*(\d+(?:\.\d+)?)\s*(cm|mm|in(?:ches?)?|")?/i.exec(text);
- if (footMatch) {
- let cm = parseFloat(footMatch[1]);
- const unit = (footMatch[2] ?? "").toLowerCase();
- if (unit === "mm") cm /= 10;
- else if (unit === "in" || unit === "inches" || unit === '"') cm *= 2.54;
- const us = Math.round((cm - 15.2) / 0.667 + 1);
- if (us >= 4 && us <= 15) return `US ${us}`;
- }
-
- return null;
-}
-
 export type InventoryItem = {
  id: string;
  title: string;
@@ -289,6 +229,12 @@ export function deriveSize(product: DBProduct): string | null {
  const fitSize = extractFitSizeFromDescription(product.description);
  if (fitSize) return fitSize;
 
+ // 0b. Explicit seller LETTER fit ("Best Fit M - XL") — same authority: the
+ // seller's stated fit wins over a marked numeric/IT tag, so we show "M-XL"
+ // (which filters under M, L and XL) instead of converting IT 54 → "US 18".
+ const fitLetter = extractFitLetterFromDescription(product.description);
+ if (fitLetter) return fitLetter;
+
  // 1. Tagged/labeled/marked size in description — most authoritative (actual garment tag)
  // Must run before title/DB to prevent "Size: Large [store bucket]" from winning
  // over "Tagged size: XS [actual tag]" that appears later in the description.
@@ -308,12 +254,27 @@ export function deriveSize(product: DBProduct): string | null {
  // 4. Non-generic DB size (Shopify variant — numeric, EU/UK prefixed)
  if (dbSize && !isGenericDb) return dbSize;
 
- // 5. Measurements fallback (bust/waist → S/M/L)
- const sizeFromMeasurements = inferSizeFromMeasurements(product.description);
- if (sizeFromMeasurements) return sizeFromMeasurements;
-
- // 6. Generic DB size (S/M/L) as last resort
+ // 5. Generic DB size (S/M/L variant the store set) as last resort.
+ // NOTE: we deliberately do NOT infer a size from measurements (bust/waist →
+ // S/M/L). If the seller never stated a size, we add none — vintage sizing is
+ // too inconsistent to guess, and a wrong size loses sales.
  return dbSize;
+}
+
+/**
+ * The size shoppers actually SEE and FILTER by — deriveSize, then converted to a
+ * US label the same way the product page displays it (so "IT 38" → "US 2",
+ * "EU 36" → "US 4", a clothing "40" → "US 8"). Letter sizes, already-US sizes,
+ * and ranges pass through unchanged. This is the single source for the size on
+ * cards, grids, and the size_keys index — keeping "what you see" === "what you
+ * filter". Without this the grid filtered the raw tag (38) while the page showed
+ * the conversion (US 2), so the item never matched a US-size filter.
+ */
+export function deriveDisplaySize(product: DBProduct): string | null {
+ const raw = deriveSize(product);
+ if (!raw) return null;
+ const categorySlug = inferCategoryFromTitle(product.title);
+ return convertSizeToUS(raw, categorySlug) ?? raw;
 }
 
 // Transform database products to InventoryItem format
@@ -341,7 +302,7 @@ function transformDBProduct(product: DBProduct): InventoryItem {
  : product.created_at
  ? String(product.created_at)
  : undefined,
- size: deriveSize(product),
+ size: deriveDisplaySize(product),
  };
 }
 
