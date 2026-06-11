@@ -211,11 +211,13 @@ export async function getInsiderAudienceEmails(): Promise<string[]> {
       AND (
         -- Purchased
         EXISTS (SELECT 1 FROM conversions WHERE user_id::text = u.id::text)
-        -- Invited a friend who signed up
+        -- Referred 2+ friends who signed up (earns the newsletter)
         OR EXISTS (
           SELECT 1 FROM pilot_access pa1
           JOIN pilot_access pa2 ON pa2.referred_by = pa1.referral_code
           WHERE LOWER(pa1.email) = LOWER(u.email)
+          GROUP BY pa1.referral_code
+          HAVING COUNT(*) >= 2
         )
         -- Clicked at least 3 times (meaningful engagement, not a one-off)
         OR (SELECT COUNT(*) FROM clicks WHERE user_id::text = u.id::text) >= 3

@@ -160,17 +160,20 @@ export default async function StorePage({ params }: StorePageProps) {
  &larr; All Stores
  </Link>
 
- <div className="flex items-center gap-3 mb-2">
+ <div className="text-center">
+ <div className="flex items-center justify-center gap-3 mb-2">
  <h1 className="text-2xl sm:text-3xl font-serif">{store.name}</h1>
  <FavoriteButton type="store" targetId={store.slug} size="md" />
  </div>
 
- <VyaVerifiedBadge className="mb-3" />
+ <div className="flex justify-center mb-3">
+ <VyaVerifiedBadge />
+ </div>
 
  <p className="text-sm text-[#5D0F17]/50 mb-3">{store.location}</p>
 
  {store.description && (
- <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-xl">{store.description}</p>
+ <p className="text-sm sm:text-base text-[#5D0F17]/60 max-w-3xl mx-auto">{store.description}</p>
  )}
 
  {"perk" in store && store.perk && (
@@ -178,6 +181,7 @@ export default async function StorePage({ params }: StorePageProps) {
  {store.perk}
  </p>
  )}
+ </div>
 
  </div>
  </section>

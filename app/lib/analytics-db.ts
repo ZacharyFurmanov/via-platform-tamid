@@ -475,11 +475,48 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  count: r.count,
  }));
 
+ // AOV across the WHOLE platform (all stores' orders), not just this store —
+ // a benchmark every store sees. Aggregate only, never per-store.
+ const aovRows = (await sql`
+ SELECT COUNT(*)::int AS n, COALESCE(SUM(order_total), 0)::float AS gmv
+ FROM conversions WHERE order_total > 0
+ `.catch(() => [{ n: 0, gmv: 0 }])) as Array<{ n: number; gmv: number }>;
+ const aov = (aovRows[0]?.n ?? 0) > 0 ? aovRows[0].gmv / aovRows[0].n : 0;
+
+ // What shoppers currently have in their carts from this store (active = added
+ // in the last 14 days). Aggregated per product — never a shopper's identity.
+ const cartRows = (await sql`
+ SELECT product_id, MAX(product_title) AS product_title, MAX(product_image) AS product_image,
+  MAX(price) AS price, MAX(currency) AS currency, COUNT(*)::int AS in_carts
+ FROM user_cart_items
+ WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug}
+  AND added_at >= NOW() - INTERVAL '14 days'
+ GROUP BY product_id
+ ORDER BY in_carts DESC, MAX(added_at) DESC
+ LIMIT 50
+ `.catch(() => [])) as Array<{ product_id: number; product_title: string; product_image: string; price: number; currency: string; in_carts: number }>;
+ // Cart prices are shown to the store in USD — convert from each item's own
+ // currency (a no-op for USD), so non-US stores see USD just like their revenue.
+ const cartItems = cartRows.map((r) => ({
+ productId: r.product_id,
+ title: r.product_title,
+ image: r.product_image,
+ price: convertCurrencyToUSD(r.price != null ? Number(r.price) : 0, r.currency ?? "USD"),
+ currency: "USD",
+ inCarts: r.in_carts,
+ }));
+ const cartCount = cartItems.reduce((s, i) => s + i.inCarts, 0);
+ const cartValue = cartItems.reduce((s, i) => s + i.price * i.inCarts, 0);
+
  return {
  totalClicks,
  totalViews,
  totalConversions,
  totalRevenue,
+ aov,
+ cartItems,
+ cartCount,
+ cartValue,
  topProducts,
  recentClicks,
  recentConversions,

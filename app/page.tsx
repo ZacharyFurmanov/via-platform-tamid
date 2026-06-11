@@ -4,7 +4,6 @@ import Link from "next/link";
 import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
 import StoreCarousel from "./components/StoreCarousel";
-import StoriesHero from "./components/StoriesHero";
 import NewArrivalsSection from "./components/NewArrivalsSection";
 import FeaturedDesignerSection from "./components/FeaturedDesignerSection";
 import EditorsPicksSection from "./components/EditorsPicksSection";
@@ -31,7 +30,7 @@ export default function HomePage() {
  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
  <div className="absolute bottom-48 left-6 right-6 z-10">
  <h1 className="text-3xl font-serif text-[#FFFDF8] mb-6 leading-tight">
- Access the world&apos;s best vintage.
+ Access the world&apos;s <span className="whitespace-nowrap">best vintage.</span>
  </h1>
  <div className="flex gap-3">
  <Link
@@ -68,7 +67,7 @@ export default function HomePage() {
  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0) 70%)" }} />
  <div className="absolute bottom-[28%] left-10 z-10 animate-hero">
  <h1 className="text-6xl font-serif mb-8 text-[#FFFDF8] leading-tight max-w-xl">
- Access the world&apos;s best vintage.
+ Access the world&apos;s <span className="whitespace-nowrap">best vintage.</span>
  </h1>
  <div className="flex gap-4">
  <Link
@@ -325,86 +324,6 @@ export default function HomePage() {
  Explore FAQs
  </Link>
  </div>
- </div>
- </section>
-
- {/* ================= STORIES ================= */}
- <section className="bg-[#FFFDF8] py-16 sm:py-24">
- <div className="max-w-7xl mx-auto px-6">
- <div className="mb-10 sm:mb-14 flex items-end justify-between">
- <div>
- <p className="text-xs uppercase tracking-[0.15em] text-[#5D0F17]/50 mb-1 font-sans">Featured</p>
- <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#5D0F17]">Stories</h2>
- </div>
- <Link
- href="/stories"
- className="text-sm uppercase tracking-[0.15em] text-[#5D0F17] hover:text-[#5D0F17]/60 transition-colors min-h-[44px] flex items-center font-sans"
- >
- View All
- </Link>
- </div>
-
- <StoriesHero
- stories={[
- {
- slug: "lei-vintage",
- store: "LEI Vintage",
- teaser: "Some brands start with a new collection. LEI started with a realization — the world doesn't need more clothes. It needs better choices.",
- image: "/stores/LEI.jpg",
- logo: "/stores/lei-vintage-logo.jpg",
- logoBg: "#ffffff",
- },
- {
- slug: "vintage-archives-la",
- store: "Vintage Archives LA",
- teaser: "Dedicated to the art of curation, specializing in exceptional vintage designer shoes that feel as special as they are timeless.",
- image: "/stores/VintageArchivesLA.jpg",
- logo: "/stores/vintage-archives-la-logo.jpg",
- logoBg: "#fdf8d8",
- },
- {
- slug: "scarz-vintage",
- store: "SCARZ Vintage",
- teaser: "Rooted in a love for timeless design and intentional sourcing — rare finds and standout runway pieces you won't see everywhere else.",
- image: "/stores/scarz-vintage.jpg",
- logo: "/stores/scarz-vintage-logo.jpg",
- logoBg: "#ffffff",
- },
- {
- slug: "missi-archives",
- store: "Missi Archives",
- teaser: "Inspired by early 2000s fashion, street style, and model off-duty looks — each piece hand-selected for individuality and timeless cool.",
- image: "/stores/missi-archives.jpg",
- logo: "/stores/missi-archives-logo.jpg",
- logoBg: "#722f37",
- logoDark: true,
- },
- {
- slug: "ascensio-vintage",
- store: "Ascensio Vintage",
- teaser: "Championing timeless style that transcends the decades — celebrating the beauty of pre-loved and archival pieces from the most loved brands.",
- image: "/stores/ascensio-vintage.jpg",
- logo: "/stores/ascensio-vintage-logo.jpg",
- logoBg: "#ffffff",
- },
- {
- slug: "blodas-choice",
- store: "Bloda's Choice",
- teaser: "A creative platform built around the vision of photographer Anna Bloda — vintage fashion, original design, and a singular point of view.",
- image: "/stores/blodas-choice.jpg",
- logo: "/stores/blodas-choice-logo.png",
- logoBg: "#ffffff",
- },
- {
- slug: "source-twenty-four",
- store: "Source Twenty Four",
- teaser: "Founded by a mother–daughter duo in New Jersey, built on the idea that the best fashion already has a story.",
- image: "/stores/source-twenty-four.jpg",
- logo: "/stores/source-twenty-four.jpg",
- logoBg: "#ffffff",
- },
- ]}
- />
  </div>
  </section>
 

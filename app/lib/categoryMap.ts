@@ -10,6 +10,8 @@ export const categoryMap = {
  skirts: "Skirts",
  shorts: "Shorts",
  jumpsuits: "Jumpsuits",
+ lingerie: "Lingerie",
+ swimwear: "Swimwear",
  "other-clothing": "Clothing",
  // Shoes
  shoes: "Shoes",
@@ -43,7 +45,7 @@ export type CategoryLabel = (typeof categoryMap)[CategorySlug];
 // a specific clothing keyword should not pollute the clothing category page.
 export const clothingSlugs = new Set<CategorySlug>([
  "tops", "sweaters", "coats-jackets", "pants", "jeans",
- "dresses", "skirts", "shorts", "jumpsuits",
+ "dresses", "skirts", "shorts", "jumpsuits", "lingerie", "swimwear",
 ]);
 
 // Slugs that fall under the "Shoes" display category (includes legacy "shoes" catch-all)

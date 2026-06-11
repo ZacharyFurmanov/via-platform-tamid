@@ -379,9 +379,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  {
  title: "Authenticity & Curation",
  content: (() => {
- const policyText = storeConfig && "authenticityPolicy" in storeConfig && storeConfig.authenticityPolicy
- ? String(storeConfig.authenticityPolicy)
- : `All items sold by ${store.name} are personally sourced and inspected before listing. Each piece is described accurately — please review all item details and photos carefully before purchasing.`;
+ // Standard authenticity statement shown on every product (replaces the
+ // inconsistent per-store copy; stores.ts `authenticityPolicy` is now unused).
+ const policyText = `Every piece at ${store.name} is personally sourced, authenticated, and inspected before listing, then accurately described — so you can shop with complete confidence.`;
  const paragraphs = policyText.split(/\n\n+/);
  return (
  <div className="space-y-3">

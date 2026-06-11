@@ -23,6 +23,7 @@ import {
  Zap,
  Activity,
  Database,
+ ClipboardCheck,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -66,6 +67,7 @@ const NAV_SECTIONS = [
  { label: "Webhooks", href: "/admin/webhooks", icon: Zap },
  { label: "Collabs", href: "/admin/collabs-links", icon: Link2 },
  { label: "Stores", href: "/admin/stores", icon: Store },
+ { label: "Listing Quality", href: "/admin/listing-quality", icon: ClipboardCheck },
  ],
  },
 ];

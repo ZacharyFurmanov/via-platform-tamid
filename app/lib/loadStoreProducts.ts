@@ -46,24 +46,19 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  ["totes", ["tote", "shopper", "neverfull", "cabas"]],
  ["clutches", ["clutch", "minaudiere", "minaudière", "wristlet", "evening bag", "envelope"]],
  ["crossbody-bags", ["crossbody", "cross-body", "satchel", "belt bag", "fanny pack"]],
- ["handbags", [
- "handbag", "purse", "hobo", "baguette", "bucket bag",
- "top handle", "chain bag", "frame bag",
- // LV
+ // "bags" — handbags merged in (bags & handbags are one category). Specific
+ // styles above (totes/clutches/crossbody) still win; everything else → bags.
+ ["bags", [
+ "bag", "pouch", "backpack", "rucksack", "luggage", "suitcase", "duffel", "duffle", "chain wallet",
+ "handbag", "purse", "hobo", "baguette", "bucket bag", "top handle", "chain bag", "frame bag",
+ // LV / Fendi / Chanel / Gucci / Prada / Balenciaga icon styles
  "pochette", "musette", "keepall", "speedy", "alma", "papillon", "noé", "noe", "deauville", "vanity",
- // Fendi
  "peekaboo", "kan i", "first bag", "sunshine",
- // Chanel
  "flap bag", "boy bag", "2.55", "cambon", "gabrielle",
- // Gucci
  "marmont", "dionysus", "bamboo", "ophidia", "horsebit",
- // Prada
  "galleria", "saffiano",
- // Balenciaga
  "city bag", "le cagole",
  ]],
- // "bags" catch-all — "bag", "pouch", "backpack", etc. that don't fit above
- ["bags", ["bag", "pouch", "backpack", "rucksack", "luggage", "suitcase", "duffel", "duffle", "chain wallet"]],
  // Specific garment types first — these take priority over material keywords
  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "slip dress", "maxi", "mini dress", "midi dress"]],
  ["skirts", ["skirt", "sarong"]],
@@ -82,11 +77,18 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "pants", "trousers", "chino", "jogger", "slacks",
  "sweatpant", "wide-leg", "flare", "legging", "culottes",
  ]],
+ // Lingerie & intimates — a true-vintage category; checked before tops so a
+ // corset/bustier isn't swallowed as a generic top. (Slip DRESSES stay dresses.)
+ ["lingerie", [
+ "lingerie", "corset", "bustier", "bralette", "negligee", "negligée",
+ "chemise", "babydoll", "garter", "girdle", "slip top", "camisole set",
+ ]],
+ // Swimwear — previously fell through to generic clothing.
+ ["swimwear", ["swimsuit", "swimwear", "bikini", "tankini", "bathing suit", "monokini"]],
  ["tops", [
  "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
- "bodysuit", "corset", "bustier", "halter", "polo", "henley",
- "tube top", "crop", "tunic", "wrap top", "bralette", "lingerie",
- "slip top", "sheer top",
+ "bodysuit", "halter", "polo", "henley",
+ "tube top", "crop", "tunic", "wrap top", "sheer top",
  ]],
  // Jeans checked after specific garment types so "Denim Skirt" → skirts,
  // not jeans. "jeans" (plural only) avoids matching designer first names

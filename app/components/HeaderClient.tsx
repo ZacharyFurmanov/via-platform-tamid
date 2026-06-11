@@ -25,7 +25,7 @@ const RECENT_MAX = 8;
 const HEADER_H = 56;
 const MENU_TOP = HEADER_H;
 
-const NAV_ITEM = "text-[12px] uppercase tracking-[0.1em] text-[#5D0F17] hover:text-[#5D0F17]/50 transition-colors duration-200 whitespace-nowrap";
+const NAV_ITEM = "text-[14px] tracking-[0.02em] text-[#5D0F17] hover:text-[#5D0F17]/50 transition-colors duration-200 whitespace-nowrap";
 const DROP_PANEL = "bg-white border border-gray-200 shadow-md";
 const DROP_LINK = "block px-4 py-1.5 text-[14px] text-[#5D0F17] normal-case tracking-normal hover:bg-gray-50 transition-colors";
 const DROP_FOOT = "border-t border-gray-100 px-4 py-2 text-[11px] uppercase tracking-[0.1em] text-[#5D0F17]/50 hover:text-[#5D0F17] hover:bg-gray-50 transition-colors block";
@@ -43,8 +43,6 @@ export default function HeaderClient({
  // ── UI state ─────────────────────────────────────────────────
  const [activeDrawer, setActiveDrawer] = useState<"search" | "cart" | "account" | null>(null);
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
- const [scrolled, setScrolled] = useState(false);
- const [isHovered, setIsHovered] = useState(false);
  const pathname = usePathname();
  const [query, setQuery] = useState("");
  const [activeIndex, setActiveIndex] = useState(-1);
@@ -67,18 +65,9 @@ export default function HeaderClient({
  }, []);
 
  useEffect(() => {
- const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.75);
- onScroll();
- window.addEventListener("scroll", onScroll, { passive: true });
- return () => window.removeEventListener("scroll", onScroll);
- }, []);
-
- useEffect(() => {
  document.body.style.overflow = (mobileMenuOpen || activeDrawer !== null) ? "hidden" : "";
  return () => { document.body.style.overflow = ""; };
  }, [mobileMenuOpen, activeDrawer]);
-
- const isTransparent = pathname === "/" && scrolled && !isHovered;
 
  // ── Search ───────────────────────────────────────────────────
  const [results, setResults] = useState<SearchResult[]>([]);
@@ -182,17 +171,15 @@ export default function HeaderClient({
  <>
  {/* ── Header ───────────────────────────────────────────── */}
  <div
- className={`fixed top-0 z-[60] w-full transition-colors duration-300 ${isTransparent ? "bg-transparent" : "bg-[#FFFDF8]"}`}
+ className="fixed top-0 z-[60] w-full bg-[#FFFDF8] border-b border-[#5D0F17]/10"
  style={{ height: HEADER_H }}
- onMouseEnter={() => setIsHovered(true)}
- onMouseLeave={() => setIsHovered(false)}
  >
  <div className="max-w-7xl mx-auto px-6 h-full flex items-center gap-6 relative">
 
  {/* Logo — always left on all screen sizes */}
  <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 flex items-start gap-1.5">
  <img src="/vya-logo.png" alt="VYA" className="h-7 sm:h-8 w-auto" />
- <span className="text-[9px] uppercase tracking-[0.2em] text-[#5D0F17]/50 font-cormorant -mt-0.5">pilot</span>
+ <span className="text-[10px] tracking-[0.08em] text-[#5D0F17]/50 font-cormorant -mt-0.5">pilot</span>
  </Link>
 
  {/* Desktop Nav */}
@@ -216,7 +203,7 @@ export default function HeaderClient({
  <button
  aria-label="Search"
  onClick={() => setActiveDrawer("search")}
- className="hidden md:flex items-center gap-2 px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-[#5D0F17]/50 hover:text-[#5D0F17] transition-colors duration-200 group"
+ className="hidden md:flex items-center gap-2 px-2 py-1 text-[13px] tracking-[0.02em] text-[#5D0F17]/50 hover:text-[#5D0F17] transition-colors duration-200 group"
  style={FONT}
  >
  <Search size={13} strokeWidth={1.5} />

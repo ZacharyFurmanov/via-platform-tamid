@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EditorsPicksPage() {
- const picks = await getEveryonesFavorites(75);
+ const picks = await getEveryonesFavorites(400);
 
  const gridProducts = picks.map((pick) => ({
  id: pick.product.id,

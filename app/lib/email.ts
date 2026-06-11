@@ -1134,6 +1134,55 @@ export async function sendSourcingRequestToStores(
  }
 }
 
+/** Weekly listing-quality nudge to a store partner — which listings need fixing. */
+export async function sendStoreListingDigest(params: {
+ email: string;
+ storeName: string;
+ flagged: number;
+ total: number;
+ counts: { noDescription: number; noSize: number; noMeasurements: number; noImage: number };
+ products: { title: string; url: string; flags: string[] }[];
+ dashboardUrl: string;
+}): Promise<void> {
+ const resend = getResend();
+ const { counts } = params;
+ const countLine = [
+ counts.noDescription ? `${counts.noDescription} missing a description` : null,
+ counts.noSize ? `${counts.noSize} missing a size` : null,
+ counts.noMeasurements ? `${counts.noMeasurements} missing measurements` : null,
+ counts.noImage ? `${counts.noImage} missing an image` : null,
+ ].filter(Boolean).join(" · ");
+
+ const items = params.products
+ .map(
+ (p) => `<tr>
+  <td style="padding:10px 0;border-bottom:1px solid rgba(93,15,23,0.08);font-size:14px;color:#5D0F17;"><a href="${p.url}" style="color:#5D0F17;text-decoration:none;">${p.title}</a></td>
+  <td style="padding:10px 0;border-bottom:1px solid rgba(93,15,23,0.08);font-size:12px;color:rgba(93,15,23,0.5);text-align:right;">${p.flags.join(", ")}</td>
+ </tr>`,
+ )
+ .join("");
+
+ const html = `<div style="background:#FFFDF8;padding:32px 20px;font-family:Georgia,'Times New Roman',serif;color:#5D0F17;">
+ <div style="max-width:560px;margin:0 auto;">
+ <h1 style="font-size:23px;font-weight:500;margin:0 0 10px;">${params.storeName} — listings to tidy up</h1>
+ <p style="font-size:15px;line-height:1.6;color:rgba(93,15,23,0.7);margin:0 0 18px;">
+  <strong>${params.flagged}</strong> of your ${params.total} listings on VYA are missing details that help them sell. Completing them gets more views and faster sales.
+ </p>
+ <p style="font-size:13px;color:rgba(93,15,23,0.55);margin:0 0 20px;">${countLine}</p>
+ <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">${items}</table>
+ <a href="${params.dashboardUrl}" style="display:inline-block;background:#5D0F17;color:#FFFDF8;text-decoration:none;padding:12px 24px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;">See all in your dashboard</a>
+ <p style="font-size:12px;color:rgba(93,15,23,0.4);margin:24px 0 0;">Update these on your store and they'll sync to VYA automatically.</p>
+ </div>
+</div>`;
+
+ await resend.emails.send({
+ from: FROM_EMAIL,
+ to: params.email,
+ subject: `${params.flagged} listing${params.flagged !== 1 ? "s" : ""} to complete — ${params.storeName}`,
+ html,
+ });
+}
+
 /** Sent to the customer when a store submits a sourcing offer */
 export async function sendSourcingOfferToCustomer(details: {
  customerEmail: string;

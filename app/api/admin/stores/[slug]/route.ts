@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stores } from "@/app/lib/stores";
+import { stores, convertCurrencyToUSD } from "@/app/lib/stores";
 import { getStoreAnalytics } from "@/app/lib/analytics-db";
 import { neon } from "@neondatabase/serverless";
 
@@ -44,30 +44,29 @@ export async function GET(
     const sql = neon(dbUrl);
     try {
       const [inventoryRows, followerRows, favRows] = await Promise.all([
-        sql`
-          SELECT
-            COALESCE(SUM(price), 0) AS total_inventory_value,
-            COALESCE(SUM(
-              CASE WHEN price < 1000 THEN price * 0.07 WHEN price < 5000 THEN price * 0.05 ELSE price * 0.03 END
-            ), 0) AS via_commission_potential
-          FROM products WHERE store_slug = ${slug}
-        `,
+        sql`SELECT price, currency FROM products WHERE store_slug = ${slug}`,
         sql`SELECT COUNT(*) AS cnt FROM store_favorites WHERE store_slug = ${slug}`,
         sql`
-          SELECT p.title, p.price, COUNT(pf.id) AS favorite_count
+          SELECT p.title, p.price, p.currency, COUNT(pf.id) AS favorite_count
           FROM products p
           JOIN product_favorites pf ON pf.product_id = p.id
           WHERE p.store_slug = ${slug}
-          GROUP BY p.id, p.title, p.price
+          GROUP BY p.id, p.title, p.price, p.currency
           ORDER BY favorite_count DESC LIMIT 10
         `,
       ]);
-      totalInventoryValue = Math.round(Number(inventoryRows[0]?.total_inventory_value ?? 0));
-      viaCommissionPotential = Math.round(Number(inventoryRows[0]?.via_commission_potential ?? 0));
+      // Show every figure in USD — convert non-US stores from their stored currency
+      // (a no-op for the USD prices we sync), matching how conversions are stored.
+      const toUsd = (r: Record<string, unknown>) =>
+        convertCurrencyToUSD(Number(r.price), (r.currency as string) || store.currency || "USD");
+      const commission = (usd: number) =>
+        usd < 1000 ? usd * 0.07 : usd < 5000 ? usd * 0.05 : usd * 0.03;
+      totalInventoryValue = Math.round(inventoryRows.reduce((s, r) => s + toUsd(r), 0));
+      viaCommissionPotential = Math.round(inventoryRows.reduce((s, r) => s + commission(toUsd(r)), 0));
       storeFollowers = Number(followerRows[0]?.cnt ?? 0);
       topFavoritedProducts = favRows.map((r) => ({
         title: r.title as string,
-        price: Math.round(Number(r.price)),
+        price: Math.round(toUsd(r)),
         favoriteCount: Number(r.favorite_count),
       }));
     } catch {}

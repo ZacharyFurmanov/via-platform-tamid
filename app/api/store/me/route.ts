@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/app/lib/auth";
-import { stores, storeContactEmails } from "@/app/lib/stores";
+import { NextRequest, NextResponse } from "next/server";
+import { stores, convertCurrencyToUSD } from "@/app/lib/stores";
+import { resolveStoreSlug } from "@/app/lib/storeAuth";
 import { neon } from "@neondatabase/serverless";
 
 function getDatabaseUrl() {
@@ -9,20 +9,8 @@ function getDatabaseUrl() {
  return url;
 }
 
-function getStoreSlugFromEmail(email: string): string | null {
- for (const [slug, storeEmail] of Object.entries(storeContactEmails)) {
- if (storeEmail && storeEmail.toLowerCase() === email.toLowerCase()) return slug;
- }
- return null;
-}
-
-export async function GET() {
- const session = await auth();
- if (!session?.user?.email) {
- return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
- }
-
- const storeSlug = getStoreSlugFromEmail(session.user.email);
+export async function GET(request: NextRequest) {
+ const storeSlug = await resolveStoreSlug(request);
  if (!storeSlug) {
  return NextResponse.json({ error: "Not a registered store partner" }, { status: 403 });
  }
@@ -84,7 +72,7 @@ export async function GET() {
 
  const [inventoryRows, followerRows, favProductRows] = await Promise.all([
  sql`
- SELECT price FROM products
+ SELECT price, currency FROM products
  WHERE store_slug = ${storeSlug}
  AND (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
  `,
@@ -92,22 +80,28 @@ export async function GET() {
  SELECT COUNT(*) AS cnt FROM store_favorites WHERE store_slug = ${storeSlug}
  `,
  sql`
- SELECT p.title, p.price, COUNT(pf.id) AS favorite_count
+ SELECT p.title, p.price, p.currency, COUNT(pf.id) AS favorite_count
  FROM products p
  JOIN product_favorites pf ON pf.product_id = p.id
  WHERE p.store_slug = ${storeSlug}
- GROUP BY p.id, p.title, p.price
+ GROUP BY p.id, p.title, p.price, p.currency
  ORDER BY favorite_count DESC
  LIMIT 10
  `,
  ]);
 
- totalInventoryValue = Math.round(inventoryRows.reduce((s, r) => s + Number(r.price), 0));
- viaCommissionPotential = Math.round(inventoryRows.reduce((s, r) => s + calcCommission(Number(r.price)), 0));
+ // Every figure a store sees is in USD — non-US stores' prices are converted from
+ // their own stored currency (a no-op for the USD prices we sync). Mirrors the way
+ // conversions are always stored/shown in USD.
+ const toUsd = (r: Record<string, unknown>) =>
+ convertCurrencyToUSD(Number(r.price), (r.currency as string) || store.currency || "USD");
+
+ totalInventoryValue = Math.round(inventoryRows.reduce((s, r) => s + toUsd(r), 0));
+ viaCommissionPotential = Math.round(inventoryRows.reduce((s, r) => s + calcCommission(toUsd(r)), 0));
  storeFollowers = Number(followerRows[0]?.cnt ?? 0);
  topFavoritedProducts = favProductRows.map((r) => ({
  title: r.title as string,
- price: Math.round(Number(r.price)),
+ price: Math.round(toUsd(r)),
  favoriteCount: Number(r.favorite_count),
  }));
  } catch {

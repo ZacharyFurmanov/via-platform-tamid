@@ -128,8 +128,8 @@ export function normalizeSize(raw: string): string {
 // variant "S/M" — and such an item must surface under EVERY size in that range,
 // not just an exact string match. Single sizes return one token (the same value
 // the facet list is keyed on); ranges expand to every size they cover.
-//   "US 2-4"  → ["2","3","4"]      "7.5-8.5" → ["8","7.5","8.5"]
-//   "S/M"     → ["S","M"]          "8"       → ["8"]
+//   "US 2-4"  → ["2","4"]          "6-8" → ["6","8"]   (endpoints only — no 3, no 7)
+//   "S/M"     → ["S","M"]          "8"   → ["8"]
 const SIZE_LETTER_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 function bareSize(s: string): string {
  return s.trim().toUpperCase().replace(/^(US|UK|EU|IT|FR|DE)\s*/, "").trim();
@@ -140,17 +140,10 @@ export function expandSizeKeys(rawSize: string | null | undefined): string[] {
  const m = /^([A-Z0-9.]+)\s*(?:[-–—/]|to)\s*([A-Z0-9.]+)$/i.exec(core);
  if (m) {
  const [, a, b] = m;
- // Numeric range → every whole size between the ends, plus the exact ends.
+ // Numeric range → the two ENDPOINTS only. A "2-4" fits a 2 and a 4, never a
+ // 3 (women's clothing sizes are even; in-between numbers aren't real sizes).
  if (/^\d{1,2}(?:\.\d)?$/.test(a) && /^\d{1,2}(?:\.\d)?$/.test(b)) {
- const lo = parseFloat(a);
- const hi = parseFloat(b);
- if (Number.isFinite(lo) && Number.isFinite(hi) && hi >= lo && hi - lo <= 20) {
-  const out = new Set<string>();
-  for (let n = Math.ceil(lo); n <= Math.floor(hi); n++) out.add(String(n));
-  out.add(a.replace(/\.0$/, ""));
-  out.add(b.replace(/\.0$/, ""));
-  return [...out];
- }
+ return [...new Set([a.replace(/\.0$/, ""), b.replace(/\.0$/, "")])];
  }
  // Letter range → every size between the ends ("S-L" → S, M, L).
  const ai = SIZE_LETTER_ORDER.indexOf(a.toUpperCase());

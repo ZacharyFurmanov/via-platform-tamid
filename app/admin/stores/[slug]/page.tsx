@@ -72,6 +72,13 @@ export default function AdminStorePortalPage() {
  <div>
  <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{data.store.name}</h1>
  <p style={{ fontSize: 13, color: "#71717a", margin: 0 }}>{data.store.location} · <a href={data.store.website} target="_blank" rel="noreferrer" style={{ color: "#09090b" }}>{data.store.website}</a></p>
+ <Link
+ href={`/store/dashboard?store=${slug}`}
+ style={{ display: "inline-block", marginTop: 12, padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 6, background: "#5D0F17", color: "#FFFDF8", textDecoration: "none" }}
+ >
+ Open the store&apos;s live dashboard →
+ </Link>
+ <p style={{ fontSize: 11, color: "#9ca3af", margin: "6px 0 0" }}>The exact seller portal — Overview, Performance, Audience &amp; Market Insights — always up to date.</p>
  </div>
  <div style={{ display: "flex", gap: 6 }}>
  {(["7d", "30d", "all"] as Range[]).map((r) => (
