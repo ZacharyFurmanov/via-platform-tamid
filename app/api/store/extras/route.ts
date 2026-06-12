@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
  getStoreActivity(storeSlug),
  ]);
  const summary = quality.stores[0] ?? null;
+ // Return every flagged listing (capped high) so the store can work through them
+ // all, not just a preview slice.
  const listing = summary
- ? { ...summary, products: quality.products.slice(0, 50) }
+ ? { ...summary, products: quality.products.slice(0, 500) }
  : null;
  return NextResponse.json({ listing, activity });
  } catch (err) {

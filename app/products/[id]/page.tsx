@@ -228,6 +228,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  productImages = [product.image];
  }
 
+ // Some stores list a video instead of (or alongside) photos. Show it first.
+ const videoUrl = product.video_url || null;
+
  // Build direct cart URL for Shopify stores only (variant IDs are numeric).
  // Square/Squarespace stores use their own URL format — use external_url as-is.
  let checkoutUrl = product.external_url || "";
@@ -289,12 +292,37 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  <div className="max-w-6xl mx-auto px-6 pb-24">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-16 md:items-start">
 
- {/* Images — carousel on mobile, vertical stack on desktop */}
+ {/* Images — carousel on mobile, vertical stack on desktop. A video (if the
+ store listed one) leads the gallery. */}
  <div>
  <div className="md:hidden -mx-6">
+ {videoUrl && (
+ <video
+ src={videoUrl}
+ controls
+ playsInline
+ preload="metadata"
+ poster={productImages[0] || undefined}
+ className="aspect-[3/4] w-full bg-[#D8CABD]/20 object-cover object-center"
+ />
+ )}
+ {productImages.length > 0 && (
  <ImageCarousel images={productImages} alt={product.title} variant="detail" />
+ )}
  </div>
  <div className="hidden md:flex flex-col gap-2">
+ {videoUrl && (
+ <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/20">
+ <video
+ src={videoUrl}
+ controls
+ playsInline
+ preload="metadata"
+ poster={productImages[0] || undefined}
+ className="h-full w-full object-cover object-center"
+ />
+ </div>
+ )}
  {productImages.length > 0 ? productImages.map((src, i) => (
  <div key={i} className="relative aspect-[3/4] w-full overflow-hidden bg-[#D8CABD]/20">
  <img
@@ -305,7 +333,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  />
  </div>
  )) : (
- <div className="aspect-[3/4] w-full bg-[#D8CABD]/30" />
+ !videoUrl && <div className="aspect-[3/4] w-full bg-[#D8CABD]/30" />
  )}
  </div>
  </div>

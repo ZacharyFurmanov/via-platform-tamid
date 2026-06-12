@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
  currency: "USD",
  image: p.image ?? undefined,
  images: p.images,
+ videoUrl: p.videoUrl ?? undefined,
  externalUrl: p.externalUrl,
  description: p.description ?? undefined,
  variantId: p.variantId ?? undefined,

@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { getProductFavoriteCounts } from "./favorites-db";
-import { canonicalStoreSlug, convertCurrencyToUSD } from "./stores";
+import { canonicalStoreSlug, convertCurrencyToUSD, stores } from "./stores";
 
 const getDatabaseUrl = () => {
  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -466,6 +466,23 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  const totalConversions = conversions.length;
  const totalRevenue = conversions.reduce((sum, c) => sum + c.orderTotal, 0);
  const recentConversions = conversions.slice(0, 20);
+
+ // VYA commission for this store — computed from each order's total in the
+ // conversions table, tiered PER ORDER (not on cumulative revenue). Per-order is
+ // correct because each sale's rate depends on that order's size, and it lines up
+ // with what stores actually earn (e.g. Shopify Collabs payouts).
+ const storeCfg = stores.find((s) => s.slug === storeSlug) as { commissionRates?: { upTo?: number; rate: number }[] } | undefined;
+ const commissionRates = storeCfg?.commissionRates ?? [{ upTo: 1000, rate: 0.07 }, { upTo: 5000, rate: 0.05 }, { rate: 0.03 }];
+ const tieredCommission = (total: number): number => {
+ if (!(total > 0)) return 0;
+ for (const tier of commissionRates) {
+ if (tier.upTo === undefined || total < tier.upTo) return total * tier.rate;
+ }
+ return total * commissionRates[commissionRates.length - 1].rate;
+ };
+ const commissionEarned = Math.round(
+ conversionRows.reduce((sum, r) => sum + tieredCommission(Number(r.order_total)), 0) * 100
+ ) / 100;
  const itemsSold = itemsSoldRows.map((r) => ({
  name: r.product_name as string,
  qty: r.total_qty as number,
@@ -514,6 +531,7 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  totalConversions,
  totalRevenue,
  aov,
+ commissionEarned,
  cartItems,
  cartCount,
  cartValue,

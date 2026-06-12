@@ -5,18 +5,17 @@ import { useRouter } from "next/navigation";
 
 type QualityProduct = {
  id: number; storeSlug: string; storeName: string; title: string; url: string;
- noSize: boolean; noMeasurements: boolean; noDescription: boolean; noImage: boolean;
+ noSizing: boolean; noDescription: boolean; noImage: boolean;
 };
 type StoreSummary = {
  storeSlug: string; storeName: string; total: number; flagged: number;
- noSize: number; noMeasurements: number; noDescription: number; noImage: number;
+ noSizing: number; noDescription: number; noImage: number;
 };
 type Data = { stores: StoreSummary[]; products: QualityProduct[] };
 
-type IssueKey = "all" | "noSize" | "noMeasurements" | "noDescription" | "noImage";
+type IssueKey = "all" | "noSizing" | "noDescription" | "noImage";
 const ISSUE_LABELS: Record<Exclude<IssueKey, "all">, string> = {
- noSize: "No size",
- noMeasurements: "No measurements",
+ noSizing: "No size / measurements",
  noDescription: "No description",
  noImage: "No image",
 };
@@ -56,8 +55,7 @@ export default function ListingQualityPage() {
  return {
  total: s.reduce((a, x) => a + x.total, 0),
  flagged: s.reduce((a, x) => a + x.flagged, 0),
- noSize: s.reduce((a, x) => a + x.noSize, 0),
- noMeasurements: s.reduce((a, x) => a + x.noMeasurements, 0),
+ noSizing: s.reduce((a, x) => a + x.noSizing, 0),
  noDescription: s.reduce((a, x) => a + x.noDescription, 0),
  noImage: s.reduce((a, x) => a + x.noImage, 0),
  };
@@ -67,7 +65,7 @@ export default function ListingQualityPage() {
  <main className="min-h-screen bg-[#FBF8F1] p-8 text-[#5D0F17]">
  <div className="mx-auto max-w-6xl">
  <h1 className="font-serif text-2xl">Listing Quality</h1>
- <p className="mt-1 text-sm text-[#5D0F17]/55">Products missing a size, measurements, description, or image — so they can be fixed.</p>
+ <p className="mt-1 text-sm text-[#5D0F17]/55">Products missing a size/measurements, description, or image — so they can be fixed.</p>
 
  {loading ? (
  <p className="mt-8 text-sm text-[#5D0F17]/50">Loading…</p>
@@ -76,11 +74,10 @@ export default function ListingQualityPage() {
  ) : (
  <>
  {/* Totals */}
- <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+ <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
   {[
   { label: "Flagged", value: `${totals.flagged.toLocaleString()} / ${totals.total.toLocaleString()}` },
-  { label: "No size", value: totals.noSize.toLocaleString() },
-  { label: "No measurements", value: totals.noMeasurements.toLocaleString() },
+  { label: "No size / measurements", value: totals.noSizing.toLocaleString() },
   { label: "No description", value: totals.noDescription.toLocaleString() },
   { label: "No image", value: totals.noImage.toLocaleString() },
   ].map((t) => (
@@ -100,7 +97,7 @@ export default function ListingQualityPage() {
   ))}
   </select>
   <div className="flex flex-wrap gap-1">
-  {(["all", "noSize", "noMeasurements", "noDescription", "noImage"] as IssueKey[]).map((k) => (
+  {(["all", "noSizing", "noDescription", "noImage"] as IssueKey[]).map((k) => (
    <button key={k} onClick={() => setIssue(k)}
    className={`rounded-full px-3 py-1.5 text-[12px] transition-colors ${issue === k ? "bg-[#5D0F17] text-[#FFFDF8]" : "border border-[#5D0F17]/15 text-[#5D0F17]/60"}`}>
    {k === "all" ? "All issues" : ISSUE_LABELS[k]}
@@ -117,8 +114,7 @@ export default function ListingQualityPage() {
    <tr className="border-b border-[#5D0F17]/[0.07] text-left text-[11px] uppercase tracking-[0.06em] text-[#5D0F17]/45">
     <th className="px-5 py-3 font-medium">Store</th>
     <th className="px-3 py-3 font-medium text-right">Flagged / total</th>
-    <th className="px-3 py-3 font-medium text-right">Size</th>
-    <th className="px-3 py-3 font-medium text-right">Measurements</th>
+    <th className="px-3 py-3 font-medium text-right">Size / meas.</th>
     <th className="px-3 py-3 font-medium text-right">Description</th>
     <th className="px-5 py-3 font-medium text-right">Image</th>
    </tr>
@@ -128,8 +124,7 @@ export default function ListingQualityPage() {
     <tr key={s.storeSlug} className="cursor-pointer hover:bg-[#5D0F17]/[0.03]" onClick={() => setStore(s.storeSlug)}>
     <td className="px-5 py-3">{s.storeName}</td>
     <td className="px-3 py-3 text-right">{s.flagged} / {s.total}</td>
-    <td className="px-3 py-3 text-right">{s.noSize || "—"}</td>
-    <td className="px-3 py-3 text-right">{s.noMeasurements || "—"}</td>
+    <td className="px-3 py-3 text-right">{s.noSizing || "—"}</td>
     <td className="px-3 py-3 text-right">{s.noDescription || "—"}</td>
     <td className="px-5 py-3 text-right">{s.noImage || "—"}</td>
     </tr>
@@ -153,8 +148,7 @@ export default function ListingQualityPage() {
     <span className="text-[11px] text-[#5D0F17]/45">{p.storeName}</span>
    </span>
    <span className="flex shrink-0 flex-wrap justify-end gap-1">
-    <Flag on={p.noSize} label="size" />
-    <Flag on={p.noMeasurements} label="measurements" />
+    <Flag on={p.noSizing} label="size / measurements" />
     <Flag on={p.noDescription} label="description" />
     <Flag on={p.noImage} label="image" />
    </span>

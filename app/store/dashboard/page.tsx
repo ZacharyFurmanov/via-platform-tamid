@@ -17,6 +17,7 @@ import {
  TrendingDown,
  Minus,
  Sparkles,
+ ClipboardCheck,
 } from "lucide-react";
 
 // "3h ago" style relative time for the activity feed.
@@ -54,6 +55,7 @@ type Analytics = {
  totalConversions: number;
  totalRevenue: number;
  aov?: number;
+ commissionEarned?: number;
  cartItems?: { productId: number; title: string; image: string | null; price: number; currency: string; inCarts: number }[];
  cartCount?: number;
  cartValue?: number;
@@ -62,13 +64,13 @@ type Analytics = {
  range: string;
 };
 
-type QualityProduct = { id: number; title: string; url: string; noSize: boolean; noMeasurements: boolean; noDescription: boolean; noImage: boolean };
-type ListingQuality = { total: number; flagged: number; noSize: number; noMeasurements: number; noDescription: number; noImage: number; products: QualityProduct[] };
+type QualityProduct = { id: number; title: string; url: string; noSizing: boolean; noDescription: boolean; noImage: boolean };
+type ListingQuality = { total: number; flagged: number; noSizing: number; noDescription: number; noImage: number; products: QualityProduct[] };
 type ActivityItem = { type: "favorite" | "cart" | "sale"; title: string; at: string };
 type Extras = { listing: ListingQuality | null; activity: ActivityItem[] };
 
 type RangeOption = "7d" | "30d" | "all";
-type Tab = "overview" | "performance" | "audience" | "market";
+type Tab = "overview" | "performance" | "audience" | "listing" | "market";
 
 type MarketSegment = {
  segmentType: string;
@@ -114,15 +116,6 @@ const DEFAULT_RATES: { upTo?: number; rate: number }[] = [
  { rate: 0.03 },
 ];
 
-function calcViaCommission(revenue: number, rates?: { upTo?: number; rate: number }[]): number {
- if (revenue <= 0) return 0;
- const tiers = rates ?? DEFAULT_RATES;
- for (const tier of tiers) {
- if (tier.upTo === undefined || revenue < tier.upTo) return revenue * tier.rate;
- }
- return revenue * tiers[tiers.length - 1].rate;
-}
-
 function commissionTiersLabel(rates?: { upTo?: number; rate: number }[]): string {
  return (rates ?? DEFAULT_RATES)
  .map((t, i, arr) => {
@@ -143,6 +136,7 @@ const NAV: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
  { id: "overview", label: "Overview", icon: LayoutDashboard },
  { id: "performance", label: "Performance", icon: BarChart3 },
  { id: "audience", label: "Audience", icon: Heart },
+ { id: "listing", label: "Listing Health", icon: ClipboardCheck },
  ...(SHOW_MARKET_INSIGHTS ? [{ id: "market" as Tab, label: "Market Insights", icon: TrendingUp }] : []),
 ];
 
@@ -150,6 +144,7 @@ const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
  overview: { title: "Overview", subtitle: "A snapshot of your store on VYA." },
  performance: { title: "Performance", subtitle: "How shoppers are engaging with your pieces." },
  audience: { title: "Audience", subtitle: "The community following and saving your work." },
+ listing: { title: "Listing Health", subtitle: "Listings missing details that help pieces sell." },
  market: { title: "Market Insights", subtitle: "What's in demand across VYA — aggregated and anonymous." },
 };
 
@@ -656,48 +651,6 @@ function StoreDashboardInner() {
  )}
  </section>
 
- {/* Listing health — flagged listings */}
- {extras?.listing && extras.listing.total > 0 && (() => {
- const l = extras.listing;
- const Flag = ({ on, label }: { on: boolean; label: string }) =>
- on ? <span className="rounded bg-[#5D0F17]/[0.08] px-2 py-0.5 text-[11px] text-[#5D0F17]">{label}</span> : null;
- return (
- <Panel title="Listing health">
-  {l.flagged === 0 ? (
-  <p className="px-6 py-5 text-sm text-[#5D0F17]/65">All {l.total} of your listings have a size, measurements, a description, and an image. 🎉</p>
-  ) : (
-  <>
-   <div className="border-b border-[#5D0F17]/[0.07] px-6 py-3 text-[13px] text-[#5D0F17]/60">
-   <strong className="text-[#5D0F17]">{l.flagged}</strong> of {l.total} listings need attention
-   </div>
-   <div className="flex flex-wrap gap-x-6 gap-y-1 border-b border-[#5D0F17]/[0.07] px-6 py-3 text-[13px] text-[#5D0F17]/65">
-   {l.noDescription > 0 && <span><strong className="text-[#5D0F17]">{l.noDescription}</strong> missing a description</span>}
-   {l.noSize > 0 && <span><strong className="text-[#5D0F17]">{l.noSize}</strong> missing a size</span>}
-   {l.noMeasurements > 0 && <span><strong className="text-[#5D0F17]">{l.noMeasurements}</strong> missing measurements</span>}
-   {l.noImage > 0 && <span><strong className="text-[#5D0F17]">{l.noImage}</strong> missing an image</span>}
-   </div>
-   <div className="divide-y divide-[#5D0F17]/[0.05]">
-   {l.products.slice(0, 25).map((p) => (
-    <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[#5D0F17]/[0.03]">
-    <span className="truncate text-sm text-[#5D0F17]">{p.title}</span>
-    <span className="flex shrink-0 flex-wrap justify-end gap-1">
-     <Flag on={p.noDescription} label="description" />
-     <Flag on={p.noSize} label="size" />
-     <Flag on={p.noMeasurements} label="measurements" />
-     <Flag on={p.noImage} label="image" />
-    </span>
-    </a>
-   ))}
-   </div>
-  </>
-  )}
-  <p className="border-t border-[#5D0F17]/[0.07] px-6 py-3 text-[12px] text-[#5D0F17]/45">
-  Complete listings get more views and sell faster. Fix these on your store and they&apos;ll sync to VYA.
-  </p>
- </Panel>
- );
- })()}
-
  {/* Recent activity */}
  {extras?.activity && extras.activity.length > 0 && (
  <Panel title="Recent activity">
@@ -722,6 +675,59 @@ function StoreDashboardInner() {
  </div>
  )}
 
+ {/* ── LISTING HEALTH ── */}
+ {tab === "listing" && (
+ <div className="space-y-8">
+ {extras?.listing && extras.listing.total > 0 ? (() => {
+ const l = extras.listing;
+ const Flag = ({ on, label }: { on: boolean; label: string }) =>
+ on ? <span className="rounded bg-[#5D0F17]/[0.08] px-2 py-0.5 text-[11px] text-[#5D0F17]">{label}</span> : null;
+ return (
+ <Panel title="Listing health">
+  {l.flagged === 0 ? (
+  <p className="px-6 py-5 text-sm text-[#5D0F17]/65">All {l.total} of your listings have a size, measurements, a description, and an image. 🎉</p>
+  ) : (
+  <>
+   <div className="border-b border-[#5D0F17]/[0.07] px-6 py-3 text-[13px] text-[#5D0F17]/60">
+   <strong className="text-[#5D0F17]">{l.flagged}</strong> of {l.total} listings need attention
+   </div>
+   <div className="flex flex-wrap gap-x-6 gap-y-1 border-b border-[#5D0F17]/[0.07] px-6 py-3 text-[13px] text-[#5D0F17]/65">
+   {l.noDescription > 0 && <span><strong className="text-[#5D0F17]">{l.noDescription}</strong> missing a description</span>}
+   {l.noSizing > 0 && <span><strong className="text-[#5D0F17]">{l.noSizing}</strong> missing a size or measurements</span>}
+   {l.noImage > 0 && <span><strong className="text-[#5D0F17]">{l.noImage}</strong> missing an image</span>}
+   </div>
+   <div className="max-h-[620px] divide-y divide-[#5D0F17]/[0.05] overflow-y-auto">
+   {l.products.map((p) => (
+    <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[#5D0F17]/[0.03]">
+    <span className="truncate text-sm text-[#5D0F17]">{p.title}</span>
+    <span className="flex shrink-0 flex-wrap justify-end gap-1">
+     <Flag on={p.noDescription} label="description" />
+     <Flag on={p.noSizing} label="size / measurements" />
+     <Flag on={p.noImage} label="image" />
+    </span>
+    </a>
+   ))}
+   </div>
+   {l.products.length < l.flagged && (
+   <p className="border-t border-[#5D0F17]/[0.07] px-6 py-2.5 text-[12px] text-[#5D0F17]/45">
+    Showing {l.products.length.toLocaleString()} of {l.flagged.toLocaleString()} flagged listings.
+   </p>
+   )}
+  </>
+  )}
+  <p className="border-t border-[#5D0F17]/[0.07] px-6 py-3 text-[12px] text-[#5D0F17]/45">
+  Complete listings get more views and sell faster. Fix these on your store and they&apos;ll sync to VYA.
+  </p>
+ </Panel>
+ );
+ })() : (
+ <div className="rounded-2xl border border-[#5D0F17]/10 bg-white p-10 text-center text-sm text-[#5D0F17]/50">
+ Once your catalog is synced, we&apos;ll flag any listings missing a size, measurements, a description, or an image here.
+ </div>
+ )}
+ </div>
+ )}
+
  {/* ── PERFORMANCE ── */}
  {tab === "performance" && (
  <div className="space-y-8">
@@ -733,9 +739,9 @@ function StoreDashboardInner() {
  <StatCard value={`$${analytics.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} label="Revenue" />
  <StatCard value={`$${Math.round(analytics.aov ?? 0).toLocaleString()}`} label="Avg order value" hint="Across all VYA orders" />
  <StatCard
- value={`$${Math.round(calcViaCommission(analytics.totalRevenue, store.commissionRates)).toLocaleString()}`}
+ value={`$${Math.round(analytics.commissionEarned ?? 0).toLocaleString()}`}
  label="VYA commission"
- hint={`${(store.commissionRates ?? DEFAULT_RATES).map((t) => `${Math.round(t.rate * 100)}%`).join(" · ")} tiered`}
+ hint={`${(store.commissionRates ?? DEFAULT_RATES).map((t) => `${Math.round(t.rate * 100)}%`).join(" · ")} tiered, per order`}
  />
  </div>
 

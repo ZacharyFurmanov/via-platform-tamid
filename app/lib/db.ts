@@ -34,6 +34,7 @@ export type DBProduct = {
  currency: string;
  image: string | null;
  images: string | null;
+ video_url: string | null;
  external_url: string | null;
  description: string | null;
  variant_id: string | null;
@@ -81,6 +82,12 @@ export async function initDatabase() {
  // Add images column if it doesn't exist (JSON array of image URLs)
  await sql`
  ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT
+ `;
+
+ // Add video_url column — a hosted product video (mp4) when the store lists one
+ // instead of (or alongside) images.
+ await sql`
+ ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT
  `;
 
  // Add variant_id column for Shopify direct checkout URLs
@@ -265,6 +272,7 @@ export async function syncProducts(
  currency?: string;
  image?: string;
  images?: string[];
+ videoUrl?: string | null;
  externalUrl?: string;
  description?: string;
  variantId?: string;
@@ -354,7 +362,7 @@ export async function syncProducts(
  const imagesJson = product.images ? JSON.stringify(product.images) : null;
  const wasSeenOnInsider = prevSeenTitles.has(product.title);
  await sql`
- INSERT INTO products (store_slug, store_name, title, price, currency, image, images, external_url, description, variant_id, shopify_product_id, size, compare_at_price, product_type, brand, insider_notified, synced_at, created_at)
+ INSERT INTO products (store_slug, store_name, title, price, currency, image, images, video_url, external_url, description, variant_id, shopify_product_id, size, compare_at_price, product_type, brand, insider_notified, synced_at, created_at)
  VALUES (
  ${storeSlug},
  ${storeName},
@@ -363,6 +371,7 @@ export async function syncProducts(
  ${product.currency || "USD"},
  ${product.image || null},
  ${imagesJson},
+ ${product.videoUrl || null},
  ${product.externalUrl || null},
  ${product.description || null},
  ${product.variantId || null},
@@ -381,6 +390,7 @@ export async function syncProducts(
  currency = EXCLUDED.currency,
  image = EXCLUDED.image,
  images = EXCLUDED.images,
+ video_url = EXCLUDED.video_url,
  external_url = EXCLUDED.external_url,
  description = EXCLUDED.description,
  variant_id = COALESCE(EXCLUDED.variant_id, products.variant_id),

@@ -14,6 +14,7 @@ export type ShopifyProduct = {
  currency: string;
  image: string | null;
  images: string[];
+ videoUrl: string | null;
  externalUrl: string;
  store: string;
  vendor: string | null;
@@ -33,6 +34,14 @@ export type ShopifyFetchResult = {
 type ShopifyImageNode = {
  url: string;
  altText: string | null;
+};
+
+// Product media (Storefront API). We only care about hosted Video clips, but the
+// connection also returns images / external video / 3d models.
+type ShopifyMediaNode = {
+ mediaContentType: string; // "VIDEO" | "IMAGE" | "EXTERNAL_VIDEO" | "MODEL_3D"
+ sources?: Array<{ url: string; mimeType?: string | null }>;
+ previewImage?: { url: string } | null;
 };
 
 type ShopifyPriceV2 = {
@@ -63,6 +72,9 @@ type ShopifyProductNode = {
  };
  images: {
  edges: Array<{ node: ShopifyImageNode }>;
+ };
+ media?: {
+ edges: Array<{ node: ShopifyMediaNode }>;
  };
  variants: {
  edges: Array<{ node: ShopifyVariantNode }>;
@@ -108,6 +120,22 @@ const PRODUCTS_QUERY = `
  node {
  url
  altText
+ }
+ }
+ }
+ media(first: 10) {
+ edges {
+ node {
+ mediaContentType
+ ... on Video {
+ sources {
+ url
+ mimeType
+ }
+ previewImage {
+ url
+ }
+ }
  }
  }
  }
@@ -518,7 +546,22 @@ export async function fetchShopifyProducts(
 
  const price = parseFloat(node.priceRange.minVariantPrice.amount);
  const currency = node.priceRange.minVariantPrice.currencyCode;
- const allImageUrls = node.images.edges.map((e) => e.node.url);
+ let allImageUrls = node.images.edges.map((e) => e.node.url);
+
+ // Pull a hosted product video if the listing has one (some stores upload a
+ // video instead of, or in addition to, photos). Prefer an mp4 source.
+ const videoNodes = (node.media?.edges ?? [])
+ .map((e) => e.node)
+ .filter((n) => n.mediaContentType === "VIDEO" && n.sources && n.sources.length > 0);
+ const firstVideo = videoNodes[0];
+ const videoUrl = firstVideo
+ ? (firstVideo.sources!.find((s) => /mp4/i.test(s.mimeType || s.url))?.url ?? firstVideo.sources![0].url)
+ : null;
+ // If the listing is video-only (no photos), use the video's poster frame so
+ // grids, cards and link previews still have an image to show.
+ if (allImageUrls.length === 0 && firstVideo?.previewImage?.url) {
+ allImageUrls = [firstVideo.previewImage.url];
+ }
  const imageUrl = allImageUrls[0] || null;
 
  // Extract numeric IDs from GIDs (e.g. "gid://shopify/Product/12345" -> "12345")
@@ -557,6 +600,7 @@ export async function fetchShopifyProducts(
  currency,
  image: imageUrl,
  images: allImageUrls,
+ videoUrl,
  externalUrl: getProductUrl(normalizedDomain, node.handle),
  store: storeName,
  vendor: node.vendor || null,
@@ -794,6 +838,7 @@ export async function fetchShopifyProductsPublic(
  currency: defaultCurrency, // Public endpoint doesn't include currency; use store's configured currency
  image: imageUrl,
  images: allImageUrls,
+ videoUrl: null,
  externalUrl: `https://${normalizedDomain}/products/${product.handle}`,
  store: storeName,
  vendor: product.vendor || null,
@@ -952,6 +997,7 @@ export async function fetchShopifyProductsByCollections(
  currency: "USD",
  image: imageUrl,
  images: allImageUrls,
+ videoUrl: null,
  externalUrl: `https://${normalizedDomain}/products/${product.handle}`,
  store: storeName,
  vendor: product.vendor || null,
@@ -1083,6 +1129,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
  currency: string;
  image: string | null;
  images: string[];
+ videoUrl: string | null;
  externalUrl: string;
  store: string;
  description: string | null;
@@ -1099,6 +1146,7 @@ export function toRSSProductFormat(product: ShopifyProduct): {
  currency: product.currency,
  image: product.image,
  images: product.images,
+ videoUrl: product.videoUrl,
  externalUrl: product.externalUrl,
  store: product.store,
  description: product.description,

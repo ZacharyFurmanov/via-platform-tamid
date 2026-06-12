@@ -41,8 +41,7 @@ export async function GET(request: NextRequest) {
  url: `${BASE_URL}${p.url}`,
  flags: [
  p.noDescription ? "no description" : null,
- p.noSize ? "no size" : null,
- p.noMeasurements ? "no measurements" : null,
+ p.noSizing ? "no size or measurements" : null,
  p.noImage ? "no image" : null,
  ].filter(Boolean) as string[],
  }));
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
  storeName: summary.storeName,
  flagged: summary.flagged,
  total: summary.total,
- counts: { noDescription: summary.noDescription, noSize: summary.noSize, noMeasurements: summary.noMeasurements, noImage: summary.noImage },
+ counts: { noDescription: summary.noDescription, noSizing: summary.noSizing, noImage: summary.noImage },
  products,
  dashboardUrl: `${BASE_URL}/store/dashboard`,
  });

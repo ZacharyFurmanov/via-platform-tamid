@@ -35,8 +35,9 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  ["boots", ["boot", "bootie"]],
  ["heels", ["heel", "pump", "stiletto", "wedge", "blahnik", "louboutin", "roger vivier"]],
  ["sneakers", ["sneaker", "trainer"]],
- ["sandals", ["sandal", "espadrille", "slide", "slingback"]],
+ ["sandals", ["sandal", "espadrille", "slide", "slingback", "flip flop", "flip-flop"]],
  ["flats", [
+ "flats", "ballet flat", "ballet flats", "ballerina flat",
  "loafer", "mule", "clog", "oxford", "derby", "brogue",
  "mary jane", "moccasin", "slipper",
  ]],
@@ -58,6 +59,10 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "marmont", "dionysus", "bamboo", "ophidia", "horsebit",
  "galleria", "saffiano",
  "city bag", "le cagole",
+ // Iconic model names with no "bag" word — distinctive enough to be safe.
+ "chanel 22", "lady dior", "classic flap", "wallet on chain", "capucines",
+ "petite malle", "metis", "loulou", "cassette", "arco",
+ "birkin", "constance", "lindy", "picotin", "bolide", "evelyne",
  ]],
  // Specific garment types first — these take priority over material keywords
  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "slip dress", "maxi", "mini dress", "midi dress"]],

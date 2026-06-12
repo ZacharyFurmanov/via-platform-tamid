@@ -1140,7 +1140,7 @@ export async function sendStoreListingDigest(params: {
  storeName: string;
  flagged: number;
  total: number;
- counts: { noDescription: number; noSize: number; noMeasurements: number; noImage: number };
+ counts: { noDescription: number; noSizing: number; noImage: number };
  products: { title: string; url: string; flags: string[] }[];
  dashboardUrl: string;
 }): Promise<void> {
@@ -1148,8 +1148,7 @@ export async function sendStoreListingDigest(params: {
  const { counts } = params;
  const countLine = [
  counts.noDescription ? `${counts.noDescription} missing a description` : null,
- counts.noSize ? `${counts.noSize} missing a size` : null,
- counts.noMeasurements ? `${counts.noMeasurements} missing measurements` : null,
+ counts.noSizing ? `${counts.noSizing} missing a size or measurements` : null,
  counts.noImage ? `${counts.noImage} missing an image` : null,
  ].filter(Boolean).join(" · ");
 

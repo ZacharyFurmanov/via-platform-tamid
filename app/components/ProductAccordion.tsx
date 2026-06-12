@@ -32,8 +32,8 @@ export default function ProductAccordion({ sections }: { sections: Section[] }) 
               />
             </button>
             <div
-              className={`overflow-hidden transition-all duration-300 ease-out ${
-                isOpen ? "max-h-[600px] opacity-100 pb-5" : "max-h-0 opacity-0"
+              className={`transition-all duration-300 ease-out ${
+                isOpen ? "max-h-[600px] overflow-y-auto scrollbar-hide opacity-100 pb-5" : "max-h-0 overflow-hidden opacity-0"
               }`}
             >
               <div className="text-sm text-black/70 leading-relaxed">
