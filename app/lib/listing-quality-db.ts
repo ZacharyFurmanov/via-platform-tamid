@@ -33,6 +33,16 @@ function db() {
  return neon(url);
 }
 
+// Tracks which listings have already triggered a "missing details" email, so each
+// one is alerted ONCE — stores aren't nagged about the same listing repeatedly,
+// and only newly-added flagged listings get emailed.
+let _alertColReady = false;
+async function ensureAlertColumn(sql: ReturnType<typeof db>): Promise<void> {
+ if (_alertColReady) return;
+ await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS listing_alert_sent_at TIMESTAMP WITH TIME ZONE`;
+ _alertColReady = true;
+}
+
 // Does the description contain any measurement / dimension info? Covers clothing
 // (bust, waist, sleeve…) AND bags/accessories (dimensions, width × height, strap
 // drop, inch marks, cm). We err toward NOT flagging: if anything looks like a
@@ -195,4 +205,60 @@ export async function getListingQualityQA(storeSlug?: string, limit = 2000): Pro
  if (out.length >= limit) break;
  }
  return out;
+}
+
+export type FlaggedListing = {
+ id: number; title: string; url: string;
+ noSizing: boolean; noDescription: boolean; noImage: boolean;
+};
+
+// Flagged listings for a store that have NOT been alerted yet (newly added or
+// never emailed). Used by the weekly digest so each listing is emailed once.
+export async function getUnalertedFlaggedByStore(storeSlug: string): Promise<{ storeName: string; products: FlaggedListing[] }> {
+ const sql = db();
+ await ensureAlertColumn(sql);
+ const rows = (await sql`
+ SELECT id, store_slug, store_name, title, description, size, image
+ FROM products
+ WHERE store_slug = ${storeSlug} AND listing_alert_sent_at IS NULL
+ ORDER BY id DESC
+ `) as ProductRow[];
+
+ let storeName = storeSlug;
+ const products: FlaggedListing[] = [];
+ for (const r of rows) {
+ if (r.store_name) storeName = r.store_name;
+ const e = evaluateListing(r);
+ if (!(e.noSizing || e.noDescription || e.noImage)) continue;
+ products.push({
+ id: r.id,
+ title: r.title,
+ url: `/products/${r.store_slug}-${r.id}`,
+ noSizing: e.noSizing, noDescription: e.noDescription, noImage: e.noImage,
+ });
+ }
+ return { storeName, products };
+}
+
+// Mark listings as alerted so they're never emailed about again.
+export async function markListingsAlerted(ids: number[]): Promise<void> {
+ if (ids.length === 0) return;
+ const sql = db();
+ await ensureAlertColumn(sql);
+ await sql`UPDATE products SET listing_alert_sent_at = NOW() WHERE id = ANY(${ids})`;
+}
+
+// Baseline: mark every current product as already-alerted WITHOUT emailing. Use
+// before enabling the digest if you only want emails for listings added later
+// (not the existing backlog). Returns how many rows were baselined.
+export async function baselineExistingAsAlerted(): Promise<number> {
+ const sql = db();
+ await ensureAlertColumn(sql);
+ const res = (await sql`
+ UPDATE products SET listing_alert_sent_at = NOW() WHERE listing_alert_sent_at IS NULL
+ `) as unknown as { count?: number };
+ // neon returns rowCount on the result; fall back to a count query if absent.
+ if (typeof res?.count === "number") return res.count;
+ const rows = (await sql`SELECT COUNT(*)::int AS n FROM products WHERE listing_alert_sent_at IS NOT NULL`) as Array<{ n: number }>;
+ return rows[0]?.n ?? 0;
 }

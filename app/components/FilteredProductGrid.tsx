@@ -32,6 +32,14 @@ function extractColor(title: string): string | null {
  }
  return null;
 }
+
+// The colour we filter/group on: prefer the vision-read image colour (catches
+// items whose TITLE has no colour word, e.g. a black pinstripe skirt), and fall
+// back to the title. Capitalized to match extractColor's casing so they merge.
+function colorOf(p: { imageColor?: string | null; title: string }): string | null {
+ if (p.imageColor) return p.imageColor.charAt(0).toUpperCase() + p.imageColor.slice(1);
+ return extractColor(p.title);
+}
 import { sortSizes, expandSizeKeys } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
 import { formatPrice } from "@/app/lib/formatPrice";
@@ -58,6 +66,7 @@ export type FilterableProduct = {
  externalUrl?: string;
  image: string;
  images?: string[];
+ imageColor?: string | null; // colour read off the image by vision (normalized)
  createdAt?: number; // timestamp for sorting by newest
  popularityScore?: number;
  size?: string | null;
@@ -328,7 +337,7 @@ export default function FilteredProductGrid({
  // Color filter
  if (filters.selectedColors.length > 0) {
  result = result.filter((p) => {
- const color = extractColor(p.title);
+ const color = colorOf(p);
  return color && filters.selectedColors.includes(color);
  });
  }
@@ -447,11 +456,11 @@ export default function FilteredProductGrid({
  return Array.from(seen).sort();
  }, [products]);
 
- // Get unique colors extracted from product titles
+ // Unique colours across products — from the image colour (preferred) or title.
  const availableColors = useMemo(() => {
  const seen = new Set<string>();
  products.forEach((p) => {
- const color = extractColor(p.title);
+ const color = colorOf(p);
  if (color) seen.add(color);
  });
  return Array.from(seen).sort();

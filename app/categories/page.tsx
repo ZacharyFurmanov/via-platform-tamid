@@ -47,6 +47,7 @@ export default async function CategoriesPage() {
  externalUrl: item.externalUrl,
  image: item.image,
  images: item.images,
+ imageColor: item.imageColor,
  size: item.size,
  engagementScore,
  createdAt: item.createdAt ? new Date(item.createdAt).getTime() : (dbIdMap.get(item.id) ?? 0),

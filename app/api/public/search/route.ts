@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
-import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
+import { parseFilters, applyJsFilters, designerPatterns } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,8 @@ export async function GET(request: Request) {
  const sizesUpper = filters.sizes.map((s) => s.toUpperCase());
  const useSizes = sizesUpper.length > 0;
  const useStores = filters.stores.length > 0;
+ const designerPats = designerPatterns(filters.designers);
+ const useDesigners = designerPats.length > 0;
  const usePriceMin = filters.priceMin != null;
  const usePriceMax = filters.priceMax != null;
  const priceMin = filters.priceMin ?? 0;
@@ -44,6 +46,7 @@ export async function GET(request: Request) {
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!useDesigners} OR title ~* ANY(${designerPats}::text[]))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
   ORDER BY price ASC, id DESC
@@ -60,6 +63,7 @@ export async function GET(request: Request) {
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!useDesigners} OR title ~* ANY(${designerPats}::text[]))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
   ORDER BY price DESC, id DESC
@@ -76,6 +80,7 @@ export async function GET(request: Request) {
   AND (${hidden.length} = 0 OR store_slug != ALL(${hidden}))
   AND (${!useSizes} OR UPPER(size) = ANY(${sizesUpper}))
   AND (${!useStores} OR store_slug = ANY(${filters.stores}))
+  AND (${!useDesigners} OR title ~* ANY(${designerPats}::text[]))
   AND (${!usePriceMin} OR price >= ${priceMin})
   AND (${!usePriceMax} OR price <= ${priceMax})
   ORDER BY id DESC

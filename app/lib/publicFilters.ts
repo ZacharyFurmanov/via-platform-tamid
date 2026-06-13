@@ -1,4 +1,30 @@
 // Shared filter logic for /api/public/* product list endpoints.
+import { brands, WHOLE_WORD_ALIASES } from "./brandData";
+
+const BRAND_BY_SLUG = new Map(brands.map((b) => [b.slug, b]));
+
+function escapeRe(s: string): string {
+ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Postgres ~* (case-insensitive regex) patterns for selected designer slugs. Short
+// keywords (≤3) AND whole-word aliases (etro/boss/coach… — substrings of common
+// words) get \y boundaries so they never match inside a word ("etro" must not hit
+// "retro"); other keywords match as substrings so plurals still work. Kept in sync
+// with resolveBrand / detectBrand / inferBrandFromTitle via WHOLE_WORD_ALIASES.
+// Used as: title ~* ANY(${designerPatterns(...)}::text[]).
+export function designerPatterns(designerSlugs: string[]): string[] {
+ const pats: string[] = [];
+ for (const slug of designerSlugs) {
+ const b = BRAND_BY_SLUG.get(slug);
+ if (!b) continue;
+ for (const kw of b.keywords) {
+  const wholeWord = kw.length <= 3 || WHOLE_WORD_ALIASES.has(kw);
+  pats.push(wholeWord ? `\\y${escapeRe(kw)}\\y` : escapeRe(kw));
+ }
+ }
+ return pats;
+}
 
 // Size matching ignores the regional prefix so a filter of "8" matches "US 8",
 // "EU 8", "UK 8", "8", etc. — we group by the bare size value. The SQL side strips
@@ -11,6 +37,7 @@ export type PublicFilters = {
  sizes: string[];      // e.g. ["S", "M", "38"]
  categories: string[]; // e.g. ["clothing", "shoes"]
  stores: string[];     // store slugs
+ designers: string[];  // brand slugs, e.g. ["chanel", "gucci"]
  priceMin: number | null;
  priceMax: number | null;
  sort: "newest" | "priceAsc" | "priceDesc";
@@ -38,6 +65,7 @@ export function parseFilters(searchParams: URLSearchParams): PublicFilters {
  sizes: csv("sizes"),
  categories: csv("categories"),
  stores: csv("stores"),
+ designers: csv("designers"),
  priceMin: num("priceMin"),
  priceMax: num("priceMax"),
  sort,

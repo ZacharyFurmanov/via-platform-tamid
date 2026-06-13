@@ -1,14 +1,15 @@
 import { neon } from "@neondatabase/serverless";
-import { brands } from "@/app/lib/brandData";
+import { brands, WHOLE_WORD_ALIASES } from "@/app/lib/brandData";
+import { aliasMatches } from "@/app/lib/data-layer/brands";
 
 export function inferBrandFromTitle(title: string): string | null {
  const lower = title.toLowerCase();
  for (const brand of brands) {
  for (const kw of brand.keywords) {
- const matched = kw.length <= 3
- ? new RegExp(`(?<![a-z])${kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z])`, "i").test(lower)
- : lower.includes(kw);
- if (matched) return brand.label;
+ // Whole-word for substrings-of-common-words (etro→retro, boss→embossed) and
+ // short aliases; substring otherwise. Shared logic keeps this matcher in sync
+ // with resolveBrand / designerPatterns / detectBrand.
+ if (aliasMatches(lower, kw, WHOLE_WORD_ALIASES.has(kw))) return brand.label;
  }
  }
  return null;

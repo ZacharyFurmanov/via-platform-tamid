@@ -185,6 +185,7 @@ export type InventoryItem = {
  syncedAt?: string;
  createdAt?: string;
  size?: string | null;
+ imageColor?: string | null; // colour read off the image by vision (normalized)
 };
 
 // Parse images JSON from DB, falling back to single image
@@ -284,6 +285,7 @@ function transformDBProduct(product: DBProduct): InventoryItem {
  compareAtPrice: product.compare_at_price != null ? Number(product.compare_at_price) : null,
  image: product.image ?? "/placeholder.jpg",
  images: parseImages(product),
+ imageColor: product.image_color ?? null,
  store: product.store_name,
  storeSlug: product.store_slug,
  externalUrl: product.external_url ?? undefined,

@@ -35,6 +35,7 @@ export type DBProduct = {
  image: string | null;
  images: string | null;
  video_url: string | null;
+ image_color: string | null;
  external_url: string | null;
  description: string | null;
  variant_id: string | null;
@@ -89,6 +90,13 @@ export async function initDatabase() {
  await sql`
  ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT
  `;
+
+ // Colour read off the product IMAGE by vision (normalized to the filter palette),
+ // so colour filtering works even when the title has no colour word. image_color_at
+ // marks a product as processed (so the backfill skips it), even if no colour was
+ // determinable (image_color stays NULL).
+ await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_color TEXT`;
+ await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_color_at TIMESTAMPTZ`;
 
  // Add variant_id column for Shopify direct checkout URLs
  await sql`
@@ -357,6 +365,12 @@ export async function syncProducts(
  for (const product of products) {
  if (isBlocked(product.title)) continue;
  titles.push(product.title);
+ // VYA is a visual marketplace — never add a product with no image (it renders a
+ // broken card and is filtered out of every grid anyway). Video-only products
+ // carry the video's poster frame as their image (see shopifyClient), so they
+ // still have one and pass. The title stays in `titles` (above) so an existing
+ // row isn't wrongly logged as "sold"/deleted by the stale-product cleanup.
+ if (!product.image && !(product.images && product.images.length > 0)) continue;
  const isExisting = oldByTitle.has(product.title);
  if (isExisting) updatedCount++; else insertedCount++;
  const imagesJson = product.images ? JSON.stringify(product.images) : null;

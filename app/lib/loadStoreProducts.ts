@@ -298,6 +298,7 @@ function transformDBProduct(product: DBProduct): StoreProduct {
  externalUrl: product.external_url ?? undefined,
  image: product.image ?? undefined,
  images: parseImages(product),
+ imageColor: product.image_color ?? null,
  size: deriveDisplaySize(product),
  syncedAt: product.synced_at instanceof Date
  ? product.synced_at.toISOString()

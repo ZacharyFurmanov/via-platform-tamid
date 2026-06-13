@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { stores } from "@/app/lib/stores";
-import { brands } from "@/app/lib/brandData";
+import { brands, WHOLE_WORD_ALIASES } from "@/app/lib/brandData";
+import { aliasMatches } from "@/app/lib/data-layer/brands";
 import { categoryMap } from "@/app/lib/categoryMap";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
 import { formatPrice } from "@/app/lib/formatPrice";
@@ -251,6 +252,14 @@ const categoryAliases: Record<string, string> = {
   cardholder: "accessories",
 };
 
+// Reverse of categoryAliases: a category slug → every term that maps to it. Lets a
+// category search ("shirt") pull the WHOLE category ("tops": blouse, tee, tank, …),
+// not just titles literally containing "shirt".
+const CATEGORY_TERMS: Record<string, string[]> = {};
+for (const [term, slug] of Object.entries(categoryAliases)) {
+  (CATEGORY_TERMS[slug] ??= []).push(term);
+}
+
 // ── Synonym map: searching X also searches Y ──────────────────────────────────
 // One-directional entries are fine; both directions listed where bidirectional.
 const SYNONYMS: Record<string, string[]> = {
@@ -349,7 +358,9 @@ function detectBrand(q: string, words: string[]): (typeof brands)[0] | null {
     if (b.keywords.some(kw => q === kw)) return b;
   }
   for (const b of brands) {
-    if (b.keywords.some(kw => kw.length > 3 && q.includes(kw))) return b;
+    // Substring match for long aliases, but whole-word for substrings-of-common-
+    // words (etro→retro, boss→embossed) — consistent with resolveBrand et al.
+    if (b.keywords.some(kw => kw.length > 3 && aliasMatches(q, kw, WHOLE_WORD_ALIASES.has(kw)))) return b;
   }
   if (words.length > 1) {
     for (const b of brands) {
@@ -424,6 +435,16 @@ export async function GET(request: Request) {
       ? `%${detectedBrand.keywords[0]}%`
       : phrasePattern;
 
+    // ── Category expansion ──
+    // If the query IS a category term ("shirt", "boots"), expand it to the WHOLE
+    // category ("tops" → blouse, tee, tank, cami…) so we return all of it, not
+    // just titles literally containing "shirt". Matched as whole words via \y so
+    // "top" doesn't hit "laptop". Only fires for category-term queries.
+    const catSlug = categoryAliases[q] ?? (words.length === 1 ? categoryAliases[words[0]] : undefined);
+    const categoryTerms = catSlug ? CATEGORY_TERMS[catSlug] ?? [] : [];
+    const categoryRegexes = categoryTerms.map((t) => `\\y${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\y`);
+    const useCategoryExpansion = categoryRegexes.length > 0;
+
     // ── 3. Quick-links: designers, categories, stores ─────────────────────────
     const matchedDesigners = brands
       .filter(b => {
@@ -491,6 +512,7 @@ export async function GET(request: Request) {
                   plainto_tsquery('english', unaccent(${safeQ}))
                 ) * 1000
               )::int
+            + CASE WHEN ${useCategoryExpansion} AND unaccent(LOWER(title)) ~* ANY(${categoryRegexes}::text[]) THEN 1500 ELSE 0 END
             + CASE WHEN unaccent(LOWER(title)) LIKE ALL(${originalWordPatterns}) THEN 500 ELSE 0 END
             + CASE WHEN unaccent(LOWER(title)) LIKE ANY(${expandedWordPatterns}) THEN 300 ELSE 0 END
             + CASE
@@ -514,14 +536,21 @@ export async function GET(request: Request) {
           (shopify_product_id IS NULL OR collabs_link IS NOT NULL)
           AND (${DISABLED_STORE_SLUGS.length} = 0 OR store_slug != ALL(${DISABLED_STORE_SLUGS}))
           AND (
+            -- A phrase variant (exact / stem-swapped / hyphen / synonym phrase)
             unaccent(LOWER(title)) LIKE ANY(${phrasePatterns})
-            OR unaccent(LOWER(title)) LIKE ANY(${expandedWordPatterns})
+            -- ALL typed words present (any order). This replaces the old "ANY one
+            -- expanded word" rule, which let a single common word like "el" in
+            -- "el dante" match every title containing "el" (yellow, velvet, …).
+            OR unaccent(LOWER(title)) LIKE ALL(${originalWordPatterns})
+            -- Full-text (stemmed, ANDs the terms — so it's word-complete too)
             OR to_tsvector('english', unaccent(COALESCE(title, '')))
                @@ plainto_tsquery('english', unaccent(${safeQ}))
             OR (product_type IS NOT NULL
                 AND LOWER(product_type) LIKE ${brandPtPattern})
             OR (description IS NOT NULL
                 AND unaccent(LOWER(description)) LIKE ANY(${phrasePatterns}))
+            -- Category-term query → the whole category (whole-word matched)
+            OR (${useCategoryExpansion} AND unaccent(LOWER(title)) ~* ANY(${categoryRegexes}::text[]))
           )
       )
       SELECT * FROM scored WHERE relevance > 0
@@ -557,16 +586,24 @@ export async function GET(request: Request) {
     }
 
     // Fire-and-forget: log search analytics — committed searches only.
+    // brand_slug is the canonical brand the query resolves to (via detectBrand),
+    // so search DEMAND rolls up by brand instead of fragmenting across spellings
+    // ("ysl", "yves saint laurent", "saint laurent" → all "saint-laurent"). NULL
+    // when the query isn't a brand search.
     if (shouldLog) {
+      const searchBrandSlug = detectedBrand?.slug ?? null;
       sql`
         CREATE TABLE IF NOT EXISTS searches (
           id SERIAL PRIMARY KEY,
           query TEXT NOT NULL,
           results_count INT NOT NULL DEFAULT 0,
+          brand_slug TEXT,
           timestamp TIMESTAMPTZ DEFAULT NOW()
         )
       `.then(() =>
-        sql`INSERT INTO searches (query, results_count) VALUES (${q}, ${allProducts.length})`
+        sql`ALTER TABLE searches ADD COLUMN IF NOT EXISTS brand_slug TEXT`
+      ).then(() =>
+        sql`INSERT INTO searches (query, results_count, brand_slug) VALUES (${q}, ${allProducts.length}, ${searchBrandSlug})`
       ).catch(() => {});
     }
 

@@ -103,6 +103,7 @@ export default async function StorePage({ params }: StorePageProps) {
  externalUrl: product.externalUrl,
  image: product.image ?? "",
  images,
+ imageColor: product.imageColor,
  size: product.size ?? null,
  isEditorsPick: editorsPickIds.has(dbIdMap.get(product.id) ?? -1),
  engagementScore,

@@ -111,6 +111,7 @@ export default async function CollectionPage({ params }: Props) {
  externalUrl: product.externalUrl ?? undefined,
  image: product.image ?? "",
  images,
+ imageColor: product.imageColor ?? null,
  size: deriveSize(dbProduct),
  engagementScore,
  createdAt: dbId,

@@ -1139,7 +1139,7 @@ export async function sendStoreListingDigest(params: {
  email: string;
  storeName: string;
  flagged: number;
- total: number;
+ total?: number;
  counts: { noDescription: number; noSizing: number; noImage: number };
  products: { title: string; url: string; flags: string[] }[];
  dashboardUrl: string;
@@ -1165,7 +1165,7 @@ export async function sendStoreListingDigest(params: {
  <div style="max-width:560px;margin:0 auto;">
  <h1 style="font-size:23px;font-weight:500;margin:0 0 10px;">${params.storeName} — listings to tidy up</h1>
  <p style="font-size:15px;line-height:1.6;color:rgba(93,15,23,0.7);margin:0 0 18px;">
-  <strong>${params.flagged}</strong> of your ${params.total} listings on VYA are missing details that help them sell. Completing them gets more views and faster sales.
+  <strong>${params.flagged}</strong> ${params.flagged === 1 ? "listing" : "listings"} on VYA ${params.flagged === 1 ? "is" : "are"} missing details that help ${params.flagged === 1 ? "it" : "them"} sell. Completing ${params.flagged === 1 ? "it" : "them"} gets more views and faster sales.
  </p>
  <p style="font-size:13px;color:rgba(93,15,23,0.55);margin:0 0 20px;">${countLine}</p>
  <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">${items}</table>

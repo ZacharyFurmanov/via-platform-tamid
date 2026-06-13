@@ -85,6 +85,7 @@ export default async function NewArrivalsPage() {
  externalUrl: item.external_url ?? undefined,
  image: item.image ?? "",
  images,
+ imageColor: item.image_color ?? null,
  size: deriveSize(item),
  engagementScore,
  createdAt: item.created_at instanceof Date

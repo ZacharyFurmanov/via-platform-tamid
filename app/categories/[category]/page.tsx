@@ -121,6 +121,7 @@ export default async function CategoryPage({
  externalUrl: item.externalUrl,
  image: item.image,
  images: item.images,
+ imageColor: item.imageColor,
  size: item.size,
  accessoryType: isAccessories ? inferAccessoryType(item.title) : null,
  isEditorsPick: editorsPickIds.has(dbIdMap.get(item.id) ?? -1),

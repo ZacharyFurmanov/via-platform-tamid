@@ -28,6 +28,7 @@ export type PickWithProduct = {
  currency?: string | null;
  image: string | null;
  images: string | null;
+ imageColor?: string | null;
  size: string | null;
  externalUrl: string | null;
  };
@@ -79,6 +80,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
  p.currency,
  p.image,
  p.images,
+ p.image_color,
  p.size,
  p.external_url,
  p.created_at,
@@ -88,7 +90,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
  LEFT JOIN clicks c ON c.product_id = (p.store_slug || '-' || p.id::text)
  WHERE ep.collection_slug = ${collectionSlug}
  AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
- GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url, p.created_at
+ GROUP BY ep.id, ep.position, p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.image_color, p.size, p.external_url, p.created_at
  ORDER BY ep.added_at DESC, ep.id DESC
  LIMIT 500
  `;
@@ -105,6 +107,7 @@ export async function getAllEditorsPicks(collectionSlug: string = "editors-picks
  currency: r.currency as string | null,
  image: r.image as string | null,
  images: r.images as string | null,
+ imageColor: (r.image_color as string | null) ?? null,
  size: r.size as string | null,
  externalUrl: r.external_url as string | null,
  },
