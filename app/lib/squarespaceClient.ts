@@ -1,3 +1,5 @@
+import { extractSizeFromTitle, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
+
 export type SquarespaceProduct = {
  title: string;
  price: number;
@@ -215,10 +217,18 @@ export async function parseSquarespaceJSON(
  // Product description (HTML body from Squarespace)
  const description = item.body || item.excerpt || null;
 
- // Extract size: tags first, then title, then description body
+ // Extract size. Priority mirrors the Shopify sync: a SPECIFIC size (numeric /
+ // EU / UK) always beats a GENERIC letter. A "size-m" tag must NOT override a real
+ // size in the title — e.g. shoes titled "...Mules (37.5)" were getting a bogus
+ // "M" from a tag. Use the shared title extractor (it reads bare parentheticals
+ // like "(37.5)", which extractSizeFromText — needing the word "size" — misses).
+ const sizeFromTags = extractSizeFromTags(item.tags || []);
+ const tagsGeneric = !!sizeFromTags && GENERIC_CLOTHING_SIZE.test(sizeFromTags);
+ const sizeFromTitle = extractSizeFromTitle(title) ?? extractSizeFromText(title);
  const size =
- extractSizeFromTags(item.tags || [])
- ?? extractSizeFromText(title)
+ (sizeFromTags && !tagsGeneric ? sizeFromTags : null) // specific tag
+ ?? sizeFromTitle // then the title (incl. EU shoe sizes)
+ ?? (tagsGeneric ? sizeFromTags : null) // generic tag only if nothing better
  ?? extractSizeFromText(description);
 
  products.push({ title, price, compareAtPrice, image, images, externalUrl, store: storeName, description, size });

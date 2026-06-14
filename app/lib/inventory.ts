@@ -9,6 +9,7 @@ const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 const SHOE_RE = /shoe|boot|heel|sneaker|flat|sandal|loafer|pump|mule|slipper|clog/i;
 
 const EU_SHOE_TO_US: Record<string, string> = {
+ "34": "4", "34.5": "4.5",
  "35": "5", "35.5": "5",
  "36": "5.5", "36.5": "6",
  "37": "6.5", "37.5": "7",
@@ -70,7 +71,7 @@ export function convertSizeToUS(raw: string, categorySlug: string): string | nul
  // Bare numeric — infer from category
  if (/^\d+(?:\.\d+)?$/.test(normalized)) {
  const num = parseFloat(normalized);
- if (isShoe && num >= 35 && num <= 44) {
+ if (isShoe && num >= 34 && num <= 44) {
   const us = EU_SHOE_TO_US[normalized];
   return us ? `US ${us}` : null;
  }
@@ -215,6 +216,17 @@ function parseImages(product: DBProduct): string[] {
  * (NewArrivalsSection, new-arrivals page, account favorites, etc.)
  */
 export function deriveSize(product: DBProduct): string | null {
+ const result = deriveSizeInner(product);
+ // Shoes NEVER use letter sizes (S/M/L) — footwear is numeric, and a letter here
+ // is almost always a stray clothing tag/variant (e.g. a "size-m" Squarespace tag
+ // on heels). Show nothing rather than a wrong size that loses the sale.
+ if (result && GENERIC_CLOTHING_SIZE.test(result.trim()) && SHOE_RE.test(inferCategoryFromTitle(product.title))) {
+ return null;
+ }
+ return result;
+}
+
+function deriveSizeInner(product: DBProduct): string | null {
  const dbSize = product.size && isValidSizeValue(product.size) ? product.size : null;
  const isGenericDb = dbSize != null && GENERIC_CLOTHING_SIZE.test(dbSize);
 

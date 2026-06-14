@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { deriveDisplaySize, expandSizeKeys } from "./inventory";
+import { GENERIC_CLOTHING_SIZE } from "./shopifyClient";
 import { ensureSizeKeysColumn, type DBProduct } from "./db";
 
 // ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ function db() {
 
 export async function backfillSizeKeys(
  opts: { onlyMissing?: boolean } = {},
-): Promise<{ scanned: number; updated: number; groups: number }> {
+): Promise<{ scanned: number; updated: number; groups: number; sizesFixed: number }> {
  const sql = db();
  await ensureSizeKeysColumn();
 
@@ -40,6 +41,12 @@ export async function backfillSizeKeys(
  // Group products by identical key-set so the whole table updates in a handful
  // of statements (most items share a size) rather than one query per row.
  const groups = new Map<string, { keys: string[]; ids: number[] }>();
+ // Separately, fix the stored `size` column when it's a GENERIC letter (or null)
+ // but the title/description yields a real size — e.g. shoes mislabeled "M" by a
+ // stray Squarespace tag. We only touch generic/null sizes, never a real numeric
+ // one, so this can't clobber correct data. Keyed by the value to set (or null).
+ const sizeFixes = new Map<string | null, number[]>();
+
  for (const r of rows) {
  const derived = deriveDisplaySize({ title: r.title, description: r.description, size: r.size } as DBProduct);
  const keys = derived ? expandSizeKeys(derived) : [];
@@ -47,6 +54,15 @@ export async function backfillSizeKeys(
  const g = groups.get(sig);
  if (g) g.ids.push(r.id);
  else groups.set(sig, { keys, ids: [r.id] });
+
+ const current = r.size?.trim() ?? null;
+ const currentIsGeneric = current == null || GENERIC_CLOTHING_SIZE.test(current);
+ const next = derived ?? null;
+ if (currentIsGeneric && next !== current) {
+ const arr = sizeFixes.get(next);
+ if (arr) arr.push(r.id);
+ else sizeFixes.set(next, [r.id]);
+ }
  }
 
  let updated = 0;
@@ -55,5 +71,11 @@ export async function backfillSizeKeys(
  updated += g.ids.length;
  }
 
- return { scanned: rows.length, updated, groups: groups.size };
+ let sizesFixed = 0;
+ for (const [val, ids] of sizeFixes) {
+ await sql`UPDATE products SET size = ${val} WHERE id = ANY(${ids})`;
+ sizesFixed += ids.length;
+ }
+
+ return { scanned: rows.length, updated, groups: groups.size, sizesFixed };
 }
