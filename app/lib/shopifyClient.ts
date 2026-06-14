@@ -411,9 +411,12 @@ export function extractSizeFromDescription(description: string | null): string |
  return WORD_SIZE_MAP[key.replace(/-/g, "")] ?? WORD_SIZE_MAP[key] ?? wordMatch[1];
  }
 
- // 3. Abbreviated size after strict label or "size:" (with colon)
+ // 3. Abbreviated size after strict label or "size:" (with colon). The trailing
+ // (?![a-z]) stops a letter size matching the FIRST letter of a word — e.g.
+ // "Size: Marked 36" must not return "M" (the M of "Marked"); it falls through
+ // so the real "36" is found from the title/elsewhere.
  const re = new RegExp(
- `(?:(?:${STRICT_KW})\\s*:?|size\\s*:)\\s*(${SIZE_VALUE_PATTERN})`,
+ `(?:(?:${STRICT_KW})\\s*:?|size\\s*:)\\s*(${SIZE_VALUE_PATTERN})(?![a-z])`,
  "i"
  );
  const match = re.exec(text);
@@ -434,8 +437,9 @@ export function extractSizeFromDescription(description: string | null): string |
  const euStandaloneMatch = euStandaloneRe.exec(text);
  if (euStandaloneMatch) return euStandaloneMatch[1].trim();
 
- // 5. Fallback: "fits XS", "best fits M"
- const fitsRe = new RegExp(`(?:best\\s+)?fits?\\s+(${SIZE_VALUE_PATTERN})`, "i");
+ // 5. Fallback: "fits XS", "best fits M" — (?![a-z]) so "fits Marked"/"fits like"
+ // can't match the leading letter of the next word.
+ const fitsRe = new RegExp(`(?:best\\s+)?fits?\\s+(${SIZE_VALUE_PATTERN})(?![a-z])`, "i");
  const fitsMatch = fitsRe.exec(text);
  if (fitsMatch) return fitsMatch[1].trim();
 

@@ -218,9 +218,12 @@ function parseImages(product: DBProduct): string[] {
 export function deriveSize(product: DBProduct): string | null {
  const result = deriveSizeInner(product);
  // Shoes NEVER use letter sizes (S/M/L) — footwear is numeric, and a letter here
- // is almost always a stray clothing tag/variant (e.g. a "size-m" Squarespace tag
- // on heels). Show nothing rather than a wrong size that loses the sale.
+ // is almost always a stray clothing tag/variant or a false-positive description
+ // match (e.g. the "M" in "Size: Marked 36"). Prefer a real numeric size from the
+ // title; only show nothing if there genuinely isn't one.
  if (result && GENERIC_CLOTHING_SIZE.test(result.trim()) && SHOE_RE.test(inferCategoryFromTitle(product.title))) {
+ const fromTitle = extractSizeFromTitle(product.title);
+ if (fromTitle && !GENERIC_CLOTHING_SIZE.test(fromTitle.trim())) return fromTitle;
  return null;
  }
  return result;
