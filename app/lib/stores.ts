@@ -44,7 +44,7 @@ export const stores = [
  shippingPolicy:
  "Ships from Shropshire, England. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
  returnPolicy:
- "All sales are final. As a vintage and pre-loved retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
+ "Items can be returned for a full refund provided they are sent back within 7 days in the same condition they were received, with tags attached. Please review all item details and photos carefully before purchasing.",
  },
  {
  slug: "bag-crush",
@@ -207,7 +207,7 @@ export const stores = [
  shippingPolicy:
  "Ships from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
  returnPolicy:
- "All sales are final. As a vintage retailer, items are one-of-a-kind. Please review all item details and photos carefully before purchasing.",
+ "Returns accepted on unworn items with tags in original packaging — refunds are issued to your original payment method within 10 business days of approval (EU customers have a 14-day right to cancel). Sale items and gift cards are non-returnable.",
  },
  {
  slug: "club-fleur",
@@ -230,7 +230,7 @@ export const stores = [
  shippingPolicy:
  "Ships from Washington, DC. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. As a curated designer vintage boutique specializing in rare shoes and accessories, all pieces are one-of-a-kind. Please review all item details and photos carefully before purchasing. Use the form below for any pre-purchase questions.",
+ "Returns accepted for store credit on clothing and shoe items within 7 days of delivery, provided the item is returned in its original condition. Some pieces are marked final sale — this is noted in the item's listing. Use the form below or email theclubfleur@gmail.com with any pre-purchase questions.",
  },
  {
  slug: "dayton-jane",
@@ -252,7 +252,7 @@ export const stores = [
  shippingPolicy:
  "Ships from Connecticut. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. If your item arrives significantly different from its description, contact jacquelyne.rankin@gmail.com within 48 hours of delivery with photos.",
+ "Returns accepted within 14 days of receipt for a full refund to your original payment method, provided items are unworn with tags attached. Items marked FINAL SALE cannot be returned. If your item arrives significantly different from its description, contact jacquelyne.rankin@gmail.com within 48 hours of delivery with photos.",
  },
  {
  slug: "dear-muse",
@@ -459,7 +459,7 @@ export const stores = [
  shippingPolicy:
   "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
  returnPolicy:
-  "All sales are final. Please review all item details and photos carefully before purchasing. Use the form below with any pre-purchase questions.",
+  "Although sales are generally considered final, a return request can be made within 7 days of delivery if you are not completely satisfied or feel the item is not as pictured. Items must be returned in original condition with tags, and requests are reviewed case-by-case. Use the form below with any pre-purchase questions.",
  },
  {
  slug: "lei-vintage",
@@ -804,7 +804,7 @@ export const stores = [
  shippingPolicy:
  "Ships from New York, NY. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. If there is an issue with your order, contact the team and they will do their best to help.",
+ "Exchanges accepted within 14 days of receipt — no cash refunds. Items must be unworn and unused with tags and original packaging; once inspected, store credit for the value is issued. If there is an issue with your order, contact the team and they will do their best to help.",
  },
  {
  slug: "sarah-does",
@@ -967,7 +967,7 @@ export const stores = [
  shippingPolicy:
  "Ships from Tampa, FL. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. Please review all item details and photos carefully before purchasing.",
+ "All sales are considered final, but a return may be requested within 3 days of delivery if an item is proven inauthentic, the wrong item was shipped, or it was significantly misrepresented in the listing. Approved returns are refunded to the original payment method (shipping is non-refundable unless the error was ours).",
  },
  {
  slug: "source-twenty-four",
@@ -1036,7 +1036,7 @@ export const stores = [
  shippingPolicy:
  "Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. Please review all item details and photos carefully before purchasing.",
+ "Returns accepted up to 14 days after delivery for store credit (not a cash refund) — you receive the full order amount minus shipping. Items must be returned in the same condition they were sent, and all sale items are final. Email hello@tesselizabeth.com to arrange a return.",
  },
  {
  slug: "the-objects-of-affection",
@@ -1153,7 +1153,7 @@ export const stores = [
  shippingPolicy:
  "Ships from Menlo Park, CA. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. Please review all item details and photos carefully before purchasing.",
+ "All sales are final, except that a return may be requested within 7 days of receipt if an item has major undisclosed defects or damage, or is proven inauthentic by the brand or an accredited authenticator. The security tag must remain intact and the item in original condition.",
  },
  {
  slug: "vintari-vault",
@@ -1199,7 +1199,7 @@ export const stores = [
  shippingPolicy:
  "Ships from New York, NY. Shipping rates are calculated at checkout.",
  returnPolicy:
- "All sales are final. Please review all item details and photos carefully before purchasing.",
+ "Bottoms may be returned within 10 days for a refund to your original payment method (issued within 10 business days of approval); all other items are final sale. There are no direct exchanges, and sale items and gift cards are non-returnable.",
  },
 ];
 
