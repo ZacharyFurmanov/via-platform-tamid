@@ -295,7 +295,9 @@ export async function syncProducts(
  const sql = neon(getDatabaseUrl());
 
  // Titles that should never appear on VYA — blocked globally across all stores.
- // Checked as case-insensitive substrings.
+ // Checked as case-insensitive substrings. Includes non-catalog "products" that
+ // sellers create as custom invoices (bulk orders, deposits, balance payments) —
+ // e.g. Nello's "Custom Bulk Order (6 items)" with a photo of a receipt.
  const BLOCKED_TITLE_PATTERNS = [
  "gift card",
  "authentication",
@@ -303,6 +305,14 @@ export async function syncProducts(
  "item authentication",
  "authentication service",
  "authentication fee",
+ "bulk order",
+ "custom bulk",
+ "deposit",
+ "balance due",
+ "remaining balance",
+ "payment plan",
+ "down payment",
+ "invoice",
  ];
 
  const isBlocked = (title: string) => {
@@ -310,16 +320,11 @@ export async function syncProducts(
  return BLOCKED_TITLE_PATTERNS.some((p) => lower.includes(p));
  };
 
- // Remove any previously-synced blocked products for this store
- await sql`
- DELETE FROM products
- WHERE store_slug = ${storeSlug}
- AND (
- title ILIKE '%gift card%'
- OR title ILIKE '%authentication%'
- OR title ILIKE '%authentification%'
- )
- `;
+ // Remove any previously-synced blocked products for this store. Driven by the
+ // same pattern list above so the two never drift apart.
+ for (const pat of BLOCKED_TITLE_PATTERNS) {
+ await sql`DELETE FROM products WHERE store_slug = ${storeSlug} AND title ILIKE ${"%" + pat + "%"}`;
+ }
 
  // Remove store-specific excluded products that may already be in the DB
  const excludeKws = (options?.excludeKeywords ?? []).map((k) => k.toLowerCase());
