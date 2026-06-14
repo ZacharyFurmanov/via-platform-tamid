@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import NextImage from "next/image";
-import { resizeImage } from "@/app/lib/imageUtils";
+import { resizeImage, isSourceResizable } from "@/app/lib/imageUtils";
 
 type ImageCarouselProps = {
  images: string[];
@@ -204,13 +204,18 @@ export default function ImageCarousel({
  }, [lightboxZoomed]);
 
  // Pre-render current + adjacent images
- const renderImages = (sizes: string, objectPosition = "object-top") =>
+ const renderImages = (sizes: string, targetWidth: number, objectPosition = "object-top") =>
  safeImages.map((src, idx) => {
  const isAdjacentOrCurrent =
  idx === current ||
  idx === (current + 1) % safeImages.length ||
  idx === (current - 1 + safeImages.length) % safeImages.length;
  if (!isAdjacentOrCurrent) return null;
+ const failed = failedImages.has(idx);
+ // Ask the source CDN for a card-sized image and, when it can resize, serve it
+ // directly (unoptimized) so it loads instantly instead of waiting on the Vercel
+ // image optimizer to cold-fetch and re-encode the full-size original.
+ const displaySrc = failed ? "/placeholder.jpg" : resizeImage(src, targetWidth);
  return (
  <div
  key={idx}
@@ -219,10 +224,11 @@ export default function ImageCarousel({
  }`}
  >
  <NextImage
- src={failedImages.has(idx) ? "/placeholder.jpg" : src}
+ src={displaySrc}
  alt={alt}
  fill
  sizes={sizes}
+ unoptimized={!failed && isSourceResizable(src)}
  className={`object-cover ${objectPosition}`}
  priority={priority && idx === 0}
  onError={() =>
@@ -251,7 +257,7 @@ export default function ImageCarousel({
  onMouseMove={hasMultiple ? onMouseMove : undefined}
  onMouseUp={hasMultiple ? onMouseUp : undefined}
  >
- {renderImages("(max-width: 768px) 50vw, 25vw", "object-center")}
+ {renderImages("(max-width: 768px) 50vw, 25vw", 600, "object-center")}
 
  {isEditorsPick && (
  <div className="hidden sm:block absolute top-2 left-2 z-40 bg-[#5D0F17] px-2 py-0.5">
@@ -300,7 +306,7 @@ export default function ImageCarousel({
  openLightbox(e);
  }}
  >
- {renderImages("(max-width: 768px) 100vw, 600px", "object-center")}
+ {renderImages("(max-width: 768px) 100vw, 600px", 1200, "object-center")}
 
  {safeImages[0] === "/placeholder.jpg" && (
  <div className="absolute inset-0 bg-[#D8CABD]/50" />
