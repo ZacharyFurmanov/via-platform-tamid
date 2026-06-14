@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { saveSetting, getSetting } from "@/app/lib/settings-db";
 import { stores, convertCurrencyToUSD } from "@/app/lib/stores";
 import { markCartItemsPurchased } from "@/app/lib/cart-db";
+import { findCachedOrder } from "@/app/lib/order-cache-db";
 
 export const maxDuration = 60;
 
@@ -317,6 +318,20 @@ async function saveCollabsConversions(
  // caller will hold back the snapshot so the next cron run retries.
  if (orderTotal <= 0) return false;
 
+ // Enrich with the REAL line items from the Shopify order-webhook cache. Collabs
+ // frequently returns no itemized data, so without this the conversion is labeled
+ // with just the product the buyer clicked — which may not be what they bought.
+ // Collabs stays the source of truth for the total/commission; we only swap in
+ // the true cart contents (by order name, else store+total+time). No-op if the
+ // store has no webhook or we have no cache hit.
+ const cached = await findCachedOrder({
+ storeSlug,
+ orderName: shopifyOrderName ?? null,
+ totalUsd: orderTotal,
+ aroundIso: ts,
+ }).catch(() => null);
+ if (cached && cached.items.length > 0) lineItems = cached.items;
+
  // Stable order ID: Shopify order name is most reliable; fall back to commission node ID
  const orderId = shopifyOrderName
  ? `collabs-${storeSlug}-${shopifyOrderName.replace(/^#/, "")}`
@@ -341,6 +356,7 @@ async function saveCollabsConversions(
  commissionRate: commissionRules.map(r => r.value),
  ...(shopifyOrderName ? { shopifyOrderName } : {}),
  dataSource: orderLineItems ? "collabs-order-api" : "commission-nodes",
+ itemsSource: cached ? "webhook-cache" : (orderLineItems ? "collabs-order-api" : "commission-nodes"),
  })},
  ${click ? (click.user_id as string) : null}
  )
@@ -390,14 +406,16 @@ async function saveCollabsConversions(
  const orderId = `collabs-${partnershipId}-order-${prevOrderCount + i}`;
  const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
 
- await sql`
- INSERT INTO conversions (
- conversion_id, timestamp, order_id, order_total, currency,
- items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
- )
- VALUES (
- ${conversionId}, ${now}, ${orderId}, ${perOrderTotal}, 'USD',
- ${(() => {
+ // Prefer the REAL line items from the order-webhook cache (matched by
+ // store + total + time). Else use the click's cart, else the single clicked
+ // product. Collabs total/commission is unchanged — this only fixes the items.
+ const cached = await findCachedOrder({
+ storeSlug,
+ totalUsd: perOrderTotal,
+ aroundIso: now,
+ }).catch(() => null);
+ const itemsJson = (() => {
+ if (cached && cached.items.length > 0) return JSON.stringify(cached.items);
  if (click?.cart_items && Array.isArray(click.cart_items) && click.cart_items.length > 1) {
  return JSON.stringify(
  (click.cart_items as { id: string; name: string; price: number }[]).map((ci) => ({
@@ -408,10 +426,19 @@ async function saveCollabsConversions(
  );
  }
  return JSON.stringify([{ productName: click ? (click.product_name as string) : `Order via Shopify Collabs`, quantity: 1, price: perOrderTotal }]);
- })()},
+ })();
+
+ await sql`
+ INSERT INTO conversions (
+ conversion_id, timestamp, order_id, order_total, currency,
+ items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
+ )
+ VALUES (
+ ${conversionId}, ${now}, ${orderId}, ${perOrderTotal}, 'USD',
+ ${itemsJson},
  ${click ? (click.click_id as string) : null},
  ${storeSlug}, ${brandName}, true,
- ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission })},
+ ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission, itemsSource: cached ? "webhook-cache" : (click?.cart_items ? "click-cart" : "click-product") })},
  ${click ? (click.user_id as string) : null}
  )
  ON CONFLICT (order_id, store_slug) DO NOTHING

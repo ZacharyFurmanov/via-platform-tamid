@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cacheShopifyOrder } from "@/app/lib/order-cache-db";
 import { saveConversion } from "@/app/lib/analytics-db";
 import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { getSetting } from "@/app/lib/settings-db";
@@ -118,47 +119,56 @@ export async function POST(request: NextRequest) {
  ((order.customer as Record<string, unknown> | null)?.email as string | null) ||
  null;
 
- // Extract via_click_id embedded by the VYA cart permalink. This is the ONLY
- // signal that the order actually came through VYA — we set this attribute in
- // /api/track when generating cart URLs for webhook-enabled stores. Without
- // it, the order is a direct sale and not ours to claim.
  // Shopify stores cart attributes in order.note_attributes: [{name, value}, ...]
  const noteAttributes = (order.note_attributes as Array<{ name: string; value: string }>) || [];
- const viaClickIdAttr = noteAttributes.find((a) => a.name === "via_click_id");
- const cartViaClickId = viaClickIdAttr?.value ?? null;
+ const cartViaClickId = noteAttributes.find((a) => a.name === "via_click_id")?.value ?? null;
 
+ const orderName = (order.name as string) || `#${orderId}`;
+ const orderedAt = (order.created_at as string) || new Date().toISOString();
+
+ // ALWAYS cache the order's real line items, for every store. The Collabs sync
+ // reads this cache to replace its single guessed product with the true cart.
+ try {
+ await cacheShopifyOrder({
+ storeSlug, orderName, orderId, email: buyerEmail,
+ totalUsd: orderTotal, currency: "USD", items, viaClickId: cartViaClickId, orderedAt,
+ });
+ console.log(`[shopify-webhook] Cached: store=${storeSlug}, order=${orderName} (${items.length} item(s), USD ${orderTotal})`);
+ } catch (err) {
+ console.error(`[shopify-webhook] Failed to cache order ${orderName} (${storeSlug}):`, err);
+ }
+
+ // Conversion RECORDING is owned by Collabs for shopify-collabs stores (their
+ // commission feed is the source of truth — letting the webhook also record
+ // double-counts). The webhook only records for NON-Collabs stores (e.g.
+ // custom-webhook stores like Carroll Street), where it's the only revenue path.
+ const storeObj = stores.find((s) => s.slug === storeSlug);
+ const isCollabsStore = storeObj?.commissionType === "shopify-collabs";
+ if (isCollabsStore) {
+ return NextResponse.json({ received: true, cached: true, recorded: false, reason: "collabs-owns-recording" });
+ }
+
+ // ── Non-Collabs store: webhook is the recorder. Require via_click_id (set by
+ // /api/track) as proof the order came through VYA, then record the conversion.
  if (!cartViaClickId) {
- // Direct sale (not via VYA) — acknowledge but do not record.
- console.log(`[shopify-webhook] Skipped: store=${storeSlug}, order=${orderId} (no via_click_id — direct sale)`);
- return NextResponse.json({ received: true, recorded: false });
+ console.log(`[shopify-webhook] Cached only: store=${storeSlug}, order=${orderName} (no via_click_id — direct sale, non-collabs store)`);
+ return NextResponse.json({ received: true, cached: true, recorded: false });
  }
 
  const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL || "");
-
  type ClickRow = { click_id: string; timestamp: unknown; product_name: string; user_id: string | null };
  let matchedClick: ClickRow | null = null;
-
  try {
- const rows = await sql`
- SELECT click_id, timestamp, product_name, user_id
- FROM clicks
- WHERE click_id = ${cartViaClickId}
- LIMIT 1
- `;
+ const rows = await sql`SELECT click_id, timestamp, product_name, user_id FROM clicks WHERE click_id = ${cartViaClickId} LIMIT 1`;
  if (rows.length > 0) matchedClick = rows[0] as ClickRow;
  } catch (err) {
  console.error(`[shopify-webhook] Failed to look up click by via_click_id:`, err);
  }
-
  if (!matchedClick) {
- // via_click_id present but doesn't match any real click — likely spoofed
- // or a stale link. Log and skip rather than save a phantom conversion.
- console.warn(`[shopify-webhook] Skipped: store=${storeSlug}, order=${orderId} — via_click_id ${cartViaClickId} not found in clicks table`);
- return NextResponse.json({ received: true, recorded: false });
+ console.warn(`[shopify-webhook] Cached only: store=${storeSlug}, order=${orderName} — via_click_id ${cartViaClickId} not found in clicks`);
+ return NextResponse.json({ received: true, cached: true, recorded: false });
  }
 
- // Email-link the user account if we can, but only as enrichment — the click
- // is the source of truth for "this was a VYA conversion".
  let matchedUserId: string | null = matchedClick.user_id;
  if (!matchedUserId && buyerEmail) {
  try {
@@ -169,21 +179,14 @@ export async function POST(request: NextRequest) {
  }
  }
 
- const conversionId = `shopify-${storeSlug}-${orderId}`;
-
  try {
  const { duplicate } = await saveConversion({
- conversionId,
+ conversionId: `shopify-${storeSlug}-${orderId}`,
  timestamp: new Date().toISOString(),
- orderId,
- orderTotal,
- currency: "USD",
- items,
+ orderId, orderTotal, currency: "USD", items,
  viaClickId: String(matchedClick.click_id),
  userId: matchedUserId ?? undefined,
- storeSlug,
- storeName,
- matched: true,
+ storeSlug, storeName, matched: true,
  matchedClickData: {
  clickId: String(matchedClick.click_id),
  clickTimestamp: (matchedClick.timestamp as Date)?.toISOString?.() || String(matchedClick.timestamp),
@@ -191,15 +194,10 @@ export async function POST(request: NextRequest) {
  source: "cart-attribute",
  },
  });
-
- if (duplicate) {
- console.log(`[shopify-webhook] Duplicate: ${orderId} (${storeName})`);
- } else {
- console.log(`[shopify-webhook] Saved: store=${storeSlug}, order=${orderId}, total=USD ${orderTotal}, via_click_id=${cartViaClickId}`);
- }
+ console.log(`[shopify-webhook] ${duplicate ? "Duplicate" : "Saved"}: store=${storeSlug}, order=${orderName}, total=USD ${orderTotal}`);
  } catch (err) {
- console.error(`[shopify-webhook] Failed to save conversion for order ${orderId}:`, err);
+ console.error(`[shopify-webhook] Failed to save conversion for order ${orderName}:`, err);
  }
 
- return NextResponse.json({ received: true, recorded: true });
+ return NextResponse.json({ received: true, cached: true, recorded: true });
 }
