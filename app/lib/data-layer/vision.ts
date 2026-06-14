@@ -65,12 +65,22 @@ export function isVisionConfigured(): boolean {
  return !!process.env.ANTHROPIC_API_KEY;
 }
 
-const COLOR_PROMPT = `What is the single dominant colour of the MAIN garment/bag/shoe in this product photo? Ignore the background and any model. Reply with just one common colour word (e.g. black, navy, burgundy, cream, charcoal). If you genuinely can't tell, reply exactly: unknown.`;
+// Builds the colour prompt. When we know WHAT the listing is selling (from its
+// title), we tell the model so it colours the right garment — a model often wears
+// other clothing (e.g. a black cardigan over a tan skirt) that would otherwise
+// dominate a whole-image colour read and mislabel the item.
+function colorPrompt(itemHint?: string | null): string {
+ const focus = itemHint && itemHint.trim()
+ ? `This listing is selling: "${itemHint.trim()}". Identify the dominant colour of THAT specific item. A model may be wearing other garments alongside it — focus ONLY on the item being sold and ignore the model's other clothing, the background, and any props.`
+ : `Identify the single dominant colour of the MAIN garment/bag/shoe in this product photo, ignoring the background and any model.`;
+ return `${focus} Reply with just one common colour word (e.g. black, navy, burgundy, cream, charcoal). If you genuinely can't tell, reply exactly: unknown.`;
+}
 
 // Lean colour-only read for the product colour backfill. Takes a public image URL
-// (no fetch/encode), tiny output → cheapest possible call. Returns the raw colour
-// text (caller normalizes via normalizeColor); null on no answer / "unknown".
-export async function identifyColor(imageUrl: string): Promise<string | null> {
+// (no fetch/encode), tiny output → cheapest possible call. `itemHint` (the listing
+// title) tells the model which item to colour. Returns the raw colour text (caller
+// normalizes via normalizeColor); null on no answer / "unknown".
+export async function identifyColor(imageUrl: string, itemHint?: string | null): Promise<string | null> {
  const apiKey = process.env.ANTHROPIC_API_KEY;
  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
  if (!imageUrl) return null;
@@ -90,7 +100,7 @@ export async function identifyColor(imageUrl: string): Promise<string | null> {
   role: "user",
   content: [
    { type: "image", source: { type: "url", url: imageUrl } },
-   { type: "text", text: COLOR_PROMPT },
+   { type: "text", text: colorPrompt(itemHint) },
   ],
   },
  ],

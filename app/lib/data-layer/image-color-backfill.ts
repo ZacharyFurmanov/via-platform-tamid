@@ -18,6 +18,35 @@ function db() {
 
 export type BackfillResult = { processed: number; colored: number; failed: number; remaining: number };
 
+// Colour words that, when present in a title, make the TITLE authoritative for
+// colour (see colorOf in FilteredProductGrid). Kept in sync with COLOR_KEYWORDS.
+const TITLE_COLOR_WORDS = [
+ "black", "white", "cream", "ivory", "beige", "off-white", "grey", "gray", "silver",
+ "charcoal", "brown", "tan", "camel", "chocolate", "cognac", "navy", "blue", "cobalt",
+ "teal", "turquoise", "red", "burgundy", "wine", "crimson", "pink", "blush", "rose",
+ "fuchsia", "green", "olive", "sage", "forest", "emerald", "mint", "yellow", "mustard",
+ "gold", "orange", "coral", "rust", "purple", "lilac", "lavender", "violet", "nude", "multicolor",
+];
+
+// One-time: clear the stored vision colour for products whose TITLE has no colour
+// word, so the next backfill re-reads them with the hint-aware prompt (the old
+// prompt coloured the whole image and could pick a model's other garment). Items
+// WITH a colour word in the title are left alone — colorOf ignores their vision
+// value anyway. Returns how many were queued for re-colouring.
+export async function resetTitlelessImageColors(): Promise<{ reset: number }> {
+ const sql = db();
+ const colorRegex = `\\y(${TITLE_COLOR_WORDS.join("|")})\\y`;
+ const [{ reset }] = (await sql`
+ WITH cleared AS (
+ UPDATE products SET image_color = NULL, image_color_at = NULL
+ WHERE image_color_at IS NOT NULL AND (title IS NULL OR title !~* ${colorRegex})
+ RETURNING id
+ )
+ SELECT COUNT(*)::int AS reset FROM cleared
+ `) as Array<{ reset: number }>;
+ return { reset };
+}
+
 export async function backfillImageColors(limit: number): Promise<BackfillResult> {
  const sql = db();
  // Safe on first run — columns may not exist yet.
@@ -25,23 +54,26 @@ export async function backfillImageColors(limit: number): Promise<BackfillResult
  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_color_at TIMESTAMPTZ`;
 
  const rows = (await sql`
- SELECT id, image FROM products
+ SELECT id, image, title FROM products
  WHERE image_color_at IS NULL
   AND image IS NOT NULL AND image <> '' AND image NOT ILIKE '%placeholder%'
  ORDER BY id DESC
  LIMIT ${limit}
- `) as Array<{ id: number; image: string }>;
+ `) as Array<{ id: number; image: string; title: string | null }>;
 
  let processed = 0;
  let colored = 0;
  let failed = 0;
- // Small concurrent chunks — well within Anthropic rate limits, much faster than serial.
- const CONCURRENCY = 5;
+ // Small concurrent chunks, paced to stay under Tier-1 Anthropic rate limits
+ // (a full backfill in tight bursts trips the per-minute cap). The title is passed
+ // as a hint so vision colours the item being sold, not a model's other garments.
+ const CONCURRENCY = 2;
+ const PACE_MS = 1200; // ~100 calls/min ceiling across chunks
  for (let i = 0; i < rows.length; i += CONCURRENCY) {
  const chunk = rows.slice(i, i + CONCURRENCY);
  const results = await Promise.allSettled(
  chunk.map(async (r) => {
-  const raw = await identifyColor(r.image);
+  const raw = await identifyColor(r.image, r.title);
   const color = normalizeColor(raw);
   await sql`UPDATE products SET image_color = ${color}, image_color_at = NOW() WHERE id = ${r.id}`;
   return color;
@@ -56,6 +88,7 @@ export async function backfillImageColors(limit: number): Promise<BackfillResult
   console.error("[image-color-backfill] failed:", res.reason);
  }
  }
+ if (i + CONCURRENCY < rows.length) await new Promise((r) => setTimeout(r, PACE_MS));
  }
 
  const [{ remaining }] = (await sql`

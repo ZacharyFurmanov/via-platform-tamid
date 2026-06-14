@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { isVisionConfigured } from "@/app/lib/data-layer/vision";
-import { backfillImageColors } from "@/app/lib/data-layer/image-color-backfill";
+import { backfillImageColors, resetTitlelessImageColors } from "@/app/lib/data-layer/image-color-backfill";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -30,6 +30,12 @@ export async function POST(request: NextRequest) {
  { ok: false, notConfigured: true, error: "ANTHROPIC_API_KEY not set — vision colour reading is off." },
  { status: 503 },
  );
+ }
+ // One-time: ?reset=titleless clears stored colours for title-less products so they
+ // get re-read with the hint-aware prompt. Run this ONCE, then run the batches below.
+ if (request.nextUrl.searchParams.get("reset") === "titleless") {
+ const { reset } = await resetTitlelessImageColors();
+ return NextResponse.json({ ok: true, reset, note: "Now run the backfill (no reset param) in batches until remaining=0." });
  }
  const limit = Math.min(Math.max(parseInt(request.nextUrl.searchParams.get("limit") ?? "100", 10), 1), 500);
  const result = await backfillImageColors(limit);

@@ -33,12 +33,16 @@ function extractColor(title: string): string | null {
  return null;
 }
 
-// The colour we filter/group on: prefer the vision-read image colour (catches
-// items whose TITLE has no colour word, e.g. a black pinstripe skirt), and fall
-// back to the title. Capitalized to match extractColor's casing so they merge.
+// The colour we filter/group on. The seller's TITLE is authoritative when it
+// names a colour ("tan suede skirt") — that's the item being sold. Vision is
+// only a FALLBACK for titles with no colour word (e.g. a black pinstripe skirt),
+// because a model often wears other garments that fool a whole-image colour read.
+// Capitalized to match extractColor's casing so they merge.
 function colorOf(p: { imageColor?: string | null; title: string }): string | null {
+ const fromTitle = extractColor(p.title);
+ if (fromTitle) return fromTitle;
  if (p.imageColor) return p.imageColor.charAt(0).toUpperCase() + p.imageColor.slice(1);
- return extractColor(p.title);
+ return null;
 }
 import { sortSizes, expandSizeKeys } from "@/app/lib/inventory";
 import ProductCard from "./ProductCard";
