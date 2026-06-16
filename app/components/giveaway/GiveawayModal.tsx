@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { getBaseUrl } from "@/app/lib/base-url";
 
 interface GiveawayModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
     if (storedCode && storedEmail) {
       setReferralCode(storedCode);
       setEmail(storedEmail);
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+      const baseUrl = getBaseUrl();
       setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
 
       // Fetch current status

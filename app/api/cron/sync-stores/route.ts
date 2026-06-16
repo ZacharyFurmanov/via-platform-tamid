@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { ALL_STORES } from "@/app/lib/storeConfig";
 import {
  fetchShopifyProducts,
@@ -310,7 +311,7 @@ export async function GET(request: Request) {
  // Run favorite notifications after sync
  let notificationResult = null;
  try {
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const baseUrl = getBaseUrl();
  const res = await fetch(`${baseUrl}/api/cron/favorite-notifications`, {
  headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
  });
@@ -323,7 +324,7 @@ export async function GET(request: Request) {
  // Run collabs link generation after sync so new products get links right away
  let collabsResult = null;
  try {
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const baseUrl = getBaseUrl();
  const res = await fetch(`${baseUrl}/api/cron/generate-collabs-links`, {
  headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
  });

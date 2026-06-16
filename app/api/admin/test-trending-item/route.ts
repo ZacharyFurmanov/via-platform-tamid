@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { sendTrendingItemEmail } from "@/app/lib/email";
 import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
  price: 100,
  };
 
- const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const BASE_URL = getBaseUrl();
 
  await sendTrendingItemEmail("hana@vyaplatform.com", [
  {

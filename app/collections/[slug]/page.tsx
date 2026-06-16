@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllEditorsPicks, COLLECTIONS } from "@/app/lib/editors-picks-db";
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  const collection = COLLECTIONS.find((c) => c.slug === slug);
  if (!collection) return {};
 
- const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const BASE_URL = getBaseUrl();
  const curatedBy: string | null = collection.curatedBy ?? null;
  const description = curatedBy
  ? `Curated by ${curatedBy} — hand-selected vintage & secondhand pieces on VYA.`

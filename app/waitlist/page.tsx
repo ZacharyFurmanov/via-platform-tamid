@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { getBaseUrl } from "@/app/lib/base-url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -63,7 +64,7 @@ function WaitlistContent() {
  if (entered && storedCode && storedEmail) {
  setReferralCode(storedCode);
  setEmail(storedEmail);
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const baseUrl = getBaseUrl();
  setReferralLink(`${baseUrl}/waitlist?ref=${storedCode}`);
  setPhase("confirmation");
 

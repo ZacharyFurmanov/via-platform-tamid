@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import crypto from "crypto";
 
 function isAuthorized(request: NextRequest): boolean {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
  return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
  }
 
- let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ let baseUrl = getBaseUrl();
  if (baseUrl && !baseUrl.startsWith("http")) baseUrl = `https://${baseUrl}`;
 
  let resp: Response;

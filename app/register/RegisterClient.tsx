@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -122,11 +123,11 @@ export default function RegisterClient() {
                   </p>
                   <div className="flex items-stretch border border-[#5D0F17]/20 overflow-hidden">
                     <p className="flex-1 px-3 py-2.5 text-xs text-[#5D0F17]/70 truncate bg-white">
-                      {`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`}
+                      {`${getBaseUrl()}/register?ref=${myReferralCode}`}
                     </p>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com"}/register?ref=${myReferralCode}`);
+                        navigator.clipboard.writeText(`${getBaseUrl()}/register?ref=${myReferralCode}`);
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import {
  getFavoriteNotificationCandidates,
  recordNotificationSent,
@@ -6,7 +7,7 @@ import {
 import { sendFavoriteActivityNotification, type FavoriteActivityProduct } from "@/app/lib/email";
 
 const MAX_ITEMS_PER_EMAIL = 3;
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 export async function GET(request: Request) {
  const authHeader = request.headers.get("authorization");

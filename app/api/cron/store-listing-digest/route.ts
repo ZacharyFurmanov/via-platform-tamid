@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { storeContactEmails } from "@/app/lib/stores";
 import { getUnalertedFlaggedByStore, markListingsAlerted } from "@/app/lib/listing-quality-db";
 import { sendStoreListingDigest } from "@/app/lib/email";
@@ -7,7 +8,7 @@ import { sendStoreListingDigest } from "@/app/lib/email";
 // emailed ONCE — we only send newly-flagged listings (those not yet alerted),
 // then mark them so stores aren't reminded about the same listing again.
 export const maxDuration = 300;
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 export async function GET(request: Request) {
  const authHeader = request.headers.get("authorization");

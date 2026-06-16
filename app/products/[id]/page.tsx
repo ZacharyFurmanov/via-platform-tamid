@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getBaseUrl } from "@/app/lib/base-url";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProductById, getRecommendedProducts, getProductsByTitleKeyword } from "@/app/lib/db";
@@ -78,7 +79,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
  const product = await getProductById(dbId);
  if (!product) return {};
 
- const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const BASE_URL = getBaseUrl();
  const price = `$${Math.round(Number(product.price))}`;
  const categorySlug = inferCategoryFromTitle(product.title);
  const brandName = inferBrandFromTitle(product.title);
@@ -242,7 +243,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  }
  const descriptionHtml = sanitizeDescription(product.description);
 
- const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const BASE_URL = getBaseUrl();
  const brandName = inferBrandFromTitle(product.title);
  const jsonLd = {
  "@context": "https://schema.org",

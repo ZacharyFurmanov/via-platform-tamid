@@ -3,8 +3,6 @@ import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { neonAdapter } from "@/app/lib/auth-adapter";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
-
 function baseStyles() {
  return `
  body { margin: 0; padding: 0; background-color: #FFFDF8; font-family: Georgia, 'Times New Roman', serif; }

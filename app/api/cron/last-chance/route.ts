@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { getLastChanceCandidates, recordLastChanceSent } from "@/app/lib/notification-db";
 import { sendLastChanceEmail } from "@/app/lib/email";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 export async function GET(request: Request) {
  const authHeader = request.headers.get("authorization");

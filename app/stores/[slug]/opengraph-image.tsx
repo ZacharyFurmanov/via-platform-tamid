@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { stores } from "@/app/lib/stores";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const store = stores.find((s) => s.slug === slug);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+  const BASE_URL = getBaseUrl();
   const name = store?.name ?? "VYA Store";
   const location = store?.location ?? "";
   const imageUrl = store?.image

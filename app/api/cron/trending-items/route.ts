@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { getTrendingCandidates, claimTrendingNotificationSlots } from "@/app/lib/notification-db";
 import { sendTrendingItemEmail, type TrendingEmailProduct } from "@/app/lib/email";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 const MAX_ITEMS_PER_EMAIL = 5;
 
 export async function GET(request: Request) {

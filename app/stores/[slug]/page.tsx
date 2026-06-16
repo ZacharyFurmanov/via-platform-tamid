@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getBaseUrl } from "@/app/lib/base-url";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { stores } from "@/app/lib/stores";
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
  const store = stores.find((s) => s.slug === slug);
  if (!store) return {};
 
- const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const BASE_URL = getBaseUrl();
  const description = `Shop ${store.name} on VYA — ${store.location}. ${store.description.slice(0, 120)}...`;
  const ogImageUrl = `${BASE_URL}/stores/${slug}/opengraph-image`;
 

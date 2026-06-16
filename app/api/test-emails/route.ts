@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { neon } from "@neondatabase/serverless";
 import {
  sendWinbackEmail,
@@ -7,7 +8,7 @@ import {
  sendLastChanceEmail,
 } from "@/app/lib/email";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 // Only callable with CRON_SECRET — not exposed publicly
 export async function GET(request: Request) {

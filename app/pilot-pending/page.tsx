@@ -1,11 +1,12 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { getBaseUrl } from "@/app/lib/base-url";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 export default function PilotPendingPage() {
  const [referralCode, setReferralCode] = useState<string | null>(null);

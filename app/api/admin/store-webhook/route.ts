@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { saveSetting, getSetting } from "@/app/lib/settings-db";
 import crypto from "crypto";
 
@@ -11,7 +12,7 @@ function isAuthorized(request: NextRequest): boolean {
  return !!token && token === crypto.createHash("sha256").update(adminPassword).digest("hex");
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 /** Save the Shopify webhook signing secret for a specific store */
 export async function POST(request: NextRequest) {

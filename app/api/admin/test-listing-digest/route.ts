@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import crypto from "crypto";
 import { getListingQuality } from "@/app/lib/listing-quality-db";
 import { sendStoreListingDigest } from "@/app/lib/email";
@@ -17,7 +18,7 @@ function isAuthorized(request: NextRequest): boolean {
  return !!token && token === crypto.createHash("sha256").update(adminPassword).digest("hex");
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+const BASE_URL = getBaseUrl();
 
 export async function GET(request: NextRequest) {
  if (!isAuthorized(request)) {

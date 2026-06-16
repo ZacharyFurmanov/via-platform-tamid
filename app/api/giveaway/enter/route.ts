@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { createGiveawayEntry, processReferralEntry, getEntryByEmail, setReferredByCode } from "@/app/lib/giveaway-db";
 import { sendGiveawayConfirmation, sendFriendEnteredEmail } from "@/app/lib/email";
 
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
  // Create entry (deduplicates via UNIQUE constraint)
  const { referralCode, isExisting } = await createGiveawayEntry(normalizedEmail, normalizedRefCode || undefined);
 
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ const baseUrl = getBaseUrl();
  const referralLink = `${baseUrl}/waitlist?ref=${referralCode}`;
 
  if (!isExisting) {

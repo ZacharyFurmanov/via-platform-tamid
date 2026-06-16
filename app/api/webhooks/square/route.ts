@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/app/lib/base-url";
 import { saveConversion } from "@/app/lib/analytics-db";
 import { neon } from "@neondatabase/serverless";
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
  }
  // Square signs the exact URL the webhook was registered with (including query params).
  const baseUrl =
- process.env.NEXT_PUBLIC_BASE_URL || "https://vyaplatform.com";
+ getBaseUrl();
  const notificationUrl = `${baseUrl}/api/webhooks/square${storeSlugForSig ? `?store=${storeSlugForSig}` : ""}`;
 
  const valid = await verifySquareSignature(body, signatureHeader, signatureKey, notificationUrl);
