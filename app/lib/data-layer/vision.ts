@@ -114,6 +114,51 @@ export async function identifyColor(imageUrl: string, itemHint?: string | null):
  return text;
 }
 
+// Lean category-only read for the category QA. Deliberately does NOT take the
+// listing title — we want an INDEPENDENT read of what the photo shows, so it can
+// be compared against the title-inferred category to catch mislabels (e.g. a
+// "Bracelet Bag" the title-keyword logic filed under jewelry). Returns the raw
+// category word (caller maps via normalizeCategory); null on no answer.
+const CATEGORY_WORDS = [
+ "tops", "dresses", "skirts", "pants", "shorts", "jumpsuits", "sweaters",
+ "coats & jackets", "jeans", "bags", "shoes", "jewelry", "accessories",
+ "lingerie", "swimwear",
+];
+
+export async function identifyCategory(imageUrl: string): Promise<string | null> {
+ const apiKey = process.env.ANTHROPIC_API_KEY;
+ if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
+ if (!imageUrl) return null;
+
+ const res = await fetch(ANTHROPIC_URL, {
+ method: "POST",
+ headers: {
+ "x-api-key": apiKey,
+ "anthropic-version": "2023-06-01",
+ "content-type": "application/json",
+ },
+ body: JSON.stringify({
+ model: MODEL,
+ max_tokens: 16,
+ messages: [
+  {
+  role: "user",
+  content: [
+   { type: "image", source: { type: "url", url: imageUrl } },
+   { type: "text", text: `What broad fashion category is the MAIN item being sold in this product photo? Ignore any model's other clothing, the background, and props. Reply with exactly one of: ${CATEGORY_WORDS.join(", ")}. If you genuinely can't tell, reply exactly: unknown.` },
+  ],
+  },
+ ],
+ }),
+ });
+
+ if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text().catch(() => "")}`);
+ const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
+ const text = data.content?.find((c) => c.type === "text")?.text?.trim().toLowerCase() ?? "";
+ if (!text || text === "unknown") return null;
+ return text;
+}
+
 export async function identifyItem(images: VisionImage[]): Promise<ItemIdentification> {
  const apiKey = process.env.ANTHROPIC_API_KEY;
  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
