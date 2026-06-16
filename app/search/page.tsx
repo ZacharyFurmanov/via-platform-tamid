@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useMemo, Suspense } from "react";
+import { useEffect, useState, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import ProductCard from "@/app/components/ProductCard";
 import TrackedStoreLink from "@/app/components/TrackedStoreLink";
@@ -27,6 +27,19 @@ function parsePrice(price: string): number {
  return Number(price.replace(/[^0-9.]/g, "")) || 0;
 }
 
+// Persist the search store-filter + sort PER QUERY so it survives back navigation
+// (search → filter → open a result → hit back → your filter is still applied).
+const searchFilterKey = (q: string) => `via_search_filter:${q}`;
+function readSearchFilter(q: string): { selectedStore: string | null; sort: SortOption } {
+ if (typeof window === "undefined") return { selectedStore: null, sort: "relevance" };
+ try {
+ const s = JSON.parse(sessionStorage.getItem(searchFilterKey(q)) || "{}");
+ return { selectedStore: s.selectedStore ?? null, sort: s.sort ?? "relevance" };
+ } catch {
+ return { selectedStore: null, sort: "relevance" };
+ }
+}
+
 function SearchResultsContent({ q }: { q: string }) {
  const [products, setProducts] = useState<SearchProduct[]>([]);
  const [designers, setDesigners] = useState<SearchDesigner[]>([]);
@@ -34,8 +47,28 @@ function SearchResultsContent({ q }: { q: string }) {
  const [matchedStores, setMatchedStores] = useState<SearchStore[]>([]);
  const [loading, setLoading] = useState(true);
 
- const [selectedStore, setSelectedStore] = useState<string | null>(null);
- const [sort, setSort] = useState<SortOption>("relevance");
+ const [selectedStore, setSelectedStore] = useState<string | null>(() => readSearchFilter(q).selectedStore);
+ const [sort, setSort] = useState<SortOption>(() => readSearchFilter(q).sort);
+
+ // When the query changes (a new search in the same mount), load that query's
+ // saved filter (or reset). Skips the first render — the lazy initializers above
+ // already restored it, which is what makes back-navigation keep the filter.
+ const prevQ = useRef(q);
+ useEffect(() => {
+ if (q === prevQ.current) return;
+ prevQ.current = q;
+ const saved = readSearchFilter(q);
+ setSelectedStore(saved.selectedStore);
+ setSort(saved.sort);
+ }, [q]);
+
+ // Save on every change so it's there when you come back.
+ useEffect(() => {
+ if (typeof window === "undefined" || !q.trim()) return;
+ try {
+ sessionStorage.setItem(searchFilterKey(q), JSON.stringify({ selectedStore, sort }));
+ } catch {}
+ }, [q, selectedStore, sort]);
 
  useEffect(() => {
  if (!q.trim()) {

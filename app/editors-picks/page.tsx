@@ -2,9 +2,16 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { getEveryonesFavorites } from "@/app/lib/editors-picks-db";
-import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
-import { categoryMap } from "@/app/lib/categoryMap";
-import MixedProductGrid from "@/app/components/MixedProductGrid";
+import { displayCategories, clothingSlugs, categoryMap } from "@/app/lib/categoryMap";
+import type { CategorySlug } from "@/app/lib/categoryMap";
+import FilteredProductGrid from "@/app/components/FilteredProductGrid";
+import type { FilterableProduct } from "@/app/components/FilteredProductGrid";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
+import { computeProductScore } from "@/app/lib/productRanking";
+import { inferBrandFromTitle, inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
+import { brandMap } from "@/app/lib/brandData";
+import { deriveSize } from "@/app/lib/inventory";
+import { stores } from "@/app/lib/stores";
 
 export const metadata: Metadata = {
  title: "Everyone's Favorites — VYA",
@@ -22,22 +29,78 @@ export const metadata: Metadata = {
  },
 };
 
+function toDisplayCategory(slug: CategorySlug): string {
+ return clothingSlugs.has(slug) ? "clothing" : slug;
+}
+
+function parseImages(raw: string | null, fallback: string | null): string[] {
+ if (raw) {
+ try {
+ const parsed = JSON.parse(raw);
+ if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+ } catch {}
+ }
+ return fallback ? [fallback] : [];
+}
+
 export default async function EditorsPicksPage() {
  const picks = await getEveryonesFavorites(400);
 
- const gridProducts = picks.map((pick) => ({
- id: pick.product.id,
- store_slug: pick.product.storeSlug,
- store_name: pick.product.storeName,
- title: pick.product.title,
- price: pick.product.price,
- currency: pick.product.currency,
- image: pick.product.image,
- images: pick.product.images,
- size: pick.product.size,
- categoryLabel: categoryMap[inferCategoryFromTitle(pick.product.title)],
- favoriteCount: pick.favoriteCount,
- }));
+ const dbIds = picks.map((p) => p.product.id);
+ const popularityScores = await getProductPopularityScores(dbIds);
+
+ const products: FilterableProduct[] = picks.map((pick) => {
+ const { product } = pick;
+ const id = `${product.storeSlug}-${product.id}`;
+ const dbId = product.id;
+ const engagementScore = popularityScores[dbId] ?? 0;
+ const images = parseImages(product.images, product.image);
+ const categorySlug = inferCategoryFromTitle(product.title) as CategorySlug;
+ const displaySlug = toDisplayCategory(categorySlug);
+ const displayLabel = displayCategories.find((c) => c.slug === displaySlug)?.label
+ ?? categoryMap[categorySlug];
+ const brandSlug = inferBrandFromTitle(product.title);
+
+ const dbProduct = {
+ title: product.title,
+ size: product.size,
+ description: null,
+ images: product.images,
+ image: product.image,
+ } as Parameters<typeof deriveSize>[0];
+
+ return {
+ id,
+ dbId,
+ title: product.title,
+ price: product.price,
+ compareAtPrice: undefined,
+ category: displaySlug,
+ categoryLabel: displayLabel,
+ brand: brandSlug,
+ brandLabel: brandSlug ? (brandMap[brandSlug] ?? null) : null,
+ store: product.storeName,
+ storeSlug: product.storeSlug,
+ externalUrl: product.externalUrl ?? undefined,
+ image: product.image ?? "",
+ images,
+ imageColor: product.imageColor ?? null,
+ size: deriveSize(dbProduct),
+ engagementScore,
+ createdAt: dbId,
+ popularityScore: computeProductScore({
+ engagementScore,
+ syncedAt: new Date().toISOString(),
+ imageCount: images.length,
+ brandSlug: brandSlug ?? null,
+ price: product.price,
+ title: product.title,
+ }),
+ };
+ });
+
+ const storeList = stores.map((s) => ({ slug: s.slug, name: s.name }));
+ const categoryList = displayCategories.map((c) => ({ slug: c.slug, label: c.label }));
 
  return (
  <main className="bg-[#FFFDF8] min-h-screen text-[#5D0F17]">
@@ -53,13 +116,17 @@ export default async function EditorsPicksPage() {
 
  <section className="py-6 sm:py-8">
  <div className="max-w-7xl mx-auto px-6">
- {gridProducts.length === 0 ? (
- <p className="text-[#5D0F17]/50 text-sm">
- No favorites yet — start hearting pieces to see them here.
- </p>
- ) : (
- <MixedProductGrid products={gridProducts} from="/editors-picks" allEditorsPicks />
- )}
+ <FilteredProductGrid
+ products={products}
+ stores={storeList}
+ categories={categoryList}
+ showCategoryFilter={true}
+ showBrandFilter={true}
+ showSizeFilter={true}
+ from="/editors-picks"
+ initialFilters={{ sort: "newest" }}
+ emptyMessage="No favorites yet — start hearting pieces to see them here."
+ />
  </div>
  </section>
  </main>

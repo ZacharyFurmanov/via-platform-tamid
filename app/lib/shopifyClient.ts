@@ -313,8 +313,10 @@ export function extractFitLetterFromDescription(description: string | null): str
  const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
  // Longest tokens first so "medium" wins over "m", "large" over "l", etc.
  const TOK = `extra\\s+small|extra\\s+large|x-?large|xx-?large|small|medium|large|xxxl|xxl|xl|xs|s|m|l`;
+ // (?![a-z]) after each token stops a bare letter matching the START of a word —
+ // e.g. "Fit: Labeled IT" must not read the "L" of "Labeled" as size Large.
  const re = new RegExp(
- `\\b(?:best\\s+fits?|fits?\\s+like\\s+a|fit\\s*:)\\s+(?:a\\s+|size\\s+)?(${TOK})(?:\\s*(?:[-\\u2013\\u2014/]|to)\\s*(${TOK}))?`,
+ `\\b(?:best\\s+fits?|fits?\\s+like\\s+a|fit\\s*:)\\s+(?:a\\s+|size\\s+)?(${TOK})(?![a-z])(?:\\s*(?:[-\\u2013\\u2014/]|to)\\s*(${TOK})(?![a-z]))?`,
  "i",
  );
  const m = re.exec(text);

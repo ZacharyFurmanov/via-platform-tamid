@@ -35,6 +35,10 @@ test("extractFitLetterFromDescription — conservative: never guesses", () => {
  assert.equal(extractFitLetterFromDescription("Fits like a glove"), null); // 'glove' isn't a size
  assert.equal(extractFitLetterFromDescription("A beautiful medium-weight wool coat"), null);
  assert.equal(extractFitLetterFromDescription("Label: IT 54"), null); // a tag, not a fit
+ // "Fit: Labeled IT" must NOT read the L of "Labeled" as size Large (real bug:
+ // a "- XS" dress showed Large because of this).
+ assert.equal(extractFitLetterFromDescription("Fit: Labeled IT. Recommended for a modern size extra small."), null);
+ assert.equal(extractFitLetterFromDescription("Fit: Material is silk"), null); // M of "Material"
  assert.equal(extractFitLetterFromDescription(""), null);
  assert.equal(extractFitLetterFromDescription(null), null);
 });

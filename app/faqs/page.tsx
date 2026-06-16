@@ -52,16 +52,8 @@ export default function FAQsPage() {
       a: "Stores on VYA are carefully selected based on curation quality, authenticity standards, and overall brand alignment.",
     },
     {
-      q: "Does VYA take a commission?",
-      a: "VYA may earn a commission when you purchase from a store through our platform. This helps support the continued curation and operation of VYA.",
-    },
-    {
       q: "Are prices on VYA different from store websites?",
       a: "No. Prices are set by each store and are the same as those listed on their own website.",
-    },
-    {
-      q: "Can stores remove themselves from VYA?",
-      a: "Yes. Stores partner with VYA voluntarily and can choose to update or remove their presence at any time.",
     },
     {
       q: "I'm a store owner, how can I partner with VYA?",
