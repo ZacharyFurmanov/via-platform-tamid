@@ -2236,9 +2236,7 @@ export async function sendLastChanceEmail(
  const resend = getResend();
 
  const itemsHtml = items
- .map(({ productTitle, productImage, storeName, productUrl, price, currency, daysSaved }) => {
- const weeksAgo = Math.round(daysSaved / 7);
- const timeLabel = weeksAgo <= 3 ? `${weeksAgo} week${weeksAgo !== 1 ? "s" : ""} ago` : `${Math.round(daysSaved / 30)} month${Math.round(daysSaved / 30) !== 1 ? "s" : ""} ago`;
+ .map(({ productTitle, productImage, storeName, productUrl, price, currency }) => {
  const img = productImage
  ? `<a href="${productUrl}" style="text-decoration:none;display:block;width:80px;flex-shrink:0;">
  <img src="${productImage}" alt="${productTitle.replace(/"/g, "&quot;")}" width="80"
@@ -2253,7 +2251,7 @@ export async function sendLastChanceEmail(
  <td style="width:80px;vertical-align:top;">${img}</td>
  <td style="padding-left:16px;vertical-align:top;">
  <p style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(93,15,23,0.5);
- font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">${storeName} &middot; Saved ${timeLabel}</p>
+ font-family:Georgia,'Times New Roman',serif;margin:0 0 4px;">${storeName} &middot; In demand</p>
  <a href="${productUrl}" style="text-decoration:none;">
  <p style="font-size:14px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;
  line-height:1.3;margin:0 0 6px;">${productTitle}</p>
@@ -2264,7 +2262,7 @@ export async function sendLastChanceEmail(
  <a href="${productUrl}"
  style="display:inline-block;border:1px solid rgba(93,15,23,0.4);color:#5D0F17 !important;padding:6px 18px;
  text-decoration:none;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;
- font-family:Georgia,'Times New Roman',serif;">View Item</a>
+ font-family:Georgia,'Times New Roman',serif;">Claim it now</a>
  </td>
  </tr>
  </table>
@@ -2275,11 +2273,11 @@ export async function sendLastChanceEmail(
 
  const content = `
  <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
- These are still waiting for you.
+ You&rsquo;re not the only one watching ${items.length === 1 ? "this" : "these"}.
  </p>
  <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 24px;">
- You saved ${items.length === 1 ? "this piece" : "these pieces"} a while back — and ${items.length === 1 ? "it&rsquo;s" : "they&rsquo;re"} still here.
- Vintage doesn&rsquo;t last forever. If you want it, now is the time.
+ The ${items.length === 1 ? "piece" : "pieces"} you saved ${items.length === 1 ? "is" : "are"} one of a kind &mdash; and you&rsquo;re not the only one who&rsquo;s noticed.
+ Once ${items.length === 1 ? "it sells" : "they sell"}, there&rsquo;s no getting ${items.length === 1 ? "it" : "them"} back.
  </p>
  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
  ${itemsHtml}
@@ -2289,8 +2287,8 @@ export async function sendLastChanceEmail(
  await resend.emails.send({
  from: FROM_EMAIL,
  to: email,
- subject: items.length === 1 ? "You saved this — it's still here" : "Your saved items are still here",
- html: viaShell("Still Here", content),
+ subject: items.length === 1 ? "Someone's about to buy the piece you saved" : "Someone's about to buy the pieces you saved",
+ html: viaShell("Going Fast", content),
  });
 }
 
