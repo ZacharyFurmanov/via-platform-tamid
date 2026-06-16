@@ -717,33 +717,33 @@ function sortByBrand(products: DBProduct[]): { sorted: DBProduct[]; topBrands: s
  return { sorted, topBrands: brandOrder };
 }
 
-/** Build a subject line like "New this week from Gucci, Chanel, and more!" */
-function buildArrivalsSubject(topBrands: string[]): string {
- if (topBrands.length === 0) return "New Arrivals Just Dropped on VYA";
- if (topBrands.length === 1) return `New this week from ${topBrands[0]}`;
- return `New this week from ${topBrands[0]}, ${topBrands[1]}, and more!`;
-}
-
 export async function sendNewArrivalsEmail(
  emails: string[],
- products: DBProduct[]
+ products: DBProduct[],
+ preserveOrder = false
 ): Promise<{ sent: number; failed: number }> {
  if (emails.length === 0 || products.length === 0) return { sent: 0, failed: 0 };
 
  const resend = getResend();
  const newArrivalsUrl = withUtm(`${BASE_URL}/new-arrivals`, "new_arrivals_email", "view_all");
 
- const { sorted: sortedProducts, topBrands } = sortByBrand(products);
- const subject = buildArrivalsSubject(topBrands);
+ // Hand-curated picks keep the exact order they were chosen; the automatic
+ // selection gets grouped by brand for a nicer flow.
+ const sortedProducts = preserveOrder ? products : sortByBrand(products).sorted;
+ const subject = "New Arrivals Sourced Just for You";
+ // Cap at 25 pieces.
+ const display = sortedProducts.slice(0, 25);
 
  function productCell(p: DBProduct): string {
  const url = productViaUrl(p, "new_arrivals_email");
  // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
  const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
+ // height:auto shows the FULL product image at its natural aspect ratio — bigger,
+ // and nothing cropped off (the old fixed 220px + object-fit:cover cut pieces off).
  const imgBlock = safeImgSrc
  ? `<img src="${safeImgSrc}" alt="${p.title.replace(/"/g, "&quot;")}" width="240"
- style="display:block;width:100%;height:220px;object-fit:cover;" border="0" />`
- : `<div style="width:100%;height:220px;background:rgba(93,15,23,0.06);"></div>`;
+ style="display:block;width:100%;height:auto;" border="0" />`
+ : `<div style="width:100%;height:300px;background:rgba(93,15,23,0.06);"></div>`;
 
  const priceStr = formatEmailPrice(p.price, p.currency);
  const compareStr = p.compare_at_price ? formatEmailPrice(p.compare_at_price, p.currency) : null;
@@ -771,9 +771,9 @@ export async function sendNewArrivalsEmail(
  }
 
  const rows: string[] = [];
- for (let i = 0; i < sortedProducts.length; i += 2) {
- const left = sortedProducts[i];
- const right = sortedProducts[i + 1] || null;
+ for (let i = 0; i < display.length; i += 2) {
+ const left = display[i];
+ const right = display[i + 1] || null;
  rows.push(`
  <tr>
  <td width="50%" valign="top" style="padding:0 14px 40px 0;">

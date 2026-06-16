@@ -7,6 +7,16 @@ import { COLLECTIONS } from "@/app/lib/collections-config";
 
 type Collection = (typeof COLLECTIONS)[number];
 
+// Not a public collection — curating this list sets exactly which pieces go in
+// the weekly New Arrivals email (leave it empty for automatic selection).
+const EMAIL_PICKS_COLLECTION = {
+ slug: "new-arrivals-email",
+ name: "📧 New Arrivals Email",
+ curatedBy: "",
+ href: null,
+ description: "Pick the pieces for the weekly New Arrivals email. Leave empty for automatic selection.",
+} as unknown as Collection;
+
 type Product = {
  id: number;
  storeSlug: string;
@@ -232,7 +242,9 @@ export default function CollectionsAdminPage() {
  Collections
  </h1>
  <p style={{ fontSize: 14, color: "#71717a" }}>
- Curate picks for each collection shown on the homepage.
+ {activeCollection.slug === EMAIL_PICKS_COLLECTION.slug
+ ? "Pick the pieces for the weekly New Arrivals email. Leave empty for automatic selection."
+ : "Curate picks for each collection shown on the homepage."}
  </p>
  </div>
  <span style={{ fontSize: 14, color: "#09090b", fontWeight: 600 }}>
@@ -242,10 +254,11 @@ export default function CollectionsAdminPage() {
 
  {/* Collection tabs — only show collections with items, plus the last one (newest) */}
  <div style={{ display: "flex", gap: 0, borderTop: "1px solid #e4e4e7", overflowX: "auto" }}>
- {COLLECTIONS.filter((col, i) =>
+ {[EMAIL_PICKS_COLLECTION, ...COLLECTIONS].filter((col) =>
+ col.slug === EMAIL_PICKS_COLLECTION.slug || // always show the email tab
  activeSlugs === null || // still loading — show all
  activeSlugs.has(col.slug) ||
- i === COLLECTIONS.length - 1 // always show newest collection
+ col.slug === COLLECTIONS[COLLECTIONS.length - 1].slug // always show newest collection
  ).map((col) => (
  <button
  key={col.slug}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendNewArrivalsEmail } from "@/app/lib/email";
+import { getEmailPickProducts } from "@/app/lib/editors-picks-db";
 import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
 import type { DBProduct } from "@/app/lib/db";
@@ -33,8 +34,12 @@ export async function GET(request: NextRequest) {
  LIMIT 12
  `;
 
- const products = rows as unknown as DBProduct[];
+ // Mirror the real send: use the hand-curated email picks if any exist,
+ // otherwise the 12 newest as a representative sample.
+ const picks = await getEmailPickProducts();
+ const usingPicks = picks.length > 0;
+ const products = usingPicks ? picks : (rows as unknown as DBProduct[]);
 
- const { sent, failed } = await sendNewArrivalsEmail([to], products);
- return NextResponse.json({ ok: true, sent, failed, to, productCount: products.length });
+ const { sent, failed } = await sendNewArrivalsEmail([to], products, usingPicks);
+ return NextResponse.json({ ok: true, sent, failed, to, productCount: products.length, source: usingPicks ? "curated-picks" : "newest-12" });
 }

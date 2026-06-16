@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getApprovedPilotEmails } from "@/app/lib/pilot-db";
 import { sendNewArrivalsEmail } from "@/app/lib/email";
+import { getEmailPickProducts } from "@/app/lib/editors-picks-db";
 import { getSetting } from "@/app/lib/settings-db";
 import type { DBProduct } from "@/app/lib/db";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
@@ -122,7 +123,11 @@ export async function GET(request: Request) {
  LIMIT 50
  `;
 
- const products = rows as DBProduct[];
+ // Hand-curated email picks (from /admin/collections → "New Arrivals Email")
+ // take precedence. When none are curated, fall back to the auto-ranked window.
+ const emailPicks = await getEmailPickProducts();
+ const usingPicks = emailPicks.length > 0;
+ const products = usingPicks ? emailPicks : (rows as DBProduct[]);
 
  if (products.length === 0) {
  if (testEmail) {
@@ -154,7 +159,7 @@ export async function GET(request: Request) {
  return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
  }
 
- const { sent, failed } = await sendNewArrivalsEmail(emails, products);
+ const { sent, failed } = await sendNewArrivalsEmail(emails, products, usingPicks);
 
  // If nothing actually went out, release the slot so it retries next run.
  if (!testEmail && sent === 0) {

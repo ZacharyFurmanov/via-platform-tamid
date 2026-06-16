@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { COLLECTIONS } from "./collections-config";
-import { DISABLED_STORE_SLUGS } from "./db";
+import { DISABLED_STORE_SLUGS, type DBProduct } from "./db";
 export { COLLECTIONS } from "./collections-config";
 export type { CollectionSlug } from "./collections-config";
 
@@ -280,6 +280,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
  p.currency,
  p.image,
  p.images,
+ p.image_color,
  p.size,
  p.external_url,
  COUNT(pf.id)::int AS favorite_count
@@ -288,7 +289,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
  WHERE p.image IS NOT NULL
  AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
  AND (${DISABLED_STORE_SLUGS.length} = 0 OR p.store_slug != ALL(${DISABLED_STORE_SLUGS}))
- GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size, p.external_url
+ GROUP BY p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.image_color, p.size, p.external_url
  ORDER BY p.created_at DESC NULLS LAST, favorite_count DESC
  LIMIT ${limit}
  `;
@@ -306,10 +307,36 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
  currency: r.currency as string | null,
  image: r.image as string | null,
  images: r.images as string | null,
+ imageColor: (r.image_color as string | null) ?? null,
  size: r.size as string | null,
  externalUrl: r.external_url as string | null,
  },
  }));
+}
+
+/** Collection slug for the hand-picked weekly New Arrivals email. NOT a public
+ * collection — it only feeds the email. */
+export const EMAIL_PICKS_SLUG = "new-arrivals-email";
+
+/**
+ * Products hand-picked for the New Arrivals email, in pick order, as full product
+ * rows. Empty when nothing is curated — the email then falls back to its automatic
+ * weekly selection, so it never goes out blank. Capped at 25 (the email's max).
+ */
+export async function getEmailPickProducts(): Promise<DBProduct[]> {
+ await initEditorsPicks();
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`
+ SELECT p.*
+ FROM editors_picks ep
+ JOIN products p ON p.id = ep.product_id
+ WHERE ep.collection_slug = ${EMAIL_PICKS_SLUG}
+ AND p.image IS NOT NULL
+ AND (p.shopify_product_id IS NULL OR p.collabs_link IS NOT NULL)
+ ORDER BY ep.position ASC, ep.added_at ASC
+ LIMIT 25
+ `;
+ return rows as unknown as DBProduct[];
 }
 
 export async function searchProducts(q: string, storeSlug?: string): Promise<ProductResult[]> {
