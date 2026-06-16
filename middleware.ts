@@ -40,6 +40,10 @@ const PUBLIC_ROUTES = [
   "/api/store/analytics",
   "/api/store/sourcing",
   "/store/login",
+  // Product detail pages are public so shared links unfurl with the product's
+  // own OG image/preview and are crawlable for SEO (covers /products/[id] and
+  // its /opengraph-image route). Browsing/favorites/checkout stay gated.
+  "/products",
 ];
 
 // Routes that require a user session but NOT pilot approval (via_access cookie)
