@@ -19,6 +19,13 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  ["boots", ["flat boot", "ankle boot", "knee-high boot", "thigh-high boot", "chelsea boot", "combat boot", "cowboy boot"]],
  ["sandals", ["wedge sandal", "thong sandal"]],
  ["heels", ["wedge heel", "kitten heel", "block heel", "cone heel"]],
+ // Bag styles whose names contain a jewelry word — matched BEFORE the jewelry
+ // NOUNS below so "Bracelet Bag" / "Ring Handle Bag" land in bags, not jewelry.
+ // (Kept to explicit bag compounds so it can't steal real jewelry.)
+ ["bags", [
+ "bracelet bag", "ring handle bag", "ring-handle bag", "ring handle", "ring bag",
+ "chain handle bag", "charm bag", "necklace bag", "pendant bag", "brooch bag",
+ ]],
  // Jewelry NOUNS checked first — an earring/necklace/ring title should never be
  // misclassified as bags or clothing even if it shares a designer keyword.
  // NOTE: gemstone/material words (ruby, emerald, pearl…) are intentionally NOT
