@@ -101,6 +101,9 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "top", "blouse", "shirt", "tee", "t-shirt", "tank", "cami",
  "bodysuit", "halter", "polo", "henley",
  "tube top", "crop", "tunic", "wrap top", "sheer top",
+ // Button-up/-down shirts — matched here (before the gemstone block) so a
+ // "Pearl Accent ... Button Up" reads as a top, not jewelry.
+ "button up", "button-up", "button down", "button-down",
  ]],
  // Jeans checked after specific garment types so "Denim Skirt" → skirts,
  // not jeans. "jeans" (plural only) avoids matching designer first names
