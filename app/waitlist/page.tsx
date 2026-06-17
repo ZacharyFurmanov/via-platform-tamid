@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { getBaseUrl } from "@/app/lib/base-url";
+import { acquisitionSource } from "@/app/lib/capturedSource";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -103,7 +104,7 @@ function WaitlistContent() {
  const waitlistRes = await fetch("/api/waitlist", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ email: email.trim(), source: "waitlist" }),
+ body: JSON.stringify({ email: email.trim(), source: acquisitionSource("waitlist") }),
  });
 
  if (!waitlistRes.ok) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getBaseUrl } from "@/app/lib/base-url";
+import { acquisitionSource } from "@/app/lib/capturedSource";
 
 interface GiveawayModalProps {
   isOpen: boolean;
@@ -136,7 +137,7 @@ export default function GiveawayModal({ isOpen, onClose, refCode }: GiveawayModa
         await fetch("/api/waitlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim(), source: "giveaway_modal" }),
+          body: JSON.stringify({ email: email.trim(), source: acquisitionSource("giveaway_modal") }),
         });
       } catch {
         // Non-blocking — continue to giveaway entry
