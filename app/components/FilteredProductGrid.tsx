@@ -229,15 +229,35 @@ export default function FilteredProductGrid({
 
  const setCurrentPage = useCallback((page: number) => {
  setCurrentPageState(page);
- // Use replaceState directly so the URL stays in sync without going through
- // Next.js router, which can serve a stale cached render on back navigation.
+ // pushState (not replace) so each page is its own history entry — browser
+ // Back returns to the previous page instead of the page you entered from.
+ // We update the URL directly rather than via the Next.js router, which can
+ // serve a stale cached render on back navigation.
  if (typeof window !== "undefined") {
  const params = new URLSearchParams(window.location.search);
  if (page === 1) params.delete("page");
  else params.set("page", String(page));
  const qs = params.toString();
- window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+ const url = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+ const currentPageParam = new URLSearchParams(window.location.search).get("page") ?? "1";
+ // Only push when the page actually changes (avoids duplicate entries).
+ if (String(page) !== currentPageParam && !(page === 1 && currentPageParam === "1")) {
+ window.history.pushState(null, "", url);
+ } else {
+ window.history.replaceState(null, "", url);
  }
+ }
+ }, []);
+
+ // Sync the visible page with browser Back/Forward (each page change pushes a
+ // history entry above). Reads the page straight from the URL on popstate.
+ useEffect(() => {
+ const onPop = () => {
+ const p = Math.max(1, parseInt(new URLSearchParams(window.location.search).get("page") ?? "1", 10) || 1);
+ setCurrentPageState(p);
+ };
+ window.addEventListener("popstate", onPop);
+ return () => window.removeEventListener("popstate", onPop);
  }, []);
 
  const handleFilterChange = useCallback((newFilters: FilterState) => {
