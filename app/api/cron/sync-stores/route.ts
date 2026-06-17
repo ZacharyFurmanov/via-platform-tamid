@@ -237,7 +237,10 @@ export async function GET(request: Request) {
  size: p.size ?? undefined,
  variantId: p.variantId ?? undefined,
  }));
- const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts);
+ const { count: productCount } = await syncProducts(store.slug, store.name, mappedProducts, {
+ excludeKeywords: store.excludeKeywords,
+ excludeTitles: store.excludeTitles,
+ });
  console.log(`[Sync Stores] Wix: ${store.name} synced ${productCount} products, skipped ${skippedCount}`);
  results.push({ store: store.name, success: true, productCount });
  } else {

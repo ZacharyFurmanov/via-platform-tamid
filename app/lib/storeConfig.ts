@@ -65,6 +65,10 @@ export type WixStore = {
  siteId: string;
  /** Name of the env var holding this store's Wix API key */
  apiKeyEnvVar: string;
+ /** Product titles to exclude/remove from sync (exact match, case-insensitive) */
+ excludeTitles?: string[];
+ /** Product title keywords to exclude/remove from sync (partial match) */
+ excludeKeywords?: string[];
 };
 
 export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareStore | StripeStore | WixStore;
@@ -117,6 +121,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  name: "SCARZ Vintage",
  slug: "scarz-vintage",
  storeDomain: "scarzvintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Sacrare",
+ slug: "sacrare",
+ storeDomain: "sacrare.com",
  scrapeProductPage: true,
  },
  {
@@ -449,6 +460,8 @@ export const WIX_STORES: WixStore[] = [
  slug: "nello-vintage",
  siteId: "1d7e01f6-61bb-477e-a804-db6f2d82275f",
  apiKeyEnvVar: "WIX_API_KEY_NELLO_VINTAGE",
+ // Knockoff-style listings removed permanently (also won't re-import).
+ excludeTitles: ["LV-style pink satin mini bag", "Prada-style croc shoulder bag"],
  },
 ];
 

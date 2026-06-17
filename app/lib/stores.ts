@@ -1201,6 +1201,23 @@ export const stores = [
  returnPolicy:
  "Bottoms may be returned within 10 days for a refund to your original payment method (issued within 10 business days of approval); all other items are final sale. There are no direct exchanges, and sale items and gift cards are non-returnable.",
  },
+ {
+ slug: "sacrare",
+ dashboardToken: "sac-7e2c9a4f1d8b",
+ name: "Sacrare",
+ location: "New York, NY",
+ description:
+ "Sacrare is a New York based luxury reseller specializing in rare, obsession-worthy designer handbags and accessories. We curate a highly selective collection of authenticated vintage, limited-edition, and hard to find pieces from fashion brands such as Chanel, Hermes, Louis Vuitton, and more. Unlike large reseller sites with thousands of listings, Sacrare hand-selects only the rarest and most coveted pieces, making it easier for collectors and fashion enthusiasts to discover timeless, sustainable treasures. Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
+ website: "https://www.sacrare.com",
+ dataSource: "sacrare",
+ image: "/stores/sacrare.jpg",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "244883",
+ authenticityPolicy:
+ "Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
+ },
 ];
 
 /** Stores shown on the public site — Shopify Collabs stores must have a collabsStoreId; other types (Squarespace, Square, Wix, custom) are always shown. */
@@ -1264,6 +1281,7 @@ export const storeContactEmails: Record<string, string> = {
  "lover-girl-vintage": "lexi.heuser@gmail.com",
  "missi-archives": "missiarchives@gmail.com",
  "scarz-vintage": "contact@scarzvintage.com",
+ "sacrare": "sacrareboutique@gmail.com",
  "house-on-a-chain": "houseonachain@gmail.com",
  "source-twenty-four": "sourcetwentyfour@gmail.com",
  "vintage-archives-la": "vintagearchivesla@gmail.com",

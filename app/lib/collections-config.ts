@@ -8,6 +8,7 @@ export const COLLECTIONS = [
   { slug: "hot-vintage-summer", name: "Hot Vintage Summer", curatedBy: "Matty Siegel", href: null, description: "A curated edit of the pieces you'd find on the coolest girl in SoHo" },
   { slug: "rachael-edit", name: "The Rachael Edit", curatedBy: "Rachael Brownfield", href: null, description: "A celebration of natural materials and quiet quality — pieces made to last, chosen for how they feel as much as how they look." },
   { slug: "y2k-girls", name: "Y2K Girls", curatedBy: "", href: null, description: "Pure 2000s energy — baby tees, low-rise, logomania, and the it-bags of the era. For the girls who do it Y2K." },
+  { slug: "80s-90s", name: "The 80s & 90s", curatedBy: "", href: null, description: "Power shoulders, bold prints, slip dresses, and grunge — the most iconic decades in fashion, straight from the archive." },
 ] as const;
 
 export type CollectionSlug = (typeof COLLECTIONS)[number]["slug"];
