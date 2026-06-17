@@ -16,6 +16,86 @@ export type WixResult = {
 };
 
 const WIX_API_BASE = "https://www.wixapis.com/stores/v1";
+const WIX_ECOM_ORDERS_URL = "https://www.wixapis.com/ecom/v1/orders/search";
+
+export type WixOrder = {
+ id: string;
+ number: string | number | null;
+ createdDate: string;
+ total: number;
+ currency: string;
+ email: string | null;
+ items: { productName: string; quantity: number; price: number }[];
+};
+
+// Fetch recent eCommerce orders for a Wix store. Field paths verified against the
+// Wix Search Orders API (orders[].id / .priceSummary.total.amount / .currency /
+// .buyerInfo.email / .lineItems[].productName.original|.quantity|.price.amount).
+// Returns only orders with a positive total. The API already excludes
+// status:"INITIALIZED". Paged via cursorPaging; capped to avoid runaway loops.
+export async function fetchWixOrders(siteId: string, apiKey: string, sinceISO: string): Promise<WixOrder[]> {
+ const orders: WixOrder[] = [];
+ let cursor: string | null = null;
+ for (let page = 0; page < 50; page++) {
+ const body = cursor
+ ? { search: { cursorPaging: { cursor } } }
+ : { search: { filter: { createdDate: { $gte: sinceISO } }, cursorPaging: { limit: 100 } } };
+
+ const res = await fetch(WIX_ECOM_ORDERS_URL, {
+ method: "POST",
+ headers: {
+ Authorization: apiKey,
+ "wix-site-id": siteId,
+ "Content-Type": "application/json",
+ },
+ body: JSON.stringify(body),
+ signal: AbortSignal.timeout(30_000),
+ });
+
+ if (!res.ok) {
+ const text = await res.text().catch(() => "");
+ throw new Error(`Wix orders API ${res.status}: ${text.slice(0, 200)}`);
+ }
+
+ type RawWixOrder = {
+ id: string;
+ number?: string | number | null;
+ createdDate?: string;
+ currency?: string;
+ priceSummary?: { total?: { amount?: string } };
+ buyerInfo?: { email?: string | null };
+ lineItems?: Array<{ productName?: { original?: string }; quantity?: number | string; price?: { amount?: string } }>;
+ };
+ const data = (await res.json()) as {
+ orders?: RawWixOrder[];
+ metadata?: { cursors?: { next?: string | null } };
+ pagingMetadata?: { cursors?: { next?: string | null } };
+ };
+
+ const pageOrders = data.orders ?? [];
+ for (const o of pageOrders) {
+ const total = parseFloat(o.priceSummary?.total?.amount ?? "0");
+ if (!(total > 0)) continue;
+ orders.push({
+ id: String(o.id),
+ number: o.number ?? null,
+ createdDate: o.createdDate ?? new Date().toISOString(),
+ total,
+ currency: o.currency ?? "USD",
+ email: o.buyerInfo?.email ?? null,
+ items: (o.lineItems ?? []).map((li) => ({
+ productName: li.productName?.original ?? "Item",
+ quantity: Number(li.quantity ?? 1),
+ price: parseFloat(li.price?.amount ?? "0"),
+ })),
+ });
+ }
+
+ cursor = data.metadata?.cursors?.next ?? data.pagingMetadata?.cursors?.next ?? null;
+ if (!cursor || pageOrders.length === 0) break;
+ }
+ return orders;
+}
 
 export async function fetchWixProducts(
  siteId: string,
