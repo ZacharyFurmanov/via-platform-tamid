@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { sendStoreSaleEmail } from "@/app/lib/email";
 import { stores, storeContactEmails } from "@/app/lib/stores";
+import { suppressConversion } from "@/app/lib/analytics-db";
 
 function hashPassword(password: string): string {
  const crypto = require("crypto");
@@ -354,7 +355,13 @@ export async function DELETE(
  if (!dbUrl) return NextResponse.json({ error: "No database" }, { status: 500 });
 
  const sql = neon(dbUrl);
+ // Grab the order_id + store before deleting so we can tombstone it — otherwise the
+ // next Carroll/Nello/Square re-sync (or a replayed webhook) re-creates the row.
+ const rows = await sql`SELECT order_id, store_slug FROM conversions WHERE conversion_id = ${id} LIMIT 1`;
  await sql`DELETE FROM conversions WHERE conversion_id = ${id}`;
+ if (rows.length > 0 && rows[0].order_id) {
+ await suppressConversion(String(rows[0].order_id), String(rows[0].store_slug ?? ""));
+ }
 
  return NextResponse.json({ ok: true });
 }

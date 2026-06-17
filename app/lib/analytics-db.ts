@@ -63,6 +63,17 @@ export async function initAnalyticsTables() {
  await sql`CREATE INDEX IF NOT EXISTS idx_conversions_store ON conversions(store_slug)`;
  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_conversions_order_store ON conversions(order_id, store_slug)`;
 
+ // Tombstones for manually-deleted conversions — so a re-sync never re-creates
+ // an order an admin intentionally removed.
+ await sql`
+ CREATE TABLE IF NOT EXISTS suppressed_conversions (
+ order_id VARCHAR(255) NOT NULL,
+ store_slug VARCHAR(255) NOT NULL,
+ suppressed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+ PRIMARY KEY (order_id, store_slug)
+ )
+ `;
+
  // Migrations: add user_id to clicks and conversions (safe to run repeatedly)
  await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS user_id TEXT`;
  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS user_id TEXT`;
@@ -206,6 +217,16 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  // Normalize to the canonical store slug so dedup, analytics, and email lookups all match.
  const storeSlug = canonicalStoreSlug(conversion.storeSlug);
 
+ // Suppression tombstone: if an admin manually deleted this order, never re-create it.
+ // Re-syncs (Carroll/Nello/Square order pulls, webhooks) call saveConversion again on
+ // every run — without this check a deleted conversion silently reappears.
+ const suppressed = await sql`
+ SELECT 1 FROM suppressed_conversions WHERE order_id = ${conversion.orderId} AND store_slug = ${storeSlug} LIMIT 1
+ `;
+ if (suppressed.length > 0) {
+ return { duplicate: true };
+ }
+
  // Always store conversions in USD. Non-US stores capture in their local currency
  // (GBP/EUR/CAD/AUD); convert here so the conversions table + all revenue analytics
  // are apples-to-apples. The original amount/currency is preserved for audit.
@@ -251,6 +272,18 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  `;
 
  return { duplicate: false };
+}
+
+// Tombstone an order so future re-syncs never re-create it. Call this whenever a
+// conversion is intentionally deleted.
+export async function suppressConversion(orderId: string, storeSlug: string): Promise<void> {
+ const sql = neon(getDatabaseUrl());
+ await initAnalyticsTables();
+ await sql`
+ INSERT INTO suppressed_conversions (order_id, store_slug)
+ VALUES (${orderId}, ${canonicalStoreSlug(storeSlug)})
+ ON CONFLICT (order_id, store_slug) DO NOTHING
+ `;
 }
 
 export async function getConversionAnalytics(range: string) {
