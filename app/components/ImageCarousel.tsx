@@ -312,25 +312,6 @@ export default function ImageCarousel({
  <div className="absolute inset-0 bg-[#D8CABD]/50" />
  )}
 
- {/* Image counter */}
- {hasMultiple && (
- <div className="absolute top-3 left-3 z-20 bg-black/40 text-white text-xs px-2 py-1 rounded-full select-none">
- {current + 1} / {safeImages.length}
- </div>
- )}
-
- {/* Expand / zoom button */}
- <button
- onClick={openLightbox}
- className="absolute bottom-8 right-3 z-20 w-9 h-9 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition"
- aria-label="View full screen"
- >
- <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
- d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 4l-5-5" />
- </svg>
- </button>
-
  {/* Progress dots */}
  {hasMultiple && (
  <div className="absolute bottom-0 left-0 right-0 z-20 flex gap-[2px] px-3 pb-2 pt-4 bg-gradient-to-t from-black/20 to-transparent">
