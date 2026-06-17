@@ -60,7 +60,8 @@ function inferPageType(pathname: string): string {
 export default function GlobalPageTracker() {
  const pathname = usePathname();
  const { data: session, status } = useSession();
- const utmTracked = useRef(false);
+ const sentAnon = useRef(false);
+ const sentWithUser = useRef(false);
  // In-memory ref so UTM data survives even when sessionStorage is blocked
  // (TikTok in-app browser and some other WebViews block web storage).
  const utmPayloadRef = useRef<Record<string, string | null> | null>(null);
@@ -203,30 +204,38 @@ export default function GlobalPageTracker() {
  // ref was reset but sessionStorage survived.
  useEffect(() => {
  if (status === "loading") return;
- if (utmTracked.current) return;
 
- // Try in-memory ref first (works in TikTok browser and all others).
+ // Read the captured source (in-memory ref, or sessionStorage after a full nav).
  let data: Record<string, string | null> | null = utmPayloadRef.current;
-
- // Fallback to sessionStorage (covers re-mount after full navigation).
  if (!data) {
  try {
  const stored = sessionStorage.getItem("via_utm_data");
  if (stored) data = JSON.parse(stored);
  } catch {}
  }
-
  if (!data) return;
 
  const userId = status === "authenticated"
  ? ((session?.user as { id?: string } | undefined)?.id ?? null)
  : null;
 
- utmTracked.current = true;
- utmPayloadRef.current = null;
+ // Send at most once anonymously and once with a user_id. The user_id send is
+ // what links the source to the account — critical when someone lands logged
+ // out (no user_id yet) and signs up later: we keep the captured source around
+ // and re-send it, tied to the user, once auth resolves. (Previously it fired
+ // once — usually anonymously — then locked, so most signups had no linked source.)
+ if (userId) {
+ if (sentWithUser.current) return;
+ sentWithUser.current = true;
+ utmPayloadRef.current = null; // linked to the account now — safe to clear
  try {
  sessionStorage.removeItem("via_utm_data");
  } catch {}
+ } else {
+ if (sentAnon.current) return;
+ sentAnon.current = true;
+ // Keep the captured data so the later authenticated send can re-use it.
+ }
 
  const payload = JSON.stringify({ ...data, user_id: userId });
 

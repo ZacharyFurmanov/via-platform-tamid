@@ -280,13 +280,19 @@ export async function GET(
  acquisitionSource = (clickRows[0]?.utm_source as string) ?? null;
  }
  }
+ if (!acquisitionSource) {
+ // Waitlist / email-capture signups never browse signed in, so there's no
+ // utm_visits row — but we DID record where the email was captured. Surface it.
+ const wlRows = await sql`SELECT source FROM waitlist WHERE LOWER(email) = LOWER(${email}) LIMIT 1`.catch(() => []);
+ acquisitionSource = (wlRows[0]?.source as string) ?? null;
+ }
  if (!acquisitionSource && pilot?.referred_by) acquisitionSource = "referral";
  if (acquisitionSource) acquisitionSource = SRC_ALIAS[acquisitionSource.toLowerCase()] ?? acquisitionSource.toLowerCase();
 
  return NextResponse.json({
  profile: {
  email,
- name: user?.name ?? pilot?.first_name ? `${pilot?.first_name ?? ""} ${pilot?.last_name ?? ""}`.trim() : null,
+ name: ([pilot?.first_name, pilot?.last_name].filter(Boolean).join(" ") || user?.name || null),
  phone: pilot?.phone ?? null,
  status: pilot?.status ?? null,
  signedUpAt: pilot?.created_at ?? null,
