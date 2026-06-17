@@ -26,13 +26,31 @@ function getDatabaseUrl(): string {
  return url;
 }
 
-// GET /api/admin/category-qa?limit=50&offset=0 — for a batch of products, compare
-// the STOREFRONT category (inferCategoryFromTitle, what users actually see) against
-// an INDEPENDENT vision read of the product photo. Both are folded to a coarse
-// family via normalizeCategory (Bags / Shoes / Accessories / Tops / …) so we only
-// flag genuine cross-family mismatches (e.g. a bag filed under jewelry), not
-// tote-vs-bag subcategory noise. Costs ~1 cheap vision call per product — YOU
-// trigger it, in batches (bump offset until scanned hits 0).
+// Fold a coarse normalizeCategory family into a broad TYPE. We only flag
+// cross-TYPE disagreements (a bag filed under jewelry, a shoe filed under
+// clothing) — the errors that actually matter for browsing. Everything inside
+// "clothing" (jeans vs pants, sweater vs top, skirt vs jacket) is left alone:
+// jeans/pants stay separate categories, but the vision model can't reliably
+// tell them apart from a photo, so those disagreements aren't actionable.
+function coarseToType(coarse: string | null): string | null {
+ if (!coarse) return null;
+ if (coarse === "Bags") return "bags";
+ if (coarse === "Shoes") return "shoes";
+ if (coarse === "Accessories") return "accessories"; // jewelry folds in here
+ return "clothing"; // dresses, tops, sweaters, coats, jeans, pants, skirts, shorts, jumpsuits
+}
+
+// Multi-item listings ("... Set", "... Suit") are genuinely more than one
+// category — vision picks one piece, the title another. Don't flag them.
+const MULTI_ITEM_RE = /\b(set|suit)\b/i;
+
+// GET /api/admin/category-qa?limit=200&offset=0&types=bags,accessories
+// For a batch of products, compare the STOREFRONT category (inferCategoryFromTitle,
+// what users see) against an INDEPENDENT vision read of the photo. Both are folded
+// to a broad TYPE; only cross-TYPE mismatches are flagged. The optional `types`
+// filter restricts the (paid) vision call to products whose storefront type is in
+// the list — use `types=bags,accessories` to hunt bag/jewelry mislabels cheaply.
+// YOU trigger it, in batches (bump offset until scanned hits 0).
 export async function GET(request: NextRequest) {
  if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  if (!isVisionConfigured()) {
@@ -42,8 +60,12 @@ export async function GET(request: NextRequest) {
  );
  }
 
- const limit = Math.min(Math.max(parseInt(request.nextUrl.searchParams.get("limit") ?? "50", 10), 1), 100);
+ const limit = Math.min(Math.max(parseInt(request.nextUrl.searchParams.get("limit") ?? "200", 10), 1), 500);
  const offset = Math.max(parseInt(request.nextUrl.searchParams.get("offset") ?? "0", 10), 0);
+ const typesParam = request.nextUrl.searchParams.get("types");
+ const typeFilter = typesParam
+ ? new Set(typesParam.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean))
+ : null;
 
  const sql = neon(getDatabaseUrl());
  const rows = (await sql`
@@ -54,24 +76,38 @@ export async function GET(request: NextRequest) {
  LIMIT ${limit} OFFSET ${offset}
  `) as { id: number; title: string; store_slug: string; image: string }[];
 
+ // Cheap pass first (no vision): resolve each product's storefront type and decide
+ // whether it's a vision candidate. This keeps vision spend to the targeted slice.
+ const candidates = rows
+ .map((p) => {
+ const storefrontCoarse = normalizeCategory(inferCategoryFromTitle(p.title));
+ const storefrontType = coarseToType(storefrontCoarse);
+ return { ...p, storefrontCoarse, storefrontType };
+ })
+ .filter((p) => {
+ if (!p.storefrontType) return false; // can't classify the title → skip
+ if (MULTI_ITEM_RE.test(p.title)) return false; // multi-item set/suit → skip
+ if (typeFilter && !typeFilter.has(p.storefrontType)) return false; // out of focus
+ return true;
+ });
+
  const mismatches: Array<{
  id: number;
  title: string;
  url: string;
  storefrontCategory: string;
  imageCategory: string;
+ storefrontType: string;
+ imageType: string;
  }> = [];
  let checked = 0;
  let skipped = 0;
 
- // Modest concurrency to stay well under vision rate limits.
  const CHUNK = 5;
- for (let i = 0; i < rows.length; i += CHUNK) {
- const chunk = rows.slice(i, i + CHUNK);
+ for (let i = 0; i < candidates.length; i += CHUNK) {
+ const chunk = candidates.slice(i, i + CHUNK);
  await Promise.all(
  chunk.map(async (p) => {
- const storefrontSlug = inferCategoryFromTitle(p.title);
- const coarseTitle = normalizeCategory(storefrontSlug);
  let visionRaw: string | null = null;
  try {
  visionRaw = await identifyCategory(p.image);
@@ -79,20 +115,23 @@ export async function GET(request: NextRequest) {
  skipped++;
  return;
  }
- const coarseImage = visionRaw ? normalizeCategory(visionRaw) : null;
- // Only compare when both sides resolve to a known coarse family.
- if (!coarseTitle || !coarseImage) {
+ const imageCoarse = visionRaw ? normalizeCategory(visionRaw) : null;
+ const imageType = coarseToType(imageCoarse);
+ if (!imageType) {
  skipped++;
  return;
  }
  checked++;
- if (coarseTitle !== coarseImage) {
+ // Only flag a genuine cross-TYPE mismatch.
+ if (p.storefrontType !== imageType) {
  mismatches.push({
  id: p.id,
  title: p.title,
  url: `/products/${p.store_slug}-${p.id}`,
- storefrontCategory: coarseTitle,
- imageCategory: coarseImage,
+ storefrontCategory: p.storefrontCoarse as string,
+ imageCategory: imageCoarse as string,
+ storefrontType: p.storefrontType as string,
+ imageType,
  });
  }
  }),
@@ -102,6 +141,7 @@ export async function GET(request: NextRequest) {
  return NextResponse.json({
  ok: true,
  scanned: rows.length,
+ candidates: candidates.length,
  checked,
  skipped,
  mismatchCount: mismatches.length,
