@@ -159,6 +159,49 @@ export async function identifyCategory(imageUrl: string): Promise<string | null>
  return text;
 }
 
+// Verification pass for the category QA. Given the broad GROUP a product is filed
+// under, asks a stronger model to confirm whether the MAIN item in the photo
+// actually belongs to that group. Returns "match" | "mismatch" | null (unsure).
+// Run only on Stage-1 candidates so the strong-model cost stays tiny — this is
+// what drives the false-positive rate down (cheap Haiku flags, strong model
+// confirms before we report). Defaults to Opus for accuracy.
+const VERIFY_MODEL = process.env.VISION_VERIFY_MODEL || "claude-opus-4-8";
+
+export async function confirmCategoryGroup(imageUrl: string, groupPhrase: string): Promise<"match" | "mismatch" | null> {
+ const apiKey = process.env.ANTHROPIC_API_KEY;
+ if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
+ if (!imageUrl) return null;
+
+ const res = await fetch(ANTHROPIC_URL, {
+ method: "POST",
+ headers: {
+ "x-api-key": apiKey,
+ "anthropic-version": "2023-06-01",
+ "content-type": "application/json",
+ },
+ body: JSON.stringify({
+ model: VERIFY_MODEL,
+ max_tokens: 8,
+ messages: [
+  {
+  role: "user",
+  content: [
+   { type: "image", source: { type: "url", url: imageUrl } },
+   { type: "text", text: `This product is listed under "${groupPhrase}". Look ONLY at the main item being sold — ignore any model's other clothing, the background, and props. Does that item genuinely belong to "${groupPhrase}"? Answer with exactly one word: YES or NO.` },
+  ],
+  },
+ ],
+ }),
+ });
+
+ if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text().catch(() => "")}`);
+ const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
+ const text = data.content?.find((c) => c.type === "text")?.text?.trim().toLowerCase() ?? "";
+ if (text.startsWith("yes")) return "match";
+ if (text.startsWith("no")) return "mismatch";
+ return null;
+}
+
 export async function identifyItem(images: VisionImage[]): Promise<ItemIdentification> {
  const apiKey = process.env.ANTHROPIC_API_KEY;
  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { neon } from "@neondatabase/serverless";
-import { isVisionConfigured, identifyCategory } from "@/app/lib/data-layer/vision";
+import { isVisionConfigured, identifyCategory, confirmCategoryGroup } from "@/app/lib/data-layer/vision";
 import { inferCategoryFromTitle } from "@/app/lib/loadStoreProducts";
 import { normalizeCategory } from "@/app/lib/market-data-db";
 
@@ -43,6 +43,14 @@ function coarseToType(coarse: string | null): string | null {
 // Multi-item listings ("... Set", "... Suit") are genuinely more than one
 // category — vision picks one piece, the title another. Don't flag them.
 const MULTI_ITEM_RE = /\b(set|suit)\b/i;
+
+// Human-readable phrase for the verification (Stage 2) prompt, per broad type.
+const TYPE_PHRASE: Record<string, string> = {
+ bags: "Bags & Handbags",
+ shoes: "Shoes & Footwear",
+ accessories: "Accessories (belts, scarves, hats, jewelry, sunglasses, gloves, ties)",
+ clothing: "Clothing (tops, dresses, pants, skirts, jackets, sweaters, etc.)",
+};
 
 // GET /api/admin/category-qa?limit=200&offset=0&types=bags,accessories
 // For a batch of products, compare the STOREFRONT category (inferCategoryFromTitle,
@@ -102,6 +110,7 @@ export async function GET(request: NextRequest) {
  }> = [];
  let checked = 0;
  let skipped = 0;
+ let droppedByVerify = 0;
 
  const CHUNK = 5;
  for (let i = 0; i < candidates.length; i += CHUNK) {
@@ -122,8 +131,23 @@ export async function GET(request: NextRequest) {
  return;
  }
  checked++;
- // Only flag a genuine cross-TYPE mismatch.
+ // Stage 1 found a cross-TYPE disagreement. Don't report it yet — Stage 2
+ // asks a stronger model to confirm the photo really ISN'T the filed type.
  if (p.storefrontType !== imageType) {
+ let verdict: "match" | "mismatch" | null = null;
+ try {
+ const stype = p.storefrontType as string;
+ verdict = await confirmCategoryGroup(p.image, TYPE_PHRASE[stype] ?? stype);
+ } catch {
+ verdict = null;
+ }
+ // Only flag when the strong model also says the item is NOT the filed
+ // type. "match" (Stage-1 vision misread) and null (unsure) are dropped,
+ // which is what keeps the false-positive rate low.
+ if (verdict !== "mismatch") {
+ droppedByVerify++;
+ return;
+ }
  mismatches.push({
  id: p.id,
  title: p.title,
@@ -144,6 +168,7 @@ export async function GET(request: NextRequest) {
  candidates: candidates.length,
  checked,
  skipped,
+ droppedByVerify,
  mismatchCount: mismatches.length,
  nextOffset: rows.length === limit ? offset + limit : null,
  mismatches: mismatches.sort((a, b) => a.id - b.id),
