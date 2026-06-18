@@ -315,30 +315,39 @@ export async function syncProducts(
  "invoice",
  ];
 
+ // Per-store exclusions come from two places: the store config (options) AND the
+ // admin-managed "permanently removed" list in blocked_products. The DB list lets the
+ // team remove a specific item from the admin with no code change, enforced on every
+ // sync path (all call syncProducts). .catch handles the table not existing yet.
+ const dbBlockedRows = (await sql`SELECT title FROM blocked_products WHERE store_slug = ${storeSlug}`.catch(() => [])) as { title: string }[];
+ const excludeKws = (options?.excludeKeywords ?? []).map((k) => k.toLowerCase());
+ const excludeTitles = new Set<string>([
+ ...(options?.excludeTitles ?? []).map((t) => t.toLowerCase()),
+ ...dbBlockedRows.map((r) => r.title.toLowerCase()),
+ ]);
+
+ // A title is blocked if it matches a global pattern, an exact removed/excluded title,
+ // or an excluded keyword. Used both to delete existing rows AND to skip re-inserting
+ // on this same sync run (see the upsert loop below — `if (isBlocked) continue`).
  const isBlocked = (title: string) => {
  const lower = title.toLowerCase();
- return BLOCKED_TITLE_PATTERNS.some((p) => lower.includes(p));
+ return BLOCKED_TITLE_PATTERNS.some((p) => lower.includes(p))
+ || excludeTitles.has(lower)
+ || excludeKws.some((kw) => lower.includes(kw));
  };
 
- // Remove any previously-synced blocked products for this store. Driven by the
- // same pattern list above so the two never drift apart.
+ // Remove any previously-synced globally-blocked products for this store.
  for (const pat of BLOCKED_TITLE_PATTERNS) {
  await sql`DELETE FROM products WHERE store_slug = ${storeSlug} AND title ILIKE ${"%" + pat + "%"}`;
  }
 
- // Remove store-specific excluded products that may already be in the DB
- const excludeKws = (options?.excludeKeywords ?? []).map((k) => k.toLowerCase());
- const excludeTitles = new Set((options?.excludeTitles ?? []).map((t) => t.toLowerCase()));
+ // Remove store-specific excluded / permanently-removed products already in the DB.
  if (excludeKws.length > 0 || excludeTitles.size > 0) {
  const existing = await sql`SELECT title FROM products WHERE store_slug = ${storeSlug}`;
- const toDelete = (existing as { title: string }[])
- .map((r) => r.title)
- .filter((t) => {
- const lower = t.toLowerCase();
- return excludeTitles.has(lower) || excludeKws.some((kw) => lower.includes(kw));
- });
- for (const t of toDelete) {
- await sql`DELETE FROM products WHERE store_slug = ${storeSlug} AND lower(title) = lower(${t})`;
+ for (const r of existing as { title: string }[]) {
+ if (isBlocked(r.title)) {
+ await sql`DELETE FROM products WHERE store_slug = ${storeSlug} AND lower(title) = lower(${r.title})`;
+ }
  }
  }
 

@@ -24,6 +24,7 @@ import {
  Activity,
  Database,
  ClipboardCheck,
+ Trash2,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -68,6 +69,7 @@ const NAV_SECTIONS = [
  { label: "Collabs", href: "/admin/collabs-links", icon: Link2 },
  { label: "Stores", href: "/admin/stores", icon: Store },
  { label: "Listing Quality", href: "/admin/listing-quality", icon: ClipboardCheck },
+ { label: "Removed Items", href: "/admin/removed-items", icon: Trash2 },
  ],
  },
 ];
