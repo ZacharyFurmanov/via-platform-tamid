@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import sanitizeHtml from "sanitize-html";
 import { getBaseUrl } from "@/app/lib/base-url";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -49,7 +50,22 @@ function expandSize(size: string, categorySlug?: string): string {
 // Shopify storefront UI strings that occasionally leak into scraped descriptions.
 const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*|subscribe\s+to\s+our\s+emails?|payment\s+methods?|american\s+express|apple\s+pay|diners\s+club|google\s+pay|mastercard|paypal|shop\s+pay|venmo|^(email|instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat)(\s+(instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat|email))*$/i;
 
-/** Converts plain text to basic HTML and strips ecom UI junk lines. */
+// Allowlist for seller-imported description HTML. Product descriptions are synced from
+// external stores (semi-trusted), so they're rendered via dangerouslySetInnerHTML and
+// MUST be sanitized — strip <script>/<iframe>/on*-handlers/javascript: URLs and keep
+// only basic formatting tags.
+const DESCRIPTION_SANITIZE_OPTS: sanitizeHtml.IOptions = {
+ allowedTags: ["p", "br", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li",
+  "h1", "h2", "h3", "h4", "h5", "h6", "a", "span", "blockquote"],
+ allowedAttributes: { a: ["href", "target", "rel"] },
+ allowedSchemes: ["http", "https", "mailto"],
+ disallowedTagsMode: "discard",
+ transformTags: {
+  a: sanitizeHtml.simpleTransform("a", { rel: "nofollow noopener noreferrer", target: "_blank" }),
+ },
+};
+
+/** Converts plain text to basic HTML, strips ecom UI junk lines, and sanitizes HTML. */
 function sanitizeDescription(html: string | null): string | null {
  if (!html) return null;
 
@@ -66,6 +82,9 @@ function sanitizeDescription(html: string | null): string | null {
  const plain = inner.replace(/<[^>]+>/g, "").replace(/&[a-z]+;/gi, " ").trim();
  return ECOM_JUNK_LINE_RE.test(plain) ? "" : match;
  });
+
+ // Final safety pass: strip anything not on the allowlist before it reaches the DOM.
+ html = sanitizeHtml(html, DESCRIPTION_SANITIZE_OPTS);
 
  return html.trim() || null;
 }
