@@ -807,6 +807,23 @@ export const stores = [
  "Exchanges accepted within 14 days of receipt — no cash refunds. Items must be unworn and unused with tags and original packaging; once inspected, store credit for the value is issued. If there is an issue with your order, contact the team and they will do their best to help.",
  },
  {
+ slug: "sacrare",
+ dashboardToken: "sac-7e2c9a4f1d8b",
+ name: "Sacrare",
+ location: "New York, NY",
+ description:
+ "Sacrare is a New York based luxury reseller specializing in rare, obsession-worthy designer handbags and accessories. We curate a highly selective collection of authenticated vintage, limited-edition, and hard to find pieces from fashion brands such as Chanel, Hermes, Louis Vuitton, and more. Unlike large reseller sites with thousands of listings, Sacrare hand-selects only the rarest and most coveted pieces, making it easier for collectors and fashion enthusiasts to discover timeless, sustainable treasures. Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
+ website: "https://www.sacrare.com",
+ dataSource: "sacrare",
+ image: "/stores/sacrare.jpg",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ affiliatePath: "VYA",
+ collabsStoreId: "244883",
+ authenticityPolicy:
+ "Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
+ },
+ {
  slug: "sarah-does",
  dashboardToken: "sd-7a1c4e9f2b8d",
  name: "SarahDoes",
@@ -1200,23 +1217,6 @@ export const stores = [
  "Ships from New York, NY. Shipping rates are calculated at checkout.",
  returnPolicy:
  "Bottoms may be returned within 10 days for a refund to your original payment method (issued within 10 business days of approval); all other items are final sale. There are no direct exchanges, and sale items and gift cards are non-returnable.",
- },
- {
- slug: "sacrare",
- dashboardToken: "sac-7e2c9a4f1d8b",
- name: "Sacrare",
- location: "New York, NY",
- description:
- "Sacrare is a New York based luxury reseller specializing in rare, obsession-worthy designer handbags and accessories. We curate a highly selective collection of authenticated vintage, limited-edition, and hard to find pieces from fashion brands such as Chanel, Hermes, Louis Vuitton, and more. Unlike large reseller sites with thousands of listings, Sacrare hand-selects only the rarest and most coveted pieces, making it easier for collectors and fashion enthusiasts to discover timeless, sustainable treasures. Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
- website: "https://www.sacrare.com",
- dataSource: "sacrare",
- image: "/stores/sacrare.jpg",
- currency: "USD",
- commissionType: "shopify-collabs" as const,
- affiliatePath: "VYA",
- collabsStoreId: "244883",
- authenticityPolicy:
- "Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
  },
 ];
 
