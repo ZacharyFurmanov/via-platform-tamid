@@ -4,6 +4,7 @@ import { saveConversion } from "@/app/lib/analytics-db";
 import { stores, convertCurrencyToUSD, refreshExchangeRates } from "@/app/lib/stores";
 import { getSetting } from "@/app/lib/settings-db";
 import { neon } from "@neondatabase/serverless";
+import { timingSafeEqualStr } from "@/app/lib/safe-compare";
 
 async function verifyShopifyHmac(body: string, hmacHeader: string, secret: string): Promise<boolean> {
  const encoder = new TextEncoder();
@@ -16,7 +17,7 @@ async function verifyShopifyHmac(body: string, hmacHeader: string, secret: strin
  );
  const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
  const digest = Buffer.from(new Uint8Array(signed)).toString("base64");
- return digest === hmacHeader;
+ return timingSafeEqualStr(digest, hmacHeader);
 }
 
 function resolveStore(storeSlugParam: string | null, shopDomain: string | null): { slug: string; name: string } | null {
@@ -186,6 +187,7 @@ export async function POST(request: NextRequest) {
  orderId, orderTotal, currency: "USD", items,
  viaClickId: String(matchedClick.click_id),
  userId: matchedUserId ?? undefined,
+ customerEmail: buyerEmail,
  storeSlug, storeName, matched: true,
  matchedClickData: {
  clickId: String(matchedClick.click_id),

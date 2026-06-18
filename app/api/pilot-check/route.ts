@@ -10,7 +10,9 @@ import { sendPilotApprovalEmail } from "@/app/lib/email";
 export async function GET(request: NextRequest) {
  const session = await auth();
  const next = request.nextUrl.searchParams.get("next") || "/";
- const safeNext = next.startsWith("/") ? next : "/";
+ // Must be a site-relative path. Reject protocol-relative ("//evil.com") and
+ // backslash variants, which new URL() would otherwise resolve to an external host.
+ const safeNext = (next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")) ? next : "/";
 
  if (!session?.user?.email) {
  return NextResponse.redirect(new URL("/login", request.url));

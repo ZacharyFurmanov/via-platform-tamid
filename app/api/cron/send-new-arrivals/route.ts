@@ -21,7 +21,7 @@ export async function GET(request: Request) {
  const testEmail = searchParams.get("testEmail");
 
  // Allow unauthenticated access for test sends (testEmail param) — never touches the lock
- if (!testEmail && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+ if (!testEmail && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
 

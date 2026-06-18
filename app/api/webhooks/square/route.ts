@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBaseUrl } from "@/app/lib/base-url";
 import { saveConversion } from "@/app/lib/analytics-db";
 import { neon } from "@neondatabase/serverless";
+import { timingSafeEqualStr } from "@/app/lib/safe-compare";
 
 /**
  * Verify Square's HMAC-SHA256 webhook signature.
@@ -27,7 +28,7 @@ async function verifySquareSignature(
  );
  const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
  const digest = Buffer.from(new Uint8Array(signed)).toString("base64");
- return digest === signatureHeader;
+ return timingSafeEqualStr(digest, signatureHeader);
  } catch {
  return false;
  }
@@ -102,6 +103,8 @@ export async function POST(request: NextRequest) {
  const amountMoney = payment.total_money as Record<string, unknown> | undefined;
  const amountCents = (amountMoney?.amount as number) ?? 0;
  const orderTotal = amountCents / 100;
+ // Square includes the buyer's email on the payment object for most online payments.
+ const buyerEmail = (payment.buyer_email_address as string | null) || null;
 
  // Resolve which VYA store this belongs to using the ?store= query param
  // Square doesn't send a shop domain header, so the webhook URL must include ?store=slug
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest) {
  storeSlug,
  storeName,
  matched: !!matchedClick,
+ customerEmail: buyerEmail,
  matchedClickData: matchedClick
  ? {
  clickId: String(matchedClick.click_id),

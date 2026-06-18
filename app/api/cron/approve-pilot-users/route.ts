@@ -1,8 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPendingUsersToApprove, approvePilotUser, markApprovalEmailSent } from "@/app/lib/pilot-db";
 import { sendPilotApprovalEmail } from "@/app/lib/email";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+ // Fail-closed cron auth. This route grants platform access + sends emails, so it must
+ // never run for an anonymous caller (and /api/cron bypasses the middleware admin gate).
+ const cronSecret = process.env.CRON_SECRET;
+ if (!cronSecret || request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+ return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+ }
  try {
  const users = await getPendingUsersToApprove();
 
@@ -35,7 +41,7 @@ export async function GET() {
  const approved = results.filter((r) => r.approved).length;
  const emailed = results.filter((r) => r.emailed).length;
  console.log(`[PilotApproval] Done — ${approved} approved, ${emailed} emailed`);
- return NextResponse.json({ approved, emailed, results });
+ return NextResponse.json({ approved, emailed });
  } catch (error) {
  console.error("[PilotApproval] Error:", error);
  return NextResponse.json({ error: "Failed" }, { status: 500 });

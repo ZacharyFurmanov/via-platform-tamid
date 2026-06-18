@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveConversion } from "@/app/lib/analytics-db";
 
-// Map from webhook token → store slug.
-// Tokens can also be overridden via env vars (e.g. PARTNER_WEBHOOK_TOKEN_CARROLL).
-const TOKEN_TO_STORE: Record<string, string> = {
- [process.env.PARTNER_WEBHOOK_TOKEN_CARROLL ?? "csv-7k3m9p1n4q8x2f"]: "carroll-street-vintage",
-};
+// Map from webhook token → store slug. Tokens come ONLY from env vars — never hardcode
+// a credential in source (a committed literal is a live commission-fraud vector since this
+// endpoint records sales). Set PARTNER_WEBHOOK_TOKEN_CARROLL in the environment.
+const TOKEN_TO_STORE: Record<string, string> = {};
+if (process.env.PARTNER_WEBHOOK_TOKEN_CARROLL) {
+ TOKEN_TO_STORE[process.env.PARTNER_WEBHOOK_TOKEN_CARROLL] = "carroll-street-vintage";
+}
 
 export async function POST(request: NextRequest) {
  let body: Record<string, unknown>;

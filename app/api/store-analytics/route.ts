@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stores } from "@/app/lib/stores";
 import { getStoreAnalytics } from "@/app/lib/analytics-db";
+import { timingSafeEqualStr } from "@/app/lib/safe-compare";
 
 export async function GET(request: NextRequest) {
  const { searchParams } = new URL(request.url);
@@ -13,7 +14,11 @@ export async function GET(request: NextRequest) {
  }
 
  const store = stores.find((s) => s.slug === storeSlug);
- if (!store || !("dashboardToken" in store) || (store as any).dashboardToken !== token) {
+ const expectedToken = store && "dashboardToken" in store
+ ? (store as { dashboardToken?: string }).dashboardToken
+ : null;
+ // Timing-safe compare so the per-store dashboard token can't be guessed byte-by-byte.
+ if (!store || !expectedToken || !timingSafeEqualStr(token, expectedToken)) {
  return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
  }
 

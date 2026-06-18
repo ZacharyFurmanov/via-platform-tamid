@@ -49,7 +49,8 @@ export async function POST(request: Request) {
  if (userId) {
  const user = await getUserById(userId);
  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
- displayName = user.name?.trim() || user.email.split("@")[0];
+ // Never expose the email local-part as a public name — fall back to a neutral handle.
+ displayName = user.name?.trim() || `Member ${String(userId).slice(-4)}`;
  } else {
  const bodyName = (body?.displayName ?? "").toString().trim();
  if (!bodyName) {

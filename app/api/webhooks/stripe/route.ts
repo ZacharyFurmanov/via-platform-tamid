@@ -5,6 +5,7 @@ import { getAllStoreEmails } from "@/app/lib/stores";
 import { saveConversion } from "@/app/lib/analytics-db";
 import { setStorePlan } from "@/app/lib/store-plans-db";
 import { neon } from "@neondatabase/serverless";
+import { timingSafeEqualStr } from "@/app/lib/safe-compare";
 
 function unixToIso(v: unknown): string | null {
  const n = typeof v === "number" ? v : typeof v === "string" ? parseInt(v, 10) : NaN;
@@ -27,6 +28,12 @@ async function verifyStripeSignature(
  const signature = parts["v1"];
  if (!timestamp || !signature) return false;
 
+ // Replay protection: reject events whose signed timestamp is more than 5 minutes
+ // old (or in the future). Without this, a captured valid event can be replayed
+ // indefinitely to re-trigger subscription activations / conversions.
+ const ts = Number(timestamp);
+ if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) return false;
+
  const payload = `${timestamp}.${body}`;
  const encoder = new TextEncoder();
  const key = await crypto.subtle.importKey(
@@ -41,7 +48,7 @@ async function verifyStripeSignature(
  .map((b) => b.toString(16).padStart(2, "0"))
  .join("");
 
- return expected === signature;
+ return timingSafeEqualStr(expected, signature);
 }
 
 export async function POST(request: NextRequest) {
