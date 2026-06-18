@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
 
   const store = request.nextUrl.searchParams.get("store");
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  // Default 30 (typeahead callers); Removed Items passes a high limit to list a
+  // whole store's catalog. Clamped so it can't be abused.
+  const limitParam = parseInt(request.nextUrl.searchParams.get("limit") ?? "30", 10);
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 2000) : 30;
 
   if (!store) return NextResponse.json({ error: "store is required" }, { status: 400 });
 
@@ -33,7 +37,7 @@ export async function GET(request: NextRequest) {
       WHERE store_slug = ${store}
         AND (${q} = '' OR title ILIKE ${pattern})
       ORDER BY title
-      LIMIT 30
+      LIMIT ${limit}
     `,
     sql`
       SELECT title, final_price AS price, image, 'sold' AS source
@@ -41,7 +45,7 @@ export async function GET(request: NextRequest) {
       WHERE store_slug = ${store}
         AND (${q} = '' OR title ILIKE ${pattern})
       ORDER BY sold_at DESC
-      LIMIT 30
+      LIMIT ${limit}
     `,
   ]);
 

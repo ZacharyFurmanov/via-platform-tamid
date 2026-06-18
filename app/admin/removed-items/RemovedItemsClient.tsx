@@ -34,7 +34,7 @@ export default function RemovedItemsClient({ stores }: { stores: StoreOpt[] }) {
  setSearching(true);
  setMsg(null);
  try {
- const res = await fetch(`/api/admin/products/search?store=${encodeURIComponent(store)}&q=${encodeURIComponent(query)}`);
+ const res = await fetch(`/api/admin/products/search?store=${encodeURIComponent(store)}&q=${encodeURIComponent(query)}&limit=1000`);
  const data = await res.json();
  setResults(res.ok ? data.products ?? [] : []);
  if (!res.ok) setMsg(data.error ?? "Search failed.");
