@@ -8,6 +8,7 @@ const STORE_NAME = "Carroll Street Vintage";
 
 interface StripeCharge {
  id: string;
+ payment_intent: string | null;
  amount: number;
  currency: string;
  status: string;
@@ -76,7 +77,12 @@ export async function POST(request: NextRequest) {
 
  for (const charge of succeeded) {
  const email = charge.billing_details?.email || charge.receipt_email;
- const conversionId = `stripe-${STORE_SLUG}-${charge.id}`;
+ // Key on the payment-intent so this backfill sync and the live Stripe webhook
+ // produce the SAME conversion_id + order_id per order — otherwise the same sale
+ // lands twice (ch_… from here, py_… from the webhook) and deleting one leaves the
+ // other to reappear. payment_intent is the stable shared id; fall back to charge id.
+ const orderKey = charge.payment_intent || charge.id;
+ const conversionId = `stripe-${STORE_SLUG}-${orderKey}`;
  const orderTotal = charge.amount / 100;
  const currency = charge.currency.toUpperCase();
  const timestamp = new Date(charge.created * 1000).toISOString();
@@ -130,7 +136,7 @@ export async function POST(request: NextRequest) {
  const { duplicate } = await saveConversion({
  conversionId,
  timestamp,
- orderId: charge.id,
+ orderId: orderKey,
  orderTotal,
  currency,
  items: charge.description ? [{ productName: charge.description, quantity: 1, price: orderTotal }] : [],
