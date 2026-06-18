@@ -88,6 +88,9 @@ export async function initAnalyticsTables() {
  // seller's original local amount/currency is preserved here for audit.
  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS original_total NUMERIC(10,2)`;
  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS original_currency VARCHAR(10)`;
+ // Buyer email for the store's sales list (Square sends it on the payment object;
+ // Shopify/Wix via the order webhook). Stored per-conversion so every source is covered.
+ await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS customer_email TEXT`;
 }
 
 export type CartItemSnapshot = {
@@ -193,6 +196,7 @@ export type ConversionRecord = {
  storeName: string;
  matched: boolean;
  userId?: string | null;
+ customerEmail?: string | null;
  matchedClickData?: {
  clickId?: string;
  clickTimestamp?: string;
@@ -252,7 +256,7 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  }
 
  await sql`
- INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, original_total, original_currency, items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id)
+ INSERT INTO conversions (conversion_id, timestamp, order_id, order_total, currency, original_total, original_currency, items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id, customer_email)
  VALUES (
  ${conversion.conversionId},
  ${conversion.timestamp},
@@ -267,7 +271,8 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  ${conversion.storeName},
  ${conversion.matched},
  ${conversion.matchedClickData ? JSON.stringify(conversion.matchedClickData) : null},
- ${conversion.userId || null}
+ ${conversion.userId || null},
+ ${conversion.customerEmail || conversion.matchedClickData?.buyerEmail || null}
  )
  `;
 
@@ -558,6 +563,50 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  const cartCount = cartItems.reduce((s, i) => s + i.inCarts, 0);
  const cartValue = cartItems.reduce((s, i) => s + i.price * i.inCarts, 0);
 
+ // Per-sale list for the store portal: item(s), buyer email, total, and the VYA
+ // commission on that order. Buyer email comes from the order cache (captured on the
+ // Shopify/Wix order webhook) joined by order_id — the store sees the email only for
+ // its OWN sales (it fulfils the order), never another store's data.
+ const emailRows = (await sql`
+ SELECT order_id, email FROM shopify_order_cache
+ WHERE REGEXP_REPLACE(store_slug, '[^a-z0-9-]', '', 'g') = ${storeSlug} AND email IS NOT NULL
+ `.catch(() => [])) as Array<{ order_id: string; email: string }>;
+ const emailByOrder = new Map(emailRows.map((r) => [String(r.order_id), r.email]));
+
+ // The matched buyer's VYA account is the most reliable email source — resolve it for
+ // every order that attributed to a logged-in shopper. (Buyer of this store's own sale.)
+ const userIds = [...new Set(conversions.map((c) => c.userId).filter(Boolean))] as string[];
+ const userRows = userIds.length
+ ? ((await sql`SELECT id, email FROM users WHERE id::text = ANY(${userIds})`.catch(() => [])) as Array<{ id: string; email: string }>)
+ : [];
+ const emailByUser = new Map(userRows.map((r) => [String(r.id), r.email]));
+
+ const sales = conversions.slice(0, 200).map((c) => {
+ // Item name: prefer the line items; fall back to the matched click's product name
+ // (orders synced without line items still know which piece was bought).
+ const items = (c.items ?? []).length
+ ? c.items.map((it) => ({ name: it.productName, quantity: it.quantity }))
+ : c.matchedClickData?.productName
+ ? [{ name: c.matchedClickData.productName, quantity: 1 }]
+ : [];
+ const customerEmail =
+ c.customerEmail ??
+ c.matchedClickData?.buyerEmail ??
+ (c.userId ? emailByUser.get(String(c.userId)) : null) ??
+ emailByOrder.get(String(c.orderId)) ??
+ null;
+ return {
+ conversionId: c.conversionId,
+ timestamp: c.timestamp,
+ orderId: c.orderId,
+ items,
+ customerEmail,
+ orderTotal: c.orderTotal,
+ currency: c.currency,
+ commission: Math.round(tieredCommission(c.orderTotal) * 100) / 100,
+ };
+ });
+
  return {
  totalClicks,
  totalViews,
@@ -573,6 +622,7 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  recentConversions,
  itemsSold,
  topSearches,
+ sales,
  range,
  };
 }
@@ -853,6 +903,7 @@ function mapConversionRow(row: Record<string, unknown>): ConversionRecord {
  storeName: row.store_name as string,
  matched: row.matched as boolean,
  userId: row.user_id as string | null | undefined,
+ customerEmail: (row.customer_email as string | null) ?? null,
  matchedClickData: row.matched_click_data as ConversionRecord["matchedClickData"],
  };
 }

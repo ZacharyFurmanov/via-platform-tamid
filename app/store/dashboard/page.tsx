@@ -61,6 +61,16 @@ type Analytics = {
  cartValue?: number;
  topProducts: { name: string; count: number }[];
  topSearches?: { query: string; count: number }[];
+ sales?: {
+ conversionId: string;
+ timestamp: string;
+ orderId: string;
+ items: { name: string; quantity: number }[];
+ customerEmail: string | null;
+ orderTotal: number;
+ currency: string;
+ commission: number;
+ }[];
  range: string;
 };
 
@@ -779,6 +789,36 @@ function StoreDashboardInner() {
  </>
  );
  })()}
+ </Panel>
+
+ {/* Recent sales — each conversion with item, buyer, total, commission */}
+ <Panel title="Recent sales">
+ {(analytics.sales?.length ?? 0) > 0 ? (
+ <div className="divide-y divide-[#5D0F17]/[0.06]">
+ {analytics.sales!.map((s) => (
+ <div key={s.conversionId} className="flex items-start justify-between gap-4 px-6 py-3">
+ <span className="flex min-w-0 flex-col text-sm text-[#5D0F17]">
+ <span className="truncate">
+ {s.items.map((it) => (it.quantity > 1 ? `${it.name} ×${it.quantity}` : it.name)).join(", ") || "Order"}
+ </span>
+ <span className="truncate text-[12px] text-[#5D0F17]/50">
+ {s.customerEmail ?? "—"} · {new Date(s.timestamp).toLocaleDateString()}
+ </span>
+ </span>
+ <span className="shrink-0 text-right text-sm">
+ <span className="block text-[#5D0F17]">${Math.round(s.orderTotal).toLocaleString()}</span>
+ <span className="block text-[12px] text-[#3a7d5d]">
+ +${s.commission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} commission
+ </span>
+ </span>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <p className="px-6 py-8 text-center text-sm text-[#5D0F17]/45">
+ No sales yet in this range. Each order will appear here with the item, buyer email, total, and your VYA commission.
+ </p>
+ )}
  </Panel>
 
  {/* In shoppers' carts now */}
