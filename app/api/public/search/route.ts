@@ -4,6 +4,7 @@ import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { parseFilters, applyJsFilters, designerPatterns } from "@/app/lib/publicFilters";
+import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +105,7 @@ export async function GET(request: Request) {
  };
  });
 
- products = applyJsFilters(products, filters).slice(0, limit);
+ products = applyJsFilters(products, filters, await getCategoryOverrideMap()).slice(0, limit);
 
  return NextResponse.json({ products });
  } catch {

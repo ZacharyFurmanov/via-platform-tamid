@@ -4,6 +4,7 @@ import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { parseFilters, applyJsFilters, stripSizePrefix, designerPatterns } from "@/app/lib/publicFilters";
+import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
 import { ensureSizeKeysColumn } from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
 
  // Category filtering happens in JS (title-keyword based). Offset advances by the
  // raw rows consumed, not the filtered count, so paging stays consistent.
- products = applyJsFilters(products, filters);
+ products = applyJsFilters(products, filters, await getCategoryOverrideMap());
 
  return NextResponse.json({
   products,

@@ -3,6 +3,7 @@ import { COLLECTIONS } from "@/app/lib/collections-config";
 import { getAllEditorsPicks } from "@/app/lib/editors-picks-db";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
+import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
 import { expandSizeKeys } from "@/app/lib/inventory";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  if (filters.priceMax != null) products = products.filter((p) => p.priceNum <= filters.priceMax!);
  if (filters.stores.length > 0) products = products.filter((p) => filters.stores.includes(p.storeSlug));
 
- products = applyJsFilters(products, filters);
+ products = applyJsFilters(products, filters, await getCategoryOverrideMap());
 
  if (filters.sort === "priceAsc") {
  products = products.slice().sort((a, b) => a.priceNum - b.priceNum);

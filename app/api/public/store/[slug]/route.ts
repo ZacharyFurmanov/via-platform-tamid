@@ -4,6 +4,7 @@ import { visibleStores } from "@/app/lib/stores";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
+import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  };
  });
 
- products = applyJsFilters(products, filters);
+ products = applyJsFilters(products, filters, await getCategoryOverrideMap());
 
  return NextResponse.json({ store: storePayload, products });
  } catch {

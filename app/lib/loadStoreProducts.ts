@@ -26,6 +26,12 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "bracelet bag", "ring handle bag", "ring-handle bag", "ring handle", "ring bag",
  "chain handle bag", "charm bag", "necklace bag", "pendant bag", "brooch bag",
  ]],
+ // Small leather goods whose names contain a jewelry word ("4 Ring Key Holder",
+ // "Key Chain") — matched BEFORE the jewelry NOUNS so "ring"/"chain" can't steal them.
+ ["accessories", [
+ "key holder", "key case", "key ring", "key chain", "key pouch", "key cles",
+ "card holder", "cardholder", "card case", "card wallet", "pochette cles", "cles",
+ ]],
  // Jewelry NOUNS checked first — an earring/necklace/ring title should never be
  // misclassified as bags or clothing even if it shares a designer keyword.
  // NOTE: gemstone/material words (ruby, emerald, pearl…) are intentionally NOT
@@ -70,6 +76,9 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  "chanel 22", "lady dior", "classic flap", "wallet on chain", "capucines",
  "petite malle", "metis", "loulou", "cassette", "arco",
  "birkin", "constance", "lindy", "picotin", "bolide", "evelyne",
+ // Chanel/Loewe flap & quilted styles named without the word "bag".
+ "flap", "mini flap", "double flap", "single flap", "jumbo flap", "woc", "puzzle",
+ "matelasse", "matelassé",
  ]],
  // Specific garment types first — these take priority over material keywords
  ["dresses", ["dress", "gown", "kaftan", "caftan", "sundress", "slip dress", "maxi", "mini dress", "midi dress"]],

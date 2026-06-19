@@ -83,7 +83,11 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
  ],
  bags: [
  "bag", "purse", "clutch", "tote", "backpack", "pouch", "handbag",
- "satchel", "hobo", "duffle", "wallet",
+ "satchel", "hobo", "duffle", "wallet on chain",
+ // Designer styles named without the word "bag"
+ "flap", "woc", "puzzle", "matelasse", "matelassé", "birkin", "constance", "speedy", "pochette",
+ "boy bag", "capucines", "lady dior", "neverfull", "marmont", "dionysus",
+ "peekaboo", "evelyne", "picotin", "lindy", "bolide",
  ],
  shoes: [
  "shoe", "boot", "heel", "sandal", "sneaker", "mule", "loafer", "flat",
@@ -93,6 +97,11 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
  accessories: [
  "belt", "scarf", "hat", "jewelry", "earring", "necklace", "bracelet",
  "ring", "sunglasses", "glasses", "tie", "watch", "headband",
+ // Brooches/charms + small leather goods (wallets/SLGs live here, not bags —
+ // "wallet on chain" is the exception and is matched under bags above)
+ "brooch", "charm", "pendant", "choker", "bangle", "cufflink",
+ "key holder", "key case", "key ring", "key chain", "card holder", "cardholder",
+ "wallet", "coin purse",
  ],
  home: [
  "vase", "lamp", "mug", "cup", "bowl", "plate", "tray", "candle",
@@ -123,21 +132,30 @@ export function categoryKeywords(categories: string[]): string[] {
 
 // Applies in-memory filtering for fields that are hard to express in SQL with
 // neon's tagged-template API (categories, size-list).
-export function applyJsFilters<T extends { name: string }>(
+//
+// `overrideMap` (keyed `${storeSlug}-${id}`, from getCategoryOverrideMap) makes
+// category filtering reflect AI/manual corrections: a product with an override is
+// matched ONLY against its corrected family; everything else falls back to the
+// title-keyword match. Omitting the map preserves the original behavior exactly.
+export function applyJsFilters<T extends { name: string; id?: number | string; storeSlug?: string }>(
  products: T[],
  filters: PublicFilters,
+ overrideMap?: Map<string, string>,
 ): T[] {
  let out = products;
 
  if (filters.categories.length > 0) {
- const kws = categoryKeywords(filters.categories);
- if (kws.length > 0) {
- const lowerKws = kws.map((k) => k.toLowerCase());
+ const lowerKws = categoryKeywords(filters.categories).map((k) => k.toLowerCase());
  out = out.filter((p) => {
+  // Corrected category wins, when we have one for this product.
+  if (overrideMap && p.id != null && p.storeSlug) {
+  const ov = overrideMap.get(`${p.storeSlug}-${p.id}`);
+  if (ov) return filters.categories.includes(ov);
+  }
+  if (lowerKws.length === 0) return true;
   const t = p.name.toLowerCase();
   return lowerKws.some((kw) => t.includes(kw));
  });
- }
  }
 
  return out;
