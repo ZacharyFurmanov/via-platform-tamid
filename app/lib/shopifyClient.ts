@@ -300,6 +300,25 @@ export function extractFitSizeFromDescription(description: string | null): strin
 }
 
 /**
+ * Extracts an explicit US size the seller listed in a size-conversion table, e.g.
+ * "UK 10 / EU 40 / US 6". The seller's own US number is authoritative for a US buyer
+ * and beats formula-converting the EU/UK tag — the generic "EU − 32" rule would turn
+ * this designer's EU 40 into US 8, but she states US 6. Only trusted when a UK/EU/IT/
+ * FR/DE size sits alongside it, so stray text like "ships from US in 2 days" can't match.
+ */
+export function extractUSConversionFromDescription(description: string | null): string | null {
+ if (!description) return null;
+ const text = description.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+ const hasUkEu = /\b(?:UK|EU|IT|FR|DE)\s*\d{1,2}\b/i.test(text);
+ if (!hasUkEu) return null;
+ const m = /\bUS\s*(\d{1,2}(?:\.5)?)\b/i.exec(text);
+ if (!m) return null;
+ const n = parseFloat(m[1]);
+ if (n < 0 || n > 24) return null;
+ return `US ${m[1]}`;
+}
+
+/**
  * Extracts a LETTER fit the seller explicitly states — "Best Fit M - XL",
  * "fits like a large", "Fit: M-L", "best fits medium to large". Returns a single
  * letter ("L") or a range ("M-XL"), normalized + uppercased. Like the numeric

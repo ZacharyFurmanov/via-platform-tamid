@@ -2,7 +2,7 @@ import type { CategorySlug } from "./categoryMap";
 import { getAllProducts, type DBProduct } from "./db";
 import { inferCategoryFromTitle, inferBrandFromTitle } from "./loadStoreProducts";
 import { brandMap } from "./brandData";
-import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, extractFitSizeFromDescription, extractFitLetterFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
+import { extractSizeFromTitle, extractSizeFromDescription, extractTaggedSizeFromDescription, extractFitSizeFromDescription, extractFitLetterFromDescription, extractUSConversionFromDescription, isValidSizeValue, GENERIC_CLOTHING_SIZE } from "./shopifyClient";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size"];
 
@@ -243,6 +243,12 @@ function deriveSizeInner(product: DBProduct): string | null {
  // (which filters under M, L and XL) instead of converting IT 54 → "US 18".
  const fitLetter = extractFitLetterFromDescription(product.description);
  if (fitLetter) return fitLetter;
+
+ // 0c. Explicit US size from a conversion table the seller wrote ("UK 10 / EU 40 /
+ // US 6"). The seller's own US number is authoritative — it beats formula-converting
+ // the EU/UK tag (generic EU−32 would wrongly show US 8 for this EU 40 = US 6 piece).
+ const usConversion = extractUSConversionFromDescription(product.description);
+ if (usConversion) return usConversion;
 
  // 1. Tagged/labeled/marked size in description — most authoritative (actual garment tag)
  // Must run before title/DB to prevent "Size: Large [store bucket]" from winning
