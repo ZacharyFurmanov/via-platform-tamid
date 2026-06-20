@@ -198,7 +198,9 @@ export const stores = [
  image: "/stores/chomp-chomp-vintage.jpg",
  logo: "/stores/chomp-chomp-vintage.jpg",
  logoBg: "#ffffff",
- currency: "GBP",
+ // Seller relisted prices in USD on their store, so no FX conversion is needed.
+ // (Was "GBP", which double-counted: a $750 listing showed as ~$993.)
+ currency: "USD",
  commissionType: "shopify-collabs" as const,
  affiliatePath: "VYA",
  collabsStoreId: "235622",
