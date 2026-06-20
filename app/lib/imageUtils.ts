@@ -62,3 +62,25 @@ export function isSourceResizable(url: string | null | undefined): boolean {
  return false;
  }
 }
+
+/**
+ * Whether to serve a resizable image DIRECTLY (unoptimized), skipping the Vercel
+ * optimizer. We do this for most CDN-resized images because they're already small
+ * and load instantly. The exception is PNGs: the source CDN's `quality` param does
+ * nothing on lossless PNG, so a 1200px PNG is still 1–2MB. Browsers that send
+ * `Accept: image/webp` get a tiny WebP via content negotiation — but in-app
+ * browsers (Instagram/TikTok webviews) often DON'T, and then download the full
+ * multi-MB PNG (the "image takes 10s to load" bug). Routing PNGs through the Vercel
+ * optimizer guarantees a compressed WebP/AVIF for every client, regardless of
+ * Accept headers, and the result is edge-cached after the first fetch.
+ */
+export function shouldServeUnoptimized(url: string | null | undefined): boolean {
+ if (!isSourceResizable(url)) return false;
+ try {
+ const path = new URL(url!).pathname.toLowerCase();
+ if (path.endsWith(".png")) return false; // let Vercel compress PNGs
+ } catch {
+ return false;
+ }
+ return true;
+}

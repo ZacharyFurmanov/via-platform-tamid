@@ -327,7 +327,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
  />
  )}
  {productImages.length > 0 && (
- <ImageCarousel images={productImages} alt={product.title} variant="detail" />
+ <ImageCarousel images={productImages} alt={product.title} variant="detail" priority />
  )}
  </div>
  <div className="hidden md:flex flex-col gap-2">

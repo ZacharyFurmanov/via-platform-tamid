@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import NextImage from "next/image";
-import { resizeImage, isSourceResizable } from "@/app/lib/imageUtils";
+import { resizeImage, shouldServeUnoptimized } from "@/app/lib/imageUtils";
 
 type ImageCarouselProps = {
  images: string[];
@@ -228,7 +228,7 @@ export default function ImageCarousel({
  alt={alt}
  fill
  sizes={sizes}
- unoptimized={!failed && isSourceResizable(src)}
+ unoptimized={!failed && shouldServeUnoptimized(src)}
  className={`object-cover ${objectPosition}`}
  priority={priority && idx === 0}
  onError={() =>
