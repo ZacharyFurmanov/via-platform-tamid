@@ -95,6 +95,11 @@ export async function POST(request: NextRequest) {
  const offset = Math.max(parseInt(request.nextUrl.searchParams.get("offset") ?? "0", 10), 0);
  const store = request.nextUrl.searchParams.get("store");
  const dryRun = request.nextUrl.searchParams.get("dryRun") === "1";
+ // Strict (default): a stronger model must confirm the mismatch before flagging —
+ // low false positives, but drops anything it's unsure about. strict=0 ("thorough")
+ // trusts the stage-1 vision read and reports every cross-type disagreement, so you
+ // see far more candidates to review. Use thorough + dry run to audit, then apply.
+ const strict = request.nextUrl.searchParams.get("strict") !== "0";
 
  const sql = neon(getDatabaseUrl());
  const rows = (store
@@ -124,12 +129,16 @@ export async function POST(request: NextRequest) {
  checked++;
  if (p.storefrontFamily === imageFamily) return; // agrees — nothing to do
 
- // Stage 2: a stronger model confirms the photo really ISN'T the filed type.
- let verdict: "match" | "mismatch" | null = null;
- try {
+ // Stage 2 (strict only): a stronger model confirms the photo really ISN'T the
+ // filed type. In thorough mode we trust the stage-1 read and skip this, so more
+ // candidates surface for human review.
+ if (strict) {
+  let verdict: "match" | "mismatch" | null = null;
+  try {
   verdict = await confirmCategoryGroup(p.image, TYPE_PHRASE[p.storefrontFamily as string] ?? (p.storefrontFamily as string));
- } catch { verdict = null; }
- if (verdict !== "mismatch") { droppedByVerify++; return; }
+  } catch { verdict = null; }
+  if (verdict !== "mismatch") { droppedByVerify++; return; }
+ }
 
  if (!dryRun) {
   await setCategoryOverride(p.store_slug, p.id, imageFamily, "ai", `was ${p.storefrontFamily}`);

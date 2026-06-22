@@ -3,6 +3,18 @@ import type { CategorySlug } from "@/app/lib/categoryMap";
 import { getProductsByStore, type DBProduct } from "./db";
 import { brands as brandDefs } from "./brandData";
 import { deriveDisplaySize } from "./inventory";
+import { getCategoryOverrideMap } from "./category-overrides-db";
+
+// Maps a coarse override family (written by the AI category sweep / admin) to a
+// representative CategorySlug, so a corrected product groups + filters under the
+// right top-level chip on store pages and anywhere loadStoreProducts is consumed.
+const OVERRIDE_FAMILY_TO_SLUG: Record<string, CategorySlug> = {
+ bags: "bags",
+ shoes: "shoes",
+ accessories: "accessories",
+ home: "home",
+ clothing: "other-clothing",
+};
 
 // Keyword → category mapping, checked in order.
 // Rule: specific garment-type keywords (skirt, dress, shorts) are checked
@@ -39,8 +51,8 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  // later (see "jewelry — gemstone" block below) so they don't steal shoes/bags.
  ["jewelry", [
  "earring", "necklace", "bracelet", "pendant",
- "brooch", "bangle", "choker", "locket", "cuff bracelet", "anklet",
- "ring", "rings", "signet", "lapel pin",
+ "brooch", "bangle", "choker", "locket", "cuff bracelet", "cuff", "d'ancre", "anklet",
+ "ring", "rings", "signet", "lapel pin", "cufflink", "cuff link",
  "charm bracelet",
  "jewelry", "jewellery",
  ]],
@@ -50,7 +62,7 @@ const categoryKeywords: [CategorySlug, string[]][] = [
  ["sneakers", ["sneaker", "trainer"]],
  ["sandals", ["sandal", "espadrille", "slide", "slingback", "flip flop", "flip-flop"]],
  ["flats", [
- "flats", "ballet flat", "ballet flats", "ballerina flat",
+ "flats", "ballet flat", "ballet flats", "ballerina", "ballerina flat",
  "loafer", "mule", "clog", "oxford", "derby", "brogue",
  "mary jane", "moccasin", "slipper",
  ]],
@@ -304,15 +316,18 @@ function parseImages(product: DBProduct): string[] {
 }
 
 // Transform database product to StoreProduct format
-function transformDBProduct(product: DBProduct): StoreProduct {
+function transformDBProduct(product: DBProduct, overrideMap?: Map<string, string>): StoreProduct {
  const priceString = `$${Math.round(Number(product.price))}`;
+ // An AI/admin category override wins over the title inference.
+ const override = overrideMap?.get(`${product.store_slug}-${product.id}`);
+ const category = (override && OVERRIDE_FAMILY_TO_SLUG[override]) || inferCategoryFromTitle(product.title);
 
  return {
  id: `${product.store_slug}-${product.id}`,
  name: product.title,
  price: priceString,
  currency: product.currency || "USD",
- category: inferCategoryFromTitle(product.title),
+ category,
  storeSlug: product.store_slug,
  externalUrl: product.external_url ?? undefined,
  image: product.image ?? undefined,
@@ -336,7 +351,8 @@ function transformDBProduct(product: DBProduct): StoreProduct {
 export async function loadStoreProducts(storeSlug: string): Promise<StoreProduct[]> {
  try {
  const products = await getProductsByStore(storeSlug);
- return products.map(transformDBProduct);
+ const overrideMap = await getCategoryOverrideMap().catch(() => new Map<string, string>());
+ return products.map((p) => transformDBProduct(p, overrideMap));
  } catch (error) {
  console.error(`Failed to load products for store ${storeSlug}:`, error);
  return [];

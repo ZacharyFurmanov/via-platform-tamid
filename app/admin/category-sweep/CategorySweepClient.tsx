@@ -11,6 +11,7 @@ const FAMILIES = ["clothing", "bags", "shoes", "accessories", "home"];
 export default function CategorySweepClient({ stores }: { stores: StoreOpt[] }) {
  const [scope, setScope] = useState(""); // "" = whole site
  const [dryRun, setDryRun] = useState(true);
+ const [thorough, setThorough] = useState(false);
  const [running, setRunning] = useState(false);
  const [progress, setProgress] = useState<{ scanned: number; checked: number; corrected: number; written: number } | null>(null);
  const [corrections, setCorrections] = useState<Correction[]>([]);
@@ -38,6 +39,7 @@ export default function CategorySweepClient({ stores }: { stores: StoreOpt[] }) 
   const q = new URLSearchParams({ offset: String(offset), limit: "150" });
   if (scope) q.set("store", scope);
   if (dryRun) q.set("dryRun", "1");
+  if (thorough) q.set("strict", "0");
   const res = await fetch(`/api/admin/category-sweep?${q}`, { method: "POST" });
   const data = await res.json();
   if (!res.ok) { setMsg(data.error ?? "Sweep failed."); break; }
@@ -95,6 +97,10 @@ export default function CategorySweepClient({ stores }: { stores: StoreOpt[] }) 
  <label style={{ fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
   <input type="checkbox" checked={dryRun} onChange={(e) => setDryRun(e.target.checked)} disabled={running} />
   Dry run (preview only)
+ </label>
+ <label style={{ fontSize: 14, display: "flex", alignItems: "center", gap: 6 }} title="Skips the conservative second-pass check — surfaces many more candidates to review.">
+  <input type="checkbox" checked={thorough} onChange={(e) => setThorough(e.target.checked)} disabled={running} />
+  Thorough (less strict)
  </label>
  <button onClick={run} disabled={running}
   style={{ padding: "9px 18px", borderRadius: 8, border: 0, background: "#18181b", color: "#fff", fontSize: 14, cursor: "pointer", opacity: running ? 0.5 : 1 }}>
