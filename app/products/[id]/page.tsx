@@ -48,7 +48,7 @@ function expandSize(size: string, categorySlug?: string): string {
 }
 
 // Shopify storefront UI strings that occasionally leak into scraped descriptions.
-const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*|subscribe\s+to\s+our\s+emails?|payment\s+methods?|american\s+express|apple\s+pay|diners\s+club|google\s+pay|mastercard|paypal|shop\s+pay|venmo|dedication\s+to\s+excellence\s+extends\s+beyond\s+materials|^(email|instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat)(\s+(instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat|email))*$/i;
+const ECOM_JUNK_LINE_RE = /regular\s+price|sale\s+price|unit\s+price|sold\s+out|in\s+stock|out\s+of\s+stock|product\s+variant|decrease\s+quantity|increase\s+quantity|add\s+to\s+(cart|bag)|pick\s+up\s+available|tax\s+included|checkout|\$\s*\d[\d,.]*|subscribe\s+to\s+our\s+emails?|payment\s+methods?|american\s+express|apple\s+pay|diners\s+club|google\s+pay|mastercard|paypal|shop\s+pay|venmo|dedication\s+to\s+excellence\s+extends\s+beyond\s+materials|we\s+will\s+exchange\s+the\s+full\s+order\s+amount|condition:\s+it\s+was\s+sent\s+out\s+in|^(email|instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat)(\s+(instagram|tiktok|facebook|pinterest|twitter|youtube|snapchat|email))*$/i;
 
 // Allowlist for seller-imported description HTML. Product descriptions are synced from
 // external stores (semi-trusted), so they're rendered via dangerouslySetInnerHTML and
