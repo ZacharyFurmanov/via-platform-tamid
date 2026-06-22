@@ -266,28 +266,48 @@ export async function GET(
  .filter((o) => !o.returned)
  .reduce((sum, o) => sum + Number(o.order_total), 0);
 
- // Acquisition source — where this account came from. First-touch = the earliest
- // captured visit source (utm_visits, populated for every authenticated user with
- // referrer + in-app-browser inference + a direct fallback). Falls back to the
- // earliest UTM click, then to a referral.
+ // Acquisition source — where this account FIRST found VYA. "direct" isn't a real
+ // channel (it's the absence of a detectable one), so we surface the earliest REAL
+ // channel (instagram, tiktok, substack, email…) and only fall back to "direct" when
+ // that's genuinely all we captured. Form/import names ("waitlist","newsletter",
+ // "mailchimp") aren't channels either — they describe HOW the email was captured,
+ // so they're shown only as a last resort.
  const SRC_ALIAS: Record<string, string> = { ig: "instagram", fb: "facebook", tw: "twitter", tt: "tiktok", yt: "youtube", li: "linkedin" };
+ const NON_CHANNEL = new Set(["direct", "unknown", "", "waitlist", "newsletter", "mailchimp", "giveaway_modal", "manual", "test", "email-capture"]);
+ const norm = (s: string | null | undefined) => (s ? (SRC_ALIAS[s.toLowerCase()] ?? s.toLowerCase()) : null);
  let acquisitionSource: string | null = null;
+ let hadDirect = false;
  if (userId) {
- const visitRows = await sql`SELECT utm_source FROM utm_visits WHERE user_id = ${userId} ORDER BY timestamp ASC LIMIT 1`;
- acquisitionSource = (visitRows[0]?.utm_source as string) ?? null;
+ // Earliest REAL channel across this account's visits (ignore direct/unknown).
+ const realRows = await sql`
+ SELECT utm_source FROM utm_visits
+ WHERE user_id = ${userId} AND utm_source IS NOT NULL
+  AND lower(utm_source) NOT IN ('direct','unknown','email')
+ ORDER BY timestamp ASC LIMIT 1`;
+ acquisitionSource = norm(realRows[0]?.utm_source as string | undefined);
  if (!acquisitionSource) {
- const clickRows = await sql`SELECT utm_source FROM clicks WHERE user_id = ${userId} AND utm_source IS NOT NULL AND utm_source <> 'unknown' ORDER BY timestamp ASC LIMIT 1`;
- acquisitionSource = (clickRows[0]?.utm_source as string) ?? null;
+ // No social/referrer channel — was there at least an email-link visit, or only direct?
+ const anyRows = await sql`SELECT utm_source FROM utm_visits WHERE user_id = ${userId} AND utm_source IS NOT NULL ORDER BY timestamp ASC LIMIT 1`;
+ const any = norm(anyRows[0]?.utm_source as string | undefined);
+ if (any === "email") acquisitionSource = "email";
+ else if (any) hadDirect = true;
+ }
+ if (!acquisitionSource) {
+ const clickRows = await sql`SELECT utm_source FROM clicks WHERE user_id = ${userId} AND utm_source IS NOT NULL AND lower(utm_source) NOT IN ('unknown','direct') ORDER BY timestamp ASC LIMIT 1`;
+ acquisitionSource = norm(clickRows[0]?.utm_source as string | undefined);
  }
  }
  if (!acquisitionSource) {
- // Waitlist / email-capture signups never browse signed in, so there's no
- // utm_visits row — but we DID record where the email was captured. Surface it.
+ // Waitlist / email-capture signups never browse signed in. The form name isn't a
+ // channel, but surface it (mapped) so it reads as "email list" rather than nothing.
  const wlRows = await sql`SELECT source FROM waitlist WHERE LOWER(email) = LOWER(${email}) LIMIT 1`.catch(() => []);
- acquisitionSource = (wlRows[0]?.source as string) ?? null;
+ const wl = norm(wlRows[0]?.source as string | undefined);
+ if (wl && !NON_CHANNEL.has(wl)) acquisitionSource = wl; // a real channel was captured at signup
+ else if (wl === "newsletter" || wl === "mailchimp") acquisitionSource = "email list";
  }
  if (!acquisitionSource && pilot?.referred_by) acquisitionSource = "referral";
- if (acquisitionSource) acquisitionSource = SRC_ALIAS[acquisitionSource.toLowerCase()] ?? acquisitionSource.toLowerCase();
+ // Last resort: we saw them but never a real channel.
+ if (!acquisitionSource && hadDirect) acquisitionSource = "direct";
 
  return NextResponse.json({
  profile: {

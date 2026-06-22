@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyRecipientToken } from "@/app/lib/recipientToken";
 
 // Routes accessible without any authentication or approval
 const PUBLIC_ROUTES = [
@@ -118,14 +119,28 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
 
+  // Per-recipient email attribution: a `?u=` token (from an email link) identifies the
+  // subscriber who clicked. Persist it as a 30-day cookie so the eventual click-through
+  // (/api/track) can record the click against them — even logged out, even before any
+  // VYA session. verifyRecipientToken is cheap and rejects forged tokens. We only set
+  // the cookie; downstream routing is unchanged.
+  const uToken = request.nextUrl.searchParams.get("u");
+  const eidValid = uToken ? !!verifyRecipientToken(uToken) : false;
+  const attachEid = (res: NextResponse): NextResponse => {
+    if (eidValid && uToken) {
+      res.cookies.set("via_eid", uToken, { maxAge: 60 * 60 * 24 * 30, path: "/", httpOnly: true, sameSite: "lax" });
+    }
+    return res;
+  };
+
   // Redirect /waitlist to /login
   if (pathname === "/waitlist" || pathname.startsWith("/waitlist/")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return attachEid(NextResponse.redirect(new URL("/login", request.url)));
   }
 
   // Allow public routes unconditionally
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    return attachEid(NextResponse.next());
   }
 
   // Admin routes (browser UI + API)
@@ -164,7 +179,7 @@ export async function middleware(request: NextRequest) {
   if (!hasUserSession(request) && !adminAuthed) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", fullPath);
-    return NextResponse.redirect(loginUrl);
+    return attachEid(NextResponse.redirect(loginUrl));
   }
 
   // Has session but no approval cookie → run pilot check

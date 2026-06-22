@@ -83,7 +83,7 @@ export async function cacheShopifyOrder(o: CachedOrder): Promise<void> {
  `;
 }
 
-export type CacheMatch = { orderName: string; totalUsd: number; items: CachedLineItem[] };
+export type CacheMatch = { orderName: string; totalUsd: number; items: CachedLineItem[]; email: string | null };
 
 /**
  * Find a cached order's real line items for a Collabs conversion.
@@ -105,19 +105,21 @@ export async function findCachedOrder(args: {
 
  if (orderName) {
  const rows = (await sql`
- SELECT order_name, total_usd, items FROM shopify_order_cache
+ SELECT order_name, total_usd, items, email FROM shopify_order_cache
  WHERE store_slug = ${storeSlug} AND order_name = ${orderName}
  LIMIT 1
- `) as Array<{ order_name: string; total_usd: string; items: CachedLineItem[] }>;
- if (rows.length > 0 && Array.isArray(rows[0].items) && rows[0].items.length > 0) {
- return { orderName: rows[0].order_name, totalUsd: Number(rows[0].total_usd), items: rows[0].items };
+ `) as Array<{ order_name: string; total_usd: string; items: CachedLineItem[]; email: string | null }>;
+ // Exact order-name match is confident — return it even if items are empty so the
+ // buyer email is still recovered (caller guards line-item use on items.length).
+ if (rows.length > 0) {
+ return { orderName: rows[0].order_name, totalUsd: Number(rows[0].total_usd), items: Array.isArray(rows[0].items) ? rows[0].items : [], email: rows[0].email ?? null };
  }
  }
 
  if (totalUsd != null && totalUsd > 0) {
  const around = aroundIso ?? new Date().toISOString();
  const rows = (await sql`
- SELECT order_name, total_usd, items,
+ SELECT order_name, total_usd, items, email,
  ABS(EXTRACT(EPOCH FROM (COALESCE(ordered_at, received_at) - ${around}::timestamptz))) AS dist
  FROM shopify_order_cache
  WHERE store_slug = ${storeSlug}
@@ -126,9 +128,9 @@ export async function findCachedOrder(args: {
  AND ${around}::timestamptz + (${windowDays} || ' days')::interval
  ORDER BY dist ASC
  LIMIT 1
- `) as Array<{ order_name: string; total_usd: string; items: CachedLineItem[] }>;
- if (rows.length > 0 && Array.isArray(rows[0].items) && rows[0].items.length > 0) {
- return { orderName: rows[0].order_name, totalUsd: Number(rows[0].total_usd), items: rows[0].items };
+ `) as Array<{ order_name: string; total_usd: string; items: CachedLineItem[]; email: string | null }>;
+ if (rows.length > 0) {
+ return { orderName: rows[0].order_name, totalUsd: Number(rows[0].total_usd), items: Array.isArray(rows[0].items) ? rows[0].items : [], email: rows[0].email ?? null };
  }
  }
 

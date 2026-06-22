@@ -279,6 +279,14 @@ export async function saveConversion(conversion: ConversionRecord): Promise<{ du
  return { duplicate: false };
 }
 
+// Resolve an email to a VYA account id (for per-recipient email-link attribution).
+// Returns null when no account exists for that email (e.g. newsletter-only subscriber).
+export async function getUserIdByEmail(email: string): Promise<string | null> {
+ const sql = neon(getDatabaseUrl());
+ const rows = await sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${email}) LIMIT 1`.catch(() => []);
+ return rows[0]?.id ? String(rows[0].id) : null;
+}
+
 // Tombstone an order so future re-syncs never re-create it. Call this whenever a
 // conversion is intentionally deleted.
 export async function suppressConversion(orderId: string, storeSlug: string): Promise<void> {

@@ -94,7 +94,11 @@ export async function GET(request: NextRequest) {
       matched: r.matched ?? false,
       viaClickId: r.via_click_id ?? null,
       userId: r.user_id ?? null,
-      userEmail: r.user_email ?? null,
+      // Buyer email: the linked VYA account's email if matched, else the email the
+      // order webhook captured (stored on the conversion). So Collabs/webhook sales
+      // show the customer even when they weren't matched to a VYA account.
+      userEmail: r.user_email ?? r.customer_email ?? null,
+      customerEmail: r.customer_email ?? null,
       userName: r.user_name ?? null,
       matchedClickData: r.matched_click_data ?? null,
       items: r.items ?? [],

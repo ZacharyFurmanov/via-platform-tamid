@@ -339,10 +339,14 @@ async function saveCollabsConversions(
 
  const conversionId = `collabs_${partnershipId}_${Date.now()}_${i}`;
 
+ // Buyer email: Collabs never includes it, but the Shopify order webhook does —
+ // recover it from the order cache (matched by name, else store+total+time).
+ const customerEmail = cached?.email ?? null;
+
  await sql`
  INSERT INTO conversions (
  conversion_id, timestamp, order_id, order_total, currency,
- items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
+ items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id, customer_email
  )
  VALUES (
  ${conversionId}, ${ts}, ${orderId}, ${orderTotal}, 'USD',
@@ -358,7 +362,8 @@ async function saveCollabsConversions(
  dataSource: orderLineItems ? "collabs-order-api" : "commission-nodes",
  itemsSource: cached ? "webhook-cache" : (orderLineItems ? "collabs-order-api" : "commission-nodes"),
  })},
- ${click ? (click.user_id as string) : null}
+ ${click ? (click.user_id as string) : null},
+ ${customerEmail}
  )
  ON CONFLICT (order_id, store_slug) DO NOTHING
  `;
@@ -428,10 +433,13 @@ async function saveCollabsConversions(
  return JSON.stringify([{ productName: click ? (click.product_name as string) : `Order via Shopify Collabs`, quantity: 1, price: perOrderTotal }]);
  })();
 
+ // Buyer email from the webhook order cache (Collabs doesn't provide it).
+ const customerEmail = cached?.email ?? null;
+
  await sql`
  INSERT INTO conversions (
  conversion_id, timestamp, order_id, order_total, currency,
- items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id
+ items, via_click_id, store_slug, store_name, matched, matched_click_data, user_id, customer_email
  )
  VALUES (
  ${conversionId}, ${now}, ${orderId}, ${perOrderTotal}, 'USD',
@@ -439,7 +447,8 @@ async function saveCollabsConversions(
  ${click ? (click.click_id as string) : null},
  ${storeSlug}, ${brandName}, true,
  ${JSON.stringify({ source: "shopify-collabs", partnershipId, deltaOrders, deltaCommission, itemsSource: cached ? "webhook-cache" : (click?.cart_items ? "click-cart" : "click-product") })},
- ${click ? (click.user_id as string) : null}
+ ${click ? (click.user_id as string) : null},
+ ${customerEmail}
  )
  ON CONFLICT (order_id, store_slug) DO NOTHING
  `;

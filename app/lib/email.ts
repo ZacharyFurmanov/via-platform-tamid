@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
 import type { ReminderCategory } from "@/app/lib/giveaway-db";
 import type { DBProduct } from "@/app/lib/db";
+import { makeRecipientToken } from "@/app/lib/recipientToken";
 
 const getResend = () => {
  const apiKey = process.env.RESEND_API_KEY;
@@ -256,16 +257,21 @@ function formatEmailPrice(price: number | string, currency: string): string {
  return `${symbol}${p % 1 === 0 ? p.toFixed(0) : p.toFixed(2)}`;
 }
 
-/** Append UTM parameters to any VYA URL. */
-function withUtm(url: string, campaign: string, content?: string): string {
+/** Append UTM parameters to any VYA URL. When `recipient` is given, also embeds a
+ * per-recipient `u=` token so a click from this email is attributable to the subscriber
+ * (even logged out / guest checkout) — see app/lib/recipientToken.ts + /api/track. */
+function withUtm(url: string, campaign: string, content?: string, recipient?: string | null): string {
  const sep = url.includes("?") ? "&" : "?";
- const base = `${url}${sep}utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
- return content ? `${base}&utm_content=${encodeURIComponent(content)}` : base;
+ let out = `${url}${sep}utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
+ if (content) out += `&utm_content=${encodeURIComponent(content)}`;
+ const token = makeRecipientToken(recipient);
+ if (token) out += `&u=${token}`;
+ return out;
 }
 
-function productViaUrl(p: DBProduct, campaign: string): string {
+function productViaUrl(p: DBProduct, campaign: string, recipient?: string | null): string {
  const base = `${BASE_URL}/products/${p.store_slug}-${p.id}`;
- return withUtm(base, campaign);
+ return withUtm(base, campaign, undefined, recipient);
 }
 
 export async function sendGiveawayConfirmation(email: string, referralCode: string) {
@@ -725,7 +731,6 @@ export async function sendNewArrivalsEmail(
  if (emails.length === 0 || products.length === 0) return { sent: 0, failed: 0 };
 
  const resend = getResend();
- const newArrivalsUrl = withUtm(`${BASE_URL}/new-arrivals`, "new_arrivals_email", "view_all");
 
  // Hand-curated picks keep the exact order they were chosen; the automatic
  // selection gets grouped by brand for a nicer flow.
@@ -734,8 +739,8 @@ export async function sendNewArrivalsEmail(
  // Cap at 25 pieces.
  const display = sortedProducts.slice(0, 25);
 
- function productCell(p: DBProduct): string {
- const url = productViaUrl(p, "new_arrivals_email");
+ function productCell(p: DBProduct, recipient: string): string {
+ const url = productViaUrl(p, "new_arrivals_email", recipient);
  // Escape & in URLs for valid HTML attributes — Shopify CDN URLs contain &width=, &v=, etc.
  const safeImgSrc = p.image ? p.image.replace(/&/g, "&amp;") : null;
  // height:auto shows the FULL product image at its natural aspect ratio — bigger,
@@ -770,6 +775,11 @@ export async function sendNewArrivalsEmail(
  `;
  }
 
+ // Build the body per-recipient so every product link carries that subscriber's
+ // attribution token (`u=`). Without this the links would be shared across all
+ // recipients and an email-driven purchase couldn't be tied to a person.
+ function renderContent(recipient: string): string {
+ const naUrl = withUtm(`${BASE_URL}/new-arrivals`, "new_arrivals_email", "view_all", recipient);
  const rows: string[] = [];
  for (let i = 0; i < display.length; i += 2) {
  const left = display[i];
@@ -777,16 +787,15 @@ export async function sendNewArrivalsEmail(
  rows.push(`
  <tr>
  <td width="50%" valign="top" style="padding:0 14px 40px 0;">
- ${productCell(left)}
+ ${productCell(left, recipient)}
  </td>
  <td width="50%" valign="top" style="padding:0 0 40px 0;">
- ${right ? productCell(right) : ""}
+ ${right ? productCell(right, recipient) : ""}
  </td>
  </tr>
  `);
  }
-
- const content = `
+ return `
  <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
  These pieces won&rsquo;t be here for long.
  </p>
@@ -795,7 +804,7 @@ export async function sendNewArrivalsEmail(
  Every piece on VYA is one-of-a-kind &mdash; once it&rsquo;s gone, it&rsquo;s gone forever. No restocks, no second chances.
  </p>
  <div style="text-align:center;margin-bottom:36px;">
- <a href="${newArrivalsUrl}"
+ <a href="${naUrl}"
  style="display:inline-block;background:#5D0F17;color:#FFFDF8 !important;padding:13px 36px;
  text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
  font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
@@ -804,19 +813,20 @@ export async function sendNewArrivalsEmail(
  ${rows.join("")}
  </table>
  <div style="text-align:center;margin-top:8px;padding-top:28px;border-top:1px solid rgba(93,15,23,0.12);">
- <a href="${newArrivalsUrl}"
+ <a href="${naUrl}"
  style="display:inline-block;background:#5D0F17;color:#FFFDF8 !important;padding:13px 36px;
  text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
  font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
  </div>
  `;
+ }
 
  let sent = 0;
  let failed = 0;
 
  for (const email of emails) {
  const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
- const html = viaShell("New Arrivals", content, unsubUrl);
+ const html = viaShell("New Arrivals", renderContent(email), unsubUrl);
  try {
  await resend.emails.send({
  from: FROM_EMAIL,

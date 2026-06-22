@@ -107,11 +107,27 @@ export default function GlobalPageTracker() {
  if (utmPayloadRef.current) return;
 
  const params = new URLSearchParams(window.location.search);
- let utmSource = params.get("utm_source") ? normalizeSource(params.get("utm_source")!) : null;
- let utmMedium = params.get("utm_medium");
- let utmCampaign = params.get("utm_campaign");
- const utmContent = params.get("utm_content");
- const utmTerm = params.get("utm_term");
+
+ // The gated homepage server-redirects unauthenticated visitors to
+ // /login?callbackUrl=/%3Futm_source%3Dinstagram, which buries the UTM params
+ // one level deep — so a tagged bio link (vyaplatform.com/?utm_source=instagram)
+ // arrives with no TOP-LEVEL utm_source and was being recorded as "direct". Recover
+ // them from the redirect-carrier param before reading.
+ const carrier = params.get("callbackUrl") || params.get("callback") || params.get("next") || params.get("redirect");
+ let nested: URLSearchParams | null = null;
+ if (carrier) {
+ try {
+ const decoded = carrier.startsWith("http") ? new URL(carrier) : new URL(carrier, window.location.origin);
+ nested = decoded.searchParams;
+ } catch {}
+ }
+ const pick = (key: string) => params.get(key) ?? nested?.get(key) ?? null;
+
+ let utmSource = pick("utm_source") ? normalizeSource(pick("utm_source")!) : null;
+ let utmMedium = pick("utm_medium");
+ let utmCampaign = pick("utm_campaign");
+ const utmContent = pick("utm_content");
+ const utmTerm = pick("utm_term");
 
  if (!utmSource) {
  const ref = document.referrer;

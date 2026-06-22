@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateClickId } from "@/app/lib/track";
-import { saveClick, saveProductView } from "@/app/lib/analytics-db";
+import { saveClick, saveProductView, getUserIdByEmail } from "@/app/lib/analytics-db";
+import { verifyRecipientToken } from "@/app/lib/recipientToken";
 import { stores } from "@/app/lib/stores";
 import { getCollabsLink } from "@/app/lib/db";
 import { getSetting } from "@/app/lib/settings-db";
@@ -91,7 +92,16 @@ export async function GET(request: NextRequest) {
 
  // Resolve logged-in user (non-blocking — anonymous clicks still work)
  const session = await auth().catch(() => null);
- const userId = session?.user?.id ?? null;
+ let userId = session?.user?.id ?? null;
+
+ // Per-recipient email attribution: if there's no session, fall back to the email-link
+ // identity captured by middleware (via_eid cookie). This is what lets a logged-out
+ // click from an email — the kind that otherwise records no identity and ends in a
+ // guest checkout — still be tied to the subscriber who clicked.
+ if (!userId) {
+ const eid = verifyRecipientToken(request.cookies.get("via_eid")?.value);
+ if (eid) userId = await getUserIdByEmail(eid).catch(() => null);
+ }
 
  // Generate click ID for attribution
  const clickId = generateClickId();
