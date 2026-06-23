@@ -40,6 +40,7 @@ const PUBLIC_ROUTES = [
   "/api/store/me",
   "/api/store/analytics",
   "/api/store/sourcing",
+  "/api/store/messages",
   "/store/login",
   // Product & store pages are public so shared links unfurl with their own OG
   // image/preview and are crawlable for SEO (covers /products/[id] and
