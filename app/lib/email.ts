@@ -44,9 +44,28 @@ function minifyHtml(html: string): string {
  return html.replace(/\s*\n\s*/g, " ").replace(/ {2,}/g, " ").trim();
 }
 
-function viaShell(_subtitle: string, content: string, unsubscribeUrl?: string): string {
+function viaShell(subtitle: string, content: string, unsubscribeUrl?: string, heroImage?: string): string {
  const year = new Date().getFullYear();
  const unsubUrl = unsubscribeUrl || `${BASE_URL}/account`;
+ // Top navigation — spaced-caps links to the main VYA sections, like a site header.
+ const navLink = (label: string, path: string) =>
+ `<a href="${BASE_URL}${path}" style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#5D0F17;text-decoration:none;font-family:Georgia,'Times New Roman',serif;">${label}</a>`;
+ const navSep = `<span style="color:rgba(93,15,23,0.32);padding:0 9px;font-size:10px;">&middot;</span>`;
+ const nav = [
+ navLink("New Arrivals", "/new-arrivals"),
+ navLink("Designers", "/brands"),
+ navLink("Browse", "/browse"),
+ navLink("Stores", "/stores"),
+ ].join(navSep);
+ // Full-width editorial hero (Revolve-style masthead photo) — only when supplied.
+ const hero = heroImage
+ ? `<a href="${BASE_URL}/new-arrivals" style="display:block;text-decoration:none;"><img src="${heroImage}" alt="VYA — New Arrivals" width="600" style="display:block;width:100%;height:auto;border:0;" border="0" /></a>`
+ : "";
+ // Section eyebrow (spaced caps) labels the email — e.g. "New Arrivals",
+ // "Your Favorites" — so each email reads as a section of VYA.
+ const eyebrow = subtitle
+ ? `<div style="font-size:12px;letter-spacing:0.34em;text-transform:uppercase;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;margin:0;">${subtitle}</div>`
+ : "";
  const html = `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
@@ -76,20 +95,41 @@ u + .body .email-inner { background-color: #FFFDF8 !important; }
 </style>
 </head>
 <body class="body" style="margin:0;padding:0;background-color:#FFFDF8;" bgcolor="#FFFDF8">
-<div class="email-wrapper" style="background-color:#FFFDF8;padding:52px 24px 48px;" bgcolor="#FFFDF8">
- <div class="email-inner" style="max-width:560px;margin:0 auto;background-color:#FFFDF8;" bgcolor="#FFFDF8">
+<div class="email-wrapper" style="background-color:#FFFDF8;padding:0 0 48px;" bgcolor="#FFFDF8">
+ <div class="email-inner" style="max-width:600px;margin:0 auto;background-color:#FFFDF8;" bgcolor="#FFFDF8">
 
- <!-- Header: logo -->
- <div style="text-align:center;margin-bottom:56px;">
- <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="160"
- style="display:block;margin:0 auto;width:160px;height:auto;" border="0" />
+ <!-- Top navigation bar -->
+ <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+ <tr><td align="center" style="padding:20px 16px 16px;">${nav}</td></tr>
+ </table>
+ <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+ <tr><td style="border-bottom:1px solid rgba(93,15,23,0.14);font-size:0;line-height:0;">&nbsp;</td></tr>
+ </table>
+
+ <!-- Logo -->
+ <div style="text-align:center;padding:34px 24px 30px;">
+ <img src="https://vyaplatform.com/vya-logo.png" alt="VYA." width="140"
+ style="display:block;margin:0 auto;width:140px;height:auto;" border="0" />
+ </div>
+
+ <!-- Editorial hero (optional, full-width) -->
+ ${hero}
+
+ <!-- Section eyebrow + hairline divider -->
+ <div style="text-align:center;padding:${hero ? "46px" : "10px"} 24px 0;">
+ ${eyebrow}
+ <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:18px auto 0;">
+ <tr><td style="width:48px;border-bottom:1px solid rgba(93,15,23,0.30);font-size:0;line-height:0;">&nbsp;</td></tr>
+ </table>
  </div>
 
  <!-- Body -->
+ <div style="padding:40px 24px 0;">
  ${content}
+ </div>
 
  <!-- Footer -->
- <div style="text-align:center;margin-top:72px;">
+ <div style="text-align:center;padding:72px 24px 0;">
  <p style="margin:0;font-size:12px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:2;">
  <a href="${BASE_URL}" style="color:#5D0F17;text-decoration:none;">vyaplatform.com</a><br />
  IG: <a href="https://www.instagram.com/vyaplatform" style="color:#5D0F17;text-decoration:none;">@vyaplatform</a>
@@ -834,6 +874,89 @@ export async function sendNewArrivalsEmail(
  subject,
  html,
  });
+ sent++;
+ await new Promise((r) => setTimeout(r, 100));
+ } catch {
+ failed++;
+ }
+ }
+
+ return { sent, failed };
+}
+
+export type EditLook = {
+ /** Publicly-hosted image URL (e.g. https://vyaplatform.com/y2k-edit/look-1.jpg) */
+ image: string;
+ /** Shoppable pieces in the look — label ("Dress") + product URL. */
+ items: { label: string; url: string }[];
+};
+
+/**
+ * One-off "Y2K, Styled" edit — a shop-the-look lookbook. Each look is a
+ * full-width editorial photo followed by its shoppable pieces. Uses the shared
+ * VYA shell (top nav + logo) with a "Y2K, Styled" section label. Sends to all
+ * approved pilot users. Per-recipient links carry the attribution token.
+ */
+export async function sendY2KEditEmail(
+ emails: string[],
+ looks: EditLook[],
+): Promise<{ sent: number; failed: number }> {
+ if (emails.length === 0 || looks.length === 0) return { sent: 0, failed: 0 };
+
+ const resend = getResend();
+ const subject = "Y2K, Styled — The VYA Edit";
+
+ function lookBlock(look: EditLook, index: number, recipient: string): string {
+ const safeImg = look.image.replace(/&/g, "&amp;");
+ const links = look.items
+ .map((it) => {
+ // Drop any ?from= nav context, then add UTM + recipient attribution.
+ const clean = it.url.split("?")[0];
+ const url = withUtm(clean, "y2k_edit", undefined, recipient).replace(/&/g, "&amp;");
+ return `<a href="${url}" style="color:#5D0F17;text-decoration:none;border-bottom:1px solid rgba(93,15,23,0.4);padding-bottom:1px;font-family:Georgia,'Times New Roman',serif;font-size:14px;">${it.label}</a>`;
+ })
+ .join(`<span style="color:rgba(93,15,23,0.3);padding:0 10px;font-size:12px;">/</span>`);
+
+ const gap = index < looks.length - 1 ? "60px" : "8px";
+ return `
+ <a href="${withUtm(`${BASE_URL}/new-arrivals`, "y2k_edit", "look", recipient).replace(/&/g, "&amp;")}" style="display:block;text-decoration:none;">
+ <img src="${safeImg}" alt="VYA Y2K Edit — Look ${index + 1}" width="552"
+ style="display:block;width:100%;height:auto;border:0;margin:0 0 16px;" border="0" />
+ </a>
+ <div style="text-align:center;margin:0 0 ${gap};">
+ <div style="font-size:10px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(93,15,23,0.55);font-family:Georgia,'Times New Roman',serif;margin:0 0 12px;">Shop the look</div>
+ <div style="line-height:2.1;">${links}</div>
+ </div>`;
+ }
+
+ const intro = `
+ <p style="font-size:15px;color:#5D0F17;font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 6px;">
+ The Y2K revival, styled.
+ </p>
+ <p style="font-size:15px;color:rgba(93,15,23,0.65);font-family:Georgia,'Times New Roman',serif;line-height:1.75;margin:0 0 44px;">
+ Five looks built from this week&rsquo;s vintage finds. Every piece is one-of-a-kind &mdash; tap any item to shop it before it&rsquo;s gone.
+ </p>`;
+
+ function renderContent(recipient: string): string {
+ const blocks = looks.map((l, i) => lookBlock(l, i, recipient)).join("");
+ const shopUrl = withUtm(`${BASE_URL}/new-arrivals`, "y2k_edit", "shop_all", recipient).replace(/&/g, "&amp;");
+ return `${intro}${blocks}
+ <div style="text-align:center;margin-top:8px;padding-top:28px;border-top:1px solid rgba(93,15,23,0.12);">
+ <a href="${shopUrl}"
+ style="display:inline-block;background:#5D0F17;color:#FFFDF8 !important;padding:13px 36px;
+ text-decoration:none;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+ font-family:Georgia,'Times New Roman',serif;">Shop New Arrivals</a>
+ </div>`;
+ }
+
+ let sent = 0;
+ let failed = 0;
+
+ for (const email of emails) {
+ const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
+ const html = viaShell("Y2K, Styled", renderContent(email), unsubUrl);
+ try {
+ await resend.emails.send({ from: FROM_EMAIL, to: email, subject, html });
  sent++;
  await new Promise((r) => setTimeout(r, 100));
  } catch {
