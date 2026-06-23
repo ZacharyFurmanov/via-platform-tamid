@@ -10,10 +10,9 @@ export default async function Header() {
  getActiveBrands().catch(() => []),
  ]);
 
- const topDesigners = allBrands
- .filter((b) => b.productCount >= 40)
- .slice(0, 10)
- .map((b) => ({ slug: b.slug, label: b.label }));
+ // Every active designer (those with inventory), sorted by product count.
+ // The nav drawer scrolls, so the full list is fine here.
+ const topDesigners = allBrands.map((b) => ({ slug: b.slug, label: b.label }));
 
  return <HeaderClient categories={categories} activeCollectionSlugs={activeCollectionSlugs} topDesigners={topDesigners} />;
 }

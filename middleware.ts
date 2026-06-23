@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyRecipientToken } from "@/app/lib/recipientToken";
+import { verifyRecipientTokenEdge } from "@/app/lib/recipientToken-edge";
 
 // Routes accessible without any authentication or approval
 const PUBLIC_ROUTES = [
@@ -126,7 +126,14 @@ export async function middleware(request: NextRequest) {
   // VYA session. verifyRecipientToken is cheap and rejects forged tokens. We only set
   // the cookie; downstream routing is unchanged.
   const uToken = request.nextUrl.searchParams.get("u");
-  const eidValid = uToken ? !!verifyRecipientToken(uToken) : false;
+  let eidValid = false;
+  if (uToken) {
+    try {
+      eidValid = !!(await verifyRecipientTokenEdge(uToken));
+    } catch {
+      eidValid = false;
+    }
+  }
   const attachEid = (res: NextResponse): NextResponse => {
     if (eidValid && uToken) {
       res.cookies.set("via_eid", uToken, { maxAge: 60 * 60 * 24 * 30, path: "/", httpOnly: true, sameSite: "lax" });

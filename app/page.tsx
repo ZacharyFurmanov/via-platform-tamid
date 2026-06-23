@@ -5,7 +5,7 @@ import FAQAccordion from "./components/FAQAccordion";
 import Image from "next/image";
 import StoreCarousel from "./components/StoreCarousel";
 import NewArrivalsSection from "./components/NewArrivalsSection";
-import FeaturedDesignerSection from "./components/FeaturedDesignerSection";
+import StylingGuideSection from "./components/StylingGuideSection";
 import EditorsPicksSection from "./components/EditorsPicksSection";
 import { Suspense } from "react";
 import HomepageScrollTracker from "./components/HomepageScrollTracker";
@@ -177,17 +177,15 @@ export default function HomePage() {
  </div>
  </section>
 
- {/* ================= FEATURED DESIGNER ================= */}
- <Suspense fallback={<div className="h-[45vw]" />}>
- <FeaturedDesignerSection />
- </Suspense>
-
  {/* ================= NEW ARRIVALS ================= */}
  <div data-section="new-arrivals">
  <Suspense fallback={<div className="bg-[#FFFDF8] py-16 sm:py-24 h-64" />}>
  <NewArrivalsSection />
  </Suspense>
  </div>
+
+ {/* ================= STYLING GUIDE ================= */}
+ <StylingGuideSection />
 
  {/* ================= CATEGORY ================= */}
  <section data-section="categories" className="bg-[#FFFDF8] py-16 sm:py-24">
