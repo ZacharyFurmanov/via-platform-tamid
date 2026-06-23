@@ -146,6 +146,32 @@ export async function middleware(request: NextRequest) {
     return attachEid(NextResponse.redirect(new URL("/login", request.url)));
   }
 
+  // Waitlist guard: a logged-out visitor may view ONE product (the shared link
+  // they arrived on), but can't browse into others. We remember the first product
+  // they open in a 24h cookie; any different product sends them to login. OG/Twitter
+  // preview images stay public so shared links still unfurl, and cookieless crawlers
+  // are unaffected so products stay indexable.
+  if (
+    pathname.startsWith("/products/") &&
+    !pathname.endsWith("/opengraph-image") &&
+    !pathname.endsWith("/twitter-image") &&
+    !hasUserSession(request) &&
+    !hasAccessCode(request) &&
+    !(await isAdminAuthenticated(request))
+  ) {
+    const seen = request.cookies.get("via_pv")?.value;
+    if (seen && seen !== pathname) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", fullPath);
+      return attachEid(NextResponse.redirect(loginUrl));
+    }
+    const res = attachEid(NextResponse.next());
+    if (!seen) {
+      res.cookies.set("via_pv", pathname, { maxAge: 60 * 60 * 24, path: "/", sameSite: "lax" });
+    }
+    return res;
+  }
+
   // Allow public routes unconditionally
   if (isPublicRoute(pathname)) {
     return attachEid(NextResponse.next());

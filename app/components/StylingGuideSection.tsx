@@ -1,18 +1,53 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { STYLING_LOOKS } from "@/app/lib/stylingGuide";
 
-// Homepage "Styling Guide" — a continuously auto-scrolling lookbook (marquee).
-// Each look is an editorial photo with its pieces linked to their product pages.
-// Scroll pauses on hover so the links stay tappable. Pure CSS, so this stays a
-// server component. Content lives in app/lib/stylingGuide.ts (add more looks there).
+// Homepage "Styling Guide" — an auto-scrolling lookbook you can ALSO scroll by
+// hand. A real overflow-x scroll container is nudged forward each frame; manual
+// scroll / hover pauses the drift and it resumes shortly after. Content + looped
+// copy give a seamless loop. Photos aren't clickable; only the item names link.
 export default function StylingGuideSection() {
- if (STYLING_LOOKS.length === 0) return null;
+ const scrollRef = useRef<HTMLDivElement>(null);
+ const pausedRef = useRef(false);
+ const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
- // Render the looks twice so translateX(-50%) loops seamlessly. Duration scales
- // with the number of looks so the scroll speed stays constant as looks are added.
+ // Render the looks twice so we can wrap seamlessly at the halfway point.
  const loop = [...STYLING_LOOKS, ...STYLING_LOOKS];
- const durationSec = Math.max(STYLING_LOOKS.length * 7, 40);
+
+ useEffect(() => {
+ const el = scrollRef.current;
+ if (!el) return;
+ const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+ if (reduce) return; // honor reduced-motion — manual scroll still works
+
+ let raf = 0;
+ const speed = 0.4; // px/frame ≈ 24px/s
+ const tick = () => {
+ if (el && !pausedRef.current) {
+ el.scrollLeft += speed;
+ const half = el.scrollWidth / 2;
+ if (half > 0 && el.scrollLeft >= half) el.scrollLeft -= half;
+ }
+ raf = requestAnimationFrame(tick);
+ };
+ raf = requestAnimationFrame(tick);
+ return () => cancelAnimationFrame(raf);
+ }, []);
+
+ const pause = () => {
+ pausedRef.current = true;
+ };
+ const resumeSoon = () => {
+ if (resumeTimer.current) clearTimeout(resumeTimer.current);
+ resumeTimer.current = setTimeout(() => {
+ pausedRef.current = false;
+ }, 1500);
+ };
+
+ if (STYLING_LOOKS.length === 0) return null;
 
  return (
  <section data-section="styling-guide" className="bg-[#FFFDF8] py-16 sm:py-24 overflow-hidden">
@@ -23,8 +58,20 @@ export default function StylingGuideSection() {
  </div>
  </div>
 
- <div className="relative w-full overflow-hidden">
- <div className="styling-marquee flex gap-5 w-max pl-6" style={{ animationDuration: `${durationSec}s` }}>
+ <div
+ ref={scrollRef}
+ onMouseEnter={pause}
+ onMouseLeave={() => (pausedRef.current = false)}
+ onPointerDown={pause}
+ onPointerUp={resumeSoon}
+ onWheel={() => {
+ pause();
+ resumeSoon();
+ }}
+ onTouchStart={pause}
+ onTouchEnd={resumeSoon}
+ className="flex gap-5 overflow-x-auto px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+ >
  {loop.map((look, i) => (
  <div key={i} className="shrink-0 w-[260px] sm:w-[300px]">
  <div className="relative w-full h-[360px] sm:h-[420px] overflow-hidden bg-[#5D0F17]/[0.04]">
@@ -33,8 +80,9 @@ export default function StylingGuideSection() {
  alt={`Styled look ${(i % STYLING_LOOKS.length) + 1}`}
  fill
  sizes="(min-width: 640px) 300px, 260px"
- className="object-cover"
+ className="object-cover pointer-events-none"
  loading="lazy"
+ draggable={false}
  />
  </div>
  <div className="mt-4">
@@ -55,24 +103,6 @@ export default function StylingGuideSection() {
  </div>
  ))}
  </div>
- </div>
-
- <style>{`
- @keyframes stylingMarquee {
- from { transform: translateX(0); }
- to { transform: translateX(-50%); }
- }
- .styling-marquee {
- animation-name: stylingMarquee;
- animation-timing-function: linear;
- animation-iteration-count: infinite;
- will-change: transform;
- }
- .styling-marquee:hover { animation-play-state: paused; }
- @media (prefers-reduced-motion: reduce) {
- .styling-marquee { animation: none; }
- }
- `}</style>
  </section>
  );
 }
