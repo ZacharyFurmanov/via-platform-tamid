@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import StoreMessages from "./StoreMessages";
 import {
  LayoutDashboard,
  BarChart3,
@@ -80,7 +81,7 @@ type ActivityItem = { type: "favorite" | "cart" | "sale"; title: string; at: str
 type Extras = { listing: ListingQuality | null; activity: ActivityItem[] };
 
 type RangeOption = "7d" | "30d" | "all";
-type Tab = "overview" | "performance" | "audience" | "listing" | "market";
+type Tab = "overview" | "performance" | "audience" | "listing" | "messages" | "market";
 
 type MarketSegment = {
  segmentType: string;
@@ -147,6 +148,7 @@ const NAV: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
  { id: "performance", label: "Performance", icon: BarChart3 },
  { id: "audience", label: "Audience", icon: Heart },
  { id: "listing", label: "Listing Health", icon: ClipboardCheck },
+ { id: "messages", label: "Messages", icon: MessageSquareText },
  ...(SHOW_MARKET_INSIGHTS ? [{ id: "market" as Tab, label: "Market Insights", icon: TrendingUp }] : []),
 ];
 
@@ -155,6 +157,7 @@ const TAB_META: Record<Tab, { title: string; subtitle: string }> = {
  performance: { title: "Performance", subtitle: "How shoppers are engaging with your pieces." },
  audience: { title: "Audience", subtitle: "The community following and saving your work." },
  listing: { title: "Listing Health", subtitle: "Listings missing details that help pieces sell." },
+ messages: { title: "Messages", subtitle: "Questions from shoppers about your pieces." },
  market: { title: "Market Insights", subtitle: "What's in demand across VYA — aggregated and anonymous." },
 };
 
@@ -623,6 +626,9 @@ function StoreDashboardInner() {
  </div>
 
  <div className="px-6 pb-16 md:px-9">
+ {/* ── MESSAGES ── */}
+ {tab === "messages" && <StoreMessages previewStore={previewStore} />}
+
  {/* ── OVERVIEW ── */}
  {tab === "overview" && (
  <div className="space-y-8">

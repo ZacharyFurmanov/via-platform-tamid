@@ -884,6 +884,39 @@ export async function sendNewArrivalsEmail(
  return { sent, failed };
 }
 
+/**
+ * Notify a store that a customer asked a question. Goes to the store's contact
+ * email; the store replies from the web portal or the in-app store dashboard.
+ */
+export async function sendStoreMessageNotification(params: {
+ storeEmail: string;
+ storeName: string;
+ productTitle: string | null;
+ customerName: string | null;
+ messageBody: string;
+}): Promise<void> {
+ const resend = getResend();
+ const esc = (s: string) =>
+ s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+ const dashUrl = `${BASE_URL}/store/dashboard`;
+ const who = params.customerName?.trim() || "A shopper";
+ const about = params.productTitle ? ` about <strong>${esc(params.productTitle)}</strong>` : "";
+ await resend.emails.send({
+ from: FROM_EMAIL,
+ to: params.storeEmail,
+ subject: params.productTitle
+ ? `New customer question: ${params.productTitle}`
+ : "New customer question on VYA",
+ html: emailShell(`
+ <h2>You have a new message.</h2>
+ <p>${esc(who)} asked a question${about} on VYA.</p>
+ <div class="link-box">${esc(params.messageBody)}</div>
+ <p class="muted">Reply from your VYA dashboard and they&rsquo;ll get your response in the app.</p>
+ <a href="${dashUrl}" class="btn">Open Messages</a>
+ `),
+ });
+}
+
 export type EditLook = {
  /** Publicly-hosted image URL (e.g. https://vyaplatform.com/y2k-edit/look-1.jpg) */
  image: string;

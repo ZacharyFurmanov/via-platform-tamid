@@ -84,6 +84,18 @@ export function getMobileUserId(request: Request): string | null {
 }
 
 /**
+ * Extract the full verified payload ({ sub, email }) from the Bearer JWT.
+ * Returns null if missing/invalid/expired. Use when you need the email (e.g. to
+ * resolve whether the logged-in app account is a store).
+ */
+export function getMobilePayload(request: Request): MobileJwtPayload | null {
+ const auth = request.headers.get("authorization") ?? "";
+ const m = /^Bearer\s+(.+)$/i.exec(auth);
+ if (!m) return null;
+ return verifyMobileJwt(m[1]);
+}
+
+/**
  * Ensure the magic_link_tokens table exists.
  */
 export async function ensureMagicLinkTable() {

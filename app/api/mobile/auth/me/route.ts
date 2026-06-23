@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMobileUserId, getUserById, signMobileJwt } from "@/app/lib/mobileAuth";
+import { storeSlugFromEmail } from "@/app/lib/storeAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +20,8 @@ export async function GET(request: Request) {
  return NextResponse.json({ error: "User not found" }, { status: 404 });
  }
  const refreshed = signMobileJwt(user.id, user.email);
- return NextResponse.json({ user, token: refreshed });
+ // If this account's email matches a store contact, the app shows the store
+ // dashboard (inbox + replies) instead of / in addition to the shopper UI.
+ const storeSlug = storeSlugFromEmail(user.email);
+ return NextResponse.json({ user, token: refreshed, storeSlug });
 }

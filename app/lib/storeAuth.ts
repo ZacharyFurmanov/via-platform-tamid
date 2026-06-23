@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { auth } from "./auth";
 import { storeContactEmails } from "./stores";
+import { getMobilePayload } from "./mobileAuth";
 
 // ───────────────────────────────────────────────────────────────────────────
 // Store-portal auth resolution. Normally the store is the logged-in partner
@@ -38,4 +39,18 @@ export async function resolveStoreSlug(request: NextRequest): Promise<string | n
  const session = await auth();
  if (!session?.user?.email) return null;
  return storeSlugFromEmail(session.user.email);
+}
+
+/**
+ * Resolve the acting store slug for an endpoint shared by the web store portal
+ * AND the in-app store dashboard. Tries the web session/admin path first, then
+ * falls back to the mobile JWT (the store partner signed into the app). Returns
+ * null if the request isn't an authenticated store on either surface.
+ */
+export async function resolveStoreSlugAny(request: NextRequest): Promise<string | null> {
+ const web = await resolveStoreSlug(request);
+ if (web) return web;
+ const payload = getMobilePayload(request);
+ if (payload?.email) return storeSlugFromEmail(payload.email);
+ return null;
 }
