@@ -79,7 +79,7 @@
 #infra .tile{background:var(--cream);border-radius:4px;padding:11px 12px}
 #infra .tile .t{font-family:var(--label);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
 #infra .tile .v{font-family:var(--head);font-size:21px;font-weight:500;margin-top:2px}
-#infra .dash-float{position:absolute;right:-14px;bottom:-26px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px;box-shadow:0 24px 50px -30px rgba(44,36,29,.5);display:flex;align-items:center;gap:10px}
+#infra .dash-float{position:absolute;right:-14px;bottom:-48px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px;box-shadow:0 24px 50px -30px rgba(44,36,29,.5);display:flex;align-items:center;gap:10px}
 #infra .dash-float .av{width:34px;height:34px;border-radius:50%;background:var(--oxblood);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:600;font-size:15px}
 #infra .dash-float .nm{font-size:14px;font-weight:500}
 #infra .dash-float .sm{font-family:var(--label);font-size:13px;color:var(--mute)}

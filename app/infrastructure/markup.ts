@@ -8,7 +8,7 @@ export const infraMarkup = `<div class="grain"></div>
     <nav>
       <a class="brandmark" href="#top"><img class="logo-img" src="https://vyaplatform.com/vya-logo.png" alt="VYA"></a>
       <div class="nav-links"><a href="#platform">Platform</a><a href="#listing">Listing</a><a href="#build">Build a site</a><a href="#trends">Trends</a><a href="#edit">VYA Platform</a><a href="#pricing">Pricing</a></div>
-      <div class="nav-cta"><a class="signin" href="#">Sign in</a><a class="btn btn-dark" href="#join">Book a demo</a></div>
+      <div class="nav-cta"><a class="btn btn-dark" href="#book">Book a demo</a></div>
     </nav>
   </div>
 </header>
@@ -23,7 +23,7 @@ export const infraMarkup = `<div class="grain"></div>
         <div class="eyebrow fade" style="margin-bottom:26px">Economic infrastructure for the one-of-a-kind economy</div>
         <h1 class="serif"><span class="h-line"><span>The infrastructure</span></span><span class="h-line"><span>for <span class="it">recommerce</span>.</span></span></h1>
         <p class="sub fade">Every other platform is built for inventory that repeats. Yours sells once and never comes back. VYA is the storefront, the listing engine, and the marketplace — built for one-of-one.</p>
-        <div class="actions fade"><a class="btn btn-dark" href="#join">Book a demo</a><a class="btn btn-ghost" href="#listing">See how it works</a></div>
+        <div class="actions fade"><a class="btn btn-dark" href="#book">Book a demo</a><a class="btn btn-ghost" href="#listing">See how it works</a></div>
         <div class="meta fade">Built for one-of-one. Made for scale.</div>
       </div>
       <div class="hero-vis">
@@ -262,7 +262,7 @@ export const infraMarkup = `<div class="grain"></div>
       <div class="stepcard reveal d1"><div class="k">02</div><h4>Add your pieces</h4><p>Snap or import your inventory and VYA drafts every listing for you — owned, consignment, or rental.</p></div>
       <div class="stepcard reveal d2"><div class="k">03</div><h4>Go live</h4><p>Publish your storefront and opt into VYA Platform to reach buyers from day one.</p></div>
     </div>
-    <div style="margin-top:48px" class="reveal"><a class="btn btn-dark" href="#join" style="padding:15px 34px">Book a demo</a></div>
+    <div style="margin-top:48px" class="reveal"><a class="btn btn-dark" href="#book" style="padding:15px 34px">Book a demo</a></div>
   </div>
 </section>
 
@@ -300,14 +300,14 @@ export const infraMarkup = `<div class="grain"></div>
         <div class="eyebrow" style="margin-bottom:14px">Seller plan</div>
         <div class="amt">$59<small>/mo</small></div>
         <div class="desc">Everything to run your store</div>
-        <a class="btn btn-dark" href="#join" style="width:100%">Book a demo</a>
+        <a class="btn btn-dark" href="#book" style="width:100%">Book a demo</a>
         <div class="lab" style="margin-top:14px;color:var(--mute)">One plan · no tiers · no setup fees</div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="cta">
+<section class="cta" id="book" style="scroll-margin-top:74px">
   <div class="blob cb1"></div><div class="blob cb2"></div>
   <div class="wrap">
     <h2 class="serif reveal">Sell the <span class="it">unrepeatable</span>.</h2>
@@ -327,7 +327,7 @@ export const infraMarkup = `<div class="grain"></div>
       <div class="foot-cols">
         <div><h4>Platform</h4><a href="#listing">Listing engine</a><a href="#build">Storefront builder</a><a href="#models">Consignment &amp; rental</a><a href="#analytics">Analytics</a><a href="#trends">Trends</a></div>
         <div><h4>Company</h4><a href="#manifesto">Manifesto</a><a href="#edit">VYA Platform</a><a href="#network">The opportunity</a><a href="#pricing">Pricing</a></div>
-        <div><h4>Sellers</h4><a href="#join">Book a demo</a><a href="#build">Build a store</a><a href="#">Help center</a><a href="#">Community</a></div>
+        <div><h4>Sellers</h4><a href="#book">Book a demo</a><a href="#build">Build a store</a><a href="#">Help center</a><a href="#">Community</a></div>
       </div>
     </div>
     <div class="foot-bottom"><span>© 2026 VYA. All rights reserved.</span><span>Economic infrastructure for the one-of-a-kind economy.</span></div>

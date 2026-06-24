@@ -32,19 +32,20 @@ export const metadata: Metadata = {
  siteName: "VYA",
  images: [
  {
- url: "https://vyaplatform.com/og-image.png",
- width: 1200,
- height: 630,
- alt: "VYA — Vintage & Secondhand Platform",
+ url: "https://vyaplatform.com/og-logo.png",
+ width: 640,
+ height: 640,
+ alt: "VYA",
  },
  ],
  type: "website",
  },
  twitter: {
- card: "summary_large_image",
+ // "summary" = small logo thumbnail next to the title (no big editorial image)
+ card: "summary",
  title: "The world's best vintage, all in one place.",
  description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of.",
- images: ["https://vyaplatform.com/og-image.png"],
+ images: ["https://vyaplatform.com/og-logo.png"],
  },
  other: {
  "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",
