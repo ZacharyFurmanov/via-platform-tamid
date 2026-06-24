@@ -1,9 +1,64 @@
 // @ts-nocheck
 /* eslint-disable */
-// Vanilla JS ported verbatim from the mockup (scroll-reveal, the texting/listing
-// demo, the build-a-store / import generator, count-up stats, particle net, lens,
-// hero parallax, Formspree handler). Runs client-side from a useEffect.
+// Vanilla JS for the infrastructure page (scroll-reveal, the texting/listing demo,
+// the build-a-store / import generator, count-up stats, particle net, hero parallax,
+// Formspree handler). Runs client-side from a useEffect.
 export function initInfra() {
+// ── Floating, rotating storefronts (hero) — real products from live VYA stores ──
+const STOREFRONTS=[
+ {name:"In a Past Life",url:"inapast.life",products:[
+  ["Vintage Dior Croc Pumps","$460","https://images.squarespace-cdn.com/content/v1/69815f50511d56376c42034b/09f10bef-691e-4a40-aec9-2df8ecd21176/F2924448-63D1-4BA3-ACAA-25C9D5CA1782.PNG"],
+  ["Vintage Dior Heels","$590","https://images.squarespace-cdn.com/content/v1/69815f50511d56376c42034b/8479446a-9e74-4740-953d-2f79129e335b/B671E797-6449-46EC-949A-FAD556330D27.PNG"],
+  ["“I Love Dior” Ballet Flats","$510","https://images.squarespace-cdn.com/content/v1/69815f50511d56376c42034b/0054e3af-90ef-4e1d-8035-398baa5976ce/vintage+dior+ballet+flats.jpg"],
+  ["Vintage Dior Heels","$700","https://images.squarespace-cdn.com/content/v1/69815f50511d56376c42034b/790eaade-f269-44b0-9e47-8082032b69ff/8114A2F0-0914-47B4-A164-22CED344BF74.PNG"],
+ ]},
+ {name:"LEI Vintage",url:"leivintage.com",products:[
+  ["Chanel 2000 Cruise Top","$650","https://images.squarespace-cdn.com/content/v1/692f0c19d6222d2cd49a182f/a47de8cb-9916-423c-b5a0-6575ae09f5f7/tempImageaK1au8.gif"],
+  ["Gucci Heels","$425","https://images.squarespace-cdn.com/content/v1/692f0c19d6222d2cd49a182f/90623b08-6062-400f-827b-4a1af0972354/tempImagegeHstQ.gif"],
+  ["Ralph Lauren Cardigan","$165","https://images.squarespace-cdn.com/content/v1/692f0c19d6222d2cd49a182f/82e4b561-4613-4558-8f01-002ab8379ccd/tempImagemWv1YL.gif"],
+  ["Gucci Asymmetrical Top","$325","https://images.squarespace-cdn.com/content/v1/692f0c19d6222d2cd49a182f/7169a104-2ebf-4197-acb9-2d6eb77459d5/tempImagedctRoC.gif"],
+ ]},
+ {name:"Montrose Edit",url:"montroseedit.com",products:[
+  ["Mulberry Bayswater Bag","$780","https://images.squarespace-cdn.com/content/v1/68af5ed7f6ae17794a258dad/3ced8283-9bf1-4d40-9103-b12e98abf2e0/Bazaart_FBC89508-5862-4905-973B-3F1C103B5F5D.JPEG"],
+  ["Chanel Lucky Charm Bag","$2,000","https://images.squarespace-cdn.com/content/v1/68af5ed7f6ae17794a258dad/b2062e2b-9f1c-4ccc-8ccb-57b940e09c51/Bazaart_D488F1FA-3BFD-4F62-9F74-00867CC51EA5.JPEG"],
+  ["Fendi Beaded Baguette","$4,000","https://images.squarespace-cdn.com/content/v1/68af5ed7f6ae17794a258dad/654170a7-eaeb-4e90-955f-87d9a1935221/Bazaart_830B8CAB-9FA9-4558-B0AF-21814F4170B6.JPEG"],
+  ["LV Murakami Mini Speedy","$1,800","https://images.squarespace-cdn.com/content/v1/68af5ed7f6ae17794a258dad/33a9bb6e-996d-46bf-81d8-3b25350c603b/Bazaart_DA0094DC-9408-4907-A08A-A5DC5F48C2C6.JPEG"],
+ ]},
+ {name:"Sassy So What",url:"sassysowhat.com",products:[
+  ["Blue Croc Manolo Blahnik Heels","$350","https://images.squarespace-cdn.com/content/v1/681a7e7f321f915140724edc/117ac869-05cf-40e5-a390-58a77353bcdd/F15B895D-C834-4B80-BDE3-A6D78C549C54.jpg"],
+  ["Jimmy Choo Malachite Heels","$465","https://images.squarespace-cdn.com/content/v1/681a7e7f321f915140724edc/4cf9ee01-2ec3-436e-96f5-6d45fa3995f2/F2F2DF36-2C3C-4299-8FAB-A5FFB91F9E08.jpg"],
+  ["Manolo Blahnik Blue Heels","$380","https://images.squarespace-cdn.com/content/v1/681a7e7f321f915140724edc/4f7a4845-6235-42f0-9047-955024a2f3dd/9C7F76DF-ED8D-4567-8D57-3978B55D36C2.jpg"],
+  ["Aqua Blue Manolo Heels","$350","https://images.squarespace-cdn.com/content/v1/681a7e7f321f915140724edc/d9d60613-0372-4f60-b8b3-de6092afbf6f/F419D32F-E77A-4269-BCC5-306BADF5C86F.jpg"],
+ ]},
+];
+(function(){
+ const host=document.getElementById('shopfloat');
+ if(!host||!STOREFRONTS.length)return;
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const card=s=>'<div class="shopcard browser"><div class="bbar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">'+esc(s.url)+'</span></div><div class="store"><div class="store-hd"><div class="nm serif">'+esc(s.name)+'</div><div class="tg">Powered by VYA</div></div><div class="pgrid">'+s.products.map(p=>'<div class="prod"><div class="img" style="background-image:url(\''+p[2].replace(/'/g,"%27")+'\')"><div class="meta"><div class="pn">'+esc(p[0])+'</div><div class="pp">'+esc(p[1])+'</div></div></div></div>').join('')+'</div></div></div>';
+ host.innerHTML=STOREFRONTS.map(card).join('');
+ const cards=Array.prototype.slice.call(host.querySelectorAll('.shopcard'));
+ if(!cards.length)return;
+ // 3D coverflow: slot 0 = front centre, 1 = right, 2 = back, 3 = left.
+ const slots=['s-center','s-right','s-back','s-left'];
+ const sold=document.querySelector('.dash-float');
+ let offset=0;
+ function place(){
+  cards.forEach((c,idx)=>{ slots.forEach(s=>c.classList.remove(s)); c.classList.add(slots[(idx+offset)%slots.length]); });
+  // The front (centre) card + a matching "sold" pop for one of its real pieces.
+  const frontIdx=(cards.length-(offset%cards.length))%cards.length;
+  const front=STOREFRONTS[frontIdx];
+  if(sold&&front){
+   const p=front.products[offset%front.products.length];
+   const nm=sold.querySelector('.nm'),sm=sold.querySelector('.sm'),av=sold.querySelector('.av');
+   if(nm)nm.textContent=p[0]; if(sm)sm.textContent='Sold · '+p[1]+' · paid out'; if(av)av.textContent=(front.name[0]||'V');
+  }
+ }
+ place();
+ setInterval(()=>{ offset=(offset+1)%cards.length; place(); }, 3000);
+})();
+// Living particle network behind the dark "opportunity" band.
+(function(){ const nc=document.querySelector('.netcv'); if(nc&&typeof makeNet==='function') makeNet(nc,'rgba(227,183,158,0.85)',44,128,false); })();
 const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');
   if(e.target.querySelectorAll)e.target.querySelectorAll('.bar i').forEach(b=>{b.style.width=b.dataset.w});
   io.unobserve(e.target);}})},{threshold:.16});

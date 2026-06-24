@@ -352,3 +352,37 @@
  #infra footer{padding:46px 0 38px}
  #infra .foot-top{padding-bottom:30px}
 }
+
+
+/* ── Futuristic pass: aurora glow + glassy cards + button glow ───────────── */
+#infra .hero-bg{background:radial-gradient(130% 120% at 72% 8%,#fbf8f2,#f3ebdc 42%,#e8dccb 78%,#ddcdb9)}
+#infra .blob{opacity:.72;filter:blur(82px)}
+#infra .b1{background:radial-gradient(circle,#8a2433,transparent 66%);width:600px;height:600px}
+#infra .b2{background:radial-gradient(circle,#caa15a,transparent 68%)}
+#infra .b3{background:radial-gradient(circle,#9b7d83,transparent 70%)}
+#infra .card,#infra .panel,#infra .stepcard{background:rgba(255,255,255,.5);backdrop-filter:blur(14px) saturate(1.08)}
+#infra .card:hover,#infra .stepcard:hover{box-shadow:0 26px 60px -28px rgba(70,16,26,.5),0 0 0 1px rgba(93,22,32,.1),inset 0 1px 0 rgba(255,255,255,.6)}
+#infra .btn-dark{box-shadow:0 10px 30px -12px rgba(93,22,32,.55)}
+#infra .btn-dark:hover{box-shadow:0 16px 42px -12px rgba(93,22,32,.75),0 0 34px -8px rgba(138,36,51,.55)}
+#infra .cta .cb1{background:radial-gradient(circle,#8a2433,transparent 66%);opacity:.5}
+#infra .cta .cb2{background:radial-gradient(circle,#caa15a,transparent 70%);opacity:.45}
+#infra .stats .wrap{position:relative;z-index:2}
+#infra .netcv{opacity:.5}
+
+/* ── Rotating storefronts (hero) — 3D coverflow ── */
+#infra .shopfloat{position:relative;width:100%;max-width:560px;margin:0 auto;height:495px;perspective:1500px;animation:infra-shopbob 7s ease-in-out infinite}
+@keyframes infra-shopbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+#infra .shopcard{position:absolute;top:0;left:50%;width:72%;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.3,.1,.2,1),opacity 1s,filter 1s;backface-visibility:hidden;will-change:transform}
+#infra .shopcard.s-center{transform:translateX(-50%) translateZ(0) scale(1);opacity:1;z-index:5;filter:none}
+#infra .shopcard.s-right{transform:translateX(-50%) translateX(50%) translateZ(-150px) rotateY(-28deg) scale(.8);opacity:.5;z-index:3;filter:saturate(.85) brightness(.95)}
+#infra .shopcard.s-left{transform:translateX(-50%) translateX(-50%) translateZ(-150px) rotateY(28deg) scale(.8);opacity:.5;z-index:3;filter:saturate(.85) brightness(.95)}
+#infra .shopcard.s-back{transform:translateX(-50%) translateY(-18px) translateZ(-290px) scale(.64);opacity:.3;z-index:1;filter:saturate(.75) brightness(.92)}
+#infra .shopcard .store{padding:18px}
+#infra .shopcard .store-hd{margin-bottom:14px}
+#infra .shopcard .pgrid{grid-template-columns:repeat(2,1fr);gap:10px}
+#infra .shopcard .prod .img{aspect-ratio:1;background-size:cover;background-position:center;background-color:#efe6d7}
+
+#infra .hero-vis{overflow:visible}
+#infra .shopcard .prod .meta .pn{font-size:11.5px;line-height:1.2}
+#infra .shopcard .prod .meta .pp{font-size:11.5px}
+

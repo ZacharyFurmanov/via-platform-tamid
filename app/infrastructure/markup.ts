@@ -27,16 +27,7 @@ export const infraMarkup = `<div class="grain"></div>
         <div class="meta fade">Built for one-of-one. Made for scale.</div>
       </div>
       <div class="hero-vis">
-        <div class="dash">
-          <div class="dh"><div><div class="lab">Store revenue · this month</div><div class="big">$12,480</div></div><div class="pos">▲ 23%</div></div>
-          <svg class="area" viewBox="0 0 420 130" preserveAspectRatio="none">
-            <defs><linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d1620" stop-opacity=".26"/><stop offset="1" stop-color="#5d1620" stop-opacity="0"/></linearGradient></defs>
-            <path class="area-fill" d="M0,108 C50,96 80,100 120,78 C165,52 200,66 250,44 C300,22 350,30 420,8 L420,130 L0,130 Z" fill="url(#ag1)"/>
-            <path class="area-line" d="M0,108 C50,96 80,100 120,78 C165,52 200,66 250,44 C300,22 350,30 420,8" fill="none" stroke="#5d1620" stroke-width="2.4"/>
-            <circle class="dot-end" cx="418" cy="9" r="4" fill="#5d1620"/>
-          </svg>
-          <div class="tiles"><div class="tile"><div class="t">Items sold</div><div class="v">38</div></div><div class="tile"><div class="t">Sell-through</div><div class="v">71%</div></div><div class="tile"><div class="t">Avg days</div><div class="v">19</div></div></div>
-        </div>
+        <div class="shopfloat" id="shopfloat"></div>
         <div class="dash-float"><div class="av">V</div><div><div class="nm">1970s suede jacket</div><div class="sm">Sold · $168 · paid out</div></div></div>
       </div>
     </div>
@@ -59,10 +50,10 @@ export const infraMarkup = `<div class="grain"></div>
       <p>One tool, front to back — no Shopify, no app stack, no cobbling five subscriptions together.</p>
     </div>
     <div class="flist reveal d1">
-      <div class="frow"><div class="fi">01</div><h3>Snap to listing</h3><p>Photograph a piece and VYA drafts the whole listing — clean ghost-mannequin image, title, era, material read from the tag, and a price. You confirm a detail or two.</p></div>
-      <div class="frow"><div class="fi">02</div><h3>Your own storefront</h3><p>A storefront that's actually yours — your brand, your customers, your data. Not a layer bolted onto someone else's platform.</p></div>
-      <div class="frow"><div class="fi">03</div><h3>One-of-one inventory</h3><p>Quantity one, done right. Items mark sold the instant they go, vanish from every channel, and never haunt your search results.</p></div>
-      <div class="frow"><div class="fi">04</div><h3>Payments &amp; payouts</h3><p>Checkout, payouts, and splits handled natively. Get paid to your bank on schedule — no money-movement headache.</p></div>
+      <div class="frow"><div class="fi">01</div><h3>Snap to listing</h3><p>Photograph a piece — VYA cleans it onto a ghost mannequin and drafts the whole listing. You confirm a detail or two.</p></div>
+      <div class="frow"><div class="fi">02</div><h3>Your own storefront</h3><p>Your brand, your customers, your data — not a layer on someone else's platform.</p></div>
+      <div class="frow"><div class="fi">03</div><h3>One-of-one inventory</h3><p>Quantity one, done right. Sold means gone — instantly, everywhere.</p></div>
+      <div class="frow"><div class="fi">04</div><h3>Payments &amp; payouts</h3><p>Checkout, payouts, and splits handled natively. Paid to your bank on schedule.</p></div>
     </div>
   </div>
 </section>
@@ -158,9 +149,9 @@ export const infraMarkup = `<div class="grain"></div>
       <p>Vintage businesses don't only sell what they own. VYA runs every model in one place — so nothing about how you actually operate gets left out.</p>
     </div>
     <div class="grid3c">
-      <div class="card reveal"><div class="mode">Owned</div><h3>Sell what you've sourced</h3><p>List the pieces you've hunted down and sell them direct — quantity one, sold once, handled natively from listing to payout.</p></div>
-      <div class="card reveal d1"><div class="mode">Consignment</div><h3>Take pieces on consignment</h3><p>Bring in inventory from consignors, set custom splits per item, and VYA pays everyone automatically when a piece sells. Each consignor gets their own view to track sales and payouts — every consignor, every split, centralized.</p></div>
-      <div class="card reveal d2"><div class="mode">Rental</div><h3>Lend the pieces too good to part with</h3><p>Put archival and statement pieces up for rent with availability calendars, deposits, and condition checks built in — so a single one-of-one can earn again and again.</p></div>
+      <div class="card reveal"><div class="mode">Owned</div><h3>Sell what you've sourced</h3><p>Sell your finds direct — listing to payout, handled natively.</p></div>
+      <div class="card reveal d1"><div class="mode">Consignment</div><h3>Take pieces on consignment</h3><p>Custom splits per item, automatic payouts to every consignor, and each one gets their own view to track sales.</p></div>
+      <div class="card reveal d2"><div class="mode">Rental</div><h3>Lend the pieces too good to part with</h3><p>Rent archival pieces with calendars, deposits, and condition checks built in — so one-of-one earns again and again.</p></div>
     </div>
   </div>
 </section>
@@ -267,6 +258,7 @@ export const infraMarkup = `<div class="grain"></div>
 </section>
 
 <section class="stats" id="network">
+  <canvas class="netcv"></canvas>
   <div class="wrap">
     <div class="index reveal" style="color:#e3b79e;margin-bottom:6px"><span class="ix" style="color:#caa996">10</span> The opportunity</div>
     <h2 class="nethead serif reveal d1">You're not just opening a store. You're building on the infrastructure for the <em>one-of-a-kind economy</em>.</h2>
