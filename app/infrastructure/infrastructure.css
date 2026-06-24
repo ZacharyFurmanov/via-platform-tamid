@@ -326,3 +326,29 @@
 #infra .join-form input{flex:1;min-width:230px;padding:15px 18px;border:1px solid var(--taupe-deep);border-radius:2px;font-family:var(--body);font-size:16px;background:#fff;color:var(--ink)}
 #infra .join-form input:focus{outline:none;border-color:var(--oxblood)}
 #infra .join-form button{cursor:pointer;white-space:nowrap;padding:15px 30px}
+
+/* ── Mobile: tighten the heavy desktop spacing so the page isn't so long ── */
+@media(max-width:680px){
+ #infra .wrap{padding:0 22px}
+ #infra .section{padding:58px 0}
+ #infra .manifesto{padding:58px 0}
+ #infra .stats{padding:62px 0}
+ #infra .cta{padding:72px 0}
+ #infra .gallery{padding:54px 0 60px}
+ #infra .hero-inner{padding:40px 0 48px}
+ #infra .hero p.sub{margin-top:18px}
+ #infra .hero .actions{margin-top:26px}
+ #infra .hero .meta{margin-top:28px}
+ #infra .sec-head{margin-bottom:30px}
+ #infra .manifesto .big{margin-top:16px}
+ #infra .manifesto .note{margin-top:18px}
+ #infra .frow{padding:24px 8px}
+ #infra .start .grid3{margin-top:34px}
+ #infra .start .grid3{gap:14px}
+ #infra .stat-top{gap:30px}
+ #infra .market-chart{margin-top:32px;padding-top:24px}
+ #infra .an-grid,#infra .two,#infra .grid3c{gap:16px}
+ #infra .price-card{padding:32px 26px}
+ #infra footer{padding:46px 0 38px}
+ #infra .foot-top{padding-bottom:30px}
+}

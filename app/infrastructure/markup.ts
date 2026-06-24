@@ -7,7 +7,7 @@ export const infraMarkup = `<div class="grain"></div>
   <div class="wrap">
     <nav>
       <a class="brandmark" href="#top"><img class="logo-img" src="https://vyaplatform.com/vya-logo.png" alt="VYA"></a>
-      <div class="nav-links"><a href="#platform">Platform</a><a href="#listing">Listing</a><a href="#build">Build a site</a><a href="#trends">Trends</a><a href="#edit">VYA Platform</a><a href="#pricing">Pricing</a></div>
+      <div class="nav-links"><a href="#platform">Platform</a><a href="#listing">Listing</a><a href="#build">Build a site</a><a href="#trends">Trends</a><a href="#edit">VYA Platform</a></div>
       <div class="nav-cta"><a class="btn btn-dark" href="#book">Book a demo</a></div>
     </nav>
   </div>
@@ -287,26 +287,6 @@ export const infraMarkup = `<div class="grain"></div>
   </div>
 </section>
 
-<section class="section" id="pricing" style="background:var(--paper)">
-  <div class="wrap">
-    <div class="price-wrap">
-      <div class="reveal">
-        <div class="index"><span class="ix">11</span> Pricing</div>
-        <h2 class="serif" style="font-size:clamp(28px,3.9vw,46px);font-weight:500;letter-spacing:-.016em;margin:18px 0 16px">One flat price. We take no cut of your own sales.</h2>
-        <p style="color:var(--ink-soft);font-size:17px;max-width:470px">A simple monthly subscription for your storefront and tools — keep the margin marketplaces take. VYA only earns a commission on sales you route through VYA Platform.</p>
-        <div style="margin-top:24px;max-width:460px"><div class="ck"><b>✓</b> No VYA commission on your own-store sales — only standard card processing (~2.9% + 30¢)</div><div class="ck"><b>✓</b> Listing, consignment, rental &amp; payouts all included</div><div class="ck"><b>✓</b> One plan, no tiers · cancel anytime</div></div>
-      </div>
-      <div class="price-card reveal d1">
-        <div class="eyebrow" style="margin-bottom:14px">Seller plan</div>
-        <div class="amt">$59<small>/mo</small></div>
-        <div class="desc">Everything to run your store</div>
-        <a class="btn btn-dark" href="#book" style="width:100%">Book a demo</a>
-        <div class="lab" style="margin-top:14px;color:var(--mute)">One plan · no tiers · no setup fees</div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="cta" id="book" style="scroll-margin-top:74px">
   <div class="blob cb1"></div><div class="blob cb2"></div>
   <div class="wrap">
@@ -326,7 +306,7 @@ export const infraMarkup = `<div class="grain"></div>
       <div style="max-width:300px"><img class="logo-img" src="https://vyaplatform.com/vya-logo.png" alt="VYA" style="height:38px"><p style="margin-top:14px;font-size:14px;color:var(--mute)">The infrastructure for recommerce. Built for one-of-one.</p></div>
       <div class="foot-cols">
         <div><h4>Platform</h4><a href="#listing">Listing engine</a><a href="#build">Storefront builder</a><a href="#models">Consignment &amp; rental</a><a href="#analytics">Analytics</a><a href="#trends">Trends</a></div>
-        <div><h4>Company</h4><a href="#manifesto">Manifesto</a><a href="#edit">VYA Platform</a><a href="#network">The opportunity</a><a href="#pricing">Pricing</a></div>
+        <div><h4>Company</h4><a href="#manifesto">Manifesto</a><a href="#edit">VYA Platform</a><a href="#network">The opportunity</a></div>
         <div><h4>Sellers</h4><a href="#book">Book a demo</a><a href="#build">Build a store</a><a href="#">Help center</a><a href="#">Community</a></div>
       </div>
     </div>

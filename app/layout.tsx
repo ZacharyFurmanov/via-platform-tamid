@@ -23,29 +23,23 @@ export const metadata: Metadata = {
  keywords: ["vintage", "secondhand", "vintage clothing", "vintage platform", "independent vintage stores", "VYA platform", "designer vintage", "pre-loved fashion"],
  icons: {
  icon: "/icon.png",
- apple: "/icon.png",
+ // apple-touch-icon is what link-preview compact cards show as the little mark;
+ // use the V on a solid cream square so it never renders on a black background.
+ apple: "/og-logo.png",
  },
  openGraph: {
  title: "The world's best vintage, all in one place.",
  description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of. All trusted and verified stores.",
  url: "https://vyaplatform.com",
  siteName: "VYA",
- images: [
- {
- url: "https://vyaplatform.com/og-logo.png",
- width: 640,
- height: 640,
- alt: "VYA",
- },
- ],
+ // No og:image on purpose — without one, link previews fall back to the
+ // compact card: the favicon (the little V mark) sits left of the title.
  type: "website",
  },
  twitter: {
- // "summary" = small logo thumbnail next to the title (no big editorial image)
  card: "summary",
  title: "The world's best vintage, all in one place.",
  description: "Shop from the best independent vintage and secondhand stores worldwide. The pieces you've been dreaming of.",
- images: ["https://vyaplatform.com/og-logo.png"],
  },
  other: {
  "p:domain_verify": "dcf6fca818d0ee26a40db310f2b0a1ba",
