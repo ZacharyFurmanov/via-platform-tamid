@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApprovedPilotEmails } from "@/app/lib/pilot-db";
 import { sendY2KEditEmail, type EditLook } from "@/app/lib/email";
-import { getSetting, saveSetting } from "@/app/lib/settings-db";
+import { getSetting, claimSetting } from "@/app/lib/settings-db";
 
 // Allow up to 5 minutes for bulk sending
 export const maxDuration = 300;
@@ -76,11 +76,15 @@ export async function GET(request: Request) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
 
- // One-time guard: if already sent, do nothing (test sends bypass this).
+ // One-time idempotency: atomically CLAIM the lock BEFORE sending. The bulk send
+ // can take minutes, so claiming after (the old behaviour) left a long window in
+ // which a cron retry or a re-trigger would send the whole batch a second time.
+ // Now a second firing fails to claim and no-ops. (Test sends bypass the lock.)
  if (!testEmail) {
- const already = await getSetting(SENT_KEY);
- if (already) {
- return NextResponse.json({ ok: true, skipped: "already sent", sentAt: already });
+ const claimed = await claimSetting(SENT_KEY, new Date().toISOString());
+ if (!claimed) {
+ const sentAt = await getSetting(SENT_KEY);
+ return NextResponse.json({ ok: true, skipped: "already sent or in progress", sentAt });
  }
  }
 
@@ -90,11 +94,6 @@ export async function GET(request: Request) {
  }
 
  const { sent, failed } = await sendY2KEditEmail(emails, LOOKS);
-
- // Claim the one-time lock only on a real send that actually went out.
- if (!testEmail && sent > 0) {
- await saveSetting(SENT_KEY, new Date().toISOString());
- }
 
  return NextResponse.json({
  ok: true,

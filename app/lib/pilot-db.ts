@@ -184,8 +184,9 @@ export async function markApprovalEmailSent(email: string): Promise<void> {
 export async function getApprovedPilotEmails(): Promise<string[]> {
   await ensureTable();
   const sql = getDb();
+  // DISTINCT so a user with duplicate pilot_access rows isn't emailed twice.
   const rows = await sql`
-    SELECT LOWER(email) AS email FROM pilot_access
+    SELECT DISTINCT LOWER(email) AS email FROM pilot_access
     WHERE status = 'approved' AND email IS NOT NULL
       AND (email_unsubscribed IS NULL OR email_unsubscribed = FALSE)
   `;

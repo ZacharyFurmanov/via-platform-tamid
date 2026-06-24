@@ -17,6 +17,12 @@ const _rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "vyaplatform.com";
 const BASE_URL = _rawBaseUrl.startsWith("http") ? _rawBaseUrl : `https://${_rawBaseUrl}`;
 const FROM_EMAIL = "VYA <hana@vyaplatform.com>";
 
+/** De-duplicate + normalise a recipient list so no address is ever emailed twice
+ * in a single bulk send (guards against duplicate rows / merged lists). */
+function dedupeEmails(emails: string[]): string[] {
+ return Array.from(new Set(emails.map((e) => (e || "").toLowerCase().trim()).filter(Boolean)));
+}
+
 function baseStyles() {
  return `
  body { margin: 0; padding: 0; background-color: #FFFDF8; font-family: Georgia, 'Times New Roman', serif; }
@@ -633,7 +639,7 @@ export async function sendInsiderNewArrivalsEmail(
  let sent = 0;
  let failed = 0;
 
- for (const email of emails) {
+ for (const email of dedupeEmails(emails)) {
  const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
  const html = viaShell("VYA Insider", content, unsubUrl);
  try {
@@ -864,7 +870,7 @@ export async function sendNewArrivalsEmail(
  let sent = 0;
  let failed = 0;
 
- for (const email of emails) {
+ for (const email of dedupeEmails(emails)) {
  const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
  const html = viaShell("New Arrivals", renderContent(email), unsubUrl);
  try {
@@ -985,7 +991,11 @@ export async function sendY2KEditEmail(
  let sent = 0;
  let failed = 0;
 
- for (const email of emails) {
+ // Belt-and-suspenders: never email the same address twice in one send, even if
+ // the caller passed duplicates.
+ const recipients = Array.from(new Set(emails.map((e) => (e || "").toLowerCase().trim()).filter(Boolean)));
+
+ for (const email of recipients) {
  const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
  const html = viaShell("Y2K, Styled", renderContent(email), unsubUrl);
  try {
@@ -1598,7 +1608,7 @@ export async function sendFeedbackEmail(
  </p>
  `;
 
- for (const email of emails) {
+ for (const email of dedupeEmails(emails)) {
  try {
  await resend.emails.send({
  from: FROM_EMAIL,
@@ -1906,7 +1916,7 @@ export async function sendPopupThankYouEmail(
  let sent = 0;
  let failed = 0;
 
- for (const email of emails) {
+ for (const email of dedupeEmails(emails)) {
  try {
  await resend.emails.send({
  from: "Hana @ VYA <hana@vyaplatform.com>",
@@ -2480,7 +2490,7 @@ export async function sendInsiderNewsletterEmail(
  let sent = 0;
  let failed = 0;
 
- for (const email of emails) {
+ for (const email of dedupeEmails(emails)) {
  const unsubUrl = `${BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}`;
  const html = insiderShell(contentHtml, unsubUrl);
  try {
