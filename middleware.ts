@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = [
   "/api/test-emails",
   "/for-stores",
   "/partner-with-vya",
+  "/infrastructure",
   "/api/auth",
   "/api/newsletter",
   "/api/track",
