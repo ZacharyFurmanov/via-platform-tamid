@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { COLLECTIONS } from "@/app/lib/collections-config";
 import { getAllCollectionPicks } from "@/app/lib/editors-picks-db";
 
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
  * Public collections list for the mobile app.
  * Returns the editorial collections + their first product image as a cover.
  */
-export async function GET() {
+export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  try {
  const picks = await getAllCollectionPicks();
 

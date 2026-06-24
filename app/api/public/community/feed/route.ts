@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { listPosts } from "@/app/lib/communityDb";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
 
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
  * "did I like this" state).
  */
 export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { searchParams } = new URL(request.url);
  const limit = Math.min(parseInt(searchParams.get("limit") ?? "30"), 100);
  const cursorParam = searchParams.get("cursor");

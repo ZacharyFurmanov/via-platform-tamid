@@ -75,6 +75,28 @@ export async function toggleProductFavorite(userId: string, productId: number): 
 }
 
 /**
+ * Idempotently set a product favorite on/off. Used by the mobile app, which is
+ * local-first and syncs explicit add/remove (not a toggle) to avoid drift.
+ */
+export async function setProductFavorite(userId: string, productId: number, favorited: boolean): Promise<void> {
+ await initFavoritesTables();
+ const sql = neon(getDatabaseUrl());
+ if (favorited) {
+ const productRows = await sql`
+ SELECT title, price, image, images, store_name, store_slug, size FROM products WHERE id = ${productId}
+ `;
+ const snapshot = productRows[0] ?? null;
+ await sql`
+ INSERT INTO product_favorites (user_id, product_id, product_snapshot)
+ VALUES (${userId}, ${productId}, ${snapshot ? JSON.stringify(snapshot) : null})
+ ON CONFLICT (user_id, product_id) DO NOTHING
+ `;
+ } else {
+ await sql`DELETE FROM product_favorites WHERE user_id = ${userId} AND product_id = ${productId}`;
+ }
+}
+
+/**
  * Toggle a store favorite. Returns true if now favorited, false if unfavorited.
  */
 export async function toggleStoreFavorite(userId: string, storeSlug: string): Promise<boolean> {

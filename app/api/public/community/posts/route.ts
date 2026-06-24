@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { createPost } from "@/app/lib/communityDb";
 import { getMobileUserId, getUserById } from "@/app/lib/mobileAuth";
 
@@ -24,6 +25,7 @@ const BANNED_PATTERNS = [
  * Otherwise displayName must be provided in the body.
  */
 export async function POST(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  try {
  const body = await request.json();
  const content = (body?.content ?? "").toString().trim();

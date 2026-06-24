@@ -40,7 +40,7 @@ export type PublicFilters = {
  designers: string[];  // brand slugs, e.g. ["chanel", "gucci"]
  priceMin: number | null;
  priceMax: number | null;
- sort: "newest" | "priceAsc" | "priceDesc";
+ sort: "newest" | "priceAsc" | "priceDesc" | "popular";
 };
 
 export function parseFilters(searchParams: URLSearchParams): PublicFilters {
@@ -59,7 +59,7 @@ export function parseFilters(searchParams: URLSearchParams): PublicFilters {
 
  const rawSort = searchParams.get("sort") ?? "newest";
  const sort: PublicFilters["sort"] =
- rawSort === "priceAsc" || rawSort === "priceDesc" ? rawSort : "newest";
+ rawSort === "priceAsc" || rawSort === "priceDesc" || rawSort === "popular" ? rawSort : "newest";
 
  return {
  sizes: csv("sizes"),
@@ -128,6 +128,18 @@ export function categoryClauseSql(categories: string[]): {
 // post-filtering (because neon serverless doesn't easily support dynamic OR lists).
 export function categoryKeywords(categories: string[]): string[] {
  return categories.flatMap((c) => CATEGORY_KEYWORDS[c] ?? []);
+}
+
+// Best-guess broad category slug (clothing/bags/shoes/accessories/home) for a
+// product title. Specific categories are checked before clothing so a "belt bag"
+// resolves to bags, not clothing. Returns null when nothing matches.
+export function inferBroadCategory(title: string): string | null {
+ const t = title.toLowerCase();
+ for (const slug of ["bags", "shoes", "accessories", "home", "clothing"]) {
+ const kws = CATEGORY_KEYWORDS[slug] ?? [];
+ if (kws.some((kw) => t.includes(kw))) return slug;
+ }
+ return null;
 }
 
 // Applies in-memory filtering for fields that are hard to express in SQL with

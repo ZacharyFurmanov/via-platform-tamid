@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { getProductById } from "@/app/lib/db";
 import { deriveSize } from "@/app/lib/inventory";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { stores } from "@/app/lib/stores";
+import { inferBroadCategory } from "@/app/lib/publicFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,8 @@ export const dynamic = "force-dynamic";
  * Returns product details + the store's authenticity / shipping / return
  * policies so the app can render them in accordions.
  */
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, ctx: { params: Promise<{ id: string }> }) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { id: rawId } = await ctx.params;
  const numeric = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : parseInt(rawId.split("-").pop() ?? "", 10);
  if (Number.isNaN(numeric)) {
@@ -54,6 +57,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
  images,
  size: deriveSize(p),
  brand: p.product_type,
+ category: inferBroadCategory(p.title ?? ""),
  variantId: p.variant_id,
  storeSlug: p.store_slug,
  storeName: p.store_name,

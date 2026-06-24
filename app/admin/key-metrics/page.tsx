@@ -167,6 +167,8 @@ type Metrics = {
  waitlistByMonth: { month: string; signups: number; approved: number }[];
  activityBreakdown?: { clickers: number; productSavers: number; storeSavers: number; buyers: number };
  emailCtr?: { opens7d: number; clicks7d: number; delivered7d: number; ctr7d: number; opensPrev7d: number; clicksPrev7d: number; ctrPrev7d: number; opensPeriod: number; clicksPeriod: number; deliveredPeriod: number; ctrPeriod: number; opensAll: number; clicksAll: number; deliveredAll: number; ctrAll: number };
+ emailSales?: { ordersPeriod: number; revenuePeriod: number; ordersAll: number; revenueAll: number };
+ approvalToPurchase?: { buyers: number; avgDays: number | null; medianDays: number | null };
  period?: { start: string; end: string; isMonth: boolean; isAllTime: boolean; label: string };
 };
 
@@ -458,8 +460,24 @@ export default function KeyMetricsPage() {
  trend={data.period?.isMonth
  ? undefined
  : <TrendBadge current={data.emailCtr?.ctr7d ?? 0} prev={data.emailCtr?.ctrPrev7d ?? 0} fmtFn={fmtPct} />}
- note="% of delivered emails that got a click (click-through rate)"
+ note="Click-through rate. ⚠️ Email-link click tracking only works from Jun 23, 2026 — links errored before then, so earlier clicks weren't recorded. CTR is only meaningful from that date."
  href="/admin/emails"
+ />
+ <MetricCard
+ label={data.period?.isMonth || data.period?.isAllTime ? `Email Sales — ${data.period.label}` : "Email Sales (all-time)"}
+ value={fmt$(data.period?.isMonth || data.period?.isAllTime ? (data.emailSales?.revenuePeriod ?? 0) : (data.emailSales?.revenueAll ?? 0))}
+ sub={`${fmtNum(data.period?.isMonth || data.period?.isAllTime ? (data.emailSales?.ordersPeriod ?? 0) : (data.emailSales?.ordersAll ?? 0))} orders from email · ${fmt$(data.emailSales?.revenueAll ?? 0)} / ${fmtNum(data.emailSales?.ordersAll ?? 0)} orders all-time`}
+ note="Sales whose originating click came from an email link (utm_source=email)"
+ href="/admin/emails"
+ />
+ <MetricCard
+ label="Approval → First Purchase"
+ value={data.approvalToPurchase?.avgDays != null ? `${data.approvalToPurchase.avgDays.toFixed(1)} days` : "—"}
+ sub={data.approvalToPurchase?.medianDays != null
+ ? `Median ${data.approvalToPurchase.medianDays.toFixed(1)} days · ${fmtNum(data.approvalToPurchase?.buyers ?? 0)} buyers`
+ : `${fmtNum(data.approvalToPurchase?.buyers ?? 0)} buyers`}
+ note="Avg time from pilot approval to a user's first order"
+ href="/admin/conversions"
  />
  <MetricCard
  label="Revenue per Order (AOV)"

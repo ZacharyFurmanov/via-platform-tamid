@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { visibleStores } from "@/app/lib/stores";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,8 @@ function fixedOrder(n: number): number[] {
  return arr;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const n = visibleStores.length;
  if (n === 0) return NextResponse.json({ store: null });
 

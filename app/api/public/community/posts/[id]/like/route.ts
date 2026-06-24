@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { toggleLike } from "@/app/lib/communityDb";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
 
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
  * Toggles a like. Returns { liked: boolean }.
  */
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { id } = await ctx.params;
  const postId = parseInt(id, 10);
  if (!Number.isFinite(postId)) {

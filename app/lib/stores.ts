@@ -5,7 +5,7 @@ export const stores = [
  name: "Ange Archive",
  location: "New York, NY",
  description:
- "Ange Archive is a NYC based vintage boutique founded by two besties Simi and Chay. We focus on iconic vintage pieces, the ones you always see saved, screenshotted, and obsessed over. Vintage Fendi baguettes, iconic Chanel, the perfect balance between trending and timeless. Bringing your Pinterest boards to life. Everything is sourced internationally and chosen for how it feels, not just what it is. Because every angel deserves something cool… a piece of us.",
+ "Ange Archive is a NYC based vintage boutique founded by two besties Simi and Chay. The shop focuses on iconic vintage pieces, the ones you always see saved, screenshotted, and obsessed over. Vintage Fendi baguettes, iconic Chanel, the perfect balance between trending and timeless. Bringing your Pinterest boards to life. Everything is sourced internationally and chosen for how it feels, not just what it is. Because every angel deserves something cool… a piece of Ange Archive.",
  website: "https://angearchive.com",
  contactEmail: "info@angearchive.com",
  dataSource: "ange-archive",
@@ -29,7 +29,7 @@ export const stores = [
  name: "Ascensio Vintage",
  location: "London, UK",
  description:
- "Ascensio's goal is to push away from fast-moving trends and unethically produced fast fashion, championing timeless style that transcends the decades. Our ethos centers on delivering authentic brands while promoting sustainable shopping, celebrating the beauty of pre-loved and archival pieces from the most well-known and loved brands. Each item is thoroughly checked by our team, ensuring quality and authenticity.",
+ "Ascensio's goal is to push away from fast-moving trends and unethically produced fast fashion, championing timeless style that transcends the decades. Its ethos centers on delivering authentic brands while promoting sustainable shopping, celebrating the beauty of pre-loved and archival pieces from the most well-known and loved brands. Each item is thoroughly checked by the team, ensuring quality and authenticity.",
  website: "https://ascensiovintage.com",
  dataSource: "ascensio-vintage",
  image: "/stores/ascensio-vintage.jpg",
@@ -120,7 +120,7 @@ export const stores = [
  name: "Capsule Édit",
  location: "Melbourne, Australia",
  description:
- "We believe luxury should be timeless, not disposable. Capsule Édit is a curated collection of vintage and pre-owned designer pieces, selected for their design, quality craftsmanship, and long-term wearability.\n\nWe prioritise intention over excess. Choosing pieces that are not trends and are designed to be worn, loved, and passed on. By extending the life of our finds, we support a more conscious approach to fashion and help reduce unnecessary waste.\n\nFor the selective collector who values quality over quantity, rarity over mass production, and timeless style over everchanging fashion.",
+ "Capsule Édit believes luxury should be timeless, not disposable. Capsule Édit is a curated collection of vintage and pre-owned designer pieces, selected for their design, quality craftsmanship, and long-term wearability.\n\nThe shop prioritises intention over excess. Choosing pieces that are not trends and are designed to be worn, loved, and passed on. By extending the life of its finds, Capsule Édit supports a more conscious approach to fashion and helps reduce unnecessary waste.\n\nFor the selective collector who values quality over quantity, rarity over mass production, and timeless style over everchanging fashion.",
  website: "https://capsuledit.com",
  contactEmail: "capsuledit@gmail.com",
  dataSource: "capsule-edit",
@@ -168,7 +168,7 @@ export const stores = [
  name: "Chill Boutique",
  location: "Fountain Hills, AZ",
  description:
- "Chill Boutique is an upscale women's consignment boutique with a Western soul. Nestled in Fountain Hills, AZ, Chill offers a premier selection of designer, vintage, and desert-inspired fashion. We're on a mission to re-home pre-loved gems from Arizona's most stylish women. Whether you're hunting for a high-end label or a one-of-a-kind vintage piece, your next find is waiting here.",
+ "Chill Boutique is an upscale women's consignment boutique with a Western soul. Nestled in Fountain Hills, AZ, Chill offers a premier selection of designer, vintage, and desert-inspired fashion. The boutique is on a mission to re-home pre-loved gems from Arizona's most stylish women. Whether you're hunting for a high-end label or a one-of-a-kind vintage piece, your next find is waiting here.",
  website: "https://chillboutiqueconsignment.com",
  dataSource: "chill-boutique",
  image: "/stores/chill-boutique.jpg",
@@ -191,7 +191,7 @@ export const stores = [
  name: "Chomp Chomp Vintage",
  location: "London, UK",
  description:
- "Chomp Chomp started with a genuine love for clothing and grew from there. We're based in London and focus on giving vintage a second life. We dig through the past so you can wear something better than whatever everyone else has on.",
+ "Chomp Chomp started with a genuine love for clothing and grew from there. Based in London, the shop focuses on giving vintage a second life. Chomp Chomp digs through the past so you can wear something better than whatever everyone else has on.",
  website: "https://chompchompvintage.com",
  contactEmail: "chompchompvintage@gmail.com",
  dataSource: "chomp-chomp-vintage",
@@ -310,7 +310,7 @@ export const stores = [
  name: "For The Globe",
  location: "Richmond, VA",
  description:
- "For The Globe is a Richmond, VA based vintage studio. Founded by Abbey Miller in 2020, our mission is to provide vintage enthusiasts with a carefully curated collection of high-quality, unique and sustainable clothing and decor from around the globe. We aim to spread our appreciation for vintage treasures + attainable designer fashion, while also encouraging a more conscious approach to style. Through a commitment to looking good while doing good for the globe, we strive to be the go-to destination for those seeking pieces for an always stylish, globe-conscious wardrobe.",
+ "For The Globe is a Richmond, VA based vintage studio. Founded by Abbey Miller in 2020, its mission is to provide vintage enthusiasts with a carefully curated collection of high-quality, unique and sustainable clothing and decor from around the globe. For The Globe aims to spread its appreciation for vintage treasures + attainable designer fashion, while also encouraging a more conscious approach to style. Through a commitment to looking good while doing good for the globe, the studio strives to be the go-to destination for those seeking pieces for an always stylish, globe-conscious wardrobe.",
  website: "https://shopfortheglobe.com/VYA",
  dataSource: "for-the-globe",
  image: "/stores/for-the-globe.jpg",
@@ -356,7 +356,7 @@ export const stores = [
  name: "Hachi Archive",
  location: "New York, NY",
  description:
- "Hachi Archive is a leading destination for pre-owned luxury fashion — carefully curated, every piece authenticated, and priced to be within reach. From our online collections to our NYC pop-up events, we've built a reputation for quality and authenticity with a dedicated and growing customer base. Driven by circularity, we're committed to making curated designer fashion accessible.",
+ "Hachi Archive is a leading destination for pre-owned luxury fashion — carefully curated, every piece authenticated, and priced to be within reach. From its online collections to its NYC pop-up events, Hachi Archive has built a reputation for quality and authenticity with a dedicated and growing customer base. Driven by circularity, the brand is committed to making curated designer fashion accessible.",
  website: "https://hachiarchive.com",
  contactEmail: "patricia@hachiarchive.com",
  dataSource: "hachi-archive",
@@ -380,7 +380,7 @@ export const stores = [
  name: "Honeybear Vintage",
  location: "New York, NY",
  description:
- "Honeybear Vintage comes to you from Morgan Muno and Liz Marino. Just like our friendship (started in Copenhagen, maintained long distance between Oregon and Madrid, and now based in NYC!), our items span decades and occasions, with an emphasis on size variety and quality materials that could live in your closet forever. It's our way of building a place where strangers can become friends in a few hours, where you can find the effortless kindness of bathroom line banter next to the perfect dress for your friend's wedding.",
+ "Honeybear Vintage comes to you from Morgan Muno and Liz Marino. Just like their friendship (started in Copenhagen, maintained long distance between Oregon and Madrid, and now based in NYC!), their items span decades and occasions, with an emphasis on size variety and quality materials that could live in your closet forever. It's their way of building a place where strangers can become friends in a few hours, where you can find the effortless kindness of bathroom line banter next to the perfect dress for your friend's wedding.",
  website: "https://honeybearvintagenyc.square.site/",
  dataSource: "honey-bear-vintage",
  image: "/stores/honey-bear-vintage.jpg",
@@ -424,7 +424,7 @@ export const stores = [
  name: "Jade Vintage",
  location: "Toronto, Canada",
  description:
- "Jade Vintage is a curated e-commerce business based in Toronto, Canada specializing in small-batch collections of rare, authenticated pre-loved designer pieces, including Balenciaga City bags, Chanel Classic Flaps, and other timeless vintage styles. Beyond sourcing, we prioritize building strong client relationships through education—guiding our customers on how to shop smarter, invest in quality, and make more conscious purchasing decisions. Rooted in expertise, transparency, and considered curation, Jade Vintage makes luxury more accessible while championing a slower, more intentional approach to fashion—where each piece is chosen with purpose and worn with meaning.",
+ "Jade Vintage is a curated e-commerce business based in Toronto, Canada specializing in small-batch collections of rare, authenticated pre-loved designer pieces, including Balenciaga City bags, Chanel Classic Flaps, and other timeless vintage styles. Beyond sourcing, the brand prioritizes building strong client relationships through education—guiding customers on how to shop smarter, invest in quality, and make more conscious purchasing decisions. Rooted in expertise, transparency, and considered curation, Jade Vintage makes luxury more accessible while championing a slower, more intentional approach to fashion—where each piece is chosen with purpose and worn with meaning.",
  website: "https://jadevintage.ca",
  dataSource: "jade-vintage",
  image: "/stores/jade-vintage.jpg",
@@ -447,7 +447,7 @@ export const stores = [
  name: "Keepin It Real Luxe",
  location: "San Francisco, CA",
  description:
-  "They say fashion is a passion, but for me, it's always been a lifestyle. For years, I lived in that relatable tug-of-war: a deep, unshakeable love for designer craftsmanship versus the reality of adulting. Life happens—bills, family, and long-term commitments naturally took the driver's seat when it came to where my paycheck went. But while my budget was being responsible, my soul was still craving that specific rush that only luxury fashion provides. I realized I didn't just want what was 'trending' on a department store shelf. I wanted the pieces with a story. I craved the rare, the hard-to-find, and the 'how did you get your hands on that?' items that define a personal collection. I started Keepin' It Real Luxe to bridge that gap for people just like me. I spent years mastering the art of the 'luxe budget'—learning how to source authentic, rare designer pieces without compromising my financial priorities.",
+  "They say fashion is a passion, but for the founder, it's always been a lifestyle. For years, she lived in that relatable tug-of-war: a deep, unshakeable love for designer craftsmanship versus the reality of adulting. Life happens—bills, family, and long-term commitments naturally took the driver's seat when it came to where her paycheck went. But while her budget was being responsible, her soul was still craving that specific rush that only luxury fashion provides. She realized she didn't just want what was 'trending' on a department store shelf. She wanted the pieces with a story. She craved the rare, the hard-to-find, and the 'how did you get your hands on that?' items that define a personal collection. She started Keepin' It Real Luxe to bridge that gap for people just like her. She spent years mastering the art of the 'luxe budget'—learning how to source authentic, rare designer pieces without compromising her financial priorities.",
  website: "https://www.keepinitrealluxe.com",
  contactEmail: "info@keepinitrealluxe.com",
  dataSource: "keepin-it-real-luxe",
@@ -464,12 +464,34 @@ export const stores = [
   "Although sales are generally considered final, a return request can be made within 7 days of delivery if you are not completely satisfied or feel the item is not as pictured. Items must be returned in original condition with tags, and requests are reviewed case-by-case. Use the form below with any pre-purchase questions.",
  },
  {
+ slug: "in-a-past-life",
+ dashboardToken: "iapl-450f3dbaca86",
+ name: "In a Past Life",
+ location: "Detroit, MI",
+ description:
+ "In a Past Life is a love letter to vintage. An ode to the craftsmanship, artistry, and timeless silhouettes found in treasures from another era. Each piece is hand-picked in Europe with intention, guided by an appreciation for character, history, and thoughtful design. Drawn to the dreamy, romantic, and beautifully made, In a Past Life curates finds that transcend time, pieces with past lives ready to be loved again.",
+ website: "https://www.inapast.life",
+ contactEmail: "inapastlife.xo@gmail.com",
+ dataSource: "in-a-past-life",
+ image: "/stores/in-a-past-life.jpg",
+ logo: "/stores/in-a-past-life.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "squarespace-manual" as const,
+ authenticityPolicy:
+ "Every piece at In a Past Life is hand-picked in Europe and inspected before listing — chosen for its character, history, and craftsmanship, and accurately described so you can shop with confidence.",
+ shippingPolicy:
+ "Ships from Detroit, MI. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing. If your item arrives significantly different from its description, reach out within 7 days of delivery and we'll review.",
+ },
+ {
  slug: "lei-vintage",
  dashboardToken: "lv-f4a8b2c1d9e3",
  name: "LEI Vintage",
  location: "Boston, MA",
  description:
- "LEI was born from the belief that the best style already exists. Rooted in vintage and sustainability, we curate timeless pieces with history and character. Reviving the past to create modern staples meant to be worn again and again.",
+ "LEI was born from the belief that the best style already exists. Rooted in vintage and sustainability, LEI curates timeless pieces with history and character. Reviving the past to create modern staples meant to be worn again and again.",
  website: "https://www.leivintage.com",
  dataSource: "lei-vintage",
  image: "/stores/LEI.jpg",
@@ -564,7 +586,7 @@ export const stores = [
  name: "Montrose Edit",
  location: "Houston, TX",
  description:
- "MontroseEdit is a Houston based curated luxury resale brand specializing in elevated pre loved designer pieces. Rooted in storytelling and personal style, MontroseEdit is more than a storefront — it is a community built around the Montrose girl, someone who is effortless, fashion forward, and intentional in the way she lives and dresses. Through curated drops, pop ups, luxury markets, and digital content, we bring a fresh and approachable perspective to luxury resale, making timeless pieces feel personal, accessible, and meaningful.",
+ "MontroseEdit is a Houston based curated luxury resale brand specializing in elevated pre loved designer pieces. Rooted in storytelling and personal style, MontroseEdit is more than a storefront — it is a community built around the Montrose girl, someone who is effortless, fashion forward, and intentional in the way she lives and dresses. Through curated drops, pop ups, luxury markets, and digital content, MontroseEdit brings a fresh and approachable perspective to luxury resale, making timeless pieces feel personal, accessible, and meaningful.",
  website: "https://www.montroseedit.com",
  dataSource: "montrose-edit",
  image: "/stores/montrose-edit-brand.jpg",
@@ -608,7 +630,7 @@ export const stores = [
  name: "Moonstruck Vintage",
  location: "New York, NY",
  description:
- "Moonstruck Vintage is dedicated to curating unique accessories for everyone. We aim to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. We focus on bags, but also love a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
+ "Moonstruck Vintage is dedicated to curating unique accessories for everyone. The shop aims to promote sustainability and give pieces a second life. Every piece tells a story, and adding to it is so special. Moonstruck focuses on bags, but also loves a good pair of shoes. Each piece is handpicked with care, authenticity, and style in mind so you can enjoy the thrill of discovering treasure, too!",
  website: "https://moonstruckvintagenyc.com",
  dataSource: "moonstruck-vintage",
  image: "/stores/moonstruck-vintage.jpg",
@@ -676,7 +698,7 @@ export const stores = [
  dashboardToken: "pv-2a9c3e1f7b4d",
  name: "Petria Vintage",
  location: "Montreal, Canada",
- description: "Petria Vintage is a Montreal-based luxury resale boutique specializing in curated vintage and pre-owned designer pieces. From iconic handbags to unique jewelry and accessories, every item is carefully selected for quality, authenticity, and timeless style. We work with a network of collectors, consignors, and trusted sources to bring unique designer pieces to our clients.",
+ description: "Petria Vintage is a Montreal-based luxury resale boutique specializing in curated vintage and pre-owned designer pieces. From iconic handbags to unique jewelry and accessories, every item is carefully selected for quality, authenticity, and timeless style. Petria Vintage works with a network of collectors, consignors, and trusted sources to bring unique designer pieces to its clients.",
  website: "https://petriavintage.com",
  dataSource: "petria-vintage",
  image: "/stores/petria-vintage.jpg",
@@ -791,7 +813,7 @@ export const stores = [
  name: "Sablier Vintage",
  location: "New York, NY",
  description:
- "Sablier consists of a curation of high-quality vintage garments focused on timeless staples and statement pieces. Our diverse collections offer custom made upcycled designs, reviving vintage fabrics into modern and chic styles.",
+ "Sablier consists of a curation of high-quality vintage garments focused on timeless staples and statement pieces. Its diverse collections offer custom made upcycled designs, reviving vintage fabrics into modern and chic styles.",
  website: "https://sabliervintage.com",
  dataSource: "sablier-vintage",
  image: "/stores/sablier-vintage.jpg",
@@ -814,7 +836,7 @@ export const stores = [
  name: "Sacrare",
  location: "New York, NY",
  description:
- "Sacrare is a New York based luxury reseller specializing in rare, obsession-worthy designer handbags and accessories. We curate a highly selective collection of authenticated vintage, limited-edition, and hard to find pieces from fashion brands such as Chanel, Hermes, Louis Vuitton, and more. Unlike large reseller sites with thousands of listings, Sacrare hand-selects only the rarest and most coveted pieces, making it easier for collectors and fashion enthusiasts to discover timeless, sustainable treasures. Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
+ "Sacrare is a New York based luxury reseller specializing in rare, obsession-worthy designer handbags and accessories. Sacrare curates a highly selective collection of authenticated vintage, limited-edition, and hard to find pieces from fashion brands such as Chanel, Hermes, Louis Vuitton, and more. Unlike large reseller sites with thousands of listings, Sacrare hand-selects only the rarest and most coveted pieces, making it easier for collectors and fashion enthusiasts to discover timeless, sustainable treasures. Sacrare holds certification in authenticating Chanel and Hermes handbags and also partners with trusted third-party authentication services for additional verification and confidence.",
  website: "https://www.sacrare.com",
  dataSource: "sacrare",
  image: "/stores/sacrare.jpg",
@@ -855,7 +877,7 @@ export const stores = [
  name: "Sassy So What",
  location: "Dallas, TX",
  description:
- "Sassysowhat is based in Dallas, TX. Our niche is fun & fancy vintage, focused on luxury brand heels from the early 90s and 00s. Our meticulous attention to detail sets us apart from other vintage designer shops; we only add lasting quality items to the next girl's wardrobe.",
+ "Sassysowhat is based in Dallas, TX. Its niche is fun & fancy vintage, focused on luxury brand heels from the early 90s and 00s. Its meticulous attention to detail sets it apart from other vintage designer shops; the shop only adds lasting quality items to the next girl's wardrobe.",
  website: "https://www.sassysowhat.com",
  dataSource: "sassy-so-what",
  image: "/stores/placeholder.svg",
@@ -924,7 +946,7 @@ export const stores = [
  name: "Shiranka Vintage",
  location: "San Francisco, CA",
  description:
- "Shiranka Vintage specializes in tracking down rare, highly coveted designer grails alongside curating wardrobe staples for the everyday girl who wants to wear something no one else has. We believe not all clothes are created equal — every piece is intentionally sourced to define eras, celebrate construction, and bring late-90s and 2000s archival luxury directly into your modern rotation.",
+ "Shiranka Vintage specializes in tracking down rare, highly coveted designer grails alongside curating wardrobe staples for the everyday girl who wants to wear something no one else has. Shiranka believes not all clothes are created equal — every piece is intentionally sourced to define eras, celebrate construction, and bring late-90s and 2000s archival luxury directly into your modern rotation.",
  website: "https://shirankavintage.com",
  dataSource: "shiranka-vintage",
  image: "/stores/shiranka-vintage.jpg",
@@ -947,7 +969,7 @@ export const stores = [
  name: "Situations Vintage",
  location: "New York, NY",
  description:
- "Situations Vintage is all about finding your next situation! We believe vintage items are more than just clothes — they're stories, moods, and moments waiting to happen. Founded by two best friends in New York City, we source and curate archival 90s and early 2000s pieces.",
+ "Situations Vintage is all about finding your next situation! Situations Vintage believes vintage items are more than just clothes — they're stories, moods, and moments waiting to happen. Founded by two best friends in New York City, the shop sources and curates archival 90s and early 2000s pieces.",
  website: "https://situationsvintage.com",
  contactEmail: "info@situationsvintage.com",
  dataSource: "situations-vintage",
@@ -1063,7 +1085,7 @@ export const stores = [
  name: "The Objects of Affection",
  location: "New Hope, Pennsylvania",
  description:
- "Founded by Mackenzie and based in New Hope, Pennsylvania, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras.\n\nWith an archival mindset and an editorial eye, Mackenzie sources pieces not for trend, but for reverence — hand-selecting objects defined by craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives. These are pieces worth longing for, chosen for those who build their wardrobes slowly and with intention, collecting for today to be passed on as heirlooms.\n\nAt The Objects of Affection, our clients are celebrated just as thoughtfully as the pieces themselves. Every object is authenticated, transparently presented, and sent off with the care and white-glove attention of buying it brand new. We serve our collectors like family, because devotion to the object should always be matched by devotion to the experience.",
+ "Founded by Mackenzie and based in New Hope, Pennsylvania, The Objects of Affection is a curated vintage and archival fashion house specializing in luxury handbags, clothing, shoes, and accessories from the designers and houses that defined eras.\n\nWith an archival mindset and an editorial eye, Mackenzie sources pieces not for trend, but for reverence — hand-selecting objects defined by craftsmanship, condition, rarity, and the emotional pull a truly remarkable piece gives. These are pieces worth longing for, chosen for those who build their wardrobes slowly and with intention, collecting for today to be passed on as heirlooms.\n\nAt The Objects of Affection, clients are celebrated just as thoughtfully as the pieces themselves. Every object is authenticated, transparently presented, and sent off with the care and white-glove attention of buying it brand new. The Objects of Affection serves its collectors like family, because devotion to the object should always be matched by devotion to the experience.",
  website: "https://theobjectsofaffection.com",
  dataSource: "the-objects-of-affection",
  image: "/stores/the-objects-of-affection-3.jpg",
@@ -1279,6 +1301,7 @@ export function getCommissionAmount(price: number): number {
  */
 export const storeContactEmails: Record<string, string> = {
  "ascensio-vintage": "info@ascensiovintage.com",
+ "in-a-past-life": "inapastlife.xo@gmail.com",
  "lei-vintage": "shop@leivintage.com",
  "lover-girl-vintage": "lexi.heuser@gmail.com",
  "missi-archives": "missiarchives@gmail.com",

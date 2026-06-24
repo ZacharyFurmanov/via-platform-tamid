@@ -198,6 +198,13 @@ export default function GlobalPageTracker() {
  // Primary: in-memory ref — always works regardless of browser storage policy.
  utmPayloadRef.current = utmPayload;
 
+ // Window global so acquisitionSource() (called from signup forms) can read the
+ // real source even when session/localStorage is blocked — the case for the
+ // Instagram & TikTok in-app browsers that /IG and /TT bio links open in.
+ try {
+ (window as unknown as { __viaUtmSource?: string }).__viaUtmSource = utmSource;
+ } catch {}
+
  // Secondary: sessionStorage for cross-navigation persistence within the same tab.
  try {
  sessionStorage.setItem("via_utm_data", JSON.stringify(utmPayload));

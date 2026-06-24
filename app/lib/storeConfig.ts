@@ -77,6 +77,12 @@ export type Store = SquarespaceStore | ShopifyStore | BigCartelStore | SquareSto
 export const SQUARESPACE_STORES: SquarespaceStore[] = [
  {
  type: "squarespace",
+ name: "In a Past Life",
+ slug: "in-a-past-life",
+ shopUrl: "https://www.inapast.life/shop",
+ },
+ {
+ type: "squarespace",
  name: "LEI Vintage",
  slug: "lei-vintage",
  shopUrl: "https://www.leivintage.com/shop",

@@ -42,12 +42,6 @@ const PUBLIC_ROUTES = [
   "/api/store/sourcing",
   "/api/store/messages",
   "/store/login",
-  // Product & store pages are public so shared links unfurl with their own OG
-  // image/preview and are crawlable for SEO (covers /products/[id] and
-  // /stores/[slug] plus their /opengraph-image routes). "/stores" does not
-  // match the seller portal at "/store/...". Browsing/favorites/checkout stay gated.
-  "/products",
-  "/stores",
 ];
 
 // Routes that require a user session but NOT pilot approval (via_access cookie)
@@ -101,6 +95,10 @@ function isPublicRoute(pathname: string): boolean {
     pathname.endsWith("/") && pathname !== "/"
       ? pathname.slice(0, -1)
       : pathname;
+  // Product & store pages are gated (waitlist), but their OG/Twitter preview images
+  // stay public so a shared link still unfurls with a thumbnail — clicking the link
+  // itself hits the login/approval wall. (Locks access, keeps links from looking broken.)
+  if (normalized.endsWith("/opengraph-image") || normalized.endsWith("/twitter-image")) return true;
   return PUBLIC_ROUTES.some(
     (route) => normalized === route || normalized.startsWith(route + "/")
   );

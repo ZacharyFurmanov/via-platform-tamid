@@ -41,6 +41,43 @@ type SquarespaceItem = {
  excerpt?: string;
 };
 
+/** True if HTML contains real visible text (ignores empty <p> placeholder tags). */
+function htmlHasText(html: string | null | undefined): boolean {
+ if (!html) return false;
+ return html.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim().length > 0;
+}
+
+/** Strip Squarespace's injected <style>/<script> blocks from a product body. */
+function cleanProductBody(html: string | null | undefined): string | null {
+ if (!html) return null;
+ const cleaned = html
+ .replace(/<style[\s\S]*?<\/style>/gi, "")
+ .replace(/<script[\s\S]*?<\/script>/gi, "")
+ .trim();
+ return cleaned || null;
+}
+
+/**
+ * Some Squarespace stores leave the collection `excerpt`/`body` empty and keep the
+ * real description only on the individual product page. Fetch that page's JSON
+ * and return its cleaned body when the collection had no usable text.
+ */
+async function fetchSquarespaceProductBody(externalUrl: string): Promise<string | null> {
+ try {
+ const url = externalUrl.replace(/\?.*$/, "") + "?format=json";
+ const res = await fetch(url, {
+ headers: { "User-Agent": "VYA-Sync/1.0", Accept: "application/json" },
+ });
+ if (!res.ok) return null;
+ const data = await res.json();
+ const item = data.item ?? (Array.isArray(data.items) ? data.items[0] : null);
+ const body = cleanProductBody(item?.body);
+ return body && htmlHasText(body) ? body : null;
+ } catch {
+ return null;
+ }
+}
+
 const SS_SIZE_VALUE = `(?:US|UK|EU|IT)?\\s*\\d[\\d.]*|XS|S|M|L|XL|XXL|2XL|3XL|XXXL|OS|OSFM|One\\s+Size`;
 
 /** Extract size from Squarespace tags (e.g. "size-m", "xl", "us-8") */
@@ -214,8 +251,14 @@ export async function parseSquarespaceJSON(
  const images = galleryUrls.length > 0 ? galleryUrls : (fallbackAsset ? [fallbackAsset] : []);
  const image = images[0] || null;
 
- // Product description (HTML body from Squarespace)
- const description = item.body || item.excerpt || null;
+ // Product description (HTML body from Squarespace). Some stores leave the
+ // collection excerpt empty (just placeholder <p> tags) and keep the real text
+ // on the product page — fetch that page's body when there's nothing usable here.
+ let description = item.body || item.excerpt || null;
+ if (!htmlHasText(description)) {
+ const fetched = await fetchSquarespaceProductBody(externalUrl);
+ if (fetched) description = fetched;
+ }
 
  // Extract size. Priority mirrors the Shopify sync: a SPECIFIC size (numeric /
  // EU / UK) always beats a GENERIC letter. A "size-m" tag must NOT override a real

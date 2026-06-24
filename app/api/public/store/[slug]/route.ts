@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { neon } from "@neondatabase/serverless";
 import { visibleStores } from "@/app/lib/stores";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { parseFilters, applyJsFilters } from "@/app/lib/publicFilters";
 import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, ctx: { params: Promise<{ slug: string }> }) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { slug } = await ctx.params;
  const { searchParams } = new URL(request.url);
  const filters = parseFilters(searchParams);
@@ -45,7 +48,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  let rows: Array<Record<string, unknown>>;
  if (filters.sort === "priceAsc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE store_slug = ${slug}
   AND image IS NOT NULL AND image != ''
@@ -59,7 +62,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  ` as Array<Record<string, unknown>>;
  } else if (filters.sort === "priceDesc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE store_slug = ${slug}
   AND image IS NOT NULL AND image != ''
@@ -73,7 +76,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
  ` as Array<Record<string, unknown>>;
  } else {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE store_slug = ${slug}
   AND image IS NOT NULL AND image != ''
@@ -100,10 +103,16 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
   price: formatPrice(Number(p.price), p.currency as string | null),
   image: p.image as string | null,
   images: parsedImages,
+  size: (p.size as string | null) ?? null,
  };
  });
 
  products = applyJsFilters(products, filters, await getCategoryOverrideMap());
+
+ if (filters.sort === "popular") {
+ const scores = await getProductPopularityScores(products.map((p) => p.id));
+ products = products.sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+ }
 
  return NextResponse.json({ store: storePayload, products });
  } catch {

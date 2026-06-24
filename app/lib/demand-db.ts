@@ -173,11 +173,17 @@ export async function getStoreDemandIntelligence(
 
 export type MarketplaceBrandDemand = { brand: string; views: number; hearts: number; purchases: number; searches: number };
 export type MarketplaceCategoryDemand = { category: string; views: number; hearts: number; purchases: number };
+// Whitespace = demand outstripping supply. The headline sourcing signal: brands
+// people want that the marketplace is under-stocked on.
+export type Whitespace = { brand: string; demand: number; inventory: number; ratio: number };
+export type DemandSummary = { gmv: number; orders: number; aov: number };
 export type MarketplaceDemand = {
  generatedAt: string;
  windowDays: number;
+ summary: DemandSummary;
  unmetSearches: UnmetSearch[];
  topBrands: MarketplaceBrandDemand[];
+ whitespace: Whitespace[];
  topCategories: MarketplaceCategoryDemand[];
  openSourcing: OpenSourcing[];
 };
@@ -229,6 +235,28 @@ export async function getMarketplaceDemand(opts: { windowDays?: number } = {}): 
  purchases: c.purchases,
  }));
 
+ // Whitespace: demand-to-supply ratio per brand. High ratio = lots of demand,
+ // little inventory = a sourcing opportunity. Demand weighted like the heat index.
+ const whitespace: Whitespace[] = marketBrands
+ .map((b) => {
+ const demand = b.clicks + b.hearts * 3 + (brandSearch.get(b.brand) ?? 0) * 2 + b.purchases * 5;
+ const inventory = b.items;
+ return { brand: b.brand, demand, inventory, ratio: inventory > 0 ? Math.round((demand / inventory) * 10) / 10 : demand };
+ })
+ .filter((w) => w.demand >= 5)
+ .sort((a, b) => b.ratio - a.ratio)
+ .slice(0, 15);
+
+ // Revenue summary over the window (actual tracked orders).
+ const sumRows = (await sql`
+ SELECT COUNT(*)::int AS orders, COALESCE(SUM(order_total), 0)::float AS gmv
+ FROM conversions
+ WHERE order_total > 0 AND timestamp >= NOW() - (${windowDays} || ' days')::interval
+ `.catch(() => [{ orders: 0, gmv: 0 }])) as Array<{ orders: number; gmv: number }>;
+ const orders = sumRows[0]?.orders ?? 0;
+ const gmv = Math.round(sumRows[0]?.gmv ?? 0);
+ const summary: DemandSummary = { gmv, orders, aov: orders > 0 ? Math.round(gmv / orders) : 0 };
+
  const sourcingRows = (await sql`
  SELECT id, description, price_min, price_max, size, deadline
  FROM sourcing_requests
@@ -245,5 +273,5 @@ export async function getMarketplaceDemand(opts: { windowDays?: number } = {}): 
  deadline: r.deadline as string,
  }));
 
- return { generatedAt: new Date().toISOString(), windowDays, unmetSearches, topBrands, topCategories, openSourcing };
+ return { generatedAt: new Date().toISOString(), windowDays, summary, unmetSearches, topBrands, whitespace, topCategories, openSourcing };
 }

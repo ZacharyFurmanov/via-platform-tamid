@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 // infinite scroll, so there is no 7-day window and no hard cap — every product
 // is reachable by paging with ?offset=. Page size is bounded per request.
 export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { searchParams } = new URL(request.url);
  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") ?? "60"), 1), 100);
  const offset = Math.max(parseInt(searchParams.get("offset") ?? "0"), 0);
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
  let rows: Array<Record<string, unknown>>;
  if (filters.sort === "priceAsc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -56,7 +58,7 @@ export async function GET(request: Request) {
  ` as Array<Record<string, unknown>>;
  } else if (filters.sort === "priceDesc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -72,7 +74,7 @@ export async function GET(request: Request) {
  ` as Array<Record<string, unknown>>;
  } else {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -103,6 +105,7 @@ export async function GET(request: Request) {
   price: formatPrice(Number(p.price), p.currency as string | null),
   image: p.image as string | null,
   images: parsedImages,
+  size: (p.size as string | null) ?? null,
  };
  });
 

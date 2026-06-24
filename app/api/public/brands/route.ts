@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { neon } from "@neondatabase/serverless";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
 // over live product titles so it matches the designer filter exactly.
 const LABEL_TO_SLUG = new Map(brands.map((b) => [b.label, b.slug]));
 
-export async function GET() {
+export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
  if (!dbUrl) return NextResponse.json({ brands: [] });
 

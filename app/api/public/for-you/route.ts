@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
-import { getUserTaste } from "@/app/lib/taste-db";
+import { getUserTasteProfile } from "@/app/lib/taste-db";
 import { vibeKeywords } from "@/app/lib/tasteVibes";
 
 export const dynamic = "force-dynamic";
@@ -21,8 +22,15 @@ export const dynamic = "force-dynamic";
  * `personalized` is true when the user had real activity driving the ranking.
  */
 export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { searchParams } = new URL(request.url);
  const limit = Math.min(parseInt(searchParams.get("limit") ?? "60"), 200);
+ // Client-passed signals so logged-out users (favorites are stored locally on the
+ // device) still get a personalized feed: their hearted product ids + taste.
+ const favIds = (searchParams.get("favs") ?? "")
+ .split(",").map((s) => parseInt(s, 10)).filter((n) => Number.isFinite(n)).slice(0, 60);
+ const queryVibes = (searchParams.get("vibes") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+ const querySizes = (searchParams.get("sizes") ?? "").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
 
  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
  if (!dbUrl) return NextResponse.json({ products: [], personalized: false });
@@ -36,40 +44,80 @@ export async function GET(request: Request) {
  // feed and as backfill so "Curated for You" is never sparse. When vibePatterns
  // are supplied (from the taste test), results are restricted to titles matching
  // those keywords — this is what makes a brand-new user's feed personalized.
- const popularRecent = async (excludeIds: number[], take: number, vibePatterns: string[] = []) => {
+ const popularRecent = async (excludeIds: number[], take: number, vibePatterns: string[] = [], sizeBias: string[] = []) => {
  if (take <= 0) return [] as Array<Record<string, unknown>>;
- return (await sql`
-  SELECT p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images,
-   COALESCE(f.cnt, 0) AS fav_count
+ // Pull a recent pool, then re-rank by recent engagement (trending) + size fit,
+ // so the base/backfill feed reflects what's hot now rather than all-time faves.
+ const pool = (await sql`
+  SELECT p.id, p.store_slug, p.store_name, p.title, p.price, p.currency, p.image, p.images, p.size
   FROM products p
-  LEFT JOIN (
-   SELECT product_id, COUNT(*)::int AS cnt FROM product_favorites GROUP BY product_id
-  ) f ON f.product_id = p.id
   WHERE p.image IS NOT NULL AND p.image != ''
    AND p.title NOT ILIKE '%gift card%'
    AND (p.store_slug != ALL(${shopifySlugs}) OR p.collabs_link IS NOT NULL)
    AND (${hidden.length} = 0 OR p.store_slug != ALL(${hidden}))
    AND (${excludeIds.length} = 0 OR p.id != ALL(${excludeIds}))
    AND (${vibePatterns.length} = 0 OR lower(p.title) LIKE ANY(${vibePatterns}::text[]))
-  ORDER BY COALESCE(f.cnt, 0) DESC, p.created_at DESC NULLS LAST, p.id DESC
-  LIMIT ${take}
+  ORDER BY p.created_at DESC NULLS LAST, p.id DESC
+  LIMIT ${Math.max(take * 5, 120)}
  `) as Array<Record<string, unknown>>;
+ const trend = await getTrendScores(pool.map((p) => p.id as number));
+ const scored = pool.map((p) => {
+  const sz = (p.size as string | null)?.toUpperCase() ?? null;
+  let s = trend.get(p.id as number) ?? 0;
+  if (sizeBias.length > 0 && sz && sizeBias.includes(sz)) s += 6;
+  return { p, s };
+ });
+ scored.sort((a, b) => b.s - a.s); // trending first; ties keep recency order (stable sort)
+ return scored.slice(0, take).map((x) => x.p);
  };
 
- // Taste-test vibes (cold-start personalization signal).
- const vibes = userId ? await getUserTaste(userId).catch(() => [] as string[]) : [];
+ // Taste profile — vibes (keyword bias) + explicit sizes (strong fit signal).
+ const profile = userId
+ ? await getUserTasteProfile(userId).catch(() => ({ vibes: [] as string[], sizes: [] as string[] }))
+ : { vibes: queryVibes, sizes: querySizes };
+ const vibes = profile.vibes;
+ const savedSizes = profile.sizes; // already uppercased by sanitizeSizes
  const vibePatterns = vibeKeywords(vibes).map((k) => `%${k}%`);
  const hasVibes = vibePatterns.length > 0;
 
+ // Recent-engagement "trending" scores for a set of products. Resilient: any
+ // SQL hiccup just yields an empty map so the feed still renders (by recency).
+ const getTrendScores = async (productIds: number[]): Promise<Map<number, number>> => {
+ if (productIds.length === 0) return new Map();
  try {
- // No user → curated popular + recent (still labeled "Curated for You" in the app).
- if (!userId) {
- const rows = await popularRecent([], limit);
- return NextResponse.json({ products: rows.map(mapRow), personalized: false });
+ const rows = (await sql`
+  WITH ids AS (SELECT unnest(${productIds}::int[]) AS id)
+  SELECT i.id,
+   (COALESCE(rf.cnt, 0) * 4 + COALESCE(rc.cnt, 0) * 3 + COALESCE(rv.cnt, 0)) AS trend
+  FROM ids i
+  LEFT JOIN (
+   SELECT product_id, COUNT(*)::int AS cnt FROM product_favorites
+   WHERE created_at >= NOW() - INTERVAL '21 days' GROUP BY product_id
+  ) rf ON rf.product_id = i.id
+  LEFT JOIN (
+   SELECT product_id::int AS pid, COUNT(*)::int AS cnt FROM clicks
+   WHERE timestamp >= NOW() - INTERVAL '21 days' AND product_id ~ '^[0-9]+$' GROUP BY product_id
+  ) rc ON rc.pid = i.id
+  LEFT JOIN products p ON p.id = i.id
+  LEFT JOIN (
+   SELECT product_id AS comp, COUNT(*)::int AS cnt FROM product_views
+   WHERE timestamp >= NOW() - INTERVAL '21 days' GROUP BY product_id
+  ) rv ON rv.comp = (p.store_slug || '-' || p.id::text)
+ `) as Array<{ id: number; trend: number }>;
+ return new Map(rows.map((r) => [Number(r.id), Number(r.trend)]));
+ } catch (e) {
+ console.error("[for-you] trend scores failed:", e);
+ return new Map();
  }
+ };
 
+ try {
  // ============ Build signal profile ============
- const signalRows = (await sql`
+ // Signed-in: the user's clicks / favorites / views. Logged-out: the favorites
+ // the app passes from local storage — so the feed still reflects your likes.
+ let signalRows: Array<{ store_slug: string; size: string | null; score: number }> = [];
+ if (userId) {
+ signalRows = (await sql`
   WITH activity AS (
    SELECT c.product_id::int AS product_id, c.store_slug, 5 AS weight
    FROM clicks c
@@ -87,17 +135,24 @@ export async function GET(request: Request) {
   WHERE COALESCE(a.store_slug, p.store_slug) IS NOT NULL
   GROUP BY 1, 2
  `) as Array<{ store_slug: string; size: string | null; score: number }>;
+ } else if (favIds.length > 0) {
+ // Each locally-favorited product contributes weight 8 to its store + size.
+ signalRows = (await sql`
+  SELECT store_slug, size, 8 AS score FROM products WHERE id = ANY(${favIds})
+ `) as Array<{ store_slug: string; size: string | null; score: number }>;
+ }
 
  // No behavioral history yet. If they took the taste test, personalize off their
  // vibes; otherwise fall back to a generic popular+recent mix.
  if (signalRows.length === 0) {
- let rows = await popularRecent([], limit, vibePatterns);
- if (hasVibes && rows.length < limit) {
+ const hasProfile = hasVibes || savedSizes.length > 0;
+ let rows = await popularRecent([], limit, vibePatterns, savedSizes);
+ if (hasProfile && rows.length < limit) {
   const have = rows.map((r) => r.id as number);
-  const fill = await popularRecent(have, limit - rows.length);
+  const fill = await popularRecent(have, limit - rows.length, [], savedSizes);
   rows = rows.concat(fill);
  }
- return NextResponse.json({ products: rows.map(mapRow), personalized: hasVibes });
+ return NextResponse.json({ products: rows.map(mapRow), personalized: hasProfile });
  }
 
  // Aggregate scores per store and per size
@@ -115,12 +170,14 @@ export async function GET(request: Request) {
  const topSizes = Array.from(sizeScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([s]) => s);
 
  // Exclude products already favorited or viewed (surface fresh discoveries)
- const seenRows = (await sql`
+ const seenRows = userId
+ ? (await sql`
   SELECT product_id::int AS pid FROM product_favorites WHERE user_id = ${userId}
   UNION
   SELECT product_id::int AS pid FROM product_views WHERE user_id = ${userId}
- `) as Array<{ pid: number }>;
- const excludeIds = seenRows.map((r) => r.pid);
+ `) as Array<{ pid: number }>
+ : [];
+ const excludeIds = userId ? seenRows.map((r) => r.pid) : favIds;
  const useSizes = topSizes.length > 0;
 
  const rows = (await sql`
@@ -137,17 +194,20 @@ export async function GET(request: Request) {
   LIMIT ${limit * 3}
  `) as Array<Record<string, unknown>>;
 
- // Score: store affinity + size bonus + taste-vibe bonus.
+ // Score: store affinity + size bonus + saved-size bonus + vibe bonus + trending.
+ const candTrend = await getTrendScores(rows.map((p) => p.id as number));
  const vibeKw = vibeKeywords(vibes);
  const scored = rows.map((p) => {
  const slug = p.store_slug as string;
  const size = (p.size as string | null)?.toUpperCase() ?? null;
  let score = storeScores.get(slug) ?? 0;
- if (useSizes && size && topSizes.includes(size)) score += 5;
+ if (useSizes && size && topSizes.includes(size)) score += 5; // size from behavior
+ if (savedSizes.length > 0 && size && savedSizes.includes(size)) score += 8; // explicit saved size (strong fit signal)
  if (vibeKw.length > 0) {
   const title = String(p.title ?? "").toLowerCase();
   if (vibeKw.some((kw) => title.includes(kw))) score += 4;
  }
+ score += Math.min(candTrend.get(p.id as number) ?? 0, 30) * 0.5; // trending boost (capped)
  return { p, score };
  });
  scored.sort((a, b) => b.score - a.score);
@@ -157,7 +217,7 @@ export async function GET(request: Request) {
  // Always fill to `limit` with a popular+recent blend so the feed is never sparse.
  if (products.length < limit) {
  const exclude = Array.from(new Set([...excludeIds, ...products.map((p) => p.id)]));
- const fill = await popularRecent(exclude, limit - products.length);
+ const fill = await popularRecent(exclude, limit - products.length, [], savedSizes);
  products = products.concat(fill.map(mapRow));
  }
 
@@ -187,5 +247,6 @@ function mapRow(p: Record<string, unknown>) {
  price: formatPrice(Number(p.price), p.currency as string | null),
  image: p.image as string | null,
  images: parsedImages,
+ size: (p.size as string | null) ?? null,
  };
 }

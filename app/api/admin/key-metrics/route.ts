@@ -487,6 +487,47 @@ export async function GET(request: NextRequest) {
   const fv = (favoritesVolumeRows as { period: number; prev_period: number; week: number; prev_week: number }[])[0] ?? { period: 0, prev_period: 0, week: 0, prev_week: 0 };
   const ru = registeredUsersRows[0] as { total: number; period_new: number; prev_period_new: number; week_new: number; prev_week_new: number };
 
+  // ── Email-attributed sales: orders whose originating click was utm_source='email'
+  // (every VYA email link is utm-tagged). Resilient — never breaks the page.
+  const emailSalesRows = (await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE c.timestamp >= ${pStart} AND c.timestamp < ${pEnd})::int AS orders_period,
+      COALESCE(SUM(c.order_total) FILTER (WHERE c.timestamp >= ${pStart} AND c.timestamp < ${pEnd}), 0)::float AS revenue_period,
+      COUNT(*)::int AS orders_all,
+      COALESCE(SUM(c.order_total), 0)::float AS revenue_all
+    FROM conversions c
+    JOIN clicks ck ON ck.click_id = c.via_click_id
+    WHERE lower(ck.utm_source) = 'email'
+      AND c.order_total > 0
+      AND (c.returned IS NULL OR c.returned = false)
+  `.catch(() => [{ orders_period: 0, revenue_period: 0, orders_all: 0, revenue_all: 0 }])) as Array<{ orders_period: number; revenue_period: number; orders_all: number; revenue_all: number }>;
+  const es = emailSalesRows[0] ?? { orders_period: 0, revenue_period: 0, orders_all: 0, revenue_all: 0 };
+
+  // ── Approval → first purchase: avg/median time from pilot approval to a buyer's
+  // first order (only counts purchases made after approval).
+  const approvalPurchaseRows = (await sql`
+    WITH approved AS (
+      SELECT u.id::text AS user_id, pa.approved_at
+      FROM pilot_access pa
+      JOIN users u ON lower(u.email) = lower(pa.email)
+      WHERE pa.status = 'approved' AND pa.approved_at IS NOT NULL
+    ),
+    first_purchase AS (
+      SELECT user_id::text AS user_id, MIN(timestamp) AS first_ts
+      FROM conversions
+      WHERE user_id IS NOT NULL AND order_total > 0 AND (returned IS NULL OR returned = false)
+      GROUP BY user_id
+    )
+    SELECT
+      COUNT(*)::int AS buyers,
+      AVG(EXTRACT(EPOCH FROM (fp.first_ts - a.approved_at)))::float AS avg_seconds,
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (fp.first_ts - a.approved_at)))::float AS median_seconds
+    FROM approved a
+    JOIN first_purchase fp ON fp.user_id = a.user_id
+    WHERE fp.first_ts >= a.approved_at
+  `.catch(() => [{ buyers: 0, avg_seconds: null, median_seconds: null }])) as Array<{ buyers: number; avg_seconds: number | null; median_seconds: number | null }>;
+  const ap = approvalPurchaseRows[0] ?? { buyers: 0, avg_seconds: null, median_seconds: null };
+
   return NextResponse.json({
     gmv: {
       total: g.total_gmv,
@@ -609,6 +650,17 @@ export async function GET(request: NextRequest) {
       clicksAll: ec.clicks_all,
       deliveredAll: ec.delivered_all,
       ctrAll: ec.delivered_all > 0 ? ec.clicks_all / ec.delivered_all : 0,
+    },
+    emailSales: {
+      ordersPeriod: es.orders_period,
+      revenuePeriod: es.revenue_period,
+      ordersAll: es.orders_all,
+      revenueAll: es.revenue_all,
+    },
+    approvalToPurchase: {
+      buyers: ap.buyers,
+      avgDays: ap.avg_seconds != null ? ap.avg_seconds / 86400 : null,
+      medianDays: ap.median_seconds != null ? ap.median_seconds / 86400 : null,
     },
     period: {
       start: pStart.toISOString(),

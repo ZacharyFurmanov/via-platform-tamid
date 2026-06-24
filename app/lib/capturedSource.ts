@@ -8,7 +8,15 @@
 
 function readSource(): string | null {
  if (typeof window === "undefined") return null;
- // Primary: the full payload the tracker writes for the current tab/session.
+ // Primary: the in-session window global the tracker sets. This is the ONLY
+ // channel that survives Instagram/TikTok in-app browsers, which block
+ // session/localStorage — exactly the /IG and /TT bio-link traffic we most need
+ // to attribute. Without this they all fell back to the form name ("waitlist").
+ try {
+  const w = (window as unknown as { __viaUtmSource?: string }).__viaUtmSource;
+  if (w && typeof w === "string") return w;
+ } catch {}
+ // Secondary: the full payload the tracker writes for the current tab/session.
  try {
   const raw = sessionStorage.getItem("via_utm_data");
   if (raw) {

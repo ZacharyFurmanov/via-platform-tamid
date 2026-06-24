@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
+import { isApprovedRequest } from "@/app/lib/approval";
 import { neon } from "@neondatabase/serverless";
 import { formatPrice } from "@/app/lib/formatPrice";
 import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { parseFilters, applyJsFilters, stripSizePrefix } from "@/app/lib/publicFilters";
 import { getCategoryOverrideMap } from "@/app/lib/category-overrides-db";
+import { getProductPopularityScores } from "@/app/lib/analytics-db";
 import { ensureSizeKeysColumn } from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+ if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const { searchParams } = new URL(request.url);
  const limit = Math.min(parseInt(searchParams.get("limit") ?? "60"), 200);
  const filters = parseFilters(searchParams);
@@ -31,14 +34,17 @@ export async function GET(request: Request) {
 
  try {
  await ensureSizeKeysColumn();
- // Fetch more than needed so JS-side category filtering still returns enough
- const fetchLimit = filters.categories.length > 0 ? Math.min(limit * 5, 500) : limit;
+ // Fetch more than needed so JS-side category filtering still returns enough.
+ // For "popular" we pull a larger recency pool, then re-rank it by popularity.
+ const isPopular = filters.sort === "popular";
+ const baseLimit = filters.categories.length > 0 ? Math.min(limit * 5, 500) : limit;
+ const fetchLimit = isPopular ? Math.min(Math.max(baseLimit, limit * 6), 800) : baseLimit;
 
  let rows: Array<Record<string, unknown>>;
 
  if (filters.sort === "priceAsc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -53,7 +59,7 @@ export async function GET(request: Request) {
  ` as Array<Record<string, unknown>>;
  } else if (filters.sort === "priceDesc") {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -68,7 +74,7 @@ export async function GET(request: Request) {
  ` as Array<Record<string, unknown>>;
  } else {
  rows = await sql`
-  SELECT id, store_slug, store_name, title, price, currency, image, images, created_at
+  SELECT id, store_slug, store_name, title, price, currency, image, images, size, created_at
   FROM products
   WHERE image IS NOT NULL AND image != ''
   AND title NOT ILIKE '%gift card%'
@@ -96,10 +102,19 @@ export async function GET(request: Request) {
   price: formatPrice(Number(p.price), p.currency as string | null),
   image: p.image as string | null,
   images: parsedImages,
+  size: (p.size as string | null) ?? null,
  };
  });
 
- products = applyJsFilters(products, filters, await getCategoryOverrideMap()).slice(0, limit);
+ products = applyJsFilters(products, filters, await getCategoryOverrideMap());
+
+ if (isPopular) {
+ const scores = await getProductPopularityScores(products.map((p) => p.id));
+ // Stable sort (V8) keeps the recency order for items with equal/zero score.
+ products = products.sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
+ }
+
+ products = products.slice(0, limit);
 
  return NextResponse.json({ products });
  } catch {

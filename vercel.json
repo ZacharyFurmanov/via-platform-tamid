@@ -5,6 +5,14 @@
       "schedule": "0 9 * * 1"
     },
     {
+      "path": "/api/cron/notify-follows",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/notify-follows",
+      "schedule": "0 22 * * *"
+    },
+    {
       "path": "/api/cron/sync-stores",
       "schedule": "0 13 * * *"
     },

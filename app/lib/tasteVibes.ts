@@ -69,3 +69,28 @@ export function sanitizeVibes(input: unknown): string[] {
  const valid = new Set(VIBE_KEYS);
  return Array.from(new Set(input.filter((k): k is string => typeof k === "string" && valid.has(k))));
 }
+
+// ── Taste-test sizes ────────────────────────────────────────────────────────
+// Sizes a user can pick in the customization form. Stored on the taste profile
+// (server-side) so the feed can prioritize things that actually fit. Grouped for
+// the UI; values are matched (uppercased) against products.size.
+export const TASTE_SIZE_GROUPS: { label: string; options: string[] }[] = [
+ { label: "Clothing", options: ["XS", "S", "M", "L", "XL", "XXL", "One Size"] },
+ { label: "Numeric", options: ["0", "2", "4", "6", "8", "10", "12", "14", "16"] },
+ { label: "Shoes (US)", options: ["5", "6", "7", "8", "9", "10", "11", "12"] },
+];
+
+const VALID_SIZES = new Set(TASTE_SIZE_GROUPS.flatMap((g) => g.options.map((s) => s.toUpperCase())));
+
+/** Validates/normalizes incoming sizes against the known set (uppercased, capped). */
+export function sanitizeSizes(input: unknown): string[] {
+ if (!Array.isArray(input)) return [];
+ const out: string[] = [];
+ for (const s of input) {
+ if (typeof s !== "string") continue;
+ const up = s.trim().toUpperCase();
+ if (VALID_SIZES.has(up) && !out.includes(up)) out.push(up);
+ if (out.length >= 12) break;
+ }
+ return out;
+}

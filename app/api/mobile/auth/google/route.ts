@@ -3,6 +3,7 @@ import {
  findOrCreateUserByEmail,
  signMobileJwt,
 } from "@/app/lib/mobileAuth";
+import { getPilotStatus } from "@/app/lib/pilot-db";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,16 @@ export async function POST(request: Request) {
  const userId = await findOrCreateUserByEmail(email, info.name);
  const jwt = signMobileJwt(userId, email);
 
- return NextResponse.json({ token: jwt, user: { id: userId, email, name: info.name ?? null } });
+ // Approval status so the app can show a "you're on the waitlist" screen instead of
+ // empty/erroring catalog calls — content endpoints (/api/public/*) now require approval.
+ const status = await getPilotStatus(email).catch(() => "pending");
+
+ return NextResponse.json({
+ token: jwt,
+ user: { id: userId, email, name: info.name ?? null },
+ approved: status === "approved",
+ status,
+ });
  } catch (err) {
  console.error("[mobile-google] error:", err);
  return NextResponse.json({ error: "Internal error" }, { status: 500 });
