@@ -442,6 +442,20 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  storeDomain: "capsuledit.com",
  scrapeProductPage: true,
  },
+ {
+ type: "shopify",
+ name: "Nunumia",
+ slug: "nunumia",
+ storeDomain: "nunumia.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
+ name: "Thread and Bloom",
+ slug: "thread-and-bloom",
+ storeDomain: "threadandbloomshop.com",
+ scrapeProductPage: true,
+ },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
