@@ -419,6 +419,28 @@ export const stores = [
  "All sales are final. Please review all item details and photos carefully before purchasing.",
  },
  {
+ slug: "in-a-past-life",
+ dashboardToken: "iapl-450f3dbaca86",
+ name: "In a Past Life",
+ location: "Detroit, MI",
+ description:
+ "In a Past Life is a love letter to vintage. An ode to the craftsmanship, artistry, and timeless silhouettes found in treasures from another era. Each piece is hand-picked in Europe with intention, guided by an appreciation for character, history, and thoughtful design. Drawn to the dreamy, romantic, and beautifully made, In a Past Life curates finds that transcend time, pieces with past lives ready to be loved again.",
+ website: "https://www.inapast.life",
+ contactEmail: "inapastlife.xo@gmail.com",
+ dataSource: "in-a-past-life",
+ image: "/stores/in-a-past-life.jpg",
+ logo: "/stores/in-a-past-life.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "squarespace-manual" as const,
+ authenticityPolicy:
+ "Every piece at In a Past Life is hand-picked in Europe and inspected before listing — chosen for its character, history, and craftsmanship, and accurately described so you can shop with confidence.",
+ shippingPolicy:
+ "Ships from Detroit, MI. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing. If your item arrives significantly different from its description, reach out within 7 days of delivery and we'll review.",
+ },
+ {
  slug: "jade-vintage",
  dashboardToken: "jv-6c2e8a4f1b9d",
  name: "Jade Vintage",
@@ -462,28 +484,6 @@ export const stores = [
   "Ships from San Francisco, CA. Shipping rates are calculated at checkout.",
  returnPolicy:
   "Although sales are generally considered final, a return request can be made within 7 days of delivery if you are not completely satisfied or feel the item is not as pictured. Items must be returned in original condition with tags, and requests are reviewed case-by-case. Use the form below with any pre-purchase questions.",
- },
- {
- slug: "in-a-past-life",
- dashboardToken: "iapl-450f3dbaca86",
- name: "In a Past Life",
- location: "Detroit, MI",
- description:
- "In a Past Life is a love letter to vintage. An ode to the craftsmanship, artistry, and timeless silhouettes found in treasures from another era. Each piece is hand-picked in Europe with intention, guided by an appreciation for character, history, and thoughtful design. Drawn to the dreamy, romantic, and beautifully made, In a Past Life curates finds that transcend time, pieces with past lives ready to be loved again.",
- website: "https://www.inapast.life",
- contactEmail: "inapastlife.xo@gmail.com",
- dataSource: "in-a-past-life",
- image: "/stores/in-a-past-life.jpg",
- logo: "/stores/in-a-past-life.jpg",
- logoBg: "#ffffff",
- currency: "USD",
- commissionType: "squarespace-manual" as const,
- authenticityPolicy:
- "Every piece at In a Past Life is hand-picked in Europe and inspected before listing — chosen for its character, history, and craftsmanship, and accurately described so you can shop with confidence.",
- shippingPolicy:
- "Ships from Detroit, MI. Shipping rates are calculated at checkout.",
- returnPolicy:
- "As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing. If your item arrives significantly different from its description, reach out within 7 days of delivery and we'll review.",
  },
  {
  slug: "lei-vintage",
@@ -668,6 +668,27 @@ export const stores = [
  "Shipping rates are calculated at checkout.",
  returnPolicy:
  "All sales are final. Please review all item details and photos carefully before purchasing.",
+ },
+ {
+ slug: "nunumia",
+ dashboardToken: "nm-9c4e2a7f1d8b",
+ name: "Nunumia",
+ location: "Washington, DC",
+ description: "Nunumia is a Washington, DC–based vintage boutique.",
+ website: "https://nunumia.com",
+ contactEmail: "nunumiavintage@gmail.com",
+ dataSource: "nunumia",
+ image: "/stores/nunumia.jpg",
+ logo: "/stores/nunumia.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "244660",
+ authenticityPolicy:
+ "Every piece is personally sourced, carefully inspected, and accurately described before listing.",
+ shippingPolicy: "Ships from Washington, DC. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
  },
  {
  slug: "other-matters-atelier",
@@ -1101,6 +1122,27 @@ export const stores = [
  "Ships from New Hope, Pennsylvania. Shipping rates are calculated at checkout.",
  returnPolicy:
  "Returns accepted within 7 business days of delivery. Items must be in original condition with tags, original packaging, and any authentication papers. A $40 handling and reauthentication fee is deducted and refunds are issued as store credit. Domestic return labels are provided; international customers cover return shipping. Use the form below to initiate a return.",
+ },
+ {
+ slug: "thread-and-bloom",
+ dashboardToken: "tb-5a8d3f9e1c2b",
+ name: "Thread and Bloom",
+ location: "United States",
+ description: "Thread and Bloom is a vintage boutique.",
+ website: "https://threadandbloomshop.com",
+ contactEmail: "shopthreadandbloom@gmail.com",
+ dataSource: "thread-and-bloom",
+ image: "/stores/thread-and-bloom.jpg",
+ logo: "/stores/thread-and-bloom.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "245939",
+ authenticityPolicy:
+ "Every piece is carefully sourced, inspected, and accurately described before listing.",
+ shippingPolicy: "Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. As a vintage boutique specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
  },
  {
  slug: "to-us-vintage",
