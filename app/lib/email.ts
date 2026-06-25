@@ -1943,8 +1943,6 @@ export async function sendStoreSaleEmail({
  storeName,
  storeSlug,
  dashboardToken,
- orderTotal,
- currency,
  productName,
  orderId,
  timestamp,
@@ -1962,11 +1960,6 @@ export async function sendStoreSaleEmail({
  const resend = getResend();
 
  const dashboardUrl = `${BASE_URL}/for-stores/analytics?store=${storeSlug}&token=${dashboardToken}`;
- const formattedTotal = new Intl.NumberFormat("en-US", {
- style: "currency",
- currency: currency || "USD",
- maximumFractionDigits: 0,
- }).format(orderTotal);
  const formattedDate = new Date(timestamp).toLocaleDateString("en-US", {
  month: "long",
  day: "numeric",
@@ -1982,8 +1975,7 @@ export async function sendStoreSaleEmail({
  </p>
 
  <div style="background:#FFFDF8;border:1px solid rgba(93,15,23,0.15);padding:24px 28px;margin:0 0 28px;">
- ${productName ? `<p style="font-size:15px;color:#5D0F17;margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-weight:600;">${productName}</p>` : ""}
- <p style="font-size:22px;font-weight:700;color:#5D0F17;margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;">${formattedTotal}</p>
+ ${productName ? `<p style="font-size:18px;color:#5D0F17;margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;font-weight:600;">${productName}</p>` : ""}
  <p style="font-size:12px;color:rgba(93,15,23,0.5);margin:0;font-family:Georgia,'Times New Roman',serif;text-transform:uppercase;letter-spacing:0.1em;">
  ${formattedDate} · Order #${orderId}
  </p>
@@ -2010,7 +2002,7 @@ export async function sendStoreSaleEmail({
  await resend.emails.send({
  from: "Hana @ VYA <hana@vyaplatform.com>",
  to: storeEmail,
- subject: `You made a sale through VYA — ${formattedTotal}`,
+ subject: `You made a sale through VYA`,
  html,
  });
 }

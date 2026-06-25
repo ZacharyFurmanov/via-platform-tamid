@@ -14,6 +14,21 @@ import { ALL_STORES } from "@/app/lib/storeConfig";
 import { getPriceDropCandidates, recordPriceDropNotificationsSent } from "@/app/lib/notification-db";
 import { sendPriceDropEmails } from "@/app/lib/email";
 
+// Strip "reach out to <email>" / contact-request boilerplate that sellers put in
+// their product descriptions — on VYA, buyers contact through the store, not the
+// seller's email, so these lines shouldn't surface on listings.
+function stripContactLines(desc: string | null | undefined): string | undefined {
+ if (!desc) return desc ?? undefined;
+ const cleaned = desc
+ // remove any text span that contains an email address (the reach-out lines)
+ .replace(/[^.!?<>\n]*\b[\w.+-]+@[\w.-]+\.\w{2,}\b[^.!?<>\n]*/gi, "")
+ // tidy emptied tags, leftover ":)" emoticons, and doubled breaks
+ .replace(/<p>\s*(?::\))?\s*<\/p>/gi, "")
+ .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
+ .replace(/[ \t]{2,}/g, " ")
+ .trim();
+ return cleaned || undefined;
+}
 
 export async function POST(request: NextRequest) {
  try {
@@ -158,7 +173,7 @@ export async function POST(request: NextRequest) {
  images: p.images,
  videoUrl: p.videoUrl ?? undefined,
  externalUrl: p.externalUrl,
- description: p.description ?? undefined,
+ description: stripContactLines(p.description),
  variantId: p.variantId ?? undefined,
  shopifyProductId: p.shopifyProductId ?? undefined,
  size: p.size ?? undefined,

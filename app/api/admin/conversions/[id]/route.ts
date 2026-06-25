@@ -238,16 +238,9 @@ export async function POST(
  return NextResponse.json({ error: "Provide clickId, userId, or userEmail" }, { status: 400 });
  }
 
- let emailSent = false;
- let emailError: string | null = null;
- try {
- emailSent = await trySendStoreSaleEmail(dbUrl, id);
- } catch (err) {
- emailError = String(err);
- console.error("[match] Failed to send store sale email:", err);
- }
-
- return NextResponse.json({ ok: true, emailSent, emailError });
+ // Email is NOT sent automatically on match — it only goes out when the admin
+ // clicks "Send store notification" (the send_email action below).
+ return NextResponse.json({ ok: true });
 }
 
 // PUT — update order total
@@ -311,16 +304,8 @@ export async function PATCH(
  SET matched_click_data = COALESCE(matched_click_data, '{}'::jsonb) || ${JSON.stringify({ productName: body.productName })}::jsonb
  WHERE conversion_id = ${id}
  `;
- // Send store email now that we have a product name (if not already sent)
- let emailSent = false;
- let emailError: string | null = null;
- try {
- emailSent = await trySendStoreSaleEmail(dbUrl, id);
- } catch (err) {
- emailError = String(err);
- console.error("[set_product] Failed to send store sale email:", err);
- }
- return NextResponse.json({ ok: true, emailSent, emailError });
+ // No email here — it only sends from the "Send store notification" action below.
+ return NextResponse.json({ ok: true });
  } else if (body.action === "send_email") {
  // Manual resend — force=true bypasses the already-sent guard
  let emailSent = false;

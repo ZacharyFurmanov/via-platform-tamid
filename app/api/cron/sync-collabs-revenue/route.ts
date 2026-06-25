@@ -300,13 +300,37 @@ async function saveCollabsConversions(
  price: Math.round(convertCurrencyToUSD(li.price, orderCurr) * 100) / 100,
  }));
  } else {
- // Fallback: build from commission nodes — use lineItemPrice if available, else back-calculate
+ // Fallback: Collabs gave us only the commission, not the order total. Prefer the
+ // price of the product the buyer actually CLICKED (looked up from our catalog) —
+ // it's the real listed price and avoids the ambiguous commission→total back-calc
+ // that can land on the wrong rate tier (e.g. a $729 order reported as $1,020.60).
+ // Order of preference: API line-item price → clicked product's price → estimate.
+ const clickedName = (click?.product_name as string | null) ?? null;
+ let clickedPriceUsd: number | null = null;
+ if (clickedName && clickedName !== "unknown") {
+ const pr = await sql`
+ SELECT price, currency FROM products
+ WHERE store_slug = ${storeSlug} AND lower(title) = lower(${clickedName}) AND price > 0
+ ORDER BY id DESC LIMIT 1
+ `.catch(() => [] as Record<string, unknown>[]);
+ if (pr.length) {
+ const p = Number(pr[0].price);
+ if (p > 0) clickedPriceUsd = Math.round(convertCurrencyToUSD(p, (pr[0].currency as string) || "USD") * 100) / 100;
+ }
+ }
+ // Only trust the clicked price for a single-item order (one click → one product).
+ const singleItem = items.length === 1;
  lineItems = items.map(item => {
- const price = item.lineItemPrice && item.lineItemPrice > 0
- ? Math.round(convertCurrencyToUSD(item.lineItemPrice, currency) * 100) / 100
- : calculateOrderTotal(item.commissionUsdAmount, commissionRules);
+ let price: number;
+ if (item.lineItemPrice && item.lineItemPrice > 0) {
+ price = Math.round(convertCurrencyToUSD(item.lineItemPrice, currency) * 100) / 100;
+ } else if (singleItem && clickedPriceUsd && clickedPriceUsd > 0) {
+ price = clickedPriceUsd;
+ } else {
+ price = calculateOrderTotal(item.commissionUsdAmount, commissionRules);
+ }
  return {
- productName: item.productName ?? (click?.product_name as string | null) ?? "Item via Shopify Collabs",
+ productName: item.productName ?? clickedName ?? "Item via Shopify Collabs",
  quantity: 1,
  price,
  };

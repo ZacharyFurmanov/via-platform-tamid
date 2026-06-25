@@ -592,10 +592,18 @@ export async function getStoreAnalytics(storeSlug: string, range: string) {
  const sales = conversions.slice(0, 200).map((c) => {
  // Item name: prefer the line items; fall back to the matched click's product name
  // (orders synced without line items still know which piece was bought).
+ // When Collabs didn't itemize the order, the line item is a generic placeholder
+ // ("Item via Shopify Collabs"). If we matched the buyer's click, that click knows
+ // the real piece — prefer it over the placeholder.
+ const GENERIC_ITEM = "Item via Shopify Collabs";
+ const clickProduct = c.matchedClickData?.productName ?? null;
  const items = (c.items ?? []).length
- ? c.items.map((it) => ({ name: it.productName, quantity: it.quantity }))
- : c.matchedClickData?.productName
- ? [{ name: c.matchedClickData.productName, quantity: 1 }]
+ ? c.items.map((it) => ({
+ name: it.productName && it.productName !== GENERIC_ITEM ? it.productName : (clickProduct ?? it.productName),
+ quantity: it.quantity,
+ }))
+ : clickProduct
+ ? [{ name: clickProduct, quantity: 1 }]
  : [];
  const customerEmail =
  c.customerEmail ??
