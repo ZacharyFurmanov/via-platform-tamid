@@ -117,6 +117,13 @@ export const SQUARESPACE_STORES: SquarespaceStore[] = [
 export const SHOPIFY_STORES: ShopifyStore[] = [
  {
  type: "shopify",
+ name: "Stone Studio Vintage",
+ slug: "stone-studio-vintage",
+ storeDomain: "stonestudiovintage.com",
+ scrapeProductPage: true,
+ },
+ {
+ type: "shopify",
  name: "Vintage Archives LA",
  slug: "vintage-archives-la",
  storeDomain: "vintagearchivesla.com",
