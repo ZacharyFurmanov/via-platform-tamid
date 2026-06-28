@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function AdminLoginClient() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [step, setStep] = useState<"password" | "otp">("password");
@@ -22,7 +23,7 @@ export default function AdminLoginClient() {
 
     try {
       const body =
-        step === "otp" ? { password, otpCode: totpCode } : { password };
+        step === "otp" ? { email, password, otpCode: totpCode } : { email, password };
 
       const res = await fetch("/api/admin/auth", {
         method: "POST",
@@ -67,25 +68,35 @@ export default function AdminLoginClient() {
             </h1>
             <p className="text-sm" style={{ color: "rgba(93,15,23,0.6)" }}>
               {step === "password"
-                ? "Enter password to continue"
-                : "Check hana@vyaplatform.com for your code"}
+                ? "Sign in to continue"
+                : `Check ${email || "hana@vyaplatform.com"} for your code`}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === "password" ? (
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
+              <div className="space-y-3">
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  autoFocus
+                  autoComplete="username"
+                  className="w-full px-4 py-3 border text-sm outline-none transition-colors"
+                  style={{ borderColor: "rgba(93,15,23,0.3)", color: "#5D0F17" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#5D0F17")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(93,15,23,0.3)")}
+                />
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  autoFocus
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 border text-sm outline-none transition-colors"
                   style={{ borderColor: "rgba(93,15,23,0.3)", color: "#5D0F17" }}
                   onFocus={(e) => (e.target.style.borderColor = "#5D0F17")}
