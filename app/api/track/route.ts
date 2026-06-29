@@ -4,7 +4,6 @@ import { saveClick, saveProductView, getUserIdByEmail } from "@/app/lib/analytic
 import { verifyRecipientToken } from "@/app/lib/recipientToken";
 import { stores } from "@/app/lib/stores";
 import { getCollabsLink } from "@/app/lib/db";
-import { getAutoApplyCode } from "@/app/lib/store-discounts-db";
 import { getSetting } from "@/app/lib/settings-db";
 import { auth } from "@/app/lib/auth";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
@@ -22,7 +21,6 @@ export async function POST(request: NextRequest) {
  return NextResponse.json({ ok: false }, { status: 400 });
  }
  const session = await auth().catch(() => null);
- // Web resolves the user from the session; the mobile app sends a Bearer JWT.
  const userId = session?.user?.id ?? getMobileUserId(request) ?? null;
  await saveProductView(productId, userId);
  } catch {
@@ -32,19 +30,17 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Get the discount config for a store (if any). A seller-set promo code (saved in
- * the portal) takes precedence over the static config field.
+ * Get the discount config for a store (if any).
  */
-async function getDiscountConfig(storeSlug: string): Promise<{
+function getDiscountConfig(storeSlug: string): {
  origin: string;
  discountCode: string;
-} | null> {
+} | null {
  const storeConfig = stores.find((s) => s.slug === storeSlug);
  if (!storeConfig) return null;
 
- const sellerCode = await getAutoApplyCode(storeSlug).catch(() => null);
  const discountCode =
- sellerCode || ("discountCode" in storeConfig ? (storeConfig as { discountCode?: string }).discountCode : null);
+ "discountCode" in storeConfig ? (storeConfig as any).discountCode : null;
  if (!discountCode) return null;
 
  try {
@@ -75,8 +71,6 @@ export async function GET(request: NextRequest) {
  const rawUtmSource = searchParams.get("us");
  const SOURCE_ALIASES: Record<string, string> = { ig: "instagram", fb: "facebook", tw: "twitter", tt: "tiktok", yt: "youtube", li: "linkedin" };
  const utmSource = rawUtmSource ? (SOURCE_ALIASES[rawUtmSource.toLowerCase()] ?? rawUtmSource.toLowerCase()) : null;
- const rawUtmMedium = searchParams.get("um");
- const utmMedium = rawUtmMedium ? rawUtmMedium.toLowerCase() : null;
 
  // Validate required params
  if (!externalUrl) {
@@ -132,7 +126,6 @@ export async function GET(request: NextRequest) {
  userId,
  cartItems,
  utmSource: utmSource || null,
- utmMedium: utmMedium || null,
  }).catch(console.error);
 
  const storeHasWebhook = storeSlug
@@ -222,7 +215,7 @@ export async function GET(request: NextRequest) {
 
  // Fallback: apply discount code if store has one, otherwise redirect directly.
  if (storeSlug) {
- const discount = await getDiscountConfig(storeSlug);
+ const discount = getDiscountConfig(storeSlug);
  if (discount) {
  const productPath = parsedUrl.pathname + parsedUrl.search;
  const discountUrl = new URL(
