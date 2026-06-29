@@ -39,15 +39,14 @@ export async function isApprovedRequest(request: Request): Promise<boolean> {
  // Web fast path: approval cookie set by /api/pilot-check
  if (cookies["via_access"] === "1") return true;
 
- // Mobile: JWT carries the email; check pilot approval
+ // Mobile: any valid app login (a verified JWT) gets full access — the app is past
+ // the waitlist, so logging in is enough. (Web still honors the waitlist via the
+ // cookie / session-email paths.)
  const authz = request.headers.get("authorization") ?? "";
  const m = /^Bearer\s+(.+)$/i.exec(authz);
  if (m) {
   const payload = verifyMobileJwt(m[1]);
-  if (payload?.email) {
-   const status = await getPilotStatus(payload.email).catch(() => "pending");
-   if (status === "approved") return true;
-  }
+  if (payload?.email) return true;
  }
 
  // Web session without the cookie yet (e.g. just approved): check by session email
