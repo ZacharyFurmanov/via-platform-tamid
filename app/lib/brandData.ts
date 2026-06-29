@@ -206,3 +206,16 @@ export const WHOLE_WORD_ALIASES: ReadonlySet<string> = new Set([
  "marni",
  "the row",
 ]);
+
+// Lowercase title/brand keywords for a set of brand slugs — used to softly bias
+// the personalized feed toward designers a user picked in the taste test.
+const _BRAND_BY_SLUG = new Map(brands.map((b) => [b.slug, b]));
+export function designerKeywords(slugs: string[] | null | undefined): string[] {
+ if (!slugs || slugs.length === 0) return [];
+ const out = new Set<string>();
+ for (const s of slugs) {
+ const b = _BRAND_BY_SLUG.get(s);
+ if (b) for (const kw of b.keywords) out.add(kw.toLowerCase());
+ }
+ return Array.from(out);
+}

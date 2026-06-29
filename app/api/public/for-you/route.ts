@@ -6,7 +6,8 @@ import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
 import { getUserTasteProfile } from "@/app/lib/taste-db";
-import { vibeKeywords } from "@/app/lib/tasteVibes";
+import { vibeKeywords, colorKeywords, eraKeywords, categoryTasteKeywords } from "@/app/lib/tasteVibes";
+import { designerKeywords } from "@/app/lib/brandData";
 
 export const dynamic = "force-dynamic";
 
@@ -73,11 +74,20 @@ export async function GET(request: Request) {
 
  // Taste profile — vibes (keyword bias) + explicit sizes (strong fit signal).
  const profile = userId
- ? await getUserTasteProfile(userId).catch(() => ({ vibes: [] as string[], sizes: [] as string[] }))
- : { vibes: queryVibes, sizes: querySizes };
+ ? await getUserTasteProfile(userId).catch(() => ({ vibes: [] as string[], sizes: [] as string[], categories: [] as string[], designers: [] as string[], colors: [] as string[], eras: [] as string[] }))
+ : { vibes: queryVibes, sizes: querySizes, categories: [] as string[], designers: [] as string[], colors: [] as string[], eras: [] as string[] };
  const vibes = profile.vibes;
  const savedSizes = profile.sizes; // already uppercased by sanitizeSizes
- const vibePatterns = vibeKeywords(vibes).map((k) => `%${k}%`);
+ // Every taste dimension feeds ONE combined keyword bias — OR-matched and additive,
+ // so a product matching ANY signal (Y2K, orange, a loved designer…) gets surfaced,
+ // never filtered out for missing the others.
+ const vibePatterns = Array.from(new Set([
+ ...vibeKeywords(vibes),
+ ...colorKeywords(profile.colors),
+ ...eraKeywords(profile.eras),
+ ...categoryTasteKeywords(profile.categories),
+ ...designerKeywords(profile.designers),
+ ])).map((k) => `%${k}%`);
  const hasVibes = vibePatterns.length > 0;
 
  // Recent-engagement "trending" scores for a set of products. Resilient: any

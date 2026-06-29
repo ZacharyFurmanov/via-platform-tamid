@@ -215,6 +215,25 @@ function parseImages(product: DBProduct): string[] {
  * Exported so it can be used by server components that work directly with DBProduct
  * (NewArrivalsSection, new-arrivals page, account favorites, etc.)
  */
+// Some stores write the size as a bare token on the first non-empty line of the
+// description ("38 1/2" for a shoe, "8" or "M" for clothing) with no "Size:" label.
+// Bare numbers are normally skipped to avoid false positives (a "2001" in a title is
+// a year), but a SHORT first line that IS just a size — and in shoe range for
+// footwear — is almost certainly the real size.
+function extractLeadingSizeFromDescription(description: string | null | undefined, title: string): string | null {
+ const first = (description || "").split(/[\n\r]/).map((l) => l.trim()).find((l) => l.length > 0) ?? "";
+ if (!first || first.length > 8) return null;
+ const norm = first.replace("½", " 1/2");
+ const numeric = norm.match(/^(\d{1,2})(?:\s?1\/2|\.5)?$/);
+ if (numeric) {
+ const n = parseInt(numeric[1], 10);
+ if (SHOE_RE.test(inferCategoryFromTitle(title))) return n >= 4 && n <= 48 ? norm : null;
+ return n >= 0 && n <= 24 ? norm : null;
+ }
+ if (/^(XXS|XS|S|M|L|XL|XXL|XXXL)$/i.test(first)) return first.toUpperCase();
+ return null;
+}
+
 export function deriveSize(product: DBProduct): string | null {
  const result = deriveSizeInner(product);
  // Shoes NEVER use letter sizes (S/M/L) — footwear is numeric, and a letter here
@@ -261,6 +280,11 @@ function deriveSizeInner(product: DBProduct): string | null {
  // listing title and the raw Shopify variant size.
  const sizeFromDesc = extractSizeFromDescription(product.description);
  if (sizeFromDesc) return sizeFromDesc;
+
+ // 2b. A bare size written as the first line of the description ("38 1/2", "8",
+ // "M") — many stores label it this way with no "Size:" prefix. Beats the title.
+ const leadingSize = extractLeadingSizeFromDescription(product.description, product.title);
+ if (leadingSize) return leadingSize;
 
  // 3. Title — explicit size in the listing title
  const sizeFromTitle = extractSizeFromTitle(product.title);
