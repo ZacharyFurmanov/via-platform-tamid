@@ -27,12 +27,12 @@ const isTaken = (p: TasteProfile) => p.vibes.length + p.sizes.length + p.categor
 export async function GET(request: Request) {
  if (!(await isApprovedRequest(request))) return NextResponse.json({ error: "Approval required", needsApproval: true }, { status: 403 });
  const userId = getMobileUserId(request);
- if (!userId) return NextResponse.json({ ...EMPTY, taken: false, options: OPTIONS });
+ if (!userId) return NextResponse.json({ ...EMPTY, taken: false, options: OPTIONS.vibes, sizeGroups: OPTIONS.sizeGroups, tasteOptions: OPTIONS });
  try {
  const p = await getUserTasteProfile(userId);
- return NextResponse.json({ ...p, taken: isTaken(p), options: OPTIONS });
+ return NextResponse.json({ ...p, taken: isTaken(p), options: OPTIONS.vibes, sizeGroups: OPTIONS.sizeGroups, tasteOptions: OPTIONS });
  } catch {
- return NextResponse.json({ ...EMPTY, taken: false, options: OPTIONS });
+ return NextResponse.json({ ...EMPTY, taken: false, options: OPTIONS.vibes, sizeGroups: OPTIONS.sizeGroups, tasteOptions: OPTIONS });
  }
 }
 
