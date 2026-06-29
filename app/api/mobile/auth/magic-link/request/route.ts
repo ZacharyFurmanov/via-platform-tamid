@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { createMagicLinkToken } from "@/app/lib/mobileAuth";
+import { createMagicLinkToken, findOrCreateUserByEmail, signMobileJwt } from "@/app/lib/mobileAuth";
 
 export const dynamic = "force-dynamic";
+
+// A fixed demo account that signs in instantly (see the short-circuit in POST) so
+// Apple's Beta App Review can get past the passwordless login wall. It's a plain
+// shopper account — no admin or store access — so this is harmless.
+const REVIEWER_EMAIL = "app-review@vyaplatform.com";
 
 /**
  * POST /api/mobile/auth/magic-link/request
@@ -19,6 +24,13 @@ export async function POST(request: Request) {
 
  if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
  return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+ }
+
+ // Reviewer/demo short-circuit: sign in instantly, no email round-trip.
+ if (rawEmail === REVIEWER_EMAIL) {
+ const userId = await findOrCreateUserByEmail(rawEmail);
+ const jwt = signMobileJwt(userId, rawEmail);
+ return NextResponse.json({ ok: true, token: jwt, user: { id: userId, email: rawEmail } });
  }
 
  const token = await createMagicLinkToken(rawEmail);
