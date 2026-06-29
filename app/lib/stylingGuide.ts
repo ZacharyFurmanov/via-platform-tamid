@@ -78,7 +78,7 @@ export const STYLING_LOOKS: StylingLook[] = [
  items: [
  { label: "Tank", url: "/products/west-village-vintage-1170443" },
  { label: "Bag", url: "/products/montrose-edit-1700647" },
- { label: "Pants", url: "/products/sourced-by-scottie-1394860" },
+ { label: "Pants", url: "/products/sourced-by-scottie-2494559" },
  { label: "Shoes", url: "/products/sheer-vintage-1858608" },
  ],
  },

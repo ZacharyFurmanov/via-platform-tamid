@@ -1,5 +1,6 @@
-import { verifyMobileJwt } from "./mobileAuth";
+import { verifyMobileJwt, getMobileUserId } from "./mobileAuth";
 import { getPilotStatus } from "./pilot-db";
+import { touchLastActive } from "./notification-db";
 import { auth } from "./auth";
 import crypto from "crypto";
 
@@ -46,7 +47,10 @@ export async function isApprovedRequest(request: Request): Promise<boolean> {
  const m = /^Bearer\s+(.+)$/i.exec(authz);
  if (m) {
   const payload = verifyMobileJwt(m[1]);
-  if (payload?.email) return true;
+  if (payload?.email) {
+   void touchLastActive(getMobileUserId(request)); // "last seen" heartbeat (best-effort)
+   return true;
+  }
  }
 
  // Web session without the cookie yet (e.g. just approved): check by session email
@@ -54,7 +58,10 @@ export async function isApprovedRequest(request: Request): Promise<boolean> {
  const email = session?.user?.email;
  if (email) {
   const status = await getPilotStatus(email).catch(() => "pending");
-  if (status === "approved") return true;
+  if (status === "approved") {
+   void touchLastActive(session?.user?.id); // "last seen" heartbeat (best-effort)
+   return true;
+  }
  }
 
  return false;
