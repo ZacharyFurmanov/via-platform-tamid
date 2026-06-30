@@ -9,7 +9,6 @@ import { auth } from "@/app/lib/auth";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
 import {
  getDtIdForProduct,
- getCollabsDiscountUrl,
  buildCartUrlWithDtId,
  buildMultiCartUrlWithDtId,
 } from "@/app/lib/collabsDtId";
@@ -151,26 +150,6 @@ export async function GET(request: NextRequest) {
  return Number.isFinite(n) ? n : null;
  })();
 
- // ============ Collabs CART checkout (multi-item safe) ============
- // For a CART url (single OR multi item) on a Collabs store, route through the
- // store's `/discount/{code}?dt_id=…` link — the exact URL collabs.shop sends
- // buyers to — but swap its `redirect` to our cart path. This keeps EVERY item in
- // the bag AND registers Collabs attribution server-side (commission tracks even on
- // Shop Pay stores), instead of collapsing the cart to one collabs.shop product.
- if (numericProductId != null && isCartUrl(parsedUrl)) {
- const discountUrl = await getCollabsDiscountUrl(numericProductId).catch(() => null);
- if (discountUrl) {
-  try {
-  const u = new URL(discountUrl);
-  u.searchParams.set("redirect", parsedUrl.pathname + parsedUrl.search);
-  if (storeHasWebhook) u.searchParams.set("attributes[via_click_id]", clickId);
-  return NextResponse.redirect(u.toString(), 302);
-  } catch { /* fall through to the fallbacks below */ }
- }
- // No discount link resolved — fall through; the cart fallback below still keeps
- // every item (it just can't attach the discount/dt_id).
- }
-
  // ============ PRIMARY: Shopify Collabs + direct-to-cart ============
  // We do NOT redirect through `collabs.shop` anymore. Instead we extract the
  // product's `dt_id` value (the Shopify Collabs attribution token) from the
@@ -213,10 +192,10 @@ export async function GET(request: NextRequest) {
  // collabs.shop redirect below.
  }
 
- // For a single product page, the legacy collabs.shop redirect is still right (it
- // drops the cookie on a real store page). NEVER do this for a cart URL — it would
- // collapse the whole bag to one collabs product (handled above instead).
- if (numericProductId != null && !isCartUrl(parsedUrl)) {
+ // If the destination isn't a cart URL (single product page), legacy redirect
+ // through collabs.shop is still the right move so the cookie drops on a real
+ // store page.
+ if (numericProductId != null) {
  const collabsLink = await getCollabsLink(numericProductId).catch(() => null);
  if (collabsLink) {
  return NextResponse.redirect(collabsLink, 302);
