@@ -28,6 +28,10 @@ export async function GET(request: NextRequest) {
  try {
  const sql = getDb();
 
+ // Ensure the pilot_access.source column exists (registration captures it now) so
+ // the query below can read it even before any new registration has created it.
+ await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS source VARCHAR(50)`;
+
  // Union pilot_access + waitlist, deduped by email (pilot_access takes priority)
  // Then join with users/accounts for login method
  const rows = await sql`
@@ -42,7 +46,8 @@ export async function GET(request: NextRequest) {
  pa.approved_at,
  pa.referral_code,
  pa.referred_by,
- pa.email_subscribe
+ pa.email_subscribe,
+ pa.source
  FROM pilot_access pa
  UNION
  SELECT
@@ -55,7 +60,8 @@ export async function GET(request: NextRequest) {
  NULL AS approved_at,
  NULL AS referral_code,
  NULL AS referred_by,
- FALSE AS email_subscribe
+ FALSE AS email_subscribe,
+ NULL AS source
  FROM waitlist w
  WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)
  ),
@@ -81,6 +87,15 @@ export async function GET(request: NextRequest) {
     ELSE 0
    END,
    timestamp ASC
+ ),
+ -- Waitlist/giveaway signups store their captured acquisition source here (the
+ -- page tracker sends it on submit), but these folks often have no user_id, so the
+ -- utm_visits join above misses them. Read it by email as a fallback.
+ wl_source AS (
+  SELECT LOWER(email) AS email, MAX(source) AS source
+  FROM waitlist
+  WHERE source IS NOT NULL AND lower(source) NOT IN ('waitlist', '', 'unknown')
+  GROUP BY LOWER(email)
  )
  SELECT
  ac.email,
@@ -108,7 +123,12 @@ export async function GET(request: NextRequest) {
  COALESCE(MAX(ord.cnt), 0) AS order_count,
  COALESCE(MAX(pg.cnt), 0) AS page_view_count,
  COALESCE(MAX(ltv.total), 0) AS total_spend,
- MAX(fs.source) AS source,
+ COALESCE(
+  CASE WHEN lower(MAX(ac.source)) NOT IN ('direct','','unknown','waitlist','register','giveaway_modal','safari','chrome','firefox','edge','samsung','web') THEN MAX(ac.source) END,
+  CASE WHEN lower(MAX(fs.source)) NOT IN ('direct','','safari','chrome','firefox','edge','samsung','web') THEN MAX(fs.source) END,
+  MAX(wl.source),
+  MAX(fs.source)
+ ) AS source,
  GREATEST(
  MAX(clk.last_at),
  MAX(vw.last_at),
@@ -128,6 +148,7 @@ export async function GET(request: NextRequest) {
  LEFT JOIN page_counts pg ON pg.uid = u.id::text
  LEFT JOIN ltv_amounts ltv ON ltv.uid = u.id::text
  LEFT JOIN first_source fs ON fs.uid = u.id::text
+ LEFT JOIN wl_source wl ON wl.email = LOWER(ac.email)
  GROUP BY
  ac.email, ac.first_name, ac.last_name, ac.phone,
  ac.status, ac.created_at, ac.approved_at,

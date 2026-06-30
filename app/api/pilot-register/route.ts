@@ -34,7 +34,7 @@ async function recordPromoCode(email: string, promoKey: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode, accessCode } = body;
+    const { firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode, accessCode, source } = body;
 
     if (!email || !firstName) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
       smsSubscribe: !!smsSubscribe,
       status,
       referredBy: normalizedReferralCode,
+      source: typeof source === "string" && source.trim() ? source.trim() : undefined,
     });
 
     // Record promo code for tracking
