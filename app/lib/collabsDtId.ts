@@ -100,6 +100,55 @@ export async function getDtIdForProduct(productId: number): Promise<string | nul
 }
 
 /**
+ * Resolves (and caches) the full Collabs **discount** redirect URL for a product —
+ * e.g. `https://store.com/discount/VYA?dt_id=...&redirect=/products/handle`. This is
+ * the URL `collabs.shop` itself redirects to: it applies the creator discount AND
+ * registers Collabs attribution server-side (before Shop Pay can redirect away).
+ *
+ * We reuse it for multi-item checkout by swapping its `redirect` param to a cart
+ * path — keeping every item AND preserving commission, instead of collapsing the
+ * bag to a single collabs.shop product.
+ */
+export async function getCollabsDiscountUrl(productId: number): Promise<string | null> {
+ if (!Number.isFinite(productId)) return null;
+ const sql = neon(getDbUrl());
+ await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS collabs_discount_url TEXT`.catch(() => {});
+
+ const rows = await sql`
+  SELECT collabs_discount_url, collabs_link FROM products WHERE id = ${productId} LIMIT 1
+ `;
+ const row = (rows as { collabs_discount_url: string | null; collabs_link: string | null }[])[0];
+ if (!row) return null;
+ if (row.collabs_discount_url && row.collabs_discount_url.trim()) return row.collabs_discount_url;
+ if (!row.collabs_link) return null;
+
+ // Follow the collabs.shop chain to the first hop that's a /discount/ URL bearing a
+ // dt_id — that's the attribution-setting discount link.
+ let url = row.collabs_link;
+ let found: string | null = null;
+ try {
+  for (let i = 0; i < 6; i++) {
+   if (url.includes("/discount/") && extractDtId(url)) { found = url; break; }
+   const res = await fetch(url, {
+    method: "GET",
+    redirect: "manual",
+    headers: { "User-Agent": "Mozilla/5.0 VYA-Bot/1.0" },
+   });
+   const loc = res.headers.get("location");
+   if (!loc) break;
+   url = new URL(loc, url).toString();
+  }
+  if (!found && url.includes("/discount/") && extractDtId(url)) found = url;
+ } catch (err) {
+  console.error("[collabsDtId] discount url fetch failed:", err);
+ }
+ if (!found) return null;
+
+ await sql`UPDATE products SET collabs_discount_url = ${found} WHERE id = ${productId}`.catch(() => {});
+ return found;
+}
+
+/**
  * Builds a Shopify cart URL with the dt_id query param appended.
  * Returns null if any required piece is missing.
  */
