@@ -74,7 +74,13 @@ export async function GET(request: NextRequest) {
   SELECT DISTINCT ON (user_id) user_id AS uid, utm_source AS source
   FROM utm_visits
   WHERE user_id IS NOT NULL
-  ORDER BY user_id, (utm_source IS NULL OR lower(utm_source) IN ('direct', '')), timestamp ASC
+  ORDER BY user_id,
+   CASE
+    WHEN utm_source IS NULL OR lower(utm_source) IN ('direct', '') THEN 2
+    WHEN lower(utm_source) IN ('safari', 'chrome', 'firefox', 'edge', 'samsung', 'web') THEN 1
+    ELSE 0
+   END,
+   timestamp ASC
  )
  SELECT
  ac.email,

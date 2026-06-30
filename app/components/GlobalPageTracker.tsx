@@ -181,9 +181,18 @@ export default function GlobalPageTracker() {
  }
  }
 
- // Fall back to "direct" so Safari bookmarks, typed URLs, etc. are counted
+ // No tracked source — label by the browser they arrived in (Safari, Chrome, …)
+ // instead of a flat "direct", so typed/bookmarked/organic traffic is at least
+ // categorized. These rank BELOW real sources but ABOVE bare "direct".
  if (!utmSource) {
- utmSource = "direct";
+ const ua = navigator.userAgent;
+ if (/Edg/i.test(ua)) utmSource = "edge";
+ else if (/SamsungBrowser/i.test(ua)) utmSource = "samsung";
+ else if (/CriOS|Chrome/i.test(ua)) utmSource = "chrome";
+ else if (/FxiOS|Firefox/i.test(ua)) utmSource = "firefox";
+ else if (/Safari/i.test(ua)) utmSource = "safari";
+ else utmSource = "web";
+ utmMedium = utmMedium ?? "direct";
  }
 
  const utmPayload = {
