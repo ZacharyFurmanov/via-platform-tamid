@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
+import { getDtIdForProduct } from "@/app/lib/collabsDtId";
 
 function getDb() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -73,5 +74,43 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ store, counts, samples }, { status: 200 });
+  // Trace the Collabs dt_id resolution for the first product — this is the piece
+  // /api/track depends on to keep all items in the cart with attribution. If it
+  // can't extract a dt_id from the collabs.shop redirect chain, /api/track falls
+  // back to a single-product collabs.shop redirect (collapsing a multi-item cart).
+  const first = rows[0] as { id: number; collabs_link: string | null; variant_id: string | null };
+  const dtIdTest: Record<string, unknown> = {
+    firstProductId: first?.id,
+    collabsLink: first?.collabs_link,
+  };
+  if (first?.collabs_link) {
+    let url = first.collabs_link;
+    const trace: unknown[] = [];
+    for (let i = 0; i < 6; i++) {
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          redirect: "manual",
+          headers: { "User-Agent": "Mozilla/5.0 VYA-Bot/1.0" },
+        });
+        const loc = res.headers.get("location");
+        trace.push({ hop: i, url, status: res.status, urlHasDtId: url.includes("dt_id"), location: loc });
+        if (!loc) break;
+        url = new URL(loc, url).toString();
+      } catch (e) {
+        trace.push({ hop: i, url, error: String(e) });
+        break;
+      }
+    }
+    dtIdTest.redirectTrace = trace;
+    dtIdTest.resolvedDtId = await getDtIdForProduct(first.id).catch((e) => `ERROR: ${String(e)}`);
+  }
+  const multiSpec = (rows as { variant_id: string | null }[])
+    .slice(0, 2)
+    .filter((r) => r.variant_id)
+    .map((r) => `${r.variant_id}:1`)
+    .join(",");
+  dtIdTest.multiVariantCartUrl = multiSpec ? `cart/${multiSpec}` : null;
+
+  return NextResponse.json({ store, counts, samples, dtIdTest }, { status: 200 });
 }
