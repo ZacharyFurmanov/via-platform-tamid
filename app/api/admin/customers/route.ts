@@ -66,7 +66,16 @@ export async function GET(request: NextRequest) {
  order_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
  page_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM page_type_views WHERE user_id IS NOT NULL GROUP BY user_id::text),
  ltv_amounts AS (SELECT user_id::text AS uid, SUM(order_total) AS total FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
- first_source AS (SELECT DISTINCT ON (user_id) user_id AS uid, utm_source AS source FROM utm_visits WHERE user_id IS NOT NULL ORDER BY user_id, timestamp ASC)
+ -- Prefer the earliest NON-direct source: ordinary return visits get logged as
+ -- "direct", so picking strictly the earliest visit would mask a real source we
+ -- captured on another visit. Real sources sort first; "direct" only wins if it's
+ -- genuinely all we have.
+ first_source AS (
+  SELECT DISTINCT ON (user_id) user_id AS uid, utm_source AS source
+  FROM utm_visits
+  WHERE user_id IS NOT NULL
+  ORDER BY user_id, (utm_source IS NULL OR lower(utm_source) IN ('direct', '')), timestamp ASC
+ )
  SELECT
  ac.email,
  ac.first_name,

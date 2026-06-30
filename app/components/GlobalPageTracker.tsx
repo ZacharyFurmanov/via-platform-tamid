@@ -210,11 +210,19 @@ export default function GlobalPageTracker() {
  sessionStorage.setItem("via_utm_data", JSON.stringify(utmPayload));
  } catch {}
 
+ // Tertiary: a first-party cookie — survives full-page redirects, OAuth round-trips,
+ // and new tabs (where sessionStorage/in-memory are lost), so the source still links
+ // to the account at sign-up.
+ try {
+ document.cookie = `via_utm=${encodeURIComponent(JSON.stringify(utmPayload))};path=/;max-age=2592000;samesite=lax`;
+ } catch {}
+
  // Also persist to localStorage for click attribution (30-day window).
  // May fail silently in TikTok browser — click attribution is best-effort.
  try {
  localStorage.setItem("via_utm", JSON.stringify({
  utm_source: utmSource,
+ utm_medium: utmMedium ?? null,
  expires_at: Date.now() + 30 * 24 * 60 * 60 * 1000,
  }));
  } catch {}
@@ -236,6 +244,13 @@ export default function GlobalPageTracker() {
  if (stored) data = JSON.parse(stored);
  } catch {}
  }
+ if (!data) {
+ // Cookie fallback — the one store that survives OAuth redirects + new tabs.
+ try {
+ const m = document.cookie.match(/(?:^|;\s*)via_utm=([^;]+)/);
+ if (m) data = JSON.parse(decodeURIComponent(m[1]));
+ } catch {}
+ }
  if (!data) return;
 
  const userId = status === "authenticated"
@@ -253,6 +268,9 @@ export default function GlobalPageTracker() {
  utmPayloadRef.current = null; // linked to the account now — safe to clear
  try {
  sessionStorage.removeItem("via_utm_data");
+ } catch {}
+ try {
+ document.cookie = "via_utm=;path=/;max-age=0";
  } catch {}
  } else {
  if (sentAnon.current) return;
