@@ -57,6 +57,7 @@ type Analytics = {
  totalRevenue: number;
  aov?: number;
  commissionEarned?: number;
+ commissionSource?: string;
  cartItems?: { productId: number; title: string; image: string | null; price: number; currency: string; inCarts: number }[];
  cartCount?: number;
  cartValue?: number;
@@ -757,7 +758,7 @@ function StoreDashboardInner() {
  <StatCard
  value={`$${Math.round(analytics.commissionEarned ?? 0).toLocaleString()}`}
  label="VYA commission"
- hint={`${(store.commissionRates ?? DEFAULT_RATES).map((t) => `${Math.round(t.rate * 100)}%`).join(" · ")} tiered, per order`}
+ hint={analytics.commissionSource === "shopify-collabs" ? "From Shopify Collabs" : `${(store.commissionRates ?? DEFAULT_RATES).map((t) => `${Math.round(t.rate * 100)}%`).join(" · ")} tiered, per order`}
  />
  </div>
 
