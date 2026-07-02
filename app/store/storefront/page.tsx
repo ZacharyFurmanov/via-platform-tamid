@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Blocks from "@/app/s/Blocks";
 import { makeBlock, pageSlugify, type Block, type BlockDef, type BlockType, type StorePage } from "@/app/lib/storefront-blocks";
+import { parseDesign, buildDesignCss, HEADING_FONTS, BODY_FONTS, type DesignSettings } from "@/app/lib/captured-design";
 
 type Template = { id: string; name: string; description: string; colors: { bg: string; text: string; accent: string }; fonts: { heading: string; body: string }; heroStyle: string };
 type Colors = { bg: string; text: string; accent: string };
@@ -10,6 +11,11 @@ type Fonts = { heading: string; body: string };
 type Product = { title: string; price: number | null; currency: string; image: string };
 type DnsRecord = { type: string; name: string; value: string };
 type DomainStatus = { domain: string; verified: boolean; misconfigured: boolean; records: DnsRecord[]; verification: { type: string; domain: string; value: string }[] };
+// One editable field in a selected captured-page section (reported from the preview iframe).
+type PanelField =
+ | { kind: "text"; eid: number; value: string; tag: string }
+ | { kind: "image"; id: number; src: string }
+ | { kind: "link"; id: number; href: string; label: string };
 
 const SERIFS = new Set(["Playfair Display", "Bodoni Moda", "Cormorant Garamond", "Newsreader", "Instrument Serif", "Fraunces"]);
 const ff = (name: string) => `'${name}', ${SERIFS.has(name) ? "Georgia, serif" : "system-ui, sans-serif"}`;
@@ -74,20 +80,34 @@ export default function StorefrontEditor() {
  const [genBusy, setGenBusy] = useState(false); // "build my storefront with VYA"
  const [genErr, setGenErr] = useState<string | null>(null);
 
+ // Section edit panel: click a section in the preview → edit its fields here (no hunting on canvas).
+ const [panel, setPanel] = useState<{ index: number; fields: PanelField[] } | null>(null);
+ const [panelDirty, setPanelDirty] = useState(false);
+ const [panelSaving, setPanelSaving] = useState(false);
+ const editIframe = useRef<HTMLIFrameElement>(null);
+
+ // Global design for a captured site: accent + fonts, layered over the theme via custom CSS.
+ const [design, setDesign] = useState<DesignSettings>({ accent: null, heading: null, body: null });
+ const [designRest, setDesignRest] = useState(""); // any other custom CSS (e.g. VYA-assistant-added) to preserve
+ const [designBusy, setDesignBusy] = useState(false);
+ const [designSaved, setDesignSaved] = useState(false);
+
  useEffect(() => {
  let cancelled = false;
  (async () => {
  try {
- const [meR, sfR, dsR, domR, asR, capR] = await Promise.all([
+ const [meR, sfR, dsR, domR, asR, capR, cssR] = await Promise.all([
  fetch("/api/store/me"),
  fetch("/api/store/storefront"),
  fetch("/api/store/storefront/design"),
  fetch("/api/store/domain"),
  fetch("/api/store/assets"),
  fetch("/api/store/capture"),
+ fetch("/api/store/capture/css"),
  ]);
  if (cancelled) return;
  if (capR.ok) { const c = await capR.json(); setIsAdmin(!!c.isAdmin); if (c.captured > 0) setCaptured({ count: c.captured, url: c.url, origin: c.origin, pages: c.pages || [] }); }
+ if (cssR.ok) { const { css } = await cssR.json(); const { settings, rest } = parseDesign(css || ""); setDesign(settings); setDesignRest(rest); }
  if (asR.ok) { const a = await asR.json(); setAssets(a.assets || []); }
  if (meR.ok) { const m = await meR.json(); setStoreName(m.storeName || "Your Store"); }
  if (sfR.ok) {
@@ -154,6 +174,44 @@ export default function StorefrontEditor() {
  } catch { setSyncMsg("Re-sync failed."); }
  setSyncBusy(false);
  }
+
+ // Apply the global design (accent + fonts) to the captured site's custom-CSS layer,
+ // preserving any other custom CSS, then reload the preview to show it.
+ async function saveDesignCss() {
+ setDesignBusy(true); setDesignSaved(false);
+ try {
+ const css = buildDesignCss(design, designRest);
+ const r = await fetch("/api/store/capture/css", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ css }) });
+ if (r.ok) { setDesignSaved(true); setPreviewKey((k) => k + 1); }
+ } catch { /* leave unsaved */ }
+ setDesignBusy(false);
+ }
+
+ // Live bridge to the preview iframe: it reports a clicked section's fields; we send edits back.
+ useEffect(() => {
+ function onMsg(e: MessageEvent) {
+ const d = e.data as { vya?: string; index?: number; fields?: PanelField[] };
+ if (!d || !d.vya) return;
+ if (d.vya === "section") { setPanel({ index: d.index ?? -1, fields: d.fields || [] }); setPanelDirty(false); setPanelSaving(false); }
+ else if (d.vya === "unsaved") setPanelDirty(true);
+ else if (d.vya === "saved") { setPanel(null); setPanelDirty(false); setPanelSaving(false); }
+ }
+ window.addEventListener("message", onMsg);
+ return () => window.removeEventListener("message", onMsg);
+ }, []);
+
+ const postToPreview = (msg: unknown) => editIframe.current?.contentWindow?.postMessage(msg, "*");
+ function updatePanelField(i: number, patch: Record<string, unknown>) {
+ setPanel((p) => (p ? { ...p, fields: p.fields.map((f, idx) => (idx === i ? ({ ...f, ...patch } as PanelField) : f)) } : p));
+ setPanelDirty(true);
+ }
+ async function replacePanelImage(i: number, file: File) {
+ const f = panel?.fields[i]; if (!f || f.kind !== "image") return;
+ const fd = new FormData(); fd.append("file", file);
+ try { const r = await fetch("/api/store/assets", { method: "POST", body: fd }); if (r.ok) { const { url } = await r.json(); updatePanelField(i, { src: url }); postToPreview({ vya: "set", kind: "image", id: f.id, src: url }); } } catch { /* ignore */ }
+ }
+ function savePanel() { setPanelSaving(true); postToPreview({ vya: "save" }); }
+ const fieldLabel = (tag: string): string => (({ h1: "Heading", h2: "Heading", h3: "Heading", h4: "Subheading", h5: "Subheading", h6: "Subheading", p: "Text", li: "List item", a: "Link text", button: "Button", blockquote: "Quote", label: "Label", span: "Text" }) as Record<string, string>)[tag] || "Text";
 
  // The sections being edited belong to the active page (home or an extra page).
  const curBlocks = activeSlug === "home" ? blocks : extraPages.find((p) => p.slug === activeSlug)?.blocks ?? [];
@@ -278,30 +336,96 @@ export default function StorefrontEditor() {
  <div>
  <p className="text-[10px] uppercase tracking-[0.25em] text-stone-400 mb-1">Storefront · your site</p>
  <h1 className="text-[22px] font-semibold tracking-[-0.01em]">Edit your pages</h1>
- <p className="mt-0.5 text-xs text-stone-500">Click any text on the page to edit it, then Save. Or ask VYA for bigger changes.</p>
+ <p className="mt-0.5 text-xs text-stone-500">Click a section in the preview to edit its text, images &amp; links in the panel. Or ask VYA for bigger changes.</p>
  </div>
  <div className="flex flex-col items-end gap-2 shrink-0">
  {captured.url && <a href={captured.url} target="_blank" rel="noopener noreferrer" className="bg-[#5D0F17] text-white px-4 py-2 text-[13px] font-medium hover:bg-[#5D0F17]/85 whitespace-nowrap">View live ↗</a>}
- <button onClick={reSync} disabled={syncBusy} className="border border-stone-300 px-4 py-2 text-[13px] font-medium hover:border-[#5D0F17] disabled:opacity-50 whitespace-nowrap">{syncBusy ? "Syncing…" : "Re-sync from live site"}</button>
+ {/* Import is a one-time onboarding step for sellers, so re-sync (which re-crawls and
+     would discard their edits) is admin-only — kept for internal testing. */}
+ {isAdmin && <button onClick={reSync} disabled={syncBusy} className="border border-stone-300 px-4 py-2 text-[13px] font-medium hover:border-[#5D0F17] disabled:opacity-50 whitespace-nowrap">{syncBusy ? "Syncing…" : "Re-sync from live site (admin)"}</button>}
  </div>
  </div>
- {(syncBusy || syncMsg) && <div className="px-6 py-2 bg-white border-b border-stone-200 text-xs">{syncBusy ? <span className="text-stone-400">Re-crawling your live site — a minute or two…</span> : <span className={syncMsg!.startsWith("✓") ? "text-green-700" : "text-amber-700"}>{syncMsg}</span>}</div>}
+ {isAdmin && (syncBusy || syncMsg) && <div className="px-6 py-2 bg-white border-b border-stone-200 text-xs">{syncBusy ? <span className="text-stone-400">Re-crawling your live site — a minute or two…</span> : <span className={syncMsg!.startsWith("✓") ? "text-green-700" : "text-amber-700"}>{syncMsg}</span>}</div>}
  <div className="flex flex-col lg:flex-row">
  {/* Page list */}
  <div className="lg:w-64 lg:shrink-0 border-r border-stone-200 bg-white lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
  <p className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-[0.18em] text-stone-400">Pages ({captured.pages.length})</p>
  {captured.pages.map((p) => (
- <button key={p} onClick={() => { setSelPath(p); setPreviewKey((k) => k + 1); }} className={`block w-full text-left px-4 py-2 border-l-2 ${selPath === p ? "border-[#5D0F17] bg-stone-50" : "border-transparent hover:bg-[#5D0F17]/[0.02]"}`}>
+ <button key={p} onClick={() => { setSelPath(p); setPanel(null); setPreviewKey((k) => k + 1); }} className={`block w-full text-left px-4 py-2 border-l-2 ${selPath === p ? "border-[#5D0F17] bg-stone-50" : "border-transparent hover:bg-[#5D0F17]/[0.02]"}`}>
  <span className={`text-sm ${selPath === p ? "font-medium" : "text-[#5D0F17]/75"}`}>{pageLabel(p)}</span>
  <span className="block text-[10px] text-stone-300 truncate">{p}</span>
  </button>
  ))}
+ {/* Global design — accent + fonts, layered over the imported theme site-wide. */}
+ <div className="border-t border-stone-200 p-4">
+ <p className="text-[10px] uppercase tracking-[0.18em] text-stone-400 mb-3">Site design</p>
+ <label className="block text-[11px] text-stone-500 mb-1">Accent color</label>
+ <div className="flex items-center gap-2 mb-3">
+ <input type="color" value={design.accent && /^#[0-9a-fA-F]{6}$/.test(design.accent) ? design.accent : "#5D0F17"} onChange={(e) => { setDesign((d) => ({ ...d, accent: e.target.value })); setDesignSaved(false); }} className="h-8 w-10 cursor-pointer border border-stone-200 bg-white p-0.5 shrink-0" title="Recolor buttons & links" />
+ {design.accent
+  ? <button onClick={() => { setDesign((d) => ({ ...d, accent: null })); setDesignSaved(false); }} className="text-[11px] text-stone-400 underline hover:text-[#5D0F17]">Keep theme</button>
+  : <span className="text-[11px] text-stone-400 leading-tight">Pick to recolor buttons &amp; links</span>}
+ </div>
+ <label className="block text-[11px] text-stone-500 mb-1">Headings</label>
+ <select value={design.heading || ""} onChange={(e) => { setDesign((d) => ({ ...d, heading: e.target.value || null })); setDesignSaved(false); }} className="w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-[12px] mb-3">
+ <option value="">Keep theme font</option>
+ {HEADING_FONTS.map((f) => <option key={f} value={f}>{f}</option>)}
+ </select>
+ <label className="block text-[11px] text-stone-500 mb-1">Body</label>
+ <select value={design.body || ""} onChange={(e) => { setDesign((d) => ({ ...d, body: e.target.value || null })); setDesignSaved(false); }} className="w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-[12px] mb-3">
+ <option value="">Keep theme font</option>
+ {BODY_FONTS.map((f) => <option key={f} value={f}>{f}</option>)}
+ </select>
+ <button onClick={saveDesignCss} disabled={designBusy} className="w-full bg-[#5D0F17] text-white px-3 py-2 text-[12px] font-medium hover:bg-[#5D0F17]/85 disabled:opacity-50">{designBusy ? "Applying…" : "Apply to my site"}</button>
+ {designSaved && <p className="mt-2 text-[11px] text-green-700">Applied ✓ — preview updated</p>}
+ </div>
  <button onClick={() => window.dispatchEvent(new CustomEvent("vya:ask", { detail: "Help me edit my site" }))} className="m-4 text-xs underline text-stone-500 hover:text-[#5D0F17]">Ask VYA instead →</button>
  {isAdmin && <button onClick={async () => { if (!confirm("OWNER RESET: discards the captured site AND deletes all (non-sold) inventory, then switches to the simple design. This can’t be undone — continue?")) return; await fetch("/api/store/capture", { method: "DELETE" }).catch(() => {}); setCaptured(null); }} className="block mx-4 mb-4 text-[11px] text-stone-400 underline hover:text-[#5D0F17]">Use the simple design instead (owner)</button>}
  </div>
+ {/* Section edit panel — appears when a section is clicked in the preview. */}
+ {panel && (
+ <div className="lg:w-80 lg:shrink-0 border-r border-stone-200 bg-white lg:h-[calc(100vh-150px)] lg:overflow-y-auto">
+ <div className="flex items-center justify-between px-4 pt-4 pb-2 sticky top-0 bg-white border-b border-stone-100">
+ <p className="text-[10px] uppercase tracking-[0.18em] text-stone-400">Edit section</p>
+ <button onClick={() => setPanel(null)} className="text-[11px] text-stone-400 hover:text-[#5D0F17]">Close ✕</button>
+ </div>
+ <div className="px-4 py-4 space-y-4">
+ {panel.fields.length === 0 && <p className="text-xs text-stone-400">Nothing text/image to edit in this section — use the section toolbar (move, duplicate, delete) in the preview, or Ask VYA.</p>}
+ {panel.fields.map((f, i) => (
+ <div key={(f.kind === "text" ? "t" + f.eid : f.kind === "image" ? "i" + f.id : "l" + f.id) + "-" + i}>
+ {f.kind === "text" && (
+ <>
+ <label className="block text-[11px] text-stone-500 mb-1">{fieldLabel(f.tag)}</label>
+ <textarea value={f.value} onChange={(e) => { updatePanelField(i, { value: e.target.value }); postToPreview({ vya: "set", kind: "text", eid: f.eid, value: e.target.value }); }} className="w-full rounded-md border border-stone-300 bg-white px-2.5 py-2 text-[13px] resize-y min-h-[42px] outline-none focus:border-[#5D0F17]/50" />
+ </>
+ )}
+ {f.kind === "image" && (
+ <>
+ <label className="block text-[11px] text-stone-500 mb-1">Image</label>
+ <div className="flex items-center gap-2.5">
+ {/* eslint-disable-next-line @next/next/no-img-element */}
+ <img src={f.src} alt="" className="h-12 w-12 rounded border border-stone-200 object-cover" />
+ <label className="cursor-pointer text-[12px] text-[#5D0F17] underline hover:text-[#5D0F17]/80">Replace<input type="file" accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.[0]) replacePanelImage(i, e.target.files[0]); e.target.value = ""; }} /></label>
+ </div>
+ </>
+ )}
+ {f.kind === "link" && (
+ <>
+ <label className="block text-[11px] text-stone-500 mb-1">Link{f.label ? ` — “${f.label}”` : ""}</label>
+ <input value={f.href} onChange={(e) => { updatePanelField(i, { href: e.target.value }); postToPreview({ vya: "set", kind: "link", id: f.id, href: e.target.value }); }} placeholder="https://…  or  /page" className="w-full rounded-md border border-stone-300 bg-white px-2.5 py-2 text-[13px] outline-none focus:border-[#5D0F17]/50" />
+ </>
+ )}
+ </div>
+ ))}
+ {panel.fields.length > 0 && (
+ <button onClick={savePanel} disabled={panelSaving || !panelDirty} className="w-full bg-[#5D0F17] text-white px-3 py-2 text-[12px] font-medium hover:bg-[#5D0F17]/85 disabled:opacity-50">{panelSaving ? "Saving…" : panelDirty ? "Save changes" : "Saved"}</button>
+ )}
+ </div>
+ </div>
+ )}
  {/* Visual editor */}
  <div className="flex-1 bg-[#e9e4da] p-3 lg:h-[calc(100vh-150px)]">
- <iframe key={`${selPath}-${previewKey}`} src={editSrc} className="w-full h-full bg-white border border-stone-200" title="Page editor" />
+ <iframe ref={editIframe} key={`${selPath}-${previewKey}`} src={editSrc} className="w-full h-full bg-white border border-stone-200" title="Page editor" />
  </div>
  </div>
  </main>

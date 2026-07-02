@@ -1,6 +1,17 @@
 import { getSellerBySlug } from "./db/sellers";
 import { createItem, updateItem, removeItem, getItem, listAvailableItems, listSellerItems } from "./db/inventory";
+import { getOrCreateCollection, setItemCollections } from "./db/collections";
 import type { Item } from "./db/index";
+
+// Resolve collection titles → ids (creating any new ones) and set an item's membership.
+// `titles === undefined` means "leave collections untouched" (so a plain title/price edit
+// never wipes them); an empty array clears them.
+async function applyCollections(sellerId: string, itemId: string, titles?: string[]): Promise<void> {
+ if (!titles) return;
+ const ids: string[] = [];
+ for (const t of titles) { const name = String(t).trim(); if (name) ids.push((await getOrCreateCollection(sellerId, name)).id); }
+ await setItemCollections(itemId, ids);
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // "Listings" are now a thin VIEW over the canonical product table (db/items).
@@ -39,6 +50,8 @@ export type ListingInput = {
  category: string | null;
  tags?: string[];
  status: ListingStatus;
+ // Collection titles this item belongs to. `undefined` = don't change membership.
+ collections?: string[];
 };
 
 // Map a canonical item → the Listing shape consumers expect.
@@ -84,6 +97,7 @@ export async function createListing(storeSlug: string, l: ListingInput): Promise
  status: l.status,
  source: "manual",
  });
+ await applyCollections(seller.id, item.id, l.collections);
  return itemToListing(item, storeSlug);
 }
 
@@ -103,6 +117,7 @@ export async function updateListing(id: string, storeSlug: string, l: ListingInp
  category: l.category,
  status: l.status,
  });
+ if (item) await applyCollections(seller.id, item.id, l.collections);
  return item ? itemToListing(item, storeSlug) : null;
 }
 
@@ -123,6 +138,11 @@ export function sanitizeListingInput(body: any, defaultCurrency = "USD"): Listin
  description: s(body?.description, 2000),
  category: s(body?.category, 60),
  status,
+ // Only touch collections when the caller actually sent the field (so a plain edit
+ // that omits it leaves membership alone). Values are collection TITLES.
+ collections: Array.isArray(body?.collections)
+  ? body.collections.filter((x: any) => typeof x === "string" && x.trim()).map((x: string) => x.trim().slice(0, 80)).slice(0, 20)
+  : undefined,
  };
 }
 

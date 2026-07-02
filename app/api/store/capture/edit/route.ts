@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
 import { getCapturePage, updateCapturePageHtml } from "@/app/lib/site-capture-db";
-import { applyEdits, type PageEdits } from "@/app/lib/site-capture";
+import { applyEdits, type PageEdits, type NewBlock } from "@/app/lib/site-capture";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +17,28 @@ export async function POST(request: NextRequest) {
  if (!path) return NextResponse.json({ error: "Missing page." }, { status: 400 });
 
  const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+ // `sections` is the full desired section order (reorder/duplicate/delete in one array);
+ // when present it supersedes the legacy per-index deleteSecs/dupSecs.
+ const VALID_NEW = new Set(["text", "image", "button", "divider"]);
+ const sections = Array.isArray(body?.sections)
+ ? (body.sections as unknown[]).map((e): number | NewBlock | null => {
+   if (typeof e === "number" && e >= 0) return e;
+   const o = e as { new?: unknown; text?: unknown; href?: unknown } | null;
+   if (o && typeof o.new === "string" && VALID_NEW.has(o.new)) return { new: o.new as NewBlock["new"], text: typeof o.text === "string" ? o.text : undefined, href: typeof o.href === "string" ? o.href : undefined };
+   return null;
+   }).filter((e): e is number | NewBlock => e !== null)
+ : undefined;
  const p: PageEdits = {
  edits: arr<{ eid: number; text: string }>(body?.edits).filter((e) => typeof e?.eid === "number" && typeof e?.text === "string").map((e) => ({ eid: e.eid, text: String(e.text).slice(0, 5000) })),
  images: arr<{ id: number; src: string }>(body?.images).filter((e) => typeof e?.id === "number" && typeof e?.src === "string").map((e) => ({ id: e.id, src: e.src.slice(0, 2000) })),
- deleteSecs: arr<number>(body?.deleteSecs).filter((n) => typeof n === "number"),
- dupSecs: arr<number>(body?.dupSecs).filter((n) => typeof n === "number"),
+ links: arr<{ id: number; href: string }>(body?.links).filter((e) => typeof e?.id === "number" && typeof e?.href === "string").map((e) => ({ id: e.id, href: e.href.slice(0, 2000) })),
+ styles: arr<{ eid: number; style: string }>(body?.styles).filter((e) => typeof e?.eid === "number" && typeof e?.style === "string").map((e) => ({ eid: e.eid, style: e.style.slice(0, 500) })),
+ secStyles: arr<{ sec: number; style: string }>(body?.secStyles).filter((e) => typeof e?.sec === "number" && typeof e?.style === "string").map((e) => ({ sec: e.sec, style: e.style.slice(0, 500) })),
+ ...(sections !== undefined
+ ? { sections }
+ : { deleteSecs: arr<number>(body?.deleteSecs).filter((n) => typeof n === "number"), dupSecs: arr<number>(body?.dupSecs).filter((n) => typeof n === "number") }),
  };
- const total = (p.edits!.length + p.images!.length + p.deleteSecs!.length + p.dupSecs!.length);
+ const total = p.edits!.length + p.images!.length + p.links!.length + p.styles!.length + p.secStyles!.length + (sections !== undefined ? 1 : (p.deleteSecs!.length + p.dupSecs!.length));
  if (!total) return NextResponse.json({ error: "Nothing to save." }, { status: 400 });
 
  const html = await getCapturePage(slug, path).catch(() => null);

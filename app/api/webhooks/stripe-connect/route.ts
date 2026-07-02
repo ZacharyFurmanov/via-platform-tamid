@@ -11,7 +11,19 @@ import { delistEverywhere } from "@/app/lib/cross-listing-db";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+// Lazily construct the Stripe SDK client. Constructing it at module load with an
+// empty key throws ("Neither apiKey nor config.authenticator provided") and crashes
+// the Vercel build during "Collecting page data" (Preview env has no secrets). We
+// only need the SDK at request time to verify webhook signatures.
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+ if (!_stripe) {
+ const key = process.env.STRIPE_SECRET_KEY;
+ if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+ _stripe = new Stripe(key);
+ }
+ return _stripe;
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -66,7 +78,7 @@ export async function POST(request: NextRequest) {
  const raw = await request.text();
  let event: Stripe.Event;
  try {
- event = stripe.webhooks.constructEvent(raw, sig, secret);
+ event = getStripe().webhooks.constructEvent(raw, sig, secret);
  } catch {
  return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
  }

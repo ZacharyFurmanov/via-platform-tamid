@@ -8,7 +8,7 @@ import { useStoreBase } from "../nav-base";
 type Item = { status: string };
 type Order = { amountCents: number };
 
-const CARDS: { href: string; icon: LucideIcon; title: string; body: string }[] = [
+const BASE_CARDS: { href: string; icon: LucideIcon; title: string; body: string }[] = [
  { href: "/import", icon: Upload, title: "Import your store", body: "Bring everything over from your existing site — products, photos, and branding — in one paste." },
  { href: "/storefront", icon: Store, title: "Set up your storefront", body: "Choose your look, claim your URL, and flip it live." },
  { href: "/payments", icon: CreditCard, title: "Get ready to accept payments", body: "Connect Stripe so sales settle straight to your own bank." },
@@ -21,6 +21,9 @@ export default function StoreHome() {
  const [name, setName] = useState("");
  const [q, setQ] = useState("");
  const [stats, setStats] = useState({ active: 0, sold: 0, orders: 0, revenueCents: 0 });
+ // Import is one-time: hide "Import your store" once this store already has a captured
+ // site (unless admin, who keeps it for testing).
+ const [cap, setCap] = useState({ captured: 0, isAdmin: false });
 
  function ask(text: string) {
  const t = text.trim();
@@ -39,7 +42,11 @@ export default function StoreHome() {
  const orders: Order[] = d?.orders || [];
  setStats((s) => ({ ...s, orders: orders.length, revenueCents: orders.reduce((a, o) => a + (o.amountCents || 0), 0) }));
  }).catch(() => {});
+ fetch("/api/store/capture").then((r) => (r.ok ? r.json() : null)).then((d) => d && setCap({ captured: d.captured || 0, isAdmin: !!d.isAdmin })).catch(() => {});
  }, []);
+
+ // Drop the one-time "Import your store" card once the store has a captured site (admin keeps it).
+ const cards = BASE_CARDS.filter((c) => !(c.href === "/import" && cap.captured > 0 && !cap.isAdmin));
 
  const statCards = [
  { label: "Active listings", value: String(stats.active) },
@@ -85,7 +92,7 @@ export default function StoreHome() {
  {/* getting started */}
  <h2 className="mb-3 text-[13px] font-semibold text-stone-900">Set up your store</h2>
  <div className="grid gap-3 sm:grid-cols-2">
- {CARDS.map((c) => {
+ {cards.map((c) => {
  const Icon = c.icon;
  return (
  <a key={c.href} href={base + c.href} className={cn("group rounded-xl border border-stone-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-stone-300 hover:shadow-md")}>

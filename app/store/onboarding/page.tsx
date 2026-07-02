@@ -13,6 +13,8 @@ export default function OnboardingPage() {
  const [busy, setBusy] = useState(false);
  const [err, setErr] = useState<string | null>(null);
  const [result, setResult] = useState<Result | null>(null);
+ // The one-time fork: do they already have a site to bring over, or build from scratch?
+ const [path, setPath] = useState<null | "import" | "build">(null);
 
  // Already set up? Skip straight to the dashboard.
  useEffect(() => {
@@ -66,11 +68,34 @@ export default function OnboardingPage() {
  <p className="text-[10px] uppercase tracking-[0.25em] text-[#5D0F17]/45 mb-2">
  Welcome{storeName ? `, ${storeName}` : ""}
  </p>
- <h1 className="font-serif text-3xl sm:text-4xl mb-3">Let’s bring your store over.</h1>
+ <h1 className="font-serif text-3xl sm:text-4xl mb-3">Let’s set up your store.</h1>
  <p className="text-sm text-[#5D0F17]/55 mb-8">
- Paste your existing site and VYA hosts it — every page, exactly as it looks — then switches the backend
- to VYA commerce. One step, then you’re live. (No site yet? Start from scratch below.)
+ {path === "import"
+  ? "Paste your existing site and VYA hosts it — every page, exactly as it looks — then switches the backend to VYA commerce. One step, then you’re live."
+  : "Two ways to start. Pick whichever fits — you can change everything later."}
  </p>
+
+ {/* Step 1 — the one-time fork. Shown until they pick a path (and before a result). */}
+ {!path && !result && (
+ <div className="grid gap-4 sm:grid-cols-2">
+  <button onClick={() => setPath("import")} className="text-left border border-[#5D0F17]/15 bg-white p-6 transition hover:border-[#5D0F17]/50 hover:shadow-[0_12px_40px_-24px_rgba(93,15,23,0.5)]">
+  <p className="font-serif text-xl mb-1.5">I already have a website</p>
+  <p className="text-sm text-[#5D0F17]/55">Bring your Shopify or Squarespace store over — every page, exactly as it looks. One-time import.</p>
+  <span className="mt-4 inline-block text-xs uppercase tracking-[0.15em] text-[#5D0F17]">Bring it over →</span>
+  </button>
+  <button onClick={() => { setPath("build"); router.push("/store/storefront"); }} className="text-left border border-[#5D0F17]/15 bg-white p-6 transition hover:border-[#5D0F17]/50 hover:shadow-[0_12px_40px_-24px_rgba(93,15,23,0.5)]">
+  <p className="font-serif text-xl mb-1.5">I need to build one</p>
+  <p className="text-sm text-[#5D0F17]/55">Start from a clean storefront and let VYA design it from your products — add and arrange sections yourself.</p>
+  <span className="mt-4 inline-block text-xs uppercase tracking-[0.15em] text-[#5D0F17]">Build from scratch →</span>
+  </button>
+ </div>
+ )}
+
+ {!path && !result && (
+ <div className="mt-8 text-xs text-[#5D0F17]/45">
+  <button onClick={() => router.push("/store/home")} className="underline hover:text-[#5D0F17]">Skip for now</button>
+ </div>
+ )}
 
  {result ? (
  <div className="border border-green-700/25 bg-green-700/5 p-6">
@@ -83,7 +108,7 @@ export default function OnboardingPage() {
  </button>
  </div>
  </div>
- ) : (
+ ) : path === "import" ? (
  <>
  <input
  className={input}
@@ -103,11 +128,11 @@ export default function OnboardingPage() {
  {err && <p className="mt-3 text-xs text-red-700">{err}</p>}
 
  <div className="mt-8 flex gap-5 text-xs text-[#5D0F17]/45">
- <a href="/store/storefront" className="underline hover:text-[#5D0F17]">Start from scratch instead</a>
+ <button onClick={() => { setPath(null); setErr(null); }} className="underline hover:text-[#5D0F17]">← Back</button>
  <button onClick={() => router.push("/store/home")} className="underline hover:text-[#5D0F17]">Skip for now</button>
  </div>
  </>
- )}
+ ) : null}
  </div>
  </main>
  );
