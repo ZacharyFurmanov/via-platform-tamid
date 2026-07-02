@@ -1,8 +1,11 @@
 import { NextRequest } from "next/server";
 import { getCapturePage, getSiteCss } from "@/app/lib/site-capture-db";
-import { injectCart, injectCss, prepareEditMode } from "@/app/lib/site-capture";
+import { injectCart, injectCss, injectCollectionItems, prepareEditMode } from "@/app/lib/site-capture";
 import { captureStorefrontEntry } from "@/app/lib/store-visits-db";
 import { recordSearch } from "@/app/lib/store-favorites-db";
+import { getSellerBySlug } from "@/app/lib/db/sellers";
+import { getCollectionBySlug, listCollectionItems } from "@/app/lib/db/collections";
+import { listAvailableItems } from "@/app/lib/db/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +33,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
  const query = (sp.get("q") || sp.get("query") || sp.get("s") || "").trim();
  if (query && (pathname.includes("search") || sp.has("q") || sp.has("query"))) {
  recordSearch(slug, query, req.cookies.get("via_sess")?.value || null).catch(() => {});
+ }
+
+ // On a captured collection page, swap the frozen Shopify grid for the store's live
+ // VYA inventory assigned to that collection (mapped by slug = the captured handle).
+ const coll = pathname.match(/^\/collections\/([^/]+)\/?$/);
+ if (coll) {
+ const seller = await getSellerBySlug(slug).catch(() => null);
+ if (seller) {
+  // "all" (the shop-all page) shows the whole live inventory; any other handle shows
+  // the items assigned to the matching VYA collection.
+  let items: Awaited<ReturnType<typeof listCollectionItems>> = [];
+  if (coll[1] === "all") items = await listAvailableItems(seller.id).catch(() => []);
+  else { const collection = await getCollectionBySlug(seller.id, coll[1]).catch(() => null); if (collection) items = await listCollectionItems(collection.id).catch(() => []); }
+  if (items.length) html = injectCollectionItems(html, items.map((it) => ({ id: it.id, title: it.title, priceCents: it.priceCents, currency: it.currency, images: it.images })));
+ }
  }
 
  const css = await getSiteCss(slug).catch(() => "");

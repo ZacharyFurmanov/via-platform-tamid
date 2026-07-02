@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveStoreSlugAny, isOwner } from "@/app/lib/storeAuth";
 import { getSellerBySlug } from "@/app/lib/db/sellers";
 import { listSellerItems, deleteAllItems, publishItems, removeItems } from "@/app/lib/db/inventory";
+import { getCollectionTitlesForItems } from "@/app/lib/db/collections";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,11 @@ export async function GET(request: NextRequest) {
 
  const seller = await getSellerBySlug(slug);
  const items = seller ? await listSellerItems(seller.id) : [];
+ // Attach each item's collections (titles) so the editor's picker can prefill.
+ const colMap = items.length ? await getCollectionTitlesForItems(items.map((i) => i.id)).catch(() => ({} as Record<string, string[]>)) : {};
+ const withCols = items.map((i) => ({ ...i, collections: colMap[i.id] || [] }));
  // isAdmin gates the owner-only "clear all inventory" reset.
- return NextResponse.json({ ok: true, items, isAdmin: isOwner(request, slug) });
+ return NextResponse.json({ ok: true, items: withCols, isAdmin: isOwner(request, slug) });
 }
 
 // POST { action: "publish" | "remove", ids: string[] } — bulk lifecycle action on

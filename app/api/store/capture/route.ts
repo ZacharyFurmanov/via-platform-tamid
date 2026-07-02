@@ -8,6 +8,7 @@ import { getConnection } from "@/app/lib/store-connections-db";
 import { getPlatform } from "@/app/lib/platforms";
 import { getSellerBySlug } from "@/app/lib/db/sellers";
 import { deleteAllItems } from "@/app/lib/db/inventory";
+import { ensureCollection } from "@/app/lib/db/collections";
 
 // Shopify's "store is password-protected" lock screen looks like a real page, so a
 // naive crawl would capture it. Detect it so we don't host the lock screen.
@@ -55,6 +56,18 @@ export async function POST(request: NextRequest) {
  // Products come in as checkout-able items regardless of design capture (the
  // connected-store API path works even when the public site is locked).
  const items = await importProductsAsItems(slug, await pullProducts(slug, url)).catch(() => 0);
+
+ // Pre-create VYA collections that mirror the store's captured collection pages, so the
+ // seller can assign items to them (slug = the Shopify handle → items render on that page).
+ try {
+ const seller = await getSellerBySlug(slug);
+ if (seller) {
+  const handles = new Set<string>();
+  for (const p of r.paths) { const m = p.match(/^\/collections\/([^/]+)\/?$/); if (m && m[1] !== "all") handles.add(m[1]); }
+  const titleize = (h: string) => h.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  for (const h of handles) await ensureCollection(seller.id, h, titleize(h)).catch(() => {});
+ }
+ } catch { /* non-fatal — assignment can create collections on demand too */ }
 
  // Password-protected? The crawl either reads nothing or only grabs the lock
  // screen — don't host that. Import products (if a store is connected) and tell

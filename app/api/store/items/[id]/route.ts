@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
 import { getSellerBySlug } from "@/app/lib/db/sellers";
 import { getItem, markSold, removeItem, publishItem, updateItem } from "@/app/lib/db/inventory";
+import { getOrCreateCollection, setItemCollections } from "@/app/lib/db/collections";
 
 export const dynamic = "force-dynamic";
 
@@ -54,8 +55,17 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
  if (body.size !== undefined) patch.size = trimOrNull(body.size, 40);
  if (body.category !== undefined) patch.category = trimOrNull(body.category, 60);
  if (body.description !== undefined) patch.description = trimOrNull(body.description, 2000);
- if (!Object.keys(patch).length) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+ // Collections (titles). Only touched when the field is sent; an array (even empty) sets membership.
+ const cols = Array.isArray(body.collections)
+ ? body.collections.filter((x: unknown) => typeof x === "string" && (x as string).trim()).map((x: string) => x.trim().slice(0, 80)).slice(0, 20)
+ : undefined;
+ if (!Object.keys(patch).length && cols === undefined) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
- const updated = await updateItem(id, patch);
+ const updated = Object.keys(patch).length ? await updateItem(id, patch) : item;
+ if (cols !== undefined) {
+ const ids: string[] = [];
+ for (const t of cols) ids.push((await getOrCreateCollection(seller.id, t)).id);
+ await setItemCollections(id, ids);
+ }
  return NextResponse.json({ ok: true, item: updated });
 }

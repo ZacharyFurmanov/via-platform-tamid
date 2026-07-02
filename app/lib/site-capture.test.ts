@@ -1,7 +1,39 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as cheerio from "cheerio";
-import { prepareEditMode, applyEdits } from "./site-capture.ts";
+import { prepareEditMode, applyEdits, injectCollectionItems } from "./site-capture.ts";
+
+const COLL_ITEMS = [
+ { id: "a1", title: "1990s Silk Slip", priceCents: 18000, currency: "USD", images: ["https://x/img1.jpg"] },
+ { id: "a2", title: "Beaded Clutch", priceCents: 9500, currency: "USD", images: [] },
+];
+
+test("injectCollectionItems replaces a theme product grid with live VYA cards", () => {
+ const html = `<html><body><main><h1>Wedding Guest</h1><ul id="product-grid"><li class="old">STALE product 1</li><li class="old">STALE product 2</li></ul></main></body></html>`;
+ const out = injectCollectionItems(html, COLL_ITEMS);
+ const $ = cheerio.load(out);
+ assert.equal($("#product-grid").length, 0, "the static grid is gone");
+ assert.equal($(".old").length, 0, "stale products removed");
+ assert.equal($("[data-vya-collection] [data-vya-add]").length, 2, "one add-to-bag per live item");
+ assert.match(out, /1990s Silk Slip/);
+ assert.match(out, /data-vya-add="a1"/);
+ assert.match(out, /\$180/); // formatted price
+ assert.match($("[data-vya-collection]").html() || "", /font-family:inherit/); // theme-inheriting
+});
+
+test("injectCollectionItems falls back to after the heading when no grid is found", () => {
+ const html = `<html><body><main><h2>Cool Stuff</h2><p>some copy</p></main></body></html>`;
+ const out = injectCollectionItems(html, COLL_ITEMS);
+ const $ = cheerio.load(out);
+ assert.equal($("[data-vya-collection]").length, 1);
+ // grid sits immediately after the heading
+ assert.ok($("h2").next().is("[data-vya-collection]"));
+});
+
+test("injectCollectionItems is a no-op when the collection has no items", () => {
+ const html = `<html><body><ul id="product-grid"><li>keep me</li></ul></body></html>`;
+ assert.equal(injectCollectionItems(html, []), html);
+});
 
 // A theme that uses NEITHER .shopify-section NOR <section> — the fallback path.
 const PLAIN = `<!doctype html><html><head></head><body>

@@ -15,6 +15,7 @@ type Item = {
  category: string | null;
  description: string | null;
  status: "draft" | "active" | "reserved" | "sold" | "removed";
+ collections?: string[];
 };
 
 const TONE: Record<Item["status"], "neutral" | "success" | "warning" | "accent" | "critical"> = {
@@ -40,6 +41,10 @@ export default function ItemsPage() {
  const [editing, setEditing] = useState<Item | null>(null);
  const [editForm, setEditForm] = useState<EditForm>({ title: "", price: "", size: "", category: "", description: "" });
  const [savingEdit, setSavingEdit] = useState(false);
+ // Collections: the store's collections + the ones selected for the item being edited.
+ const [cols, setCols] = useState<{ id: string; title: string; itemCount?: number }[]>([]);
+ const [selCols, setSelCols] = useState<string[]>([]);
+ const [newCol, setNewCol] = useState("");
 
  async function load() {
  try {
@@ -59,6 +64,7 @@ export default function ItemsPage() {
  }
  useEffect(() => {
  (async () => { await load(); })();
+ fetch("/api/store/collections").then((r) => (r.ok ? r.json() : null)).then((c) => c && setCols(c.collections || [])).catch(() => {});
  }, []);
 
  async function act(id: string, action: "sold" | "remove" | "publish") {
@@ -102,6 +108,8 @@ export default function ItemsPage() {
  function openEdit(it: Item) {
  setEditing(it);
  setEditForm({ title: it.title, price: (it.priceCents / 100).toFixed(0), size: it.size || "", category: it.category || "", description: it.description || "" });
+ setSelCols(it.collections || []);
+ setNewCol("");
  }
  async function saveEdit() {
  if (!editing) return;
@@ -109,7 +117,7 @@ export default function ItemsPage() {
  await fetch(`/api/store/items/${editing.id}`, {
  method: "PATCH",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ title: editForm.title, price: Number(editForm.price) || 0, size: editForm.size, category: editForm.category, description: editForm.description }),
+ body: JSON.stringify({ title: editForm.title, price: Number(editForm.price) || 0, size: editForm.size, category: editForm.category, description: editForm.description, collections: selCols }),
  }).catch(() => {});
  setSavingEdit(false);
  setEditing(null);
@@ -236,6 +244,28 @@ export default function ItemsPage() {
  <Field label="Description">
  <textarea value={editForm.description} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} rows={4} className="w-full rounded-lg border border-stone-200 px-3 py-2 text-[13px] text-stone-900 outline-none focus:border-stone-400" />
  </Field>
+ <div>
+ <label className="mb-1.5 block text-[12px] font-medium text-stone-500">Collections <span className="font-normal text-stone-400">— where it shows on your store</span></label>
+ <div className="flex flex-wrap gap-2">
+ {cols.map((c) => {
+ const on = selCols.includes(c.title);
+ return (
+ <button key={c.id} type="button" onClick={() => setSelCols((s) => (on ? s.filter((t) => t !== c.title) : [...s, c.title]))}
+ className={`rounded-full border px-3 py-1.5 text-xs transition ${on ? "border-[#5D0F17] bg-[#5D0F17] text-white" : "border-stone-300 bg-white text-stone-600 hover:border-stone-400"}`}>
+ {c.title}{c.itemCount ? ` ${c.itemCount}` : ""}
+ </button>
+ );
+ })}
+ {selCols.filter((t) => !cols.some((c) => c.title === t)).map((t) => (
+ <button key={t} type="button" onClick={() => setSelCols((s) => s.filter((x) => x !== t))}
+ className="rounded-full border border-[#5D0F17] bg-[#5D0F17] px-3 py-1.5 text-xs text-white">{t} ✕</button>
+ ))}
+ </div>
+ <input value={newCol} onChange={(e) => setNewCol(e.target.value)}
+ onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const t = newCol.trim(); if (t && !selCols.includes(t)) setSelCols((s) => [...s, t]); setNewCol(""); } }}
+ placeholder="New collection — type &amp; Enter (Y2K, Designer bags…)"
+ className="mt-2 w-full rounded-lg border border-stone-200 px-3 py-2 text-[13px] text-stone-900 outline-none focus:border-stone-400" />
+ </div>
  </div>
  <div className="mt-5 flex items-center justify-end gap-2">
  <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>

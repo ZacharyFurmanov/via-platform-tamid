@@ -246,6 +246,43 @@ document.addEventListener("click",function(e){var a=e.target.closest&&e.target.c
 window.addEventListener("load",function(){VYACart.refresh();document.querySelectorAll('a[href$="/cart"],a[href*="/cart?"]').forEach(function(a){a.addEventListener("click",function(e){e.preventDefault();VYACart.open()})});document.querySelectorAll('form[action*="/cart"]').forEach(function(f){var card=f.closest('li,[class*="card"],[class*="product"],.grid__item');var link=card&&card.querySelector('a[href*="/products/"]');if(link){f.querySelectorAll('button,[name="add"]').forEach(function(b){b.addEventListener("click",function(e){e.preventDefault();location.href=link.getAttribute("href")})})}})});
 </script>`;
 
+// ── Live VYA inventory on captured collection pages ──────────────────────────
+// Captured /collections/{handle} pages are frozen Shopify HTML showing stale
+// products. This replaces that static grid with a live grid of the store's VYA
+// items assigned to the collection — styled to inherit the theme (transparent,
+// inherited font/colour) so it looks native. Cards add to the injected VYA cart.
+export type CollectionCardItem = { id: string; title: string; priceCents: number | null; currency: string | null; images: unknown };
+// Common Shopify/theme selectors for the collection product grid.
+const GRID_SELECTORS = "#product-grid,ul#product-grid,ul.product-grid,.product-grid,ul.grid--view-items,.grid--view-items,.collection ul.grid,ul.collection__products,.product-list,.collection-products,[class*='product-grid'],[id*='ProductGridContainer'] ul";
+
+function money(cents: number | null, currency: string | null): string {
+ if (cents == null) return "";
+ try { return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD", maximumFractionDigits: 0 }).format(cents / 100); } catch { return `$${Math.round(cents / 100)}`; }
+}
+
+export function injectCollectionItems(html: string, items: CollectionCardItem[]): string {
+ if (!items.length) return html;
+ const $ = cheerio.load(html);
+ const cards = items.map((it) => {
+  const imgs = Array.isArray(it.images) ? (it.images as unknown[]) : [];
+  const img = typeof imgs[0] === "string" ? (imgs[0] as string) : "";
+  const bg = img ? `background:#f2f0eb url('${img.replace(/'/g, "%27")}') center/cover;` : "background:#f2f0eb;";
+  return `<div style="font-family:inherit;color:inherit"><div style="aspect-ratio:3/4;${bg}"></div><div style="font-size:14px;margin-top:9px;line-height:1.3">${escHtml(it.title || "")}</div><div style="font-size:14px;opacity:.7;margin:2px 0 9px">${money(it.priceCents, it.currency)}</div><a href="#" data-vya-add="${escHtml(it.id)}" style="display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;border:1px solid currentColor;padding:8px 15px;text-decoration:none;color:inherit">Add to bag</a></div>`;
+ }).join("");
+ const grid = `<div data-vya-collection="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:26px;padding:26px 0;font-family:inherit;color:inherit">${cards}</div>`;
+ const $grid = $(GRID_SELECTORS).first();
+ if ($grid.length) {
+  $grid.replaceWith(grid);
+ } else {
+  // Fallback: remove any static product grids, drop the live grid after the page heading.
+  $(GRID_SELECTORS).remove();
+  const $host = $("main").first().length ? $("main").first() : $("body").first();
+  const $h = $host.find("h1,h2").first();
+  if ($h.length) $h.after(grid); else $host.prepend(grid);
+ }
+ return $.html();
+}
+
 /** Inject a store's site-wide custom CSS (seller edits applied over time) so it
  * wins over the captured theme. No-op when there's no custom CSS. */
 export function injectCss(html: string, css: string): string {
