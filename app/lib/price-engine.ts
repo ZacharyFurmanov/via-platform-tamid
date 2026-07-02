@@ -1,4 +1,6 @@
 import { fetchComps, isCompsConfigured, type Comp } from "./comps";
+import { inferCategoryFromTitle } from "./loadStoreProducts";
+import { getInternalPriceBenchmark, type InternalPriceBenchmark } from "./data-layer/price-benchmark-db";
 
 // The price engine: turn real comps into one defensible number.
 //  market value  = comps, filtered to TRUE comparables by the model (sold > asking)
@@ -16,7 +18,7 @@ export type PriceEstimate = {
  confidence: number;
  comps: Comp[]; // the comps actually used
  rationale: string;
- source: "comps" | "floor" | "knowledge" | "none";
+ source: "comps" | "floor" | "knowledge" | "benchmark" | "none";
 };
 
 function median(nums: number[]): number | null {
@@ -34,7 +36,7 @@ export async function valueFromComps(
  query: string,
  photoUrl: string | undefined,
  comps: Comp[],
- ctx?: { brand?: string | null; era?: string | null; runway?: string | null; knowledgeHintCents?: number | null; trend?: string | null },
+ ctx?: { brand?: string | null; era?: string | null; runway?: string | null; knowledgeHintCents?: number | null; trend?: string | null; internalBenchmark?: InternalPriceBenchmark | null },
 ) {
  const fallback = () => {
  const sold = comps.filter((c) => c.sold).map((c) => c.priceCents);
@@ -60,8 +62,12 @@ export async function valueFromComps(
  const idLine = ctx && (ctx.brand || ctx.era || ctx.runway)
  ? `\n\nThis piece has been identified as: ${[ctx.brand, ctx.era].filter(Boolean).join(", ")}${ctx.runway ? ` — from the ${ctx.runway} runway collection (archival/collectible)` : ""}.`
  : "";
+ const b = ctx?.internalBenchmark;
+ const benchLine = b
+ ? `\n\nMOST RELIABLE SIGNAL — THIS platform's own realized sales: "${b.segment}" has recently SOLD here for a median of $${Math.round(b.medianCents / 100)}${b.p25Cents != null && b.p75Cents != null ? ` (typical range $${Math.round(b.p25Cents / 100)}–$${Math.round(b.p75Cents / 100)})` : ""}, across ${b.txnCount} real sales on ${b.storeCount}+ stores. These are actual sales on the exact marketplace this item will list on — weight them ABOVE external asking prices and keep marketCents near this range unless this specific piece is clearly a different caliber or condition.`
+ : "";
  const list = comps.map((c, i) => `${i}. [${c.sold ? "SOLD" : "asking"}] $${(c.priceCents / 100).toFixed(0)} — ${c.title.slice(0, 90)} (${c.source})`).join("\n");
- const prompt = `Item being priced: "${query}".${idLine}\n\nCandidate resale comps found online:\n${list}\n\nReturn ONLY JSON: {"marketCents": int, "lowCents": int, "highCents": int, "confidence": 0..1, "keptIndices": int[], "rationale": string}.\nRules:\n- Keep ONLY TRUE comparables: the SAME designer at a similar caliber, a similar garment and era, roughly the photographed condition. Discard fast-fashion, unrelated/diffusion brands, different garments, parts/accessories, wild outliers — never use them as an anchor, ceiling, or floor.\n- ANCHOR TO THE REAL COMPS. When 2+ true comparables exist, marketCents MUST sit within their realistic range — around the typical/median, NOT the single highest one. A boutique-vintage or SOLD price (e.g. a real shop's listing) reflects true market; do not price far above it.\n- ASKING vs SOLD: authenticated-luxury ASKING prices (The RealReal, Vestiaire, 1stDibs, Farfetch, The Luxury Closet) are ASPIRATIONAL and often sit unsold — treat them as a CEILING reference, NOT the target, and NEVER anchor marketCents to the highest asking. Weight actual SOLD prices and realistic shop/marketplace listings most. eBay/Depop/Poshmark are the quick-sale floor.\n- ONLY IF there are essentially NO true comps (truly rare/archival, nothing comparable) may you price from expert knowledge of where this exact piece sells — realistic, not aspirational; don't lowball to fast-fashion, but don't invent a luxury wish-price either. Set confidence ≈0.4.\n- DEMAND / TREND: a sought-after designer/era earns only a MODEST premium — at most ~10-15%, and only when the comps support it. A demand-momentum percentage is NOT a price-increase percentage: NEVER multiply the price by it.${ctx?.trend ? ` Demand note: ${ctx.trend} — apply at most a small nudge, not a large one.` : ""}\n- marketCents = the realistic price this actually SELLS for (what a smart reseller lists to move it), NOT a wish price; lowCents = quick-sale, highCents = a patient strong-demand ceiling; keptIndices = the true comps relied on; rationale = one brief sentence.`;
+ const prompt = `Item being priced: "${query}".${idLine}${benchLine}\n\nCandidate resale comps found online:\n${list}\n\nReturn ONLY JSON: {"marketCents": int, "lowCents": int, "highCents": int, "confidence": 0..1, "keptIndices": int[], "rationale": string}.\nRules:\n- Keep ONLY TRUE comparables: the SAME designer at a similar caliber, a similar garment and era, roughly the photographed condition. Discard fast-fashion, unrelated/diffusion brands, different garments, parts/accessories, wild outliers — never use them as an anchor, ceiling, or floor.\n- ANCHOR TO THE REAL COMPS. When 2+ true comparables exist, marketCents MUST sit within their realistic range — around the typical/median, NOT the single highest one. A boutique-vintage or SOLD price (e.g. a real shop's listing) reflects true market; do not price far above it.\n- ASKING vs SOLD: authenticated-luxury ASKING prices (The RealReal, Vestiaire, 1stDibs, Farfetch, The Luxury Closet) are ASPIRATIONAL and often sit unsold — treat them as a CEILING reference, NOT the target, and NEVER anchor marketCents to the highest asking. Weight actual SOLD prices and realistic shop/marketplace listings most. eBay/Depop/Poshmark are the quick-sale floor.\n- ONLY IF there are essentially NO true comps (truly rare/archival, nothing comparable) may you price from expert knowledge of where this exact piece sells — realistic, not aspirational; don't lowball to fast-fashion, but don't invent a luxury wish-price either. Set confidence ≈0.4.\n- DEMAND / TREND: a sought-after designer/era earns only a MODEST premium — at most ~10-15%, and only when the comps support it. A demand-momentum percentage is NOT a price-increase percentage: NEVER multiply the price by it.${ctx?.trend ? ` Demand note: ${ctx.trend} — apply at most a small nudge, not a large one.` : ""}\n- marketCents = the realistic price this actually SELLS for (what a smart reseller lists to move it), NOT a wish price; lowCents = quick-sale, highCents = a patient strong-demand ceiling; keptIndices = the true comps relied on; rationale = one brief sentence.`;
  const content: any[] = [];
  if (photoUrl) content.push({ type: "image", source: { type: "url", url: photoUrl } });
  content.push({ type: "text", text: prompt });
@@ -109,7 +115,14 @@ export async function estimatePrice(opts: {
  extraComps?: Comp[]; // reverse-image (visually-identical) matches — the strongest comps
  context?: { brand?: string | null; era?: string | null; runway?: string | null; trend?: string | null }; // the identified piece + live demand signal, for knowledge/trend-aware valuation
 }): Promise<PriceEstimate> {
- const fetched = await fetchComps(opts.query).catch(() => []);
+ // Fetch external comps and THIS platform's own realized-price benchmark together. The
+ // internal benchmark (privacy-gated, from the nightly market_metrics) is the strongest
+ // signal — actual sales on our marketplace for this brand/category.
+ const category = inferCategoryFromTitle(opts.query) as string;
+ const [fetched, benchmark] = await Promise.all([
+ fetchComps(opts.query).catch(() => []),
+ getInternalPriceBenchmark({ brand: opts.context?.brand, category }).catch(() => null),
+ ]);
  // Reverse-image matches first (they're the exact piece), then searched comps. Dedupe,
  // keep authenticated-luxury sources ahead of fast-sale marketplaces, and cap the set.
  const PREMIUM = /real\s?real|vestiaire|fashionphile|rebag|luxury\s?closet|1st\s?dibs|farfetch/i;
@@ -121,8 +134,15 @@ export async function estimatePrice(opts: {
  let marketCents: number | null = null, low: number | null = null, high: number | null = null, confidence = 0, rationale = "", kept: Comp[] = [];
 
  if (comps.length) {
- const v = await valueFromComps(opts.query, opts.photoUrl, comps, { ...opts.context, knowledgeHintCents: opts.knowledgeHintCents });
+ const v = await valueFromComps(opts.query, opts.photoUrl, comps, { ...opts.context, knowledgeHintCents: opts.knowledgeHintCents, internalBenchmark: benchmark });
  marketCents = v.marketCents; low = v.low; high = v.high; confidence = v.confidence; rationale = v.rationale; kept = v.kept;
+ } else if (benchmark) {
+ // No external comps — anchor to our own realized sold prices for this brand/category.
+ marketCents = benchmark.medianCents;
+ low = benchmark.p25Cents;
+ high = benchmark.p75Cents;
+ confidence = 0.5;
+ rationale = `Based on ${benchmark.segment}'s recent sold prices on VYA — median across ${benchmark.txnCount} sales on ${benchmark.storeCount}+ stores.`;
  } else if (opts.knowledgeHintCents && opts.knowledgeHintCents > 0) {
  marketCents = opts.knowledgeHintCents;
  confidence = 0.3;
@@ -136,6 +156,7 @@ export async function estimatePrice(opts: {
  if (suggestedCents > 0) {
  if (floorCents && suggestedCents === floorCents && (marketCents == null || floorCents >= marketCents)) source = "floor";
  else if (comps.length) source = "comps";
+ else if (benchmark && marketCents === benchmark.medianCents) source = "benchmark";
  else source = "knowledge";
  }
 
