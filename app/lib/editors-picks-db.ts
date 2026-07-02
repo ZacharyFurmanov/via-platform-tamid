@@ -274,6 +274,7 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
  if (!dbUrl) return [];
  const sql = neon(dbUrl);
 
+ try {
  const rows = await sql`
  SELECT
  p.id AS product_id,
@@ -316,6 +317,12 @@ export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct
  externalUrl: r.external_url as string | null,
  },
  }));
+ } catch (error) {
+ // A query failure during prerender (e.g. Neon out-of-memory under the parallel build
+ // workers) must not crash the homepage — degrade to empty like the other homepage fetches.
+ console.error("Failed to fetch everyone's favorites:", error);
+ return [];
+ }
 }
 
 /** Collection slug for the hand-picked weekly New Arrivals email. NOT a public
