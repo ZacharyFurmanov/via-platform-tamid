@@ -103,6 +103,18 @@
     {
       "path": "/api/cron/check-saved-searches",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron/build-events",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/build-market-metrics",
+      "schedule": "30 8 * * *"
+    },
+    {
+      "path": "/api/cron/data-layer-snapshot",
+      "schedule": "0 9 * * *"
     }
   ]
 }
