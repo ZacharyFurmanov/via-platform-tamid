@@ -646,7 +646,11 @@ export async function getProductsByTitleKeyword(
  * maxPerStore caps results per store for diversity (use 2 for homepage carousel, large number for full page).
  */
 const _getNewArrivalsUncached = async (limit: number, days: number, maxPerStore = 2): Promise<DBProduct[]> => {
- const sql = neon(getDatabaseUrl());
+ // Degrade to empty when no DB is configured (e.g. a preview build without DATABASE_URL),
+ // so the ISR homepage can still prerender instead of crashing the build.
+ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!dbUrl) return [];
+ const sql = neon(dbUrl);
  try {
  const result = await sql`
  WITH click_counts AS (
