@@ -35,8 +35,9 @@ export default function BuyNowButton({
  const raw = localStorage.getItem("via_utm");
  if (raw) {
  const parsed = JSON.parse(raw);
- if (parsed.utm_source && parsed.expires_at > Date.now()) {
- params.set("us", parsed.utm_source);
+ if (parsed.expires_at > Date.now()) {
+ if (parsed.utm_source) params.set("us", parsed.utm_source);
+ if (parsed.utm_medium) params.set("um", parsed.utm_medium);
  }
  }
  } catch {}

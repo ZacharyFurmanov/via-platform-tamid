@@ -42,6 +42,33 @@ export type BrandHeatIndex = {
  brands: BrandHeat[];
 };
 
+// A brand's live demand trend on VYA, for the pricing engine. The Heat Index is a
+// cross-store aggregate that's expensive to compute, so cache it for an hour — the
+// intake path hits this per listing.
+export type BrandTrend = { brand: string; rank: number; momentumPct: number | null; trending: boolean; note: string };
+let _heatCache: { at: number; index: BrandHeatIndex } | null = null;
+
+export async function getBrandTrend(brand: string): Promise<BrandTrend | null> {
+ if (!brand || !brand.trim()) return null;
+ const now = Date.now();
+ if (!_heatCache || now - _heatCache.at > 60 * 60 * 1000) {
+ try { _heatCache = { at: now, index: await getBrandHeatIndex(30, 200) }; }
+ catch { return null; }
+ }
+ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+ const b = norm(brand);
+ if (b.length < 3) return null;
+ const brands = _heatCache.index.brands;
+ const hit = brands.find((x) => norm(x.brand) === b) || brands.find((x) => { const n = norm(x.brand); return n.includes(b) || b.includes(n); });
+ if (!hit) return null;
+ const trending = hit.isBreakout || (hit.momentumPct != null && hit.momentumPct >= 15) || (hit.rankDelta != null && hit.rankDelta >= 3);
+ const parts: string[] = [];
+ if (hit.momentumPct != null) parts.push(`${hit.momentumPct >= 0 ? "+" : ""}${hit.momentumPct}% demand vs prior 30d`);
+ parts.push(`#${hit.rank} on VYA`);
+ if (hit.isBreakout) parts.push("breakout");
+ return { brand: hit.brand, rank: hit.rank, momentumPct: hit.momentumPct, trending, note: parts.join(", ") };
+}
+
 type Acc = { vC: number; vP: number; fC: number; fP: number; sC: number; sP: number; soldC: number; soldP: number; gmv: number };
 
 export async function getBrandHeatIndex(periodDays = 30, limit = 50): Promise<BrandHeatIndex> {

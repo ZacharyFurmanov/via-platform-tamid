@@ -1,0 +1,453 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Camera, Sparkles } from "lucide-react";
+import { Card, Button, cn } from "@/app/store/ui";
+
+type Field = { value: string | null; confidence: number };
+type Draft = {
+ title: string;
+ description: string;
+ brand: Field;
+ era: Field;
+ material: Field;
+ condition: Field;
+ category: string | null;
+ careTag: string | null;
+ runway: string | null;
+ priceHint: number | null;
+ parcel: { weightOz: number; lengthIn: number; widthIn: number; heightIn: number };
+};
+type Form = { title: string; brand: string; era: string; material: string; condition: string; size: string; category: string; price: string; cost: string; description: string; weightOz: string; lengthIn: string; widthIn: string; heightIn: string };
+type Collection = { id: string; title: string; itemCount: number };
+const BLANK: Form = { title: "", brand: "", era: "", material: "", condition: "", size: "", category: "", price: "", cost: "", description: "", weightOz: "", lengthIn: "", widthIn: "", heightIn: "" };
+
+const RISKY = ["brand", "era", "material"] as const;
+const THRESHOLD = 0.75;
+
+const input = "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-[13px] text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-stone-400 focus:ring-2 focus:ring-stone-900/[0.06]";
+const label = "mb-1.5 block text-[12px] font-medium text-stone-700";
+
+// Build the Vogue Runway show URL from a runway match like "Roberto Cavalli F/W 2000"
+// or "Tom Ford for Gucci S/S 2003". Falls back to a search if it can't parse cleanly.
+function runwayShowUrl(runway: string): string {
+ const low = runway.toLowerCase();
+ const year = runway.match(/\b(19|20)\d{2}\b/)?.[0];
+ const season = /(s\/s|\bss\b|spring|summer)/.test(low) ? "spring"
+ : /(f\/w|a\/w|\bfw\b|\baw\b|fall|autumn|winter)/.test(low) ? "fall"
+ : /(resort|cruise)/.test(low) ? "resort"
+ : /pre-?fall/.test(low) ? "pre-fall" : "";
+ const type = /couture/.test(low) ? "couture" : "ready-to-wear";
+ // Designer = the fashion house: text after "for" (e.g. Tom Ford FOR Gucci), else the
+ // whole string with season/year tokens stripped.
+ const forIdx = low.indexOf(" for ");
+ const designer = (forIdx >= 0 ? runway.slice(forIdx + 5) : runway)
+ .replace(/\b(19|20)\d{2}\b/g, " ")
+ .replace(/s\/s|f\/w|a\/w|p\/f/gi, " ")
+ .replace(/\b(ss|fw|aw|pf|spring|summer|fall|autumn|winter|resort|cruise|couture|pre-?fall|ready-?to-?wear|rtw|menswear|runway|collection|show)\b/gi, " ")
+ .replace(/[^a-z0-9]+/gi, " ")
+ .trim();
+ const slug = designer.toLowerCase().replace(/\s+/g, "-");
+ if (year && season && slug) return `https://www.vogue.com/fashion-shows/${season}-${year}-${type}/${slug}`;
+ return `https://www.google.com/search?q=${encodeURIComponent(`${runway} vogue runway`)}`;
+}
+
+// Google-Flights-style price scale: where the seller's price sits on the low→high
+// resale range, with the AI's recommendation marked.
+function PriceScale({ low, high, market, value }: { low: number; high: number; market: number | null; value: number }) {
+ const span = Math.max(1, high - low);
+ const pos = (v: number) => `${Math.max(0, Math.min(1, (v - low) / span)) * 100}%`;
+ const mid = market ?? (low + high) / 2;
+ const verdict = value <= 0 ? null
+ : value < low * 0.98 ? { t: "Below market", c: "text-amber-600" }
+ : value > high * 1.02 ? { t: "Above market", c: "text-red-600" }
+ : market && Math.abs(value - market) / market < 0.06 ? { t: "Market rate", c: "text-emerald-600" }
+ : value < mid ? { t: "Good value", c: "text-emerald-600" }
+ : { t: "Premium", c: "text-stone-600" };
+ return (
+ <div className="mt-2">
+ <div className="relative h-2 rounded-full" style={{ background: "linear-gradient(90deg,#10b98155,#f59e0b55,#ef444455)" }}>
+ {market != null && <div className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-stone-900 shadow" style={{ left: pos(market) }} title={`AI rec $${market.toLocaleString()}`} />}
+ {value > 0 && <div className="absolute -top-1 h-4 w-[3px] -translate-x-1/2 rounded bg-[#5D0F17]" style={{ left: pos(value) }} title={`Your price $${value.toLocaleString()}`} />}
+ </div>
+ <div className="mt-1.5 flex items-center justify-between text-[10px] text-stone-400">
+ <span>${low.toLocaleString()} <span className="text-stone-300">quick sale</span></span>
+ {verdict && <span className={cn("font-semibold", verdict.c)}>{verdict.t}</span>}
+ <span>${high.toLocaleString()} <span className="text-stone-300">top demand</span></span>
+ </div>
+ </div>
+ );
+}
+
+export default function IntakePage() {
+ const [phase, setPhase] = useState<"form" | "done">("form");
+ const [photos, setPhotos] = useState<string[]>([]);
+ const [runway, setRunway] = useState<string | null>(null);
+ const [ghost, setGhost] = useState<string | null>(null);
+ const [busy, setBusy] = useState(false);
+ const [busyMsg, setBusyMsg] = useState("");
+ const [savedDraft, setSavedDraft] = useState(false);
+ const [dragOver, setDragOver] = useState(false);
+ const [err, setErr] = useState<string | null>(null);
+ const [form, setForm] = useState<Form>(BLANK);
+ const [flagged, setFlagged] = useState<string[]>([]);
+ const [confirmed, setConfirmed] = useState<Record<string, boolean>>({});
+ const [careTag, setCareTag] = useState<string | null>(null);
+ const [reverseImage, setReverseImage] = useState<{ matches: number; brand: string | null; hits: number; sampleTitles: string[] } | null>(null);
+ const [promptVersion, setPromptVersion] = useState<string | null>(null);
+ const [cols, setCols] = useState<Collection[]>([]);
+ const [selectedCols, setSelectedCols] = useState<string[]>([]);
+ const [newCol, setNewCol] = useState("");
+ const fileRef = useRef<HTMLInputElement>(null);
+ const dragIdx = useRef<number | null>(null);
+ const [markupPct, setMarkupPct] = useState<number | null>(null);
+ const [aiDraft, setAiDraft] = useState<Record<string, string | null>>({});
+ const [embedding, setEmbedding] = useState<number[] | null>(null);
+ const [marketPrice, setMarketPrice] = useState<number | null>(null);
+ const [rawMarketCents, setRawMarketCents] = useState<number | null>(null);
+ const [priceNote, setPriceNote] = useState<string>("");
+ const [priceLow, setPriceLow] = useState<number | null>(null);
+ const [priceHigh, setPriceHigh] = useState<number | null>(null);
+
+ // Load the store's markup-over-cost setting so entering cost auto-fills price; and
+ // the store's collections for tagging.
+ useEffect(() => {
+ fetch("/api/store/pricing").then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && typeof d.minMarkupPct === "number") setMarkupPct(d.minMarkupPct); }).catch(() => {});
+ fetch("/api/store/collections").then((r) => (r.ok ? r.json() : null)).then((c) => c && setCols(c.collections || [])).catch(() => {});
+ }, []);
+
+ function set<K extends keyof Form>(k: K, v: string) {
+ setForm((f) => ({ ...f, [k]: v }));
+ if ((RISKY as readonly string[]).includes(k)) setConfirmed((c) => ({ ...c, [k]: true })); // editing = reviewed
+ }
+
+ function reorderPhoto(from: number, to: number) {
+ if (from === to) return;
+ setPhotos((ps) => { const a = [...ps]; const [m] = a.splice(from, 1); a.splice(to, 0, m); return a; });
+ }
+
+ // Typing cost auto-fills price at the store's markup: price = cost × (1 + markup%).
+ function onCostChange(raw: string) {
+ const cost = raw.replace(/[^0-9.]/g, "");
+ setForm((f) => {
+ const next = { ...f, cost };
+ const c = parseFloat(cost);
+ if (Number.isFinite(c) && c > 0) {
+ const floor = markupPct != null ? Math.round(c * (1 + markupPct / 100)) : 0;
+ const best = Math.max(marketPrice ?? 0, floor);
+ if (best > 0) next.price = String(best);
+ }
+ return next;
+ });
+ }
+
+ // Upload photos only — AI is a separate, on-demand step ("Fill the rest with AI").
+ async function onPick(files: FileList | File[] | null) {
+ if (!files) return;
+ const list = Array.from(files).filter((f) => !f.type || f.type.startsWith("image/")).slice(0, 8);
+ if (!list.length) return;
+ setBusy(true);
+ setBusyMsg(list.length > 1 ? `Uploading ${list.length} photos…` : "Uploading…");
+ setErr(null);
+ try {
+ const urls = [...photos];
+ for (const file of list) {
+ const fd = new FormData();
+ fd.append("file", file);
+ const up = await fetch("/api/store/listings/upload", { method: "POST", body: fd });
+ const ud = await up.json();
+ if (!up.ok) throw new Error(ud.error || "Upload failed");
+ urls.push(ud.url);
+ }
+ setPhotos(urls.slice(0, 8));
+ } catch (e) {
+ setErr(e instanceof Error ? e.message : "Something went wrong");
+ }
+ setBusy(false);
+ }
+
+ // Fill ONLY the blank fields with AI — whatever the seller typed is kept and tells
+ // the server to skip that work (a typed price skips the valuation call entirely).
+ async function fillWithAI() {
+ if (!photos.length) { setErr("Add at least one photo first."); return; }
+ setBusy(true);
+ setBusyMsg("Filling the blanks…");
+ setErr(null);
+ try {
+ const filled: Record<string, string> = {};
+ (Object.keys(form) as (keyof Form)[]).forEach((k) => { const v = String(form[k]).trim(); if (v) filled[k] = v; });
+ const r = await fetch("/api/store/intake", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ imageUrls: photos, filled }),
+ });
+ const d = await r.json();
+ if (!r.ok) { setErr(d.error || "Couldn’t fill the listing."); setBusy(false); return; }
+
+ const dr: Draft | null = d.draft || null;
+ const est = d.estimate;
+ if (d.ghostUrl) setGhost(d.ghostUrl);
+ if (Array.isArray(d.embedding)) setEmbedding(d.embedding);
+ setReverseImage(d.reverseImage || null);
+ setPromptVersion(d.promptVersion || null);
+ if (est?.suggestedCents) setMarketPrice(Math.round(est.suggestedCents / 100));
+ if (typeof est?.marketCents === "number") setRawMarketCents(est.marketCents);
+ if (typeof est?.rationale === "string") setPriceNote(est.rationale);
+ setPriceLow(typeof est?.lowCents === "number" ? Math.round(est.lowCents / 100) : null);
+ setPriceHigh(typeof est?.highCents === "number" ? Math.round(est.highCents / 100) : null);
+ if (dr?.careTag) setCareTag(dr.careTag);
+ if (dr?.runway) setRunway(dr.runway);
+
+ // Flag risky fields the AI filled (were blank) with low confidence — before merge.
+ if (dr) {
+ const flags = RISKY.filter((k) => {
+ if (String(form[k]).trim()) return false; // seller already filled it → trusted
+ const fld = dr[k];
+ return !!fld && (!fld.value || fld.confidence < THRESHOLD);
+ });
+ setFlagged(flags);
+ setConfirmed({});
+ // Record the AI's proposal ONLY for fields the seller left blank (a genuine prediction).
+ // Pre-typed fields aren't the AI's guess → excluded, keeping the accuracy metric honest.
+ { const predicted: Record<string, string | null> = {};
+ ([["title", dr.title], ["brand", dr.brand?.value], ["era", dr.era?.value], ["material", dr.material?.value], ["condition", dr.condition?.value], ["category", dr.category], ["description", dr.description]] as [keyof Form, string | null | undefined][])
+ .forEach(([k, aiVal]) => { if (!String(form[k]).trim() && aiVal) predicted[k] = aiVal; });
+ setAiDraft(predicted); }
+ }
+
+ // Merge — only ever fill EMPTY fields; never overwrite what the seller typed.
+ setForm((f) => {
+ const next = { ...f };
+ const fill = (k: keyof Form, v: string | null | undefined) => { if (!String(next[k]).trim() && v) next[k] = String(v); };
+ if (dr) {
+ fill("title", dr.title);
+ fill("brand", dr.brand?.value);
+ fill("era", dr.era?.value);
+ fill("material", dr.material?.value);
+ fill("condition", dr.condition?.value);
+ fill("category", dr.category);
+ fill("description", dr.description);
+ if (dr.parcel) { fill("weightOz", String(dr.parcel.weightOz)); fill("lengthIn", String(dr.parcel.lengthIn)); fill("widthIn", String(dr.parcel.widthIn)); fill("heightIn", String(dr.parcel.heightIn)); }
+ }
+ if (est?.suggestedCents) fill("price", String(Math.round(est.suggestedCents / 100)));
+ else if (dr?.priceHint) fill("price", String(dr.priceHint));
+ return next;
+ });
+ } catch (e) {
+ setErr(e instanceof Error ? e.message : "Something went wrong");
+ }
+ setBusy(false);
+ }
+
+ const allConfirmed = flagged.every((k) => confirmed[k]);
+
+ async function publish(status: "active" | "draft" = "active") {
+ if (!form.title.trim()) { setErr("Add a title first."); return; }
+ if (!photos.length) { setErr("Add at least one photo."); return; }
+ if (status === "active" && !allConfirmed) { setErr("Confirm the flagged fields first."); return; }
+ setBusy(true);
+ setBusyMsg(status === "draft" ? "Saving draft…" : "Publishing…");
+ setErr(null);
+ try {
+ const images = [ghost, ...photos].filter(Boolean);
+ const r = await fetch("/api/store/intake/publish", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ ...form, status, price: Number(form.price) || 0, cost: form.cost === "" ? null : Number(form.cost) || 0, collections: selectedCols, images, aiDraft, photo: photos[0] ?? null, embedding, marketCents: rawMarketCents, runway, reverseImage, promptVersion, reviewed: allConfirmed }),
+ });
+ const d = await r.json();
+ if (!r.ok) throw new Error(d.error || "Publish failed");
+ setSavedDraft(status === "draft");
+ setPhase("done");
+ } catch (e) {
+ setErr(e instanceof Error ? e.message : "Publish failed");
+ }
+ setBusy(false);
+ }
+
+ function reset() {
+ setPhase("form"); setPhotos([]); setRunway(null); setGhost(null); setForm(BLANK);
+ setSelectedCols([]); setFlagged([]); setConfirmed({}); setErr(null); setSavedDraft(false);
+ setReverseImage(null); setPromptVersion(null); setCareTag(null); setMarketPrice(null); setRawMarketCents(null); setPriceNote(""); setPriceLow(null); setPriceHigh(null); setAiDraft({}); setEmbedding(null);
+ }
+
+ // ── Done ──
+ if (phase === "done") {
+ return (
+ <div className="flex min-h-screen items-center justify-center px-6 text-center">
+ <div>
+ <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">✓</div>
+ <p className="text-xl font-semibold text-stone-900">{savedDraft ? "Saved as draft" : "Listed"}</p>
+ <p className="mt-1 text-sm text-stone-500">{savedDraft ? "It’s in your inventory — publish it (or the whole drop) when you’re ready." : "It’s live on your storefront."}</p>
+ <div className="mt-6 flex items-center justify-center gap-3">
+ <Button onClick={reset}>List another</Button>
+ <Button variant="secondary" onClick={() => { window.location.href = "/infrastructure/admin/inventory"; }}>View inventory</Button>
+ </div>
+ </div>
+ </div>
+ );
+ }
+
+ const riskyField = (k: keyof Form, name: string) => {
+ const isFlagged = flagged.includes(k as string);
+ return (
+ <div>
+ <label className={label}>
+ {name}
+ {isFlagged && <span className="ml-2 text-[11px] font-normal text-amber-600">● AI unsure — confirm</span>}
+ </label>
+ <input className={cn(input, isFlagged && !confirmed[k] && "border-amber-400 bg-amber-50/50")} value={form[k]} onChange={(e) => set(k, e.target.value)} />
+ {isFlagged && (
+ <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-500">
+ <input type="checkbox" checked={!!confirmed[k]} onChange={(e) => setConfirmed((c) => ({ ...c, [k]: e.target.checked }))} className="accent-[#5D0F17]" />
+ Confirmed
+ </label>
+ )}
+ </div>
+ );
+ };
+
+ // ── Manual-first form ──
+ return (
+ <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
+ <h1 className="text-[22px] font-semibold tracking-[-0.01em] text-stone-900">Add a listing</h1>
+ <p className="mb-5 mt-1 text-[13px] text-stone-500">Add photos and fill in what you know — then let AI complete the rest. Anything you type, it keeps.</p>
+
+ {reverseImage && (
+ reverseImage.brand
+ ? <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-[12px] text-emerald-800">🔍 Reverse image search identified <span className="font-semibold">{reverseImage.brand}</span> from {reverseImage.hits} of {reverseImage.matches} web matches{reverseImage.sampleTitles[0] ? <span className="text-emerald-700/80"> — e.g. “{reverseImage.sampleTitles[0].slice(0, 70)}”</span> : null}.</div>
+ : <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-[12px] text-amber-800">🔍 Reverse image search found {reverseImage.matches} web {reverseImage.matches === 1 ? "match" : "matches"} but no confident brand{reverseImage.sampleTitles[0] ? <span className="text-amber-700/80"> — e.g. “{reverseImage.sampleTitles[0].slice(0, 70)}”</span> : null}. Confirm the brand below.</div>
+ )}
+
+ <div className="grid gap-6 sm:grid-cols-[240px_1fr]">
+ {/* Photos + AI */}
+ <div>
+ {photos.length ? (
+ <>
+ <Card className="overflow-hidden">
+ <div className="aspect-[3/4] w-full bg-stone-100">
+ {/* eslint-disable-next-line @next/next/no-img-element */}
+ <img src={ghost || photos[0]} alt="" className="h-full w-full object-cover" />
+ </div>
+ </Card>
+ <p className="mt-2 text-[11px] uppercase tracking-[0.08em] text-stone-400">{ghost ? "Ghost-mannequin cover" : "Your photo"}</p>
+ <div className="mt-2 flex flex-wrap gap-1.5">
+ {photos.map((p, i) => (
+ <div
+ key={p}
+ draggable
+ onDragStart={() => { dragIdx.current = i; }}
+ onDragOver={(e) => e.preventDefault()}
+ onDrop={() => { if (dragIdx.current !== null) reorderPhoto(dragIdx.current, i); dragIdx.current = null; }}
+ className="group relative h-12 w-10 cursor-grab active:cursor-grabbing"
+ title="Drag to reorder"
+ >
+ {/* eslint-disable-next-line @next/next/no-img-element */}
+ <img src={p} alt="" className="h-full w-full rounded object-cover ring-1 ring-stone-200" />
+ {i === 0 && !ghost && <span className="absolute -left-1 -top-1 rounded bg-[#5D0F17] px-1 text-[8px] leading-tight text-white">cover</span>}
+ <button type="button" onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))} className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-black/70 text-[10px] leading-none text-white group-hover:flex" aria-label="Remove">×</button>
+ </div>
+ ))}
+ {photos.length < 8 && (
+ <button type="button" onClick={() => fileRef.current?.click()} disabled={busy} className="flex h-12 w-10 items-center justify-center rounded border border-dashed border-stone-300 text-stone-400 hover:border-stone-400 hover:text-stone-600">+</button>
+ )}
+ </div>
+ {photos.length > 1 && <p className="mt-1 text-[10px] text-stone-400">Drag to reorder{ghost ? "" : " · first is the cover"}</p>}
+ </>
+ ) : (
+ <div
+ onDragOver={(e) => { e.preventDefault(); if (!busy) setDragOver(true); }}
+ onDragEnter={(e) => { e.preventDefault(); if (!busy) setDragOver(true); }}
+ onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+ onDrop={(e) => { e.preventDefault(); setDragOver(false); if (!busy) onPick(e.dataTransfer.files); }}
+ onClick={() => !busy && fileRef.current?.click()}
+ className={cn("flex aspect-[3/4] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 text-center transition-colors", dragOver ? "border-[#5D0F17] bg-[#5D0F17]/[0.04]" : "border-stone-300 hover:border-stone-400")}
+ >
+ <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#5D0F17]/[0.07] text-[#5D0F17]"><Camera size={20} /></span>
+ <p className="text-[13px] font-medium text-stone-700">{busy ? busyMsg : "Add photos"}</p>
+ <p className="mt-1 text-[11px] text-stone-400">or drag here · up to 8</p>
+ </div>
+ )}
+
+ {runway && <p className="mt-3 text-[12px] text-stone-600">🎬 Runway match: <a href={runwayShowUrl(runway)} target="_blank" rel="noopener noreferrer" className="font-medium underline decoration-stone-300 underline-offset-2 hover:decoration-stone-600">{runway}</a> <span className="text-stone-400">↗ view show</span></p>}
+ {careTag && <p className="mt-3 text-[12px] text-stone-500">Read from care tag: <span className="italic">{careTag}</span></p>}
+
+ <Button className="mt-4 w-full" variant="secondary" onClick={fillWithAI} disabled={busy || !photos.length}>
+ <Sparkles size={14} className="mr-1.5 inline" />{busy ? busyMsg : "Fill the rest with AI"}
+ </Button>
+ <p className="mt-1.5 text-[11px] text-stone-400">Only fills blanks. Set a price and it skips the pricing AI.</p>
+
+ <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => onPick(e.target.files)} />
+ </div>
+
+ {/* Fields */}
+ <Card className="space-y-4 p-5">
+ <div>
+ <label className={label}>Title</label>
+ <input className={input} value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. 1990s Prada nylon shoulder bag" />
+ </div>
+ <div className="grid grid-cols-2 gap-3">{riskyField("brand", "Brand")}{riskyField("era", "Era")}</div>
+ <div className="grid grid-cols-2 gap-3">{riskyField("material", "Material")}
+ <div>
+ <label className={label}>Condition</label>
+ <input className={input} value={form.condition} onChange={(e) => set("condition", e.target.value)} />
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ <div><label className={label}>Size</label><input className={input} value={form.size} onChange={(e) => set("size", e.target.value)} placeholder="M / US 8" /></div>
+ <div><label className={label}>Category</label><input className={input} value={form.category} onChange={(e) => set("category", e.target.value)} /></div>
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ <div><label className={label}>Price ($)</label><input className={input} value={form.price} onChange={(e) => set("price", e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="You set it, or AI estimates" />{(priceNote || (markupPct != null && form.cost)) && <p className="mt-1 text-[10px] text-stone-400">{priceNote || `auto · ${markupPct}% over cost`}</p>}</div>
+ <div><label className={label}>Cost ($) <span className="font-normal text-stone-400">— private</span></label><input className={input} value={form.cost} onChange={(e) => onCostChange(e.target.value)} inputMode="decimal" placeholder="What you paid" /></div>
+ </div>
+ {priceLow != null && priceHigh != null && priceHigh > priceLow && (
+ <PriceScale low={priceLow} high={priceHigh} market={marketPrice} value={Number(form.price) || 0} />
+ )}
+ <div>
+ <label className={label}>Shipping parcel <span className="font-normal text-stone-400">— AI-estimated, edit if needed</span></label>
+ <div className="grid grid-cols-4 gap-2">
+ <div><input className={input} value={form.weightOz} onChange={(e) => set("weightOz", e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="oz" /><p className="mt-1 text-center text-[10px] text-stone-400">weight oz</p></div>
+ <div><input className={input} value={form.lengthIn} onChange={(e) => set("lengthIn", e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="L" /><p className="mt-1 text-center text-[10px] text-stone-400">length in</p></div>
+ <div><input className={input} value={form.widthIn} onChange={(e) => set("widthIn", e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="W" /><p className="mt-1 text-center text-[10px] text-stone-400">width in</p></div>
+ <div><input className={input} value={form.heightIn} onChange={(e) => set("heightIn", e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="H" /><p className="mt-1 text-center text-[10px] text-stone-400">height in</p></div>
+ </div>
+ </div>
+ <div>
+ <label className={label}>Description</label>
+ <textarea className={cn(input, "min-h-[80px] resize-y")} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Write it yourself, or leave blank and AI drafts it" />
+ </div>
+
+ <div>
+ <label className={label}>Collections <span className="font-normal text-stone-400">— group it so it sells</span></label>
+ <div className="flex flex-wrap gap-2">
+ {cols.map((c) => {
+ const on = selectedCols.includes(c.title);
+ return (
+ <button key={c.id} type="button" onClick={() => setSelectedCols((s) => (on ? s.filter((t) => t !== c.title) : [...s, c.title]))}
+ className={cn("rounded-full border px-3 py-1.5 text-xs transition", on ? "border-[#5D0F17] bg-[#5D0F17] text-white" : "border-stone-300 bg-white text-stone-600 hover:border-stone-400")}>
+ {c.title}{c.itemCount ? ` ${c.itemCount}` : ""}
+ </button>
+ );
+ })}
+ {selectedCols.filter((t) => !cols.some((c) => c.title === t)).map((t) => (
+ <button key={t} type="button" onClick={() => setSelectedCols((s) => s.filter((x) => x !== t))}
+ className="rounded-full border border-[#5D0F17] bg-[#5D0F17] px-3 py-1.5 text-xs text-white">{t} ✕</button>
+ ))}
+ </div>
+ <input className={cn(input, "mt-2")} value={newCol} onChange={(e) => setNewCol(e.target.value)}
+ onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const t = newCol.trim(); if (t && !selectedCols.includes(t)) setSelectedCols((s) => [...s, t]); setNewCol(""); } }}
+ placeholder="New collection — type &amp; Enter (Y2K, Designer bags…)" />
+ </div>
+
+ <div className="flex items-center gap-4 border-t border-stone-100 pt-4">
+ <Button onClick={() => publish("active")} disabled={busy || !allConfirmed}>{busy ? busyMsg : "Publish listing"}</Button>
+ <Button variant="secondary" onClick={() => publish("draft")} disabled={busy || !form.title.trim()}>Save as draft</Button>
+ {!allConfirmed && <span className="text-[11px] text-amber-600">Confirm the flagged fields to publish — or save as a draft for now</span>}
+ {err && <span className="text-xs text-red-600">{err}</span>}
+ </div>
+ </Card>
+ </div>
+ </div>
+ );
+}

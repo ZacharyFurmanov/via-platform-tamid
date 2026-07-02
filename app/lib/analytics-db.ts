@@ -84,6 +84,8 @@ export async function initAnalyticsTables() {
  // Migration: store UTM source on clicks for source attribution
  await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS utm_source TEXT`;
  await sql`CREATE INDEX IF NOT EXISTS idx_clicks_utm_source ON clicks(utm_source) WHERE utm_source IS NOT NULL`;
+ // Migration: utm_medium too, so paid vs organic can be split (built going forward).
+ await sql`ALTER TABLE clicks ADD COLUMN IF NOT EXISTS utm_medium TEXT`;
  // Migration: conversions are always stored in USD (order_total/currency); the
  // seller's original local amount/currency is preserved here for audit.
  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS original_total NUMERIC(10,2)`;
@@ -111,6 +113,7 @@ export type ClickRecord = {
  userId?: string | null;
  cartItems?: CartItemSnapshot[];
  utmSource?: string | null;
+ utmMedium?: string | null;
 };
 
 export async function saveClick(click: ClickRecord): Promise<void> {
@@ -120,8 +123,8 @@ export async function saveClick(click: ClickRecord): Promise<void> {
  const cartItemsJson = click.cartItems ? JSON.stringify(click.cartItems) : null;
  const storeSlug = canonicalStoreSlug(click.storeSlug);
  await sql`
- INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id, cart_items, utm_source)
- VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson}, ${click.utmSource || null})
+ INSERT INTO clicks (click_id, timestamp, product_id, product_name, store, store_slug, external_url, user_agent, user_id, cart_items, utm_source, utm_medium)
+ VALUES (${click.clickId}, ${click.timestamp}, ${click.productId}, ${click.productName}, ${click.store}, ${storeSlug}, ${click.externalUrl}, ${click.userAgent || null}, ${click.userId || null}, ${cartItemsJson}, ${click.utmSource || null}, ${click.utmMedium || null})
  ON CONFLICT (click_id) DO NOTHING
  `;
 }

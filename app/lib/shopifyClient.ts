@@ -24,6 +24,7 @@ export type ShopifyProduct = {
  variantId: string | null;
  shopifyProductId: string | null;
  size: string | null;
+ tags?: string[];
 };
 
 export type ShopifyFetchResult = {
@@ -873,6 +874,7 @@ export async function fetchShopifyProductsPublic(
  variantId,
  shopifyProductId,
  size,
+ tags: productTags,
  });
  }
 
@@ -1015,6 +1017,11 @@ export async function fetchShopifyProductsByCollections(
  const isAvailable = product.available === true || anyVariantAvailable ||
  (product.available !== false && !variants.every((v: { available?: boolean }) => v.available === false));
 
+ const rawTags2 = product.tags as string[] | string | undefined;
+ const productTags = Array.isArray(rawTags2)
+ ? rawTags2.map((t) => t.toLowerCase())
+ : (rawTags2 ?? "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+
  products.push({
  title: product.title,
  price: isNaN(price as number) ? null : price,
@@ -1032,6 +1039,7 @@ export async function fetchShopifyProductsByCollections(
  variantId,
  shopifyProductId,
  size,
+ tags: productTags,
  });
  }
  }

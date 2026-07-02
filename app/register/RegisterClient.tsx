@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getBaseUrl } from "@/app/lib/base-url";
+import { acquisitionSource } from "@/app/lib/capturedSource";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -45,7 +46,7 @@ export default function RegisterClient() {
       const res = await fetch("/api/pilot-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode: referralCode || undefined, accessCode: accessCode.trim() || undefined }),
+        body: JSON.stringify({ firstName, lastName, email, phone, emailSubscribe, smsSubscribe, referralCode: referralCode || undefined, accessCode: accessCode.trim() || undefined, source: acquisitionSource("register") }),
       });
 
       const data = await res.json();

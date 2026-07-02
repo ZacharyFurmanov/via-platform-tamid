@@ -1,0 +1,137 @@
+import { NextRequest, NextResponse } from "next/server";
+import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
+import { stores, storeContactEmails } from "@/app/lib/stores";
+import { getOrCreateSeller } from "@/app/lib/db/sellers";
+import { createItem } from "@/app/lib/db/inventory";
+import { createCrossListingsForItem, syncItemToApiPlatforms } from "@/app/lib/cross-listing-db";
+import { getOrCreateCollection, setItemCollections } from "@/app/lib/db/collections";
+import { logCorrections, logPredictions, rememberItem } from "@/app/lib/intake-memory-db";
+import { recordIntakeExample } from "@/app/lib/training-data-db";
+
+export const dynamic = "force-dynamic";
+
+// POST — publish a reviewed intake draft as a live one-of-one item.
+export async function POST(request: NextRequest) {
+ const slug = await resolveStoreSlugAny(request);
+ if (!slug) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+ const body = await request.json().catch(() => null);
+ if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+
+ const title = String(body.title || "").trim().slice(0, 200);
+ if (!title) return NextResponse.json({ error: "Title is required." }, { status: 400 });
+
+ const store = stores.find((s) => s.slug === slug);
+ const seller = await getOrCreateSeller(slug, store?.name || slug, storeContactEmails[slug] || "");
+
+ const str = (v: unknown, n: number) => {
+ const s = (typeof v === "string" ? v : "").trim();
+ return s ? s.slice(0, n) : null;
+ };
+ const intOr = (v: unknown, d: number) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 ? n : d; };
+ const price = Math.max(0, Math.min(1_000_000, Number(body.price) || 0));
+ const hasCost = body.cost !== undefined && body.cost !== null && body.cost !== "";
+ const cost = Math.max(0, Math.min(1_000_000, Number(body.cost) || 0));
+ const images = Array.isArray(body.images) ? body.images.filter((x: unknown) => typeof x === "string" && x).slice(0, 8) : [];
+
+ const item = await createItem({
+ sellerId: seller.id,
+ title,
+ description: str(body.description, 2000),
+ priceCents: Math.round(price * 100),
+ costCents: hasCost ? Math.round(cost * 100) : null,
+ currency: store?.currency || "USD",
+ images,
+ brand: str(body.brand, 80),
+ era: str(body.era, 40),
+ material: str(body.material, 120),
+ condition: str(body.condition, 80),
+ size: str(body.size, 40),
+ category: str(body.category, 60),
+ weightOz: intOr(body.weightOz, 16),
+ lengthIn: intOr(body.lengthIn, 12),
+ widthIn: intOr(body.widthIn, 9),
+ heightIn: intOr(body.heightIn, 3),
+ source: "ai",
+ // Stores doing a drop stage pieces as drafts, then publish the batch at once.
+ status: body.status === "draft" ? "draft" : "active",
+ });
+
+ // Collections: titles in → get-or-create per seller, then set membership. Sending
+ // titles handles both picking an existing collection and creating a new one.
+ const collectionTitles = Array.isArray(body.collections)
+ ? body.collections.filter((x: unknown) => typeof x === "string" && x.trim()).slice(0, 20)
+ : [];
+ if (collectionTitles.length) {
+ const ids: string[] = [];
+ for (const t of collectionTitles) ids.push((await getOrCreateCollection(seller.id, String(t))).id);
+ await setItemCollections(item.id, ids);
+ }
+
+ // Cross-listing: publishing to VYA queues the piece for the seller's other
+ // marketplaces (whichever they've connected with auto-list on). Drafts don't fan out.
+ // Handle-based platforms get a paste-ready record; eBay is pushed for real via its API.
+ if (item.status === "active") {
+ createCrossListingsForItem(slug, item.id).catch(() => {});
+ syncItemToApiPlatforms(slug, item.id).catch(() => {});
+ }
+
+ // Correction memory: log any field the seller changed from the AI's draft, keyed
+ // to the photo, so the next intake learns from it (feeds back in as hints).
+ const ai = (body.aiDraft && typeof body.aiDraft === "object" ? body.aiDraft : {}) as Record<string, unknown>;
+ const photoUrl = typeof body.photo === "string" && body.photo ? body.photo : (images[images.length - 1] ?? null);
+ const fieldRows = (["brand", "era", "material", "condition", "category"] as const).map((f) => ({
+ field: f,
+ aiValue: typeof ai[f] === "string" ? (ai[f] as string) : null,
+ finalValue: String((body as Record<string, unknown>)[f] ?? "").trim(),
+ imageUrl: photoUrl,
+ }));
+ // logCorrections → the hint loop (brand fixes). logPredictions → the acceptance
+ // flow: every AI-predicted field + whether the seller kept it, for true accuracy.
+ await logCorrections(slug, fieldRows).catch(() => {});
+ await logPredictions(slug, fieldRows).catch(() => {});
+
+ // Per-store memory: the photo embedding + confirmed labels (visual matching) AND
+ // the comp market value vs. this final price (so we learn this store's pricing).
+ // Recorded even without an embedding so pricing still learns when Voyage is off.
+ const embedding = Array.isArray(body.embedding) ? (body.embedding as number[]) : [];
+ await rememberItem(slug, {
+ imageUrl: photoUrl,
+ embedding,
+ brand: str(body.brand, 80),
+ era: str(body.era, 40),
+ material: str(body.material, 120),
+ condition: str(body.condition, 80),
+ category: str(body.category, 60),
+ marketCents: typeof body.marketCents === "number" ? Math.round(body.marketCents) : null,
+ priceCents: price > 0 ? Math.round(price * 100) : null,
+ }).catch(() => {});
+
+ // Golden training record: photo + AI guess + seller's final answer + trust/version,
+ // one clean row per listing. The dataset our own model will one day learn from.
+ const usedAi = Object.keys(ai).length > 0;
+ await recordIntakeExample({
+ itemId: item.id,
+ storeSlug: slug,
+ imageUrls: images,
+ final: { brand: str(body.brand, 80), era: str(body.era, 40), material: str(body.material, 120), condition: str(body.condition, 80), category: str(body.category, 60), size: str(body.size, 40), title, description: str(body.description, 2000) },
+ priceCents: price > 0 ? Math.round(price * 100) : null,
+ marketCents: typeof body.marketCents === "number" ? Math.round(body.marketCents) : null,
+ ai: {
+ brand: typeof ai.brand === "string" ? ai.brand : null,
+ era: typeof ai.era === "string" ? ai.era : null,
+ material: typeof ai.material === "string" ? ai.material : null,
+ condition: typeof ai.condition === "string" ? ai.condition : null,
+ category: typeof ai.category === "string" ? ai.category : null,
+ title: typeof ai.title === "string" ? ai.title : null,
+ description: typeof ai.description === "string" ? ai.description : null,
+ runway: typeof body.runway === "string" ? body.runway : null,
+ },
+ reverseImage: body.reverseImage ?? null,
+ promptVersion: typeof body.promptVersion === "string" ? body.promptVersion : null,
+ // Human-authored or seller-reviewed = high-trust label; unreviewed AI = medium.
+ trust: !usedAi ? "high" : body.reviewed ? "high" : "medium",
+ }).catch(() => {});
+
+ return NextResponse.json({ ok: true, itemId: item.id });
+}

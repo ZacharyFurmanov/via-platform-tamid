@@ -46,6 +46,10 @@ export async function initNotificationTables() {
  )
  `;
  await sql`CREATE INDEX IF NOT EXISTS idx_winback_user_tier ON winback_emails(user_id, tier, sent_at DESC)`;
+ // "Last seen" heartbeat column — stamped on any authenticated browse so winback
+ // sees browse-only sessions (not just product taps). See touchLastActive.
+ await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_users_last_active ON users(last_active_at) WHERE last_active_at IS NOT NULL`;
  await sql`
  CREATE TABLE IF NOT EXISTS viewed_item_reminders (
  id SERIAL PRIMARY KEY,
@@ -398,6 +402,10 @@ export async function getWinbackCandidates(tier: '14d' | '30d'): Promise<Winback
  SELECT user_id::text AS user_id, created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
  UNION ALL
  SELECT user_id::text AS user_id, created_at AS ts FROM store_favorites WHERE user_id IS NOT NULL
+ UNION ALL
+ SELECT user_id::text AS user_id, timestamp AS ts FROM page_type_views WHERE user_id IS NOT NULL
+ UNION ALL
+ SELECT id::text AS user_id, last_active_at AS ts FROM users WHERE last_active_at IS NOT NULL
  ) all_activity
  GROUP BY user_id::text
  )
@@ -441,6 +449,10 @@ export async function getWinbackCandidates(tier: '14d' | '30d'): Promise<Winback
  SELECT user_id::text AS user_id, created_at AS ts FROM product_favorites WHERE user_id IS NOT NULL
  UNION ALL
  SELECT user_id::text AS user_id, created_at AS ts FROM store_favorites WHERE user_id IS NOT NULL
+ UNION ALL
+ SELECT user_id::text AS user_id, timestamp AS ts FROM page_type_views WHERE user_id IS NOT NULL
+ UNION ALL
+ SELECT id::text AS user_id, last_active_at AS ts FROM users WHERE last_active_at IS NOT NULL
  ) all_activity
  GROUP BY user_id::text
  )
@@ -474,6 +486,36 @@ export async function getWinbackCandidates(tier: '14d' | '30d'): Promise<Winback
  }
 
  return rows as WinbackCandidate[];
+}
+
+let lastActiveEnsured = false;
+async function ensureLastActiveColumn(): Promise<void> {
+ if (lastActiveEnsured) return;
+ const sql = neon(getDatabaseUrl());
+ await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_users_last_active ON users(last_active_at) WHERE last_active_at IS NOT NULL`;
+ lastActiveEnsured = true;
+}
+
+/**
+ * Best-effort "last seen" heartbeat. Stamps users.last_active_at when a logged-in
+ * person uses the site/app, throttled to once per 30 min (the WHERE clause makes
+ * it a cheap PK no-op the rest of the time). Never throws — must not block a
+ * request. This is what keeps winback from emailing someone who browsed yesterday.
+ */
+export async function touchLastActive(userId: string | null | undefined): Promise<void> {
+ if (!userId) return;
+ try {
+ await ensureLastActiveColumn();
+ const sql = neon(getDatabaseUrl());
+ await sql`
+  UPDATE users SET last_active_at = NOW()
+  WHERE id::text = ${userId}
+  AND (last_active_at IS NULL OR last_active_at < NOW() - INTERVAL '30 minutes')
+ `;
+ } catch {
+ // swallow — a missed heartbeat is harmless (throttled; next request catches it)
+ }
 }
 
 export async function recordWinbackSent(userId: string, tier: '14d' | '30d'): Promise<void> {

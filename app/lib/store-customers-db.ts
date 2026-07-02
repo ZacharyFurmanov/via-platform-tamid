@@ -1,0 +1,171 @@
+import { neon } from "@neondatabase/serverless";
+import type { ParsedCustomer } from "./parse-customers";
+
+// A seller's existing customer list, brought over at onboarding. Stored per store
+// and deduped by email so re-uploading is safe. This is the seller's own audience
+// (their relationship) — VYA holds it on their behalf.
+
+function db() {
+ const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!url) throw new Error("DATABASE_URL or POSTGRES_URL is not set.");
+ return neon(url);
+}
+
+let ensured = false;
+async function ensureTable() {
+ if (ensured) return;
+ const sql = db();
+ await sql`CREATE TABLE IF NOT EXISTS store_customers (
+ id SERIAL PRIMARY KEY,
+ store_slug TEXT NOT NULL,
+ email TEXT NOT NULL,
+ name TEXT,
+ phone TEXT,
+ source TEXT,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+ UNIQUE (store_slug, email)
+ )`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_store_customers_store ON store_customers (store_slug)`;
+ // Marketing consent — defaults to subscribed; the seller's email campaigns honor it.
+ await sql`ALTER TABLE store_customers ADD COLUMN IF NOT EXISTS email_subscribed BOOLEAN NOT NULL DEFAULT true`;
+ ensured = true;
+}
+
+// Display location from the buyer's most recent shipping address (US/CA/etc. codes
+// expanded to full names so the column reads like "South Lyon MI, United States").
+const COUNTRY_NAMES: Record<string, string> = { US: "United States", USA: "United States", CA: "Canada", GB: "United Kingdom", UK: "United Kingdom", AU: "Australia" };
+function formatLocation(city: unknown, state: unknown, country: unknown): string | null {
+ const co = country ? (COUNTRY_NAMES[String(country).toUpperCase()] || String(country)) : null;
+ const cityState = [city, state].map((x) => (x ? String(x).trim() : "")).filter(Boolean).join(" ");
+ if (cityState && co) return `${cityState}, ${co}`;
+ return cityState || co || null;
+}
+
+/** Upsert a parsed customer list for a store. Returns how many were newly added. */
+export async function importCustomers(
+ storeSlug: string,
+ rows: ParsedCustomer[],
+ source: string | null,
+): Promise<{ added: number; total: number }> {
+ await ensureTable();
+ const sql = db();
+ const before = await getCustomerCount(storeSlug);
+ for (const r of rows) {
+ await sql`INSERT INTO store_customers (store_slug, email, name, phone, source)
+ VALUES (${storeSlug}, ${r.email}, ${r.name}, ${r.phone}, ${source})
+ ON CONFLICT (store_slug, email) DO UPDATE SET
+ name = COALESCE(EXCLUDED.name, store_customers.name),
+ phone = COALESCE(EXCLUDED.phone, store_customers.phone)`;
+ }
+ const total = await getCustomerCount(storeSlug);
+ return { added: total - before, total };
+}
+
+export async function getCustomerCount(storeSlug: string): Promise<number> {
+ await ensureTable();
+ const rows = await db()`SELECT COUNT(*)::int AS n FROM store_customers WHERE store_slug = ${storeSlug}`;
+ return (rows[0] as { n: number })?.n ?? 0;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function listCustomers(storeSlug: string, limit = 50): Promise<{ email: string; name: string | null; phone: string | null }[]> {
+ await ensureTable();
+ const rows = await db()`SELECT email, name, phone FROM store_customers WHERE store_slug = ${storeSlug} ORDER BY created_at DESC LIMIT ${limit}`;
+ return (rows as any[]).map((r) => ({ email: r.email, name: r.name ?? null, phone: r.phone ?? null }));
+}
+
+// A unified customer = the store's brought-over audience PLUS anyone who has
+// actually bought on VYA, merged by email. Buyers carry order count / total spent /
+// last order; imported-only contacts carry when they were added. This is the
+// seller's CRM view — their relationship, held on their behalf.
+export type CustomerProfile = {
+ email: string;
+ name: string | null;
+ phone: string | null;
+ location: string | null;
+ subscribed: boolean;
+ source: "imported" | "buyer" | "both";
+ orders: number;
+ spentCents: number;
+ lastOrderAt: string | null; // ISO
+ addedAt: string | null; // ISO — when imported
+};
+
+export async function listCustomerProfiles(storeSlug: string): Promise<CustomerProfile[]> {
+ await ensureTable();
+ const sql = db();
+
+ const imported = (await sql`
+ SELECT email, name, phone, email_subscribed, created_at FROM store_customers WHERE store_slug = ${storeSlug}
+ `) as any[];
+
+ // Buyers: aggregate real orders for this store by email, plus their latest shipping
+ // location. Wrapped defensively so the list still renders from the imported audience
+ // if the orders table isn't present.
+ let buyers: any[] = [];
+ try {
+ buyers = (await sql`
+ WITH agg AS (
+ SELECT lower(o.buyer_email) AS email,
+ max(o.buyer_name) AS name,
+ max(o.buyer_phone) AS phone,
+ count(*)::int AS orders,
+ coalesce(sum(o.amount_cents), 0)::int AS spent_cents,
+ max(o.paid_at) AS last_order
+ FROM orders o
+ JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${storeSlug}
+ AND o.buyer_email IS NOT NULL AND o.buyer_email <> ''
+ AND o.status IN ('paid', 'shipped', 'delivered')
+ GROUP BY lower(o.buyer_email)
+ ),
+ loc AS (
+ SELECT DISTINCT ON (lower(o.buyer_email)) lower(o.buyer_email) AS email,
+ o.ship_city, o.ship_state, o.ship_country
+ FROM orders o
+ JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${storeSlug}
+ AND o.buyer_email IS NOT NULL AND o.buyer_email <> ''
+ ORDER BY lower(o.buyer_email), o.paid_at DESC NULLS LAST
+ )
+ SELECT a.email, a.name, a.phone, a.orders, a.spent_cents, a.last_order,
+ l.ship_city, l.ship_state, l.ship_country
+ FROM agg a
+ LEFT JOIN loc l USING (email)
+ `) as any[];
+ } catch { buyers = []; }
+
+ const map = new Map<string, CustomerProfile>();
+ const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
+
+ for (const r of imported) {
+ const email = String(r.email || "").toLowerCase().trim();
+ if (!email) continue;
+ map.set(email, { email, name: r.name ?? null, phone: r.phone ?? null, location: null, subscribed: r.email_subscribed !== false, source: "imported", orders: 0, spentCents: 0, lastOrderAt: null, addedAt: iso(r.created_at) });
+ }
+ for (const r of buyers) {
+ const email = String(r.email || "").toLowerCase().trim();
+ if (!email) continue;
+ const location = formatLocation(r.ship_city, r.ship_state, r.ship_country);
+ const existing = map.get(email);
+ if (existing) {
+ existing.source = "both";
+ existing.orders = r.orders;
+ existing.spentCents = r.spent_cents;
+ existing.lastOrderAt = iso(r.last_order);
+ existing.name = existing.name || r.name || null;
+ existing.phone = existing.phone || r.phone || null;
+ existing.location = existing.location || location;
+ } else {
+ map.set(email, { email, name: r.name ?? null, phone: r.phone ?? null, location, subscribed: true, source: "buyer", orders: r.orders, spentCents: r.spent_cents, lastOrderAt: iso(r.last_order), addedAt: null });
+ }
+ }
+
+ const ts = (c: CustomerProfile) => c.lastOrderAt || c.addedAt || "";
+ return [...map.values()].sort((a, b) => b.spentCents - a.spentCents || ts(b).localeCompare(ts(a)));
+}
+
+/** Add a single customer by hand (the "Add customer" button). Upsert-safe. */
+export async function addCustomer(storeSlug: string, email: string, name: string | null): Promise<void> {
+ await importCustomers(storeSlug, [{ email, name, phone: null }], "manual");
+}

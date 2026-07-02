@@ -1,6 +1,18 @@
 {
   "crons": [
     {
+      "path": "/api/cron/eval",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/store-automations",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/store-abandoned-cart",
+      "schedule": "0 */3 * * *"
+    },
+    {
       "path": "/api/cron/store-listing-digest",
       "schedule": "0 9 * * 1"
     },

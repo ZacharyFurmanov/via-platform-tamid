@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyRecipientTokenEdge } from "@/app/lib/recipientToken-edge";
+import { capturedSlugForDomain } from "@/app/lib/domain-routing-edge";
 
 // Routes accessible without any authentication or approval
 const PUBLIC_ROUTES = [
@@ -12,7 +13,9 @@ const PUBLIC_ROUTES = [
   "/waitlist",
   "/api/waitlist",
   "/admin/login",
+  "/admin/set-password",
   "/api/admin/auth",
+  "/api/admin/set-password",
   "/terms",
   "/privacy",
   "/api/giveaway",
@@ -21,8 +24,11 @@ const PUBLIC_ROUTES = [
   "/for-stores",
   "/partner-with-vya",
   "/infrastructure",
+  "/s",
+  "/site",
   "/api/auth",
   "/api/newsletter",
+  "/api/contact",
   "/api/track",
   "/api/conversion",
   "/api/access-code",
@@ -42,6 +48,31 @@ const PUBLIC_ROUTES = [
   "/api/store/analytics",
   "/api/store/sourcing",
   "/api/store/messages",
+  "/api/store/storefront",
+  "/api/store/assistant",
+  "/api/store/capture",
+  "/api/store/assets",
+  "/api/store/listings",
+  "/api/store/domain",
+  "/api/store/payments",
+  "/api/store/import",
+  "/api/store/onboarding-status",
+  "/api/store/intake",
+  "/api/store/items",
+  "/api/store/orders",
+  "/api/store/inbox",
+  "/api/store/customers",
+  "/api/store/collections",
+  "/api/store/pricing",
+  "/api/store/shipping",
+  "/api/store/shopify-connect",
+  "/api/store/shopify-oauth",
+  "/api/store/connect",
+  "/api/checkout",
+  "/api/storefront",
+  "/checkout",
+  "/api/thread",
+  "/thread",
   "/store/login",
 ];
 
@@ -54,6 +85,19 @@ const SESSION_ONLY_ROUTES = [
   "/api/membership",
   "/api/referral-status",
   "/store/dashboard",
+  "/store/home",
+  "/store/storefront",
+  "/store/listings",
+  "/store/payments",
+  "/store/import",
+  "/store/onboarding",
+  "/store/intake",
+  "/store/items",
+  "/store/orders",
+  "/store/inbox",
+  "/store/customers",
+  "/store/settings",
+  "/store/connect",
   "/cart",
   "/api/cart",
 ];
@@ -118,6 +162,41 @@ function isSessionOnlyRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
+
+  // ── Custom storefront domains ──────────────────────────────────────────────
+  // A request arriving on a seller's connected domain (anything that isn't a VYA
+  // host) is served that store's hosted storefront. Runs before the waitlist/auth
+  // gate so the seller's own customers never hit the VYA login wall. Static assets
+  // and API calls pass through untouched.
+  const host = (request.headers.get("host") || "").toLowerCase().split(":")[0];
+  const isVyaHost =
+    host === "vyaplatform.com" ||
+    host === "www.vyaplatform.com" ||
+    host === "localhost" ||
+    host.endsWith(".vercel.app");
+
+  // Free branded subdomain: {handle}.vyaplatform.com → that store's storefront.
+  // We rewrite to /s/{handle}, which itself redirects to the captured site if the
+  // seller brought one over. (Needs a *.vyaplatform.com wildcard domain on Vercel.)
+  const vyaSub = host.endsWith(".vyaplatform.com") && !isVyaHost ? host.slice(0, -".vyaplatform.com".length) : null;
+  if (vyaSub && !pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
+    if (pathname.startsWith("/s/") || pathname.startsWith("/site/")) return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = `/s/${vyaSub}${pathname === "/" ? "" : pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  if (host && !isVyaHost && !pathname.startsWith("/api") && !pathname.startsWith("/_next")) {
+    // A captured site's internal links are /site/{slug}/… — let those through so
+    // navigation within a brought-over site works on the seller's own domain.
+    if (pathname.startsWith("/site/")) return NextResponse.next();
+    const url = request.nextUrl.clone();
+    // If this domain's store brought its own site over, serve the captured site;
+    // otherwise fall back to the block/template storefront.
+    const capturedSlug = await capturedSlugForDomain(host).catch(() => null);
+    url.pathname = capturedSlug ? `/site/${capturedSlug}${pathname === "/" ? "" : pathname}` : "/s/by-domain";
+    return NextResponse.rewrite(url);
+  }
 
   // Per-recipient email attribution: a `?u=` token (from an email link) identifies the
   // subscriber who clicked. Persist it as a 30-day cookie so the eventual click-through

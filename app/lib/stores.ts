@@ -1284,6 +1284,29 @@ export const stores = [
  returnPolicy:
  "Bottoms may be returned within 10 days for a refund to your original payment method (issued within 10 business days of approval); all other items are final sale. There are no direct exchanges, and sale items and gift cards are non-returnable.",
  },
+ {
+ slug: "stone-studio-vintage",
+ dashboardToken: "ssv-7d2e9a4c1f6b",
+ name: "Stone Studio Vintage",
+ location: "Miami, FL",
+ description:
+ "Stone Studio Vintage is a curated collection of authentic luxury and designer vintage, handpicked for those who love rare, timeless pieces with a modern edge. Founded by two sisters with a shared love for vintage fashion, Stone Studio Vintage was created from an obsession with finding the coolest, most niche pieces — constantly searching for rare designer finds and one-of-a-kind vintage that feels special, unexpected, and impossible to find everywhere else.",
+ website: "https://stonestudiovintage.com",
+ contactEmail: "stonestudiovintage@gmail.com",
+ dataSource: "stone-studio-vintage",
+ image: "/stores/stone-studio-vintage.jpg",
+ logo: "/stores/stone-studio-vintage.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "246578",
+ authenticityPolicy:
+ "Every piece at Stone Studio Vintage is handpicked and personally authenticated by the sisters behind the shop. Each item is carefully inspected for quality and accurately described before listing.",
+ shippingPolicy:
+ "Ships from Miami, FL. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. As a curated vintage shop specializing in rare, one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
+ },
 ];
 
 /** Stores shown on the public site — Shopify Collabs stores must have a collabsStoreId; other types (Squarespace, Square, Wix, custom) are always shown. */
@@ -1342,6 +1365,7 @@ export function getCommissionAmount(price: number): number {
  * Fill in each store's email address — leave blank to skip that store.
  */
 export const storeContactEmails: Record<string, string> = {
+ "stone-studio-vintage": "stonestudiovintage@gmail.com",
  "ascensio-vintage": "info@ascensiovintage.com",
  "in-a-past-life": "inapastlife.xo@gmail.com",
  "lei-vintage": "shop@leivintage.com",
@@ -1397,7 +1421,7 @@ export const storeContactEmails: Record<string, string> = {
  "california-boho-studio": "hello@californiabohostudio.com",
  "shiranka-vintage": "info@shirankavintage.com",
  // VYA admin test account — sees all requests
- "via-admin": "hana@vyaplatform.com",
+ "via-admin": "hana@theviaplatform.com",
 };
 
 /** Returns all non-empty store contact emails */

@@ -153,6 +153,9 @@ export async function GET(request: NextRequest) {
  // Save for analytics display only — do NOT touch collabs_data or collabs_last_synced_at
  // which are used exclusively by the cron job to detect delta orders for conversion recording.
  await saveSetting("collabs_analytics_synced_at", new Date().toISOString());
+ // Persist the per-store snapshot so each store's own dashboard can show its authoritative
+ // Collabs commission (matched by brand name), not just the tracked-conversions estimate.
+ await saveSetting("collabs_partnerships_snapshot", JSON.stringify(partnerships));
 
  return NextResponse.json({
  ok: true,

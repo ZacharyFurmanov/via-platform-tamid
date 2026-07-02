@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
         destination: "/categories/clothing",
         permanent: true,
       },
+      // The recommerce pages moved to the owner's infrastructure workspace. Only these
+      // four were removed from /store, so redirecting them is safe (they 404 otherwise);
+      // the rest of /store stays live for real sellers.
+      { source: "/store/intake", destination: "/infrastructure/admin/add-listing", permanent: false },
+      { source: "/store/items", destination: "/infrastructure/admin/inventory", permanent: false },
+      { source: "/store/customers", destination: "/infrastructure/admin/customers", permanent: false },
+      { source: "/store/performance", destination: "/infrastructure/admin/performance", permanent: false },
       ...socialSources.map(({ path, source, campaign }) => ({
         source: `/${path}`,
         destination: `/?utm_source=${source}&utm_medium=social&utm_campaign=${campaign}`,

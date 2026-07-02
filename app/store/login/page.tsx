@@ -17,7 +17,7 @@ export default function StoreLoginPage() {
  fetch("/api/store/me")
  .then((res) => {
  if (res.ok) {
- router.replace("/store/dashboard");
+ router.replace("/store/onboarding");
  }
  })
  .catch(() => {});
@@ -28,7 +28,7 @@ export default function StoreLoginPage() {
  e.preventDefault();
  if (!email.trim()) return;
  setMagicLoading(true);
- await signIn("resend", { email, callbackUrl: "/store/dashboard", redirect: false });
+ await signIn("resend", { email, callbackUrl: "/store/onboarding", redirect: false });
  setMagicLoading(false);
  setMagicSent(true);
  }
@@ -68,7 +68,7 @@ export default function StoreLoginPage() {
  Your account ({session?.user?.email}) is not linked to a partner store.
  </p>
  <button
- onClick={() => signIn("google", { callbackUrl: "/store/dashboard" })}
+ onClick={() => signIn("google", { callbackUrl: "/store/onboarding" })}
  className="w-full py-3 text-sm uppercase tracking-wide transition-colors mb-3"
  style={{ backgroundColor: "#5D0F17", color: "#FFFDF8" }}
  >
@@ -99,7 +99,7 @@ export default function StoreLoginPage() {
  <>
  {/* Google */}
  <button
- onClick={() => signIn("google", { callbackUrl: "/store/dashboard" })}
+ onClick={() => signIn("google", { callbackUrl: "/store/onboarding" })}
  disabled={isLoading}
  className="w-full py-3 text-sm uppercase tracking-wide transition-opacity disabled:opacity-50 mb-4"
  style={{ backgroundColor: "#5D0F17", color: "#FFFDF8" }}

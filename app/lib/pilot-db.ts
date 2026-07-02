@@ -26,7 +26,8 @@ async function ensureTable() {
   await sql`
     ALTER TABLE pilot_access
     ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE,
-    ADD COLUMN IF NOT EXISTS referred_by VARCHAR(20)
+    ADD COLUMN IF NOT EXISTS referred_by VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS source VARCHAR(50)
   `;
 }
 
@@ -82,6 +83,7 @@ export async function createPilotEntry(data: {
   smsSubscribe?: boolean;
   status: "pending" | "approved";
   referredBy?: string;
+  source?: string;
 }) {
   await ensureTable();
   const sql = getDb();
@@ -90,7 +92,7 @@ export async function createPilotEntry(data: {
     INSERT INTO pilot_access (
       email, first_name, last_name, phone,
       email_subscribe, sms_subscribe, status, approved_at,
-      referral_code, referred_by
+      referral_code, referred_by, source
     )
     VALUES (
       ${data.email.toLowerCase().trim()},
@@ -102,7 +104,8 @@ export async function createPilotEntry(data: {
       ${data.status},
       ${data.status === "approved" ? new Date().toISOString() : null},
       ${referralCode},
-      ${data.referredBy ?? null}
+      ${data.referredBy ?? null},
+      ${data.source ?? null}
     )
     ON CONFLICT (email) DO UPDATE SET
       first_name = COALESCE(EXCLUDED.first_name, pilot_access.first_name),
@@ -111,7 +114,8 @@ export async function createPilotEntry(data: {
       email_subscribe = EXCLUDED.email_subscribe,
       sms_subscribe = EXCLUDED.sms_subscribe,
       referred_by = COALESCE(pilot_access.referred_by, EXCLUDED.referred_by),
-      referral_code = COALESCE(pilot_access.referral_code, EXCLUDED.referral_code)
+      referral_code = COALESCE(pilot_access.referral_code, EXCLUDED.referral_code),
+      source = COALESCE(pilot_access.source, EXCLUDED.source)
   `;
   return referralCode;
 }

@@ -1,5 +1,6 @@
-import { verifyMobileJwt } from "./mobileAuth";
+import { verifyMobileJwt, getMobileUserId } from "./mobileAuth";
 import { getPilotStatus } from "./pilot-db";
+import { touchLastActive } from "./notification-db";
 import { auth } from "./auth";
 import crypto from "crypto";
 
@@ -39,14 +40,16 @@ export async function isApprovedRequest(request: Request): Promise<boolean> {
  // Web fast path: approval cookie set by /api/pilot-check
  if (cookies["via_access"] === "1") return true;
 
- // Mobile: JWT carries the email; check pilot approval
+ // Mobile: any valid app login (a verified JWT) gets full access — the app is past
+ // the waitlist, so logging in is enough. (Web still honors the waitlist via the
+ // cookie / session-email paths.)
  const authz = request.headers.get("authorization") ?? "";
  const m = /^Bearer\s+(.+)$/i.exec(authz);
  if (m) {
   const payload = verifyMobileJwt(m[1]);
   if (payload?.email) {
-   const status = await getPilotStatus(payload.email).catch(() => "pending");
-   if (status === "approved") return true;
+   void touchLastActive(getMobileUserId(request)); // "last seen" heartbeat (best-effort)
+   return true;
   }
  }
 
@@ -55,7 +58,10 @@ export async function isApprovedRequest(request: Request): Promise<boolean> {
  const email = session?.user?.email;
  if (email) {
   const status = await getPilotStatus(email).catch(() => "pending");
-  if (status === "approved") return true;
+  if (status === "approved") {
+   void touchLastActive(session?.user?.id); // "last seen" heartbeat (best-effort)
+   return true;
+  }
  }
 
  return false;

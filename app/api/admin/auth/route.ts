@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { Resend } from "resend";
+import { verifyAdminLogin } from "@/app/lib/admin-users-db";
+
+const FALLBACK_OTP_EMAIL = "hana@vyaplatform.com";
 
 function hashPassword(password: string): string {
  return crypto.createHash("sha256").update(password).digest("hex");
@@ -45,11 +48,11 @@ function verifyOtpCookie(cookieValue: string): string | null {
  return otp;
 }
 
-async function sendOtpEmail(otp: string) {
+async function sendOtpEmail(otp: string, to: string = FALLBACK_OTP_EMAIL) {
  const resend = new Resend(process.env.RESEND_API_KEY);
  await resend.emails.send({
  from: "VYA Admin <hana@vyaplatform.com>",
- to: "hana@vyaplatform.com",
+ to,
  subject: `${otp} — VYA Admin Sign-In Code`,
  html: `<!DOCTYPE html>
 <html lang="en">
@@ -89,7 +92,7 @@ body { margin: 0; padding: 0; background-color: #FFFDF8; font-family: Georgia, '
 
 export async function POST(request: Request) {
  try {
- const { password, otpCode } = await request.json();
+ const { email, password, otpCode } = await request.json();
  const expectedPassword = process.env.ADMIN_PASSWORD;
 
  if (!expectedPassword) {
@@ -99,7 +102,15 @@ export async function POST(request: Request) {
  );
  }
 
- if (password !== expectedPassword) {
+ // Per-user admin (email + their own password) sends the 2FA code to THEIR inbox;
+ // no email falls back to the shared ADMIN_PASSWORD → code to the fallback inbox.
+ let otpRecipient = FALLBACK_OTP_EMAIL;
+ const loginEmail = (email || "").trim().toLowerCase();
+ if (loginEmail) {
+ const ok = await verifyAdminLogin(loginEmail, password).catch(() => null);
+ if (!ok) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+ otpRecipient = ok;
+ } else if (password !== expectedPassword) {
  return NextResponse.json({ error: "Invalid password" }, { status: 401 });
  }
 
@@ -172,7 +183,7 @@ export async function POST(request: Request) {
  path: "/",
  });
 
- await sendOtpEmail(otp);
+ await sendOtpEmail(otp, otpRecipient);
  return NextResponse.json({ requireOtp: true });
  } catch {
  return NextResponse.json({ error: "Invalid request" }, { status: 400 });

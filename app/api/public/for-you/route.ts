@@ -6,7 +6,8 @@ import { SHOPIFY_STORES } from "@/app/lib/storeConfig";
 import { HIDDEN_STORE_SLUGS } from "@/app/lib/stores";
 import { getMobileUserId } from "@/app/lib/mobileAuth";
 import { getUserTasteProfile } from "@/app/lib/taste-db";
-import { vibeKeywords } from "@/app/lib/tasteVibes";
+import { vibeKeywords, colorKeywords, eraKeywords, categoryTasteKeywords } from "@/app/lib/tasteVibes";
+import { designerKeywords } from "@/app/lib/brandData";
 
 export const dynamic = "force-dynamic";
 
@@ -73,11 +74,20 @@ export async function GET(request: Request) {
 
  // Taste profile — vibes (keyword bias) + explicit sizes (strong fit signal).
  const profile = userId
- ? await getUserTasteProfile(userId).catch(() => ({ vibes: [] as string[], sizes: [] as string[] }))
- : { vibes: queryVibes, sizes: querySizes };
+ ? await getUserTasteProfile(userId).catch(() => ({ vibes: [] as string[], sizes: [] as string[], categories: [] as string[], designers: [] as string[], colors: [] as string[], eras: [] as string[] }))
+ : { vibes: queryVibes, sizes: querySizes, categories: [] as string[], designers: [] as string[], colors: [] as string[], eras: [] as string[] };
  const vibes = profile.vibes;
  const savedSizes = profile.sizes; // already uppercased by sanitizeSizes
- const vibePatterns = vibeKeywords(vibes).map((k) => `%${k}%`);
+ // Every taste dimension feeds ONE combined keyword bias — OR-matched and additive,
+ // so a product matching ANY signal (Y2K, orange, a loved designer…) gets surfaced,
+ // never filtered out for missing the others.
+ const vibePatterns = Array.from(new Set([
+ ...vibeKeywords(vibes),
+ ...colorKeywords(profile.colors),
+ ...eraKeywords(profile.eras),
+ ...categoryTasteKeywords(profile.categories),
+ ...designerKeywords(profile.designers),
+ ])).map((k) => `%${k}%`);
  const hasVibes = vibePatterns.length > 0;
 
  // Recent-engagement "trending" scores for a set of products. Resilient: any
@@ -119,15 +129,20 @@ export async function GET(request: Request) {
  if (userId) {
  signalRows = (await sql`
   WITH activity AS (
-   SELECT c.product_id::int AS product_id, c.store_slug, 5 AS weight
+   -- clicks + views store the COMPOSITE id (store_slug-id), so resolve the real
+   -- int product id via the same join the trending query uses; favorites are INT.
+   SELECT cp.id AS product_id, c.store_slug, 5 AS weight
    FROM clicks c
+   JOIN products cp ON (cp.store_slug || '-' || cp.id::text) = c.product_id
    WHERE c.user_id = ${userId} AND c.timestamp >= NOW() - INTERVAL '90 days' AND c.store_slug IS NOT NULL
    UNION ALL
-   SELECT pf.product_id::int AS product_id, NULL AS store_slug, 8 AS weight
+   SELECT pf.product_id AS product_id, NULL AS store_slug, 8 AS weight
    FROM product_favorites pf WHERE pf.user_id = ${userId}
    UNION ALL
-   SELECT pv.product_id::int AS product_id, NULL AS store_slug, 1 AS weight
-   FROM product_views pv WHERE pv.user_id = ${userId} AND pv.timestamp >= NOW() - INTERVAL '60 days'
+   SELECT vp.id AS product_id, NULL AS store_slug, 1 AS weight
+   FROM product_views pv
+   JOIN products vp ON (vp.store_slug || '-' || vp.id::text) = pv.product_id
+   WHERE pv.user_id = ${userId} AND pv.timestamp >= NOW() - INTERVAL '60 days'
   )
   SELECT COALESCE(a.store_slug, p.store_slug) AS store_slug, p.size, SUM(a.weight)::int AS score
   FROM activity a
@@ -172,9 +187,11 @@ export async function GET(request: Request) {
  // Exclude products already favorited or viewed (surface fresh discoveries)
  const seenRows = userId
  ? (await sql`
-  SELECT product_id::int AS pid FROM product_favorites WHERE user_id = ${userId}
+  SELECT pf.product_id AS pid FROM product_favorites pf WHERE pf.user_id = ${userId}
   UNION
-  SELECT product_id::int AS pid FROM product_views WHERE user_id = ${userId}
+  SELECT vp.id AS pid FROM product_views pv
+  JOIN products vp ON (vp.store_slug || '-' || vp.id::text) = pv.product_id
+  WHERE pv.user_id = ${userId}
  `) as Array<{ pid: number }>
  : [];
  const excludeIds = userId ? seenRows.map((r) => r.pid) : favIds;

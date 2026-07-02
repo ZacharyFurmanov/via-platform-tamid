@@ -1,0 +1,135 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getItem, reserveItem, releaseReservation, sweepExpiredReservations } from "@/app/lib/db/inventory";
+import { getSellerById } from "@/app/lib/db/sellers";
+import { getSellerPayments } from "@/app/lib/seller-payments-db";
+import { stripePost, stripeConfigured } from "@/app/lib/stripe";
+import { getCartItemIds } from "@/app/lib/storefront-cart-db";
+import { applicationFeeCents } from "@/app/lib/payments-config";
+import type { Item } from "@/app/lib/db/schema";
+
+export const dynamic = "force-dynamic";
+const COOKIE = "via_cart";
+
+function baseUrl(request: NextRequest) {
+ const host = request.headers.get("host") || "vyaplatform.com";
+ const proto = host.startsWith("localhost") ? "http" : "https";
+ return `${proto}://${host}`;
+}
+
+// POST — check out the cart. Each seller has their own connected Stripe account,
+// so a direct charge can only cover one seller — we group the cart by seller and
+// open one Stripe Checkout Session per seller (direct charge + VYA application
+// fee). Returns a session per seller; a single-seller cart is the common case.
+export async function POST(request: NextRequest) {
+ if (!stripeConfigured()) return NextResponse.json({ error: "Checkout isn’t available yet." }, { status: 503 });
+
+ const token = request.cookies.get(COOKIE)?.value;
+ if (!token) return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
+ const ids = await getCartItemIds(token);
+ if (!ids.length) return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
+
+ // We collect the address on VYA (so we can quote a live shipping rate first), then
+ // open the Stripe session — same pattern as the single-item Buy-now checkout.
+ const body = await request.json().catch(() => null);
+ const buyer = body?.buyer || {};
+ const ship = body?.ship || {};
+ const buyerEmail = typeof buyer.email === "string" ? buyer.email.trim() : "";
+ if (!buyerEmail) return NextResponse.json({ error: "Email is required." }, { status: 400 });
+ if (!ship.line1 || !ship.city || !ship.state || !ship.zip) return NextResponse.json({ error: "A full shipping address is required." }, { status: 400 });
+ const shippingCostCents = Math.max(0, Math.round(Number(body?.shippingCostCents) || 0));
+
+ // Free expired reservations first, then reclaim any items still reserved in THIS
+ // buyer's own cart (e.g. a checkout they opened and backed out of) so they aren't
+ // locked out of their own bag. The atomic markSold at payment is the real guard.
+ await sweepExpiredReservations().catch(() => {});
+ const bySeller = new Map<string, Item[]>();
+ for (const id of ids) {
+ let item = await getItem(id);
+ if (item && item.status === "reserved") { await releaseReservation(id).catch(() => {}); item = await getItem(id); }
+ if (item && item.status === "active") {
+ const arr = bySeller.get(item.sellerId) ?? [];
+ arr.push(item);
+ bySeller.set(item.sellerId, arr);
+ }
+ }
+ if (!bySeller.size) return NextResponse.json({ error: "Your cart items are no longer available." }, { status: 409 });
+
+ const base = baseUrl(request);
+ const sessions: { sellerSlug: string; url: string; itemIds: string[] }[] = [];
+ const reservedAll: string[] = [];
+ let shippingApplied = false;
+
+ try {
+ for (const [sellerId, sellerItems] of bySeller) {
+ const seller = await getSellerById(sellerId);
+ if (!seller) continue;
+ const pay = await getSellerPayments(seller.slug);
+ if (!pay?.stripeAccountId || !pay.chargesEnabled) continue; // store can't take payment yet
+
+ // Hold each of this seller's items (TTL lock). Skip any that lost the race.
+ const reserved: Item[] = [];
+ for (const item of sellerItems) {
+ const r = await reserveItem(item.id, token);
+ if (r) { reserved.push(item); reservedAll.push(item.id); }
+ }
+ if (!reserved.length) continue;
+
+ const lineItems: Record<number, unknown> = {};
+ reserved.forEach((item, i) => {
+ lineItems[i] = {
+ quantity: 1,
+ price_data: {
+ currency: (item.currency || "usd").toLowerCase(),
+ unit_amount: item.priceCents,
+ product_data: { name: item.title, ...(item.images?.[0] ? { images: { 0: item.images[0] } } : {}) },
+ },
+ };
+ });
+ const subtotal = reserved.reduce((s, it) => s + it.priceCents, 0);
+ // Buyer-paid shipping (quoted live on the VYA checkout page) is charged once, on
+ // the first seller's session — single-seller carts are the norm for a captured store.
+ const shipHere = shippingApplied ? 0 : shippingCostCents;
+ shippingApplied = true;
+ const cur = (reserved[0].currency || "usd").toLowerCase();
+ if (shipHere > 0) lineItems[reserved.length] = { quantity: 1, price_data: { currency: cur, unit_amount: shipHere, product_data: { name: "Shipping" } } };
+ const feeAmount = applicationFeeCents(subtotal) + shipHere;
+ const itemIds = reserved.map((it) => it.id);
+ const idCsv = itemIds.join(",");
+ const meta: Record<string, string> = {
+ itemIds: idCsv, sellerId,
+ ship_name: String(buyer.name || ""), ship_line1: String(ship.line1), ship_line2: String(ship.line2 || ""),
+ ship_city: String(ship.city), ship_state: String(ship.state), ship_zip: String(ship.zip), ship_country: String(ship.country || "US"),
+ buyer_phone: String(buyer.phone || ""), shipping_paid_cents: String(shipHere),
+ };
+
+ const session = await stripePost(
+ "checkout/sessions",
+ {
+ mode: "payment",
+ customer_email: buyerEmail,
+ success_url: `${base}/checkout/success`,
+ cancel_url: `${base}/checkout/cancel`,
+ line_items: lineItems,
+ metadata: meta,
+ payment_intent_data: {
+ ...(feeAmount > 0 ? { application_fee_amount: feeAmount } : {}),
+ metadata: meta,
+ },
+ },
+ pay.stripeAccountId, // direct charge on the seller's connected account
+ );
+ sessions.push({ sellerSlug: seller.slug, url: session.url as string, itemIds });
+ }
+
+ if (!sessions.length) {
+ for (const id of reservedAll) await releaseReservation(id);
+ return NextResponse.json({ error: "None of your cart’s stores can take payment yet." }, { status: 400 });
+ }
+ // Single-seller cart → one session (the common case). Multi-seller → the buyer
+ // completes each in turn; the UI sends them through the sessions in order.
+ return NextResponse.json({ ok: true, sessions, multiSeller: sessions.length > 1, url: sessions[0].url });
+ } catch (e) {
+ for (const id of reservedAll) await releaseReservation(id);
+ return NextResponse.json({ error: e instanceof Error ? e.message : "Checkout failed." }, { status: 502 });
+ }
+}

@@ -17,6 +17,22 @@ const _rawBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "vyaplatform.com";
 const BASE_URL = _rawBaseUrl.startsWith("http") ? _rawBaseUrl : `https://${_rawBaseUrl}`;
 const FROM_EMAIL = "VYA <hana@vyaplatform.com>";
 
+// The verified ADDRESS order emails are sent from. The display NAME varies — the
+// buyer's confirmation shows the STORE's name so it reads as if from the store they
+// bought from. Set EMAIL_FROM (e.g. "<orders@theviaplatform.com>") once that domain
+// is verified; until then it falls back to the verified vyaplatform.com domain.
+function orderSenderAddress(): string {
+ const f = process.env.EMAIL_FROM || "";
+ const m = f.match(/<([^>]+)>/);
+ if (m) return m[1].trim();
+ if (f.includes("@")) return f.trim();
+ return "orders@vyaplatform.com";
+}
+// Sanitize a display name for an email From header.
+function fromDisplayName(s: string): string {
+ return (s || "").replace(/["<>\\\r\n]/g, "").trim() || "VYA";
+}
+
 /** De-duplicate + normalise a recipient list so no address is ever emailed twice
  * in a single bulk send (guards against duplicate rows / merged lists). */
 function dedupeEmails(emails: string[]): string[] {
@@ -318,6 +334,51 @@ function withUtm(url: string, campaign: string, content?: string, recipient?: st
 function productViaUrl(p: DBProduct, campaign: string, recipient?: string | null): string {
  const base = `${BASE_URL}/products/${p.store_slug}-${p.id}`;
  return withUtm(base, campaign, undefined, recipient);
+}
+
+function escapeHtml(s: string): string {
+ return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Seller email campaign. Sends AS THE STORE — the from-name is the store and
+ * replies route to the store's own email — but over VYA's verified domain (you
+ * can't send "from" a gmail/unverified domain without it being spam-filtered).
+ * Links are UTM-tagged so the campaign shows up in the store's audience insights.
+ */
+export async function sendStoreCampaign(opts: {
+ storeName: string;
+ storeEmail: string; // reply-to
+ fromAddress?: string; // the verified sending address, else VYA's shared domain
+ subject: string;
+ body: string;
+ link?: string;
+ recipients: string[];
+}): Promise<{ sent: number; failed: number }> {
+ const resend = getResend();
+ const cleanName = opts.storeName.replace(/[<>"\n\r]/g, "").trim() || "Your store";
+ const sender = (opts.fromAddress && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(opts.fromAddress)) ? opts.fromAddress : "campaigns@vyaplatform.com";
+ const from = `${cleanName} <${sender}>`;
+ const cta = opts.link ? withUtm(opts.link, "campaign") : null;
+ const paragraphs = opts.body.trim().split(/\n{2,}/).map((p) => `<p style="margin:0 0 16px;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`).join("");
+ const html = `<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+ <div style="max-width:560px;margin:0 auto;background:#ffffff;">
+ <div style="padding:28px 32px 6px;"><h1 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;">${escapeHtml(cleanName)}</h1></div>
+ <div style="padding:10px 32px 24px;font-size:15px;line-height:1.7;color:#292524;">${paragraphs}${cta ? `<p style="margin:24px 0 0;"><a href="${cta}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:6px;font-size:14px;">Shop now</a></p>` : ""}</div>
+ <div style="padding:16px 32px 30px;border-top:1px solid #eeeeee;font-size:12px;color:#a8a29e;">You're receiving this because you shopped with ${escapeHtml(cleanName)}. Reply to this email to reach us.</div>
+ </div></body></html>`;
+
+ let sent = 0, failed = 0;
+ for (let i = 0; i < opts.recipients.length; i += 100) {
+ const chunk = opts.recipients.slice(i, i + 100);
+ try {
+ await resend.batch.send(chunk.map((to) => ({ from, to, replyTo: opts.storeEmail, subject: opts.subject, html })));
+ sent += chunk.length;
+ } catch {
+ failed += chunk.length;
+ }
+ }
+ return { sent, failed };
 }
 
 export async function sendGiveawayConfirmation(email: string, referralCode: string) {
@@ -2500,4 +2561,107 @@ export async function sendInsiderNewsletterEmail(
  }
 
  return { sent, failed };
+}
+
+// ── Platform order emails (hosted-storefront purchases) ──────────────────────
+function fmtMoney(cents: number, currency: string): string {
+ return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD", maximumFractionDigits: 0 }).format((cents || 0) / 100);
+}
+
+/** Buyer's order confirmation — what they bought + that the seller will ship. */
+export async function sendBuyerOrderConfirmation(p: {
+ buyerEmail: string;
+ itemTitle: string;
+ imageUrl?: string | null;
+ amountCents: number;
+ currency: string;
+ storeName: string;
+ replyTo?: string | null; // the store's email, so replies reach the seller
+}): Promise<void> {
+ if (!p.buyerEmail) return;
+ const resend = getResend();
+ const content = `
+ <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 20px;font-family:Georgia,serif;">Your order is confirmed — thank you. 🖤</p>
+ <div style="background:#FFFDF8;border:1px solid rgba(93,15,23,0.15);padding:24px;margin:0 0 24px;">
+ ${p.imageUrl ? `<img src="${p.imageUrl}" alt="" width="160" style="display:block;margin:0 0 14px;border:1px solid rgba(93,15,23,0.1);" />` : ""}
+ <p style="font-size:16px;font-weight:700;color:#5D0F17;margin:0 0 6px;font-family:Georgia,serif;">${p.itemTitle}</p>
+ <p style="font-size:14px;color:rgba(93,15,23,0.7);margin:0;font-family:Georgia,serif;">${fmtMoney(p.amountCents, p.currency)} · from ${p.storeName}</p>
+ </div>
+ <p style="font-size:15px;color:#5D0F17;line-height:1.7;margin:0;font-family:Georgia,serif;">${p.storeName} will ship your piece soon — you'll get tracking by email once it's on the way.</p>
+ `;
+ const html = viaShell("Order confirmed", content);
+ // From the STORE the buyer ordered from (not VYA); replies go to the seller.
+ await resend.emails.send({
+ from: `${fromDisplayName(p.storeName)} <${orderSenderAddress()}>`,
+ to: p.buyerEmail,
+ ...(p.replyTo ? { replyTo: p.replyTo } : {}),
+ subject: `Your order from ${p.storeName} — ${p.itemTitle}`,
+ html,
+ });
+}
+
+/** Seller's sale notification — what sold, where to ship, link to buy the label. */
+export async function sendSellerSaleNotification(p: {
+ sellerEmail: string;
+ storeName: string;
+ itemTitle: string;
+ amountCents: number;
+ currency: string;
+ buyerName?: string | null;
+ ship: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; postal?: string | null; country?: string | null };
+ orderId: string;
+}): Promise<void> {
+ if (!p.sellerEmail) return;
+ const resend = getResend();
+ const addr = [
+ p.buyerName,
+ p.ship.line1,
+ p.ship.line2,
+ [p.ship.city, p.ship.state, p.ship.postal].filter(Boolean).join(", "),
+ p.ship.country,
+ ].filter(Boolean).join("<br>");
+ const url = `${BASE_URL}/store/orders/${p.orderId}`;
+ const content = `
+ <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 18px;font-family:Georgia,serif;">You sold <b>${p.itemTitle}</b> for ${fmtMoney(p.amountCents, p.currency)}. 🎉</p>
+ <div style="background:#FFFDF8;border:1px solid rgba(93,15,23,0.15);padding:20px 24px;margin:0 0 24px;">
+ <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(93,15,23,0.5);margin:0 0 8px;font-family:Georgia,serif;">Ship to</p>
+ <p style="font-size:15px;color:#5D0F17;line-height:1.6;margin:0;font-family:Georgia,serif;">${addr || "(address on the order)"}</p>
+ </div>
+ <p style="font-size:15px;color:#5D0F17;line-height:1.7;margin:0 0 20px;font-family:Georgia,serif;">Buy your shipping label and mark it shipped from your dashboard.</p>
+ <a href="${url}" style="display:inline-block;background:#5D0F17;color:#FFFDF8 !important;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">Open the order →</a>
+ `;
+ const html = viaShell("You made a sale", content);
+ await resend.emails.send({ from: `VYA <${orderSenderAddress()}>`, to: p.sellerEmail, subject: `You sold ${p.itemTitle}`, html });
+}
+
+/** Buyer's shipping/tracking email — sent when the order ships. From the store. */
+export async function sendBuyerTrackingEmail(p: {
+ buyerEmail: string;
+ storeName: string;
+ itemTitle: string;
+ trackingNumber: string;
+ trackingUrl?: string | null;
+ replyTo?: string | null;
+}): Promise<void> {
+ if (!p.buyerEmail) return;
+ const resend = getResend();
+ const track = p.trackingUrl
+ ? `<a href="${p.trackingUrl}" style="display:inline-block;background:#5D0F17;color:#FFFDF8 !important;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;">Track your package →</a>`
+ : "";
+ const content = `
+ <p style="font-size:16px;color:#5D0F17;line-height:1.7;margin:0 0 18px;font-family:Georgia,serif;">Your order from ${p.storeName} is on its way. 📦</p>
+ <div style="background:#FFFDF8;border:1px solid rgba(93,15,23,0.15);padding:20px 24px;margin:0 0 24px;">
+ <p style="font-size:15px;font-weight:700;color:#5D0F17;margin:0 0 8px;font-family:Georgia,serif;">${p.itemTitle}</p>
+ <p style="font-size:13px;color:rgba(93,15,23,0.6);margin:0;font-family:Georgia,serif;">Tracking: ${p.trackingNumber}</p>
+ </div>
+ ${track}
+ `;
+ const html = viaShell("Your order shipped", content);
+ await resend.emails.send({
+ from: `${fromDisplayName(p.storeName)} <${orderSenderAddress()}>`,
+ to: p.buyerEmail,
+ ...(p.replyTo ? { replyTo: p.replyTo } : {}),
+ subject: `Your ${p.storeName} order has shipped`,
+ html,
+ });
 }
