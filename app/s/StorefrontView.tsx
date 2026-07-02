@@ -5,6 +5,7 @@ import SearchBox from "./SearchBox";
 import { loadStoreProducts } from "@/app/lib/loadStoreProducts";
 import { getListingsByStore, type Listing } from "@/app/lib/listings-db";
 import { getSellerBySlug } from "@/app/lib/db/sellers";
+import { getCollectionBySlug, listCollectionItems, listCollections } from "@/app/lib/db/collections";
 import { formatPrice } from "@/app/lib/formatPrice";
 import type { StorefrontSettings } from "@/app/lib/storefront-db";
 import NewsletterForm from "./NewsletterForm";
@@ -30,7 +31,7 @@ function googleFontsHref(families: string[]): string | null {
 
 // Shared storefront render — used by /s/[handle] and the custom-domain route.
 // Applies the store's extracted theme (fonts, colour palette, logo).
-export default async function StorefrontView({ settings, view = "home", preview = false, category, query, pageSlug }: { settings: StorefrontSettings; view?: "home" | "shop"; preview?: boolean; category?: string; query?: string; pageSlug?: string }) {
+export default async function StorefrontView({ settings, view = "home", preview = false, category, query, pageSlug, collectionSlug }: { settings: StorefrontSettings; view?: "home" | "shop"; preview?: boolean; category?: string; query?: string; pageSlug?: string; collectionSlug?: string }) {
  const sf = settings;
  // Store metadata: prefer hardcoded stores.ts, fall back to the sellers table,
  // then the handle — so DB-based sellers (not in stores.ts) still render.
@@ -50,6 +51,15 @@ export default async function StorefrontView({ settings, view = "home", preview 
 
  // Available first, sold last.
  const sortedListings = [...listings].sort((a, b) => Number(a.status === "sold") - Number(b.status === "sold"));
+ // Collection page: keep only the items assigned to this collection (its slug). "all"
+ // means the whole catalogue, so no membership filter. (Reuses the `seller` above.)
+ const storeCollections = seller ? await listCollections(seller.id).catch(() => []) : [];
+ let collectionTitle: string | null = null;
+ let collectionIds: Set<string> | null = null;
+ if (collectionSlug && collectionSlug !== "all" && seller) {
+ const col = await getCollectionBySlug(seller.id, collectionSlug).catch(() => null);
+ if (col) { collectionTitle = col.title; const cis = await listCollectionItems(col.id).catch(() => []); collectionIds = new Set(cis.map((i) => i.id)); }
+ }
  // Category filter (Shop dropdown): match the slug against the item's category or
  // legacy tags, tolerant of plural/singular (heels↔Heels, dress↔Dresses).
  const catSlug = (category || "").toLowerCase();
@@ -64,6 +74,7 @@ export default async function StorefrontView({ settings, view = "home", preview 
  };
  const q = (query || "").trim().toLowerCase();
  const shownListings = sortedListings
+ .filter((l) => (collectionIds ? collectionIds.has(l.id) : true))
  .filter((l) => (category && catWords.length ? matchesCat(l) : true))
  .filter((l) => (q ? l.title.toLowerCase().includes(q) || catFields(l).some((t) => t.toLowerCase().includes(q)) : true));
  const items: Tile[] = listings.length
@@ -126,12 +137,13 @@ export default async function StorefrontView({ settings, view = "home", preview 
  const activePage = pageSlug ? extraPages.find((p) => p.slug === pageSlug) : null;
  const blocks = pageSlug ? activePage?.blocks ?? [] : homeBlocks;
  const hasBlocks = !isShop && (!!pageSlug || homeBlocks.length > 0);
- // A clean nav for block-based stores: Home · Shop · each extra page.
+ // A clean nav for block-based stores: Home · Shop · each collection (with items) · each extra page.
+ const collectionNav = storeCollections.filter((c) => c.itemCount > 0).map((c) => ({ label: c.title, href: withPreview(`/s/${sf.handle}/collections/${c.slug}`) }));
  const blockNav = homeBlocks.length > 0 || extraPages.length > 0
- ? [{ label: "Home", href: withPreview(`/s/${sf.handle}`) }, { label: "Shop", href: shopHref }, ...extraPages.map((p) => ({ label: p.title, href: withPreview(`/s/${sf.handle}/${p.slug}`) }))]
+ ? [{ label: "Home", href: withPreview(`/s/${sf.handle}`) }, { label: "Shop", href: shopHref }, ...collectionNav, ...extraPages.map((p) => ({ label: p.title, href: withPreview(`/s/${sf.handle}/${p.slug}`) }))]
  : null;
  const finalNav = blockNav ?? navItems;
- const gridHeading = isShop ? categoryLabel || (query ? `Search: ${query}` : "Shop") : productsSection?.headline || "New Arrivals";
+ const gridHeading = isShop ? collectionTitle || categoryLabel || (query ? `Search: ${query}` : "Shop") : productsSection?.headline || "New Arrivals";
  const heroHeadline = theme.hero?.headline ?? null;
  const heroSub = theme.hero?.subheadline ?? null;
  const heroCta = theme.hero?.ctaLabel ?? null;

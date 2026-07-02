@@ -268,7 +268,11 @@ export async function getProductsByStore(storeSlug: string, limit = 300): Promis
  * Falls back to most-clicked products if no favorites exist yet.
  */
 export async function getEveryonesFavorites(limit = 75): Promise<PickWithProduct[]> {
- const sql = neon(getDatabaseUrl());
+ // Degrade to empty when the DB isn't reachable (e.g. a preview build without
+ // DATABASE_URL) so static prerendering of the homepage never crashes the build.
+ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!dbUrl) return [];
+ const sql = neon(dbUrl);
 
  const rows = await sql`
  SELECT
