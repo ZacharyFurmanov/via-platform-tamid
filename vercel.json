@@ -115,6 +115,10 @@
     {
       "path": "/api/cron/data-layer-snapshot",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-store-voices",
+      "schedule": "0 11 * * *"
     }
   ]
 }
