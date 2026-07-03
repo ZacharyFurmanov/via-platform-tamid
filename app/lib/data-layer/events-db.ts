@@ -82,6 +82,23 @@ export async function ensureDataLayerTables(): Promise<void> {
  await sql`CREATE INDEX IF NOT EXISTS idx_events_era ON events(era)`;
  await sql`CREATE INDEX IF NOT EXISTS idx_events_store ON events(store_slug)`;
  await sql`CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type)`;
+ // product_history mirrors the identity of removed products so the views join can resolve
+ // sold-out / renamed items. Created here too (not only in the sync) so the ETL never
+ // depends on a sync having run first. CREATE IF NOT EXISTS keeps it idempotent with db.ts.
+ await sql`
+ CREATE TABLE IF NOT EXISTS product_history (
+  id INTEGER PRIMARY KEY,
+  store_slug TEXT NOT NULL,
+  composite_id TEXT NOT NULL,
+  title TEXT,
+  description TEXT,
+  shopify_product_id TEXT,
+  price NUMERIC(10,2),
+  currency TEXT,
+  archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ )
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_product_history_composite ON product_history(composite_id)`;
  // Title is stored so brand attribution is auditable and the coverage report can
  // surface high-volume UNRESOLVED titles. Safe migration for pre-existing tables.
  await sql`ALTER TABLE events ADD COLUMN IF NOT EXISTS title TEXT`;
@@ -206,7 +223,17 @@ export async function buildEvents(
 
  const dryRun = !!opts.dryRun;
  if (opts.full && !dryRun) await sql`TRUNCATE events`;
- const cutoff = opts.full ? null : new Date(Date.now() - (opts.sinceDays ?? 3) * 86_400_000).toISOString();
+ // Incremental window: look back to just before the newest event we've already ingested,
+ // so a skipped or failed run SELF-HEALS (catches up the whole gap) instead of losing it
+ // forever. ON CONFLICT(source) makes re-scanning the ~2-day safety overlap a no-op. Falls
+ // back to sinceDays for a fresh/empty log; `full` rebuilds everything.
+ let cutoff: string | null = null;
+ if (!opts.full) {
+ const [{ maxts }] = (await sql`SELECT MAX(ts) AS maxts FROM events`) as Array<{ maxts: string | null }>;
+ cutoff = maxts
+ ? new Date(Date.parse(maxts) - 2 * 86_400_000).toISOString()
+ : new Date(Date.now() - (opts.sinceDays ?? 3) * 86_400_000).toISOString();
+ }
 
  const result: BuildResult = { views: 0, favorites: 0, clicks: 0, orderItems: 0, filtered: emptyFilterStats() };
  const CHUNK = 500;
@@ -231,8 +258,8 @@ export async function buildEvents(
 
  // 1. Views (join products on the composite "slug-id" key; users for the email).
  const viewRows = (cutoff
- ? await sql`SELECT v.id, v.timestamp AS ts, v.user_id, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_views v JOIN products p ON (p.store_slug || '-' || p.id::text) = v.product_id LEFT JOIN users u ON u.id::text = v.user_id WHERE v.timestamp >= ${cutoff}`
- : await sql`SELECT v.id, v.timestamp AS ts, v.user_id, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_views v JOIN products p ON (p.store_slug || '-' || p.id::text) = v.product_id LEFT JOIN users u ON u.id::text = v.user_id`) as Array<Record<string, unknown>>;
+ ? await sql`SELECT v.id, v.timestamp AS ts, v.user_id, COALESCE(p.id, ph.id) AS pid, COALESCE(p.store_slug, ph.store_slug) AS store_slug, COALESCE(p.title, ph.title) AS title, COALESCE(p.description, ph.description) AS description, COALESCE(p.price, ph.price) AS price, COALESCE(p.currency, ph.currency) AS currency, u.email FROM product_views v LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = v.product_id LEFT JOIN product_history ph ON ph.composite_id = v.product_id LEFT JOIN users u ON u.id::text = v.user_id WHERE v.timestamp >= ${cutoff} AND (p.id IS NOT NULL OR ph.id IS NOT NULL)`
+ : await sql`SELECT v.id, v.timestamp AS ts, v.user_id, COALESCE(p.id, ph.id) AS pid, COALESCE(p.store_slug, ph.store_slug) AS store_slug, COALESCE(p.title, ph.title) AS title, COALESCE(p.description, ph.description) AS description, COALESCE(p.price, ph.price) AS price, COALESCE(p.currency, ph.currency) AS currency, u.email FROM product_views v LEFT JOIN products p ON (p.store_slug || '-' || p.id::text) = v.product_id LEFT JOIN product_history ph ON ph.composite_id = v.product_id LEFT JOIN users u ON u.id::text = v.user_id WHERE (p.id IS NOT NULL OR ph.id IS NOT NULL)`) as Array<Record<string, unknown>>;
  result.views = await ingest(viewRows.map((r): Item => {
  const title = (r.title as string) ?? "";
  const e = enrich(title, r.description as string, buckets, brandRef);
@@ -243,14 +270,17 @@ export async function buildEvents(
 
  // 2. Favorites (join products on id; prefer snapshot price as listed-at-save).
  const favRows = (cutoff
- ? await sql`SELECT f.id, f.created_at AS ts, f.user_id::text AS user_id, f.product_snapshot, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_favorites f JOIN products p ON p.id = f.product_id LEFT JOIN users u ON u.id::text = f.user_id::text WHERE f.created_at >= ${cutoff}`
- : await sql`SELECT f.id, f.created_at AS ts, f.user_id::text AS user_id, f.product_snapshot, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_favorites f JOIN products p ON p.id = f.product_id LEFT JOIN users u ON u.id::text = f.user_id::text`) as Array<Record<string, unknown>>;
+ ? await sql`SELECT f.id, f.created_at AS ts, f.user_id::text AS user_id, f.product_snapshot, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_favorites f LEFT JOIN products p ON p.id = f.product_id LEFT JOIN users u ON u.id::text = f.user_id::text WHERE f.created_at >= ${cutoff}`
+ : await sql`SELECT f.id, f.created_at AS ts, f.user_id::text AS user_id, f.product_snapshot, p.id AS pid, p.store_slug, p.title, p.description, p.price, p.currency, u.email FROM product_favorites f LEFT JOIN products p ON p.id = f.product_id LEFT JOIN users u ON u.id::text = f.user_id::text`) as Array<Record<string, unknown>>;
  result.favorites = await ingest(favRows.map((r): Item => {
- const title = (r.title as string) ?? "";
- const e = enrich(title, r.description as string, buckets, brandRef);
- const snap = r.product_snapshot as { price?: number } | null;
+ // When the live product is gone (sold out / re-synced away), fall back to the snapshot
+ // captured at favorite time — otherwise these strong-intent signals for our best-selling
+ // pieces get dropped, biasing demand DOWN for exactly the hot items.
+ const snap = r.product_snapshot as { title?: string; store_slug?: string; price?: number } | null;
+ const title = (r.title as string) ?? snap?.title ?? "";
+ const e = enrich(title, (r.description as string) ?? null, buckets, brandRef);
  const ts = iso(r.ts);
- const row: EventRow = { ts, eventType: "favorite", userId: (r.user_id as string) ?? null, storeSlug: r.store_slug as string, productId: r.pid as number, title, ...e, listedPrice: num(snap?.price) ?? num(r.price), salePrice: null, currency: (r.currency as string) ?? null, qty: 1, source: `fav:${r.id}` };
+ const row: EventRow = { ts, eventType: "favorite", userId: (r.user_id as string) ?? null, storeSlug: (r.store_slug as string) ?? snap?.store_slug ?? "", productId: (r.pid as number) ?? null, title, ...e, listedPrice: num(snap?.price) ?? num(r.price), salePrice: null, currency: (r.currency as string) ?? null, qty: 1, source: `fav:${r.id}` };
  return { userId: row.userId, productId: row.productId, eventType: "favorite", tsMs: Date.parse(ts), userAgent: null, email: (r.email as string) ?? null, row };
  }));
 

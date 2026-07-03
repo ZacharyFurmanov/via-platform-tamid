@@ -1,6 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import { getAllProducts } from "../db";
-import { inferBrandFromTitle } from "../market-data-db";
+import { resolveBrand } from "./brands";
+import { WHOLE_WORD_ALIASES } from "../brandData";
+import { loadBrandRef } from "./brands-db";
 import { inferCategoryFromTitle } from "../loadStoreProducts";
 import { loadEraBuckets } from "./events-db";
 import { inferEra } from "./enrich";
@@ -107,11 +109,14 @@ async function aggregate(curStart: string, priorStart: string): Promise<AggRow[]
 // (era enriched on the fly, since products carry no era column).
 async function supplyTallies(): Promise<Record<SegmentType, Map<string, number>>> {
  const buckets = await loadEraBuckets();
+ const brandRef = await loadBrandRef();
  const products = await getAllProducts().catch(() => []);
  const out: Record<SegmentType, Map<string, number>> = { brand: new Map(), category: new Map(), era: new Map() };
  const bump = (m: Map<string, number>, k: string | null) => { if (k) m.set(k, (m.get(k) ?? 0) + 1); };
  for (const p of products) {
- bump(out.brand, inferBrandFromTitle(p.title));
+ // Resolve brand through the SAME canonical alias reference the demand side (events.brand)
+ // uses, so supply and demand reconcile when joined by brand for sell-through / supply-gap.
+ bump(out.brand, resolveBrand(p.title, brandRef, WHOLE_WORD_ALIASES));
  bump(out.category, inferCategoryFromTitle(p.title) as string);
  bump(out.era, inferEra(`${p.title} ${p.description ?? ""}`, buckets));
  }
@@ -130,7 +135,6 @@ type MetricRow = {
 export type BuildMetricsResult = { asOfDate: string; windows: Record<string, number> };
 
 export async function computeMarketMetrics(opts: { asOf?: string } = {}): Promise<BuildMetricsResult> {
- const sql = db();
  await ensureMarketMetricsTable();
  const supply = await supplyTallies();
  const now = Date.now();

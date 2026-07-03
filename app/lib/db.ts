@@ -195,6 +195,25 @@ export async function initDatabase() {
  await sql`CREATE INDEX IF NOT EXISTS idx_sold_items_designer ON sold_items(designer, sold_at DESC)`;
  await sql`CREATE INDEX IF NOT EXISTS idx_sold_items_store ON sold_items(store_slug, sold_at DESC)`;
 
+ // Preserve the identity of products removed from the catalog (sold out / renamed) so the
+ // events ETL can still resolve their views — otherwise that history orphans and demand for
+ // our best-selling items gets undercounted. Keyed by the original products.id; composite_id
+ // matches how product_views/clicks reference a product ("{store_slug}-{id}").
+ await sql`
+ CREATE TABLE IF NOT EXISTS product_history (
+ id INTEGER PRIMARY KEY,
+ store_slug TEXT NOT NULL,
+ composite_id TEXT NOT NULL,
+ title TEXT,
+ description TEXT,
+ shopify_product_id TEXT,
+ price NUMERIC(10,2),
+ currency TEXT,
+ archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ )
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_product_history_composite ON product_history(composite_id)`;
+
  // Remove products synced under the old computed slug for Bloda's Choice
  // (computed: "bloda-s-choice", correct: "blodas-choice")
  await sql`DELETE FROM products WHERE store_slug = 'bloda-s-choice'`;
@@ -503,6 +522,19 @@ export async function syncProducts(
  AND p.title != ALL(${titles})
  AND p.price > 0
  `.catch(() => {}); // non-fatal on first run
+ }
+
+ // Preserve product identity (id + composite key) BEFORE deletion so the events ETL can
+ // resolve renamed/sold-out products — otherwise their views orphan and demand undercounts
+ // the very items that sold. (sold_items above lacks the id needed to match a view/click.)
+ if (titles.length > 0) {
+ await sql`
+ INSERT INTO product_history (id, store_slug, composite_id, title, description, shopify_product_id, price, currency, archived_at)
+ SELECT p.id, p.store_slug, p.store_slug || '-' || p.id::text, p.title, p.description, p.shopify_product_id, p.price, p.currency, NOW()
+ FROM products p
+ WHERE p.store_slug = ${storeSlug} AND p.title != ALL(${titles})
+ ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, price = EXCLUDED.price, currency = EXCLUDED.currency, archived_at = NOW()
+ `.catch((e) => console.error("[sync] product_history archive failed:", e));
  }
 
  // Remove products that are no longer in the feed.
