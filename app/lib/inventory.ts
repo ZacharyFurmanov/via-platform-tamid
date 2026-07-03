@@ -223,17 +223,41 @@ function parseImages(product: DBProduct): string[] {
 // Bare numbers are normally skipped to avoid false positives (a "2001" in a title is
 // a year), but a SHORT first line that IS just a size — and in shoe range for
 // footwear — is almost certainly the real size.
+// Squarespace (and some Shopify) descriptions are HTML — often entity-encoded
+// ("&lt;p&gt;38&lt;/p&gt;"). Decode entities, turn block tags into line breaks (so a size on
+// its own paragraph becomes its own line), and strip the rest. Plain text passes through.
+function htmlToText(html: string | null | undefined): string | null {
+ if (!html) return null;
+ if (!/[<&]/.test(html)) return html;
+ let s = html;
+ for (let i = 0; i < 2; i++) {
+ s = s
+  .replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&amp;/gi, "&")
+  .replace(/&nbsp;/gi, " ").replace(/&#39;|&apos;/gi, "'").replace(/&quot;/gi, '"');
+ }
+ s = s.replace(/<\/(p|div|li|h[1-6])>/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, " ");
+ return s.replace(/[ \t]+/g, " ").replace(/[ \t]*\n[ \t]*/g, "\n").replace(/\n{2,}/g, "\n").trim();
+}
+
 function extractLeadingSizeFromDescription(description: string | null | undefined, title: string): string | null {
- const first = (description || "").split(/[\n\r]/).map((l) => l.trim()).find((l) => l.length > 0) ?? "";
- if (!first || first.length > 8) return null;
- const norm = first.replace("½", " 1/2");
+ const lines = (description || "").split(/[\n\r]+/).map((l) => l.trim()).filter((l) => l.length > 0);
+ const isShoe = SHOE_RE.test(title) || SHOE_RE.test(inferCategoryFromTitle(title));
+ // Many stores put the size on its own line/paragraph with no "Size:" label. Scan the first
+ // few lines for a bare size token; for shoes accept the footwear range AND look a few lines
+ // in (the size often isn't line 1 — e.g. "sunflower & star details" then "37").
+ for (const line of lines.slice(0, isShoe ? 4 : 1)) {
+ if (line.length > 8) continue;
+ const norm = line.replace("½", " 1/2");
  const numeric = norm.match(/^(\d{1,2})(?:\s?1\/2|\.5)?$/);
  if (numeric) {
- const n = parseInt(numeric[1], 10);
- if (SHOE_RE.test(inferCategoryFromTitle(title))) return n >= 4 && n <= 48 ? norm : null;
- return n >= 0 && n <= 24 ? norm : null;
+  const n = parseInt(numeric[1], 10);
+  const value = /1\/2|\.5/.test(norm) ? `${n}.5` : String(n);
+  if (isShoe) { if (n >= 4 && n <= 48) return value; continue; }
+  if (n >= 0 && n <= 24) return value;
+  continue;
  }
- if (/^(XXS|XS|S|M|L|XL|XXL|XXXL)$/i.test(first)) return first.toUpperCase();
+ if (/^(XXS|XS|S|M|L|XL|XXL|XXXL)$/i.test(line)) return line.toUpperCase();
+ }
  return null;
 }
 
@@ -254,39 +278,42 @@ export function deriveSize(product: DBProduct): string | null {
 function deriveSizeInner(product: DBProduct): string | null {
  const dbSize = product.size && isValidSizeValue(product.size) ? product.size : null;
  const isGenericDb = dbSize != null && GENERIC_CLOTHING_SIZE.test(dbSize);
+ // Descriptions can be HTML (esp. Squarespace) — clean to text once so every extractor
+ // below reads the actual words, not the "<p>" tags.
+ const desc = htmlToText(product.description);
 
  // 0. Explicit seller US fit note ("runs true to a 6", "fits like a 6.5") — the
  // seller telling a US buyer what to order, so it beats a marked EU tag size.
- const fitSize = extractFitSizeFromDescription(product.description);
+ const fitSize = extractFitSizeFromDescription(desc);
  if (fitSize) return fitSize;
 
  // 0b. Explicit seller LETTER fit ("Best Fit M - XL") — same authority: the
  // seller's stated fit wins over a marked numeric/IT tag, so we show "M-XL"
  // (which filters under M, L and XL) instead of converting IT 54 → "US 18".
- const fitLetter = extractFitLetterFromDescription(product.description);
+ const fitLetter = extractFitLetterFromDescription(desc);
  if (fitLetter) return fitLetter;
 
  // 0c. Explicit US size from a conversion table the seller wrote ("UK 10 / EU 40 /
  // US 6"). The seller's own US number is authoritative — it beats formula-converting
  // the EU/UK tag (generic EU−32 would wrongly show US 8 for this EU 40 = US 6 piece).
- const usConversion = extractUSConversionFromDescription(product.description);
+ const usConversion = extractUSConversionFromDescription(desc);
  if (usConversion) return usConversion;
 
  // 1. Tagged/labeled/marked size in description — most authoritative (actual garment tag)
  // Must run before title/DB to prevent "Size: Large [store bucket]" from winning
  // over "Tagged size: XS [actual tag]" that appears later in the description.
- const taggedSize = extractTaggedSizeFromDescription(product.description);
+ const taggedSize = extractTaggedSizeFromDescription(desc);
  if (taggedSize) return taggedSize;
 
  // 2. Any explicit size the seller wrote in the description ("Size: 4",
  // "EU 38", "fits XS"). The seller's own words take precedence over the
  // listing title and the raw Shopify variant size.
- const sizeFromDesc = extractSizeFromDescription(product.description);
+ const sizeFromDesc = extractSizeFromDescription(desc);
  if (sizeFromDesc) return sizeFromDesc;
 
  // 2b. A bare size written as the first line of the description ("38 1/2", "8",
  // "M") — many stores label it this way with no "Size:" prefix. Beats the title.
- const leadingSize = extractLeadingSizeFromDescription(product.description, product.title);
+ const leadingSize = extractLeadingSizeFromDescription(desc, product.title);
  if (leadingSize) return leadingSize;
 
  // 3. Title — explicit size in the listing title
