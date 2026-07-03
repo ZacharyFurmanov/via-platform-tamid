@@ -3,8 +3,9 @@ import { neon } from "@neondatabase/serverless";
 
 // One-shot, idempotent index creation for the hot query paths the scale audit flagged as
 // missing (full seq-scans on clicks/products/events that OOM or crawl as data grows).
-// CRON_SECRET-gated; trigger once:
-//   curl -H "authorization: Bearer $CRON_SECRET" https://vyaplatform.com/api/admin/db-indexes
+// Lives under /api/cron so it's Bearer-gated (CRON_SECRET) and not behind the admin-cookie
+// middleware. Trigger once:
+//   curl -H "authorization: Bearer $CRON_SECRET" https://vyaplatform.com/api/cron/db-indexes
 // CREATE INDEX IF NOT EXISTS is safe to re-run. Each index runs independently so one failure
 // (e.g. a column that doesn't exist on this DB) is reported without blocking the rest.
 // Run it while the tables are still small — plain CREATE INDEX briefly locks writes on big tables.
