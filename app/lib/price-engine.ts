@@ -1,4 +1,4 @@
-import { fetchComps, isCompsConfigured, type Comp } from "./comps";
+import { fetchComps, rankComps, isCompsConfigured, type Comp } from "./comps";
 import { inferCategoryFromTitle } from "./loadStoreProducts";
 import { getInternalPriceBenchmark, type InternalPriceBenchmark } from "./data-layer/price-benchmark-db";
 import { AI_MODELS } from "./ai-models";
@@ -120,18 +120,17 @@ export async function estimatePrice(opts: {
  // internal benchmark (privacy-gated, from the nightly market_metrics) is the strongest
  // signal — actual sales on our marketplace for this brand/category.
  const category = inferCategoryFromTitle(opts.query) as string;
+ // Full comp basket (reverse-image + eBay sold + Google Shopping + RealReal). A dry-run
+ // (see /api/cron/pricing-compare) showed a leaner reverse-image + eBay-only path diverged
+ // ~23% and failed to price some luxury bags (their comps came only from the RealReal pass),
+ // so we keep the full basket — accuracy beats the few cents saved.
  const [fetched, benchmark] = await Promise.all([
  fetchComps(opts.query).catch(() => []),
  getInternalPriceBenchmark({ brand: opts.context?.brand, category }).catch(() => null),
  ]);
- // Reverse-image matches first (they're the exact piece), then searched comps. Dedupe,
- // keep authenticated-luxury sources ahead of fast-sale marketplaces, and cap the set.
- const PREMIUM = /real\s?real|vestiaire|fashionphile|rebag|luxury\s?closet|1st\s?dibs|farfetch/i;
- const seen = new Set<string>();
- const comps = [...(opts.extraComps || []), ...fetched]
- .filter((c) => { const k = c.link || `${c.title}|${c.priceCents}`; if (seen.has(k)) return false; seen.add(k); return true; })
- .sort((a, b) => (PREMIUM.test(b.source) ? 1 : 0) - (PREMIUM.test(a.source) ? 1 : 0))
- .slice(0, 40);
+ // Reverse-image matches first (the exact piece), then the searched comps; dedupe, surface
+ // authenticated-luxury sources first, and cap the set.
+ const comps = rankComps([...(opts.extraComps || []), ...fetched]).slice(0, 40);
  let marketCents: number | null = null, low: number | null = null, high: number | null = null, confidence = 0, rationale = "", kept: Comp[] = [];
 
  if (comps.length) {
