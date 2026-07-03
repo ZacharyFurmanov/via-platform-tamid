@@ -8,9 +8,10 @@ import { STOREFRONT_TEMPLATES, getTemplate, HEADING_FONTS, BODY_FONTS } from "./
 import { sanitizeBlocks, sanitizePages } from "./storefront-blocks";
 import { stores } from "./stores";
 import type { StorefrontTheme } from "./store-import";
+import { AI_MODELS } from "./ai-models";
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const MODEL = AI_MODELS.storefront;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 async function anthropic(body: any): Promise<any> {

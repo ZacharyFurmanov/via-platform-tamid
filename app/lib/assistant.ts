@@ -10,9 +10,10 @@ import { getListingsByStore, updateListing } from "./listings-db";
 import { listCapturePaths, getCapturePage, updateCapturePageHtml, setSiteCss } from "./site-capture-db";
 import { list } from "@vercel/blob";
 import type { StorefrontTheme } from "./store-import";
+import { AI_MODELS } from "./ai-models";
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const MODEL = AI_MODELS.assistant;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 export type AssistantMessage = { role: "user" | "assistant"; content: any };

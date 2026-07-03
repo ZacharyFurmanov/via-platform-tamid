@@ -1,13 +1,14 @@
 import { fetchComps, isCompsConfigured, type Comp } from "./comps";
 import { inferCategoryFromTitle } from "./loadStoreProducts";
 import { getInternalPriceBenchmark, type InternalPriceBenchmark } from "./data-layer/price-benchmark-db";
+import { AI_MODELS } from "./ai-models";
 
 // The price engine: turn real comps into one defensible number.
 //  market value  = comps, filtered to TRUE comparables by the model (sold > asking)
 //  floor         = cost × (1 + the store's min markup)
 //  suggested     = max(market, floor)
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const MODEL = AI_MODELS.pricing;
 
 export type PriceEstimate = {
  suggestedCents: number;

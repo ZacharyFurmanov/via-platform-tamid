@@ -1,9 +1,10 @@
 import { getListingsByStore } from "./listings-db";
 import { saveVoice, getVoice, type StoreVoice } from "./store-voice-db";
+import { AI_MODELS } from "./ai-models";
 
 // Learn a store's writing voice from how they already write their listings.
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const MODEL = AI_MODELS.voice; // Haiku — mechanical style summary that feeds the drafter
 
 export function stripHtml(s: string): string {
  return s

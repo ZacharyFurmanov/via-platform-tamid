@@ -4,6 +4,8 @@
 // (drafting new listings in the store's exact tone + pricing) and seller insight.
 // ───────────────────────────────────────────────────────────────────────────
 
+import { AI_MODELS } from "./ai-models";
+
 export type StoreProfile = {
  summary: string; // 2–3 sentence positioning
  voice: string; // how they write listings (tone, vocabulary, structure)
@@ -27,7 +29,7 @@ export type StoreProfile = {
  generatedAt: string | null;
 };
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = AI_MODELS.storeProfile;
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
 function priceNum(p: string): number {

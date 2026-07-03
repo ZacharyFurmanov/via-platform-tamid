@@ -6,8 +6,10 @@
 // Uses Claude vision (raw REST, matching app/lib/data-layer/vision.ts).
 // ───────────────────────────────────────────────────────────────────────────
 
+import { AI_MODELS } from "./ai-models";
+
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const INTAKE_MODEL = "claude-sonnet-4-6"; // capable + cost-fit for high-volume intake
+const INTAKE_MODEL = AI_MODELS.intake;
 
 export function isIntakeConfigured(): boolean {
  return Boolean(process.env.ANTHROPIC_API_KEY);
