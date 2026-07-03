@@ -34,12 +34,13 @@ export async function backfillSizeKeys(
  // that don't have size_keys yet (new/re-synced items), draining any backlog over a few runs.
  const cap = opts.limit ?? 1_000_000;
  const rows = (opts.onlyMissing
- ? await sql`SELECT id, title, description, size FROM products WHERE size_keys IS NULL LIMIT ${cap}`
- : await sql`SELECT id, title, description, size FROM products LIMIT ${cap}`) as Array<{
+ ? await sql`SELECT id, title, description, size, currency FROM products WHERE size_keys IS NULL LIMIT ${cap}`
+ : await sql`SELECT id, title, description, size, currency FROM products LIMIT ${cap}`) as Array<{
  id: number;
  title: string;
  description: string | null;
  size: string | null;
+ currency: string | null;
  }>;
 
  // Group products by identical key-set so the whole table updates in a handful
@@ -52,7 +53,7 @@ export async function backfillSizeKeys(
  const sizeFixes = new Map<string | null, number[]>();
 
  for (const r of rows) {
- const derived = deriveDisplaySize({ title: r.title, description: r.description, size: r.size } as DBProduct);
+ const derived = deriveDisplaySize({ title: r.title, description: r.description, size: r.size, currency: r.currency } as DBProduct);
  const keys = derived ? expandSizeKeys(derived) : [];
  const sig = JSON.stringify(keys);
  const g = groups.get(sig);
