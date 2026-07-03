@@ -486,6 +486,28 @@ export const stores = [
   "Although sales are generally considered final, a return request can be made within 7 days of delivery if you are not completely satisfied or feel the item is not as pictured. Items must be returned in original condition with tags, and requests are reviewed case-by-case. Use the form below with any pre-purchase questions.",
  },
  {
+ slug: "lamash",
+ dashboardToken: "lm-6a3f9c2e8d1b",
+ name: "Lamash",
+ location: "Sheffield, UK",
+ description:
+ "Based in the UK, Lamash is a curated vintage store specialising in designer pieces sourced through years of experience across the UK and Paris. The collection celebrates fun, confident dressing — offering everything from effortless everyday staples to statement event wear, with a focus on timeless vintage that feels unique, wearable, and effortlessly sexy.",
+ website: "https://lamash-store.myshopify.com",
+ dataSource: "lamash",
+ image: "/stores/lamash.jpg",
+ logo: "/stores/lamash.jpg",
+ logoBg: "#ffffff",
+ currency: "GBP",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "247333",
+ authenticityPolicy:
+ "Every piece at Lamash is personally sourced and hand-selected through years of experience across the UK and Paris. Each item is carefully inspected and accurately described before listing.",
+ shippingPolicy:
+ "Ships from Sheffield, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+ returnPolicy:
+ "All sales are final. As a curated vintage shop specializing in one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
+ },
+ {
  slug: "lei-vintage",
  dashboardToken: "lv-f4a8b2c1d9e3",
  name: "LEI Vintage",
@@ -1078,6 +1100,29 @@ export const stores = [
  "Returns accepted within 7 days of delivery — items must be shipped back within 7 business days of return confirmation. Refunds are issued as store credit for the full price minus a $15 restocking and return shipping fee. Final sale items (belts, jewelry, swimwear, lingerie, and sale items) are not eligible. Contact hello@sourcedbyscottie.com to initiate a return.",
  },
  {
+ slug: "stone-studio-vintage",
+ dashboardToken: "ssv-7d2e9a4c1f6b",
+ name: "Stone Studio Vintage",
+ location: "Miami, FL",
+ description:
+ "Stone Studio Vintage is a curated collection of authentic luxury and designer vintage, handpicked for those who love rare, timeless pieces with a modern edge. Founded by two sisters with a shared love for vintage fashion, Stone Studio Vintage was created from an obsession with finding the coolest, most niche pieces — constantly searching for rare designer finds and one-of-a-kind vintage that feels special, unexpected, and impossible to find everywhere else.",
+ website: "https://stonestudiovintage.com",
+ contactEmail: "stonestudiovintage@gmail.com",
+ dataSource: "stone-studio-vintage",
+ image: "/stores/stone-studio-vintage.jpg",
+ logo: "/stores/stone-studio-vintage.jpg",
+ logoBg: "#ffffff",
+ currency: "USD",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "246578",
+ authenticityPolicy:
+ "Every piece at Stone Studio Vintage is handpicked and personally authenticated by the sisters behind the shop. Each item is carefully inspected for quality and accurately described before listing.",
+ shippingPolicy:
+ "Ships from Miami, FL. Shipping rates are calculated at checkout.",
+ returnPolicy:
+ "All sales are final. As a curated vintage shop specializing in rare, one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
+ },
+ {
  slug: "tess-elizabeth-vintage",
  dashboardToken: "tev-7b3d1a9c5e2f",
  name: "Tess Elizabeth Vintage",
@@ -1284,29 +1329,6 @@ export const stores = [
  returnPolicy:
  "Bottoms may be returned within 10 days for a refund to your original payment method (issued within 10 business days of approval); all other items are final sale. There are no direct exchanges, and sale items and gift cards are non-returnable.",
  },
- {
- slug: "stone-studio-vintage",
- dashboardToken: "ssv-7d2e9a4c1f6b",
- name: "Stone Studio Vintage",
- location: "Miami, FL",
- description:
- "Stone Studio Vintage is a curated collection of authentic luxury and designer vintage, handpicked for those who love rare, timeless pieces with a modern edge. Founded by two sisters with a shared love for vintage fashion, Stone Studio Vintage was created from an obsession with finding the coolest, most niche pieces — constantly searching for rare designer finds and one-of-a-kind vintage that feels special, unexpected, and impossible to find everywhere else.",
- website: "https://stonestudiovintage.com",
- contactEmail: "stonestudiovintage@gmail.com",
- dataSource: "stone-studio-vintage",
- image: "/stores/stone-studio-vintage.jpg",
- logo: "/stores/stone-studio-vintage.jpg",
- logoBg: "#ffffff",
- currency: "USD",
- commissionType: "shopify-collabs" as const,
- collabsStoreId: "246578",
- authenticityPolicy:
- "Every piece at Stone Studio Vintage is handpicked and personally authenticated by the sisters behind the shop. Each item is carefully inspected for quality and accurately described before listing.",
- shippingPolicy:
- "Ships from Miami, FL. Shipping rates are calculated at checkout.",
- returnPolicy:
- "All sales are final. As a curated vintage shop specializing in rare, one-of-a-kind pieces, please review all item details and photos carefully before purchasing.",
- },
 ];
 
 /** Stores shown on the public site — Shopify Collabs stores must have a collabsStoreId; other types (Squarespace, Square, Wix, custom) are always shown. */
@@ -1365,6 +1387,7 @@ export function getCommissionAmount(price: number): number {
  * Fill in each store's email address — leave blank to skip that store.
  */
 export const storeContactEmails: Record<string, string> = {
+ "lamash": "mollyashmore6@gmail.com",
  "stone-studio-vintage": "stonestudiovintage@gmail.com",
  "ascensio-vintage": "info@ascensiovintage.com",
  "in-a-past-life": "inapastlife.xo@gmail.com",

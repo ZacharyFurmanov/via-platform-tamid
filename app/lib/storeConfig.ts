@@ -463,6 +463,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  storeDomain: "threadandbloomshop.com",
  scrapeProductPage: true,
  },
+ {
+ type: "shopify",
+ name: "Lamash",
+ slug: "lamash",
+ storeDomain: "lamash-store.myshopify.com",
+ scrapeProductPage: true,
+ },
 ];
 
 // Big Cartel stores (public JSON API — no token required)
