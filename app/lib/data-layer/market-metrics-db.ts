@@ -180,8 +180,8 @@ export async function computeMarketMetrics(opts: { asOf?: string } = {}): Promis
  }
  }
 
- // Replace today's rows wholesale (idempotent re-run), then bulk insert.
- await sql`DELETE FROM market_metrics WHERE as_of_date = ${asOf}`;
+ // Upsert today's rows (no DELETE) so the table is never in a torn/empty state during a
+ // rebuild, and two overlapping runs can't dup-key-fail — see insertMetrics' ON CONFLICT.
  const CHUNK = 500;
  for (let i = 0; i < allRows.length; i += CHUNK) await insertMetrics(asOf, allRows.slice(i, i + CHUNK));
 
@@ -208,5 +208,12 @@ async function insertMetrics(asOf: string, rows: MetricRow[]): Promise<void> {
   ${col((r) => r.priceP25)}::numeric[], ${col((r) => r.priceMedian)}::numeric[], ${col((r) => r.priceP75)}::numeric[],
   ${col((r) => r.activeSupply)}::int[], ${col((r) => r.supplyGapScore)}::int[], ${col((r) => r.storeCount)}::int[], ${col((r) => r.txnCount)}::int[]
  )
+ ON CONFLICT (as_of_date, segment_type, segment_value, window_key) DO UPDATE SET
+  demand_index = EXCLUDED.demand_index, demand_trend = EXCLUDED.demand_trend, raw_demand = EXCLUDED.raw_demand,
+  views = EXCLUDED.views, saves = EXCLUDED.saves, clicks = EXCLUDED.clicks, orders = EXCLUDED.orders,
+  sell_through_pct = EXCLUDED.sell_through_pct, median_days_to_sale = EXCLUDED.median_days_to_sale,
+  price_p25 = EXCLUDED.price_p25, price_median = EXCLUDED.price_median, price_p75 = EXCLUDED.price_p75,
+  active_supply = EXCLUDED.active_supply, supply_gap_score = EXCLUDED.supply_gap_score,
+  store_count = EXCLUDED.store_count, txn_count = EXCLUDED.txn_count, generated_at = NOW()
  `;
 }

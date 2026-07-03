@@ -24,14 +24,18 @@ function db() {
 }
 
 export async function backfillSizeKeys(
- opts: { onlyMissing?: boolean } = {},
+ opts: { onlyMissing?: boolean; limit?: number } = {},
 ): Promise<{ scanned: number; updated: number; groups: number; sizesFixed: number }> {
  const sql = db();
  await ensureSizeKeysColumn();
 
+ // Cap rows per run so the nightly job stays bounded as the catalog grows — this was a
+ // full, unbounded table scan+rewrite every night. With onlyMissing it only touches rows
+ // that don't have size_keys yet (new/re-synced items), draining any backlog over a few runs.
+ const cap = opts.limit ?? 1_000_000;
  const rows = (opts.onlyMissing
- ? await sql`SELECT id, title, description, size FROM products WHERE size_keys IS NULL`
- : await sql`SELECT id, title, description, size FROM products`) as Array<{
+ ? await sql`SELECT id, title, description, size FROM products WHERE size_keys IS NULL LIMIT ${cap}`
+ : await sql`SELECT id, title, description, size FROM products LIMIT ${cap}`) as Array<{
  id: number;
  title: string;
  description: string | null;

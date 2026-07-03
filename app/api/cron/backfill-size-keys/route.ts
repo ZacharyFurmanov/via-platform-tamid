@@ -13,7 +13,7 @@ export async function GET(request: Request) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
  try {
- const result = await backfillSizeKeys();
+ const result = await backfillSizeKeys({ onlyMissing: true, limit: 5000 });
  return NextResponse.json({ ok: true, ...result });
  } catch (err) {
  console.error("[cron/backfill-size-keys] failed:", err);

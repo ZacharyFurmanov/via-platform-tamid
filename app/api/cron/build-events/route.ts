@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildEvents } from "@/app/lib/data-layer/events-db";
+import { sendOpsAlert } from "@/app/lib/email";
 
 // Daily incremental ETL of the capture tables into the unified `events` log.
 // Idempotent (ON CONFLICT(source) DO NOTHING), so a few days of overlap is safe.
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
  return NextResponse.json({ ok: true, ...result });
  } catch (err) {
  console.error("[cron/build-events] failed:", err);
+ await sendOpsAlert("build-events FAILED", String(err));
  return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
  }
 }

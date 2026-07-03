@@ -268,9 +268,13 @@ export async function buildEvents(
 
  // 4. Orders → one event per line item (sale_price = item price). Real money:
  // skip burst (multi-item orders share a timestamp), but still drop internal/test.
+ // Returned/refunded orders must NOT count as sales — the admin market path already
+ // excludes them, so filter here too or the two systems disagree on GMV/sell-through.
+ // Ensure the column exists first (it's created lazily by admin routes, not everywhere).
+ await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned BOOLEAN`;
  const convRows = (cutoff
- ? await sql`SELECT c.conversion_id, c.timestamp AS ts, c.user_id, c.store_slug, c.currency, c.items, u.email FROM conversions c LEFT JOIN users u ON u.id::text = c.user_id WHERE c.order_total > 0 AND c.timestamp >= ${cutoff}`
- : await sql`SELECT c.conversion_id, c.timestamp AS ts, c.user_id, c.store_slug, c.currency, c.items, u.email FROM conversions c LEFT JOIN users u ON u.id::text = c.user_id WHERE c.order_total > 0`) as Array<Record<string, unknown>>;
+ ? await sql`SELECT c.conversion_id, c.timestamp AS ts, c.user_id, c.store_slug, c.currency, c.items, u.email FROM conversions c LEFT JOIN users u ON u.id::text = c.user_id WHERE c.order_total > 0 AND (c.returned IS NULL OR c.returned = false) AND c.timestamp >= ${cutoff}`
+ : await sql`SELECT c.conversion_id, c.timestamp AS ts, c.user_id, c.store_slug, c.currency, c.items, u.email FROM conversions c LEFT JOIN users u ON u.id::text = c.user_id WHERE c.order_total > 0 AND (c.returned IS NULL OR c.returned = false)`) as Array<Record<string, unknown>>;
  const orderItems: Item[] = [];
  for (const c of convRows) {
  const items = Array.isArray(c.items) ? c.items : [];

@@ -424,6 +424,13 @@ export async function syncProducts(
  variant_id = COALESCE(EXCLUDED.variant_id, products.variant_id),
  shopify_product_id = COALESCE(EXCLUDED.shopify_product_id, products.shopify_product_id),
  size = COALESCE(EXCLUDED.size, products.size),
+ -- Invalidate derived size tokens ONLY when their inputs (size/description) actually
+ -- changed, so the bounded onlyMissing backfill recomputes just the changed rows
+ -- instead of the whole catalog every night.
+ size_keys = CASE
+ WHEN products.description IS DISTINCT FROM EXCLUDED.description
+ OR products.size IS DISTINCT FROM COALESCE(EXCLUDED.size, products.size)
+ THEN NULL ELSE products.size_keys END,
  compare_at_price = EXCLUDED.compare_at_price,
  product_type = COALESCE(EXCLUDED.product_type, products.product_type),
  brand = COALESCE(EXCLUDED.brand, products.brand),

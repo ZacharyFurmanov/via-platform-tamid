@@ -10,7 +10,12 @@ const getDatabaseUrl = () => {
  return url;
 };
 
+// Run the ~30 DDL statements below at most once per lambda instance, not on every hot-path
+// call (saveClick/saveConversion/analytics reads all invoke this). Matches favorites-db.ts.
+let analyticsTablesInitialized = false;
+
 export async function initAnalyticsTables() {
+ if (analyticsTablesInitialized) return;
  const sql = neon(getDatabaseUrl());
 
  await sql`
@@ -93,6 +98,10 @@ export async function initAnalyticsTables() {
  // Buyer email for the store's sales list (Square sends it on the payment object;
  // Shopify/Wix via the order webhook). Stored per-conversion so every source is covered.
  await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS customer_email TEXT`;
+ // Refund/return flag — created here (canonical) so the events ETL and admin market
+ // queries that filter on it never hit a missing column on a fresh DB.
+ await sql`ALTER TABLE conversions ADD COLUMN IF NOT EXISTS returned BOOLEAN`;
+ analyticsTablesInitialized = true;
 }
 
 export type CartItemSnapshot = {
@@ -354,9 +363,11 @@ export async function getConversionAnalytics(range: string) {
 /**
  * Record a product page view. Called fire-and-forget from the product page.
  */
+let productViewsReady = false;
 export async function saveProductView(productId: string, userId?: string | null): Promise<void> {
  const sql = neon(getDatabaseUrl());
- // CREATE IF NOT EXISTS is idempotent — safe to call each time
+ // Ensure schema once per lambda instance — not 3 DDL statements on every single page view.
+ if (!productViewsReady) {
  await sql`
  CREATE TABLE IF NOT EXISTS product_views (
  id SERIAL PRIMARY KEY,
@@ -366,6 +377,8 @@ export async function saveProductView(productId: string, userId?: string | null)
  `;
  await sql`CREATE INDEX IF NOT EXISTS idx_product_views_product_id ON product_views(product_id)`;
  await sql`ALTER TABLE product_views ADD COLUMN IF NOT EXISTS user_id TEXT`;
+ productViewsReady = true;
+ }
  await sql`INSERT INTO product_views (product_id, user_id) VALUES (${productId}, ${userId ?? null})`;
 }
 
