@@ -1,4 +1,5 @@
 import { fetchComps, rankComps, isCompsConfigured, type Comp } from "./comps";
+import { getCachedComps, saveComps, getVyaComps } from "./comp-cache-db";
 import { inferCategoryFromTitle } from "./loadStoreProducts";
 import { getInternalPriceBenchmark, type InternalPriceBenchmark } from "./data-layer/price-benchmark-db";
 import { AI_MODELS } from "./ai-models";
@@ -107,6 +108,22 @@ export async function valueFromComps(
  }
 }
 
+export type PriceFlag = { level: "under" | "over" | "at"; pct: number; marketUsd: number; message: string };
+
+/** Compare a seller's own price to a computed market value → an over/under-market flag. Uses
+ *  the estimate's low/high band (or a ±band) so small deviations read as "at market" and only
+ *  real gaps flag. Kept here so the intake route, the price-check endpoint, and the client UI
+ *  all use one definition. */
+export function computePriceFlag(sellerCents: number, marketCents: number, lowCents: number | null, highCents: number | null): PriceFlag {
+ const low = lowCents ?? Math.round(marketCents * 0.85);
+ const high = highCents ?? Math.round(marketCents * 1.2);
+ const marketUsd = Math.round(marketCents / 100);
+ const pct = Math.round(((sellerCents - marketCents) / marketCents) * 100);
+ if (sellerCents < low) return { level: "under", pct, marketUsd, message: `About ${Math.abs(pct)}% below market — comparable pieces sit around $${marketUsd}. You could likely price higher.` };
+ if (sellerCents > high) return { level: "over", pct, marketUsd, message: `About ${pct}% above market (~$${marketUsd}) — expect a slower sale.` };
+ return { level: "at", pct, marketUsd, message: `Right at market (~$${marketUsd}).` };
+}
+
 export async function estimatePrice(opts: {
  query: string;
  photoUrl?: string;
@@ -120,17 +137,27 @@ export async function estimatePrice(opts: {
  // internal benchmark (privacy-gated, from the nightly market_metrics) is the strongest
  // signal — actual sales on our marketplace for this brand/category.
  const category = inferCategoryFromTitle(opts.query) as string;
- // Full comp basket (reverse-image + eBay sold + Google Shopping + RealReal). A dry-run
- // (see /api/cron/pricing-compare) showed a leaner reverse-image + eBay-only path diverged
- // ~23% and failed to price some luxury bags (their comps came only from the RealReal pass),
- // so we keep the full basket — accuracy beats the few cents saved.
- const [fetched, benchmark] = await Promise.all([
- fetchComps(opts.query).catch(() => []),
- getInternalPriceBenchmark({ brand: opts.context?.brand, category }).catch(() => null),
+ const brand = opts.context?.brand ?? null;
+ // Owned-data-first: reuse recently-cached comps (from past PAID lookups) before spending on a
+ // new SerpApi basket. Only hit the live full basket (reverse-image + eBay + Shopping + RealReal)
+ // on a cold/thin cache, then write every fresh comp back so the next similar item is free.
+ // (Reverse-image comps in extraComps are always fresh — per photo — and also cached.)
+ const [cached, benchmark, vyaComps] = await Promise.all([
+ getCachedComps({ query: opts.query, brand, category, maxAgeDays: 45, limit: 40 }).catch(() => []),
+ getInternalPriceBenchmark({ brand, category }).catch(() => null),
+ getVyaComps({ brand, limit: 15 }).catch(() => []),
  ]);
- // Reverse-image matches first (the exact piece), then the searched comps; dedupe, surface
- // authenticated-luxury sources first, and cap the set.
- const comps = rankComps([...(opts.extraComps || []), ...fetched]).slice(0, 40);
+ let live: Comp[] = [];
+ if (cached.length < 8) {
+ live = await fetchComps(opts.query).catch(() => []);
+ }
+ // Persist this run's fresh EXTERNAL comps (reverse-image + any live) for future reuse. VYA
+ // comps come straight from our own tables, so there's nothing to cache.
+ const fresh = rankComps([...(opts.extraComps || []), ...live]);
+ if (fresh.length) await saveComps(fresh, { query: opts.query, brand, category });
+ // Reverse-image (exact piece) + VYA's own sold/listed items first, then external cached/live;
+ // dedupe, luxury-first, cap. VYA (sold) are real transactions, VYA (listed) are asking refs.
+ const comps = rankComps([...(opts.extraComps || []), ...vyaComps, ...cached, ...live]).slice(0, 40);
  let marketCents: number | null = null, low: number | null = null, high: number | null = null, confidence = 0, rationale = "", kept: Comp[] = [];
 
  if (comps.length) {

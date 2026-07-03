@@ -22,6 +22,20 @@ type Form = { title: string; brand: string; era: string; material: string; condi
 type Collection = { id: string; title: string; itemCount: number };
 const BLANK: Form = { title: "", brand: "", era: "", material: "", condition: "", size: "", category: "", price: "", cost: "", description: "", weightOz: "", lengthIn: "", widthIn: "", heightIn: "" };
 
+type Flag = { level: string; message: string; marketUsd: number; pct?: number };
+
+// Client mirror of the server's computePriceFlag (works in whole dollars) — lets the flag update
+// instantly as the seller edits the price, once we know the item's market value. No server call.
+function flagFor(priceUsd: number, marketUsd: number | null, lowUsd: number | null, highUsd: number | null): Flag | null {
+ if (!marketUsd || priceUsd <= 0) return null;
+ const lo = lowUsd ?? Math.round(marketUsd * 0.85);
+ const hi = highUsd ?? Math.round(marketUsd * 1.2);
+ const pct = Math.round(((priceUsd - marketUsd) / marketUsd) * 100);
+ if (priceUsd < lo) return { level: "under", pct, marketUsd, message: `About ${Math.abs(pct)}% below market — comparable pieces sit around $${marketUsd}. You could likely price higher.` };
+ if (priceUsd > hi) return { level: "over", pct, marketUsd, message: `About ${pct}% above market (~$${marketUsd}) — expect a slower sale.` };
+ return { level: "at", pct, marketUsd, message: `Right at market (~$${marketUsd}).` };
+}
+
 const RISKY = ["brand", "era", "material"] as const;
 const THRESHOLD = 0.75;
 
@@ -108,6 +122,7 @@ export default function IntakePage() {
  const [priceNote, setPriceNote] = useState<string>("");
  const [priceLow, setPriceLow] = useState<number | null>(null);
  const [priceHigh, setPriceHigh] = useState<number | null>(null);
+ const [priceFlag, setPriceFlag] = useState<Flag | null>(null);
 
  // Load the store's markup-over-cost setting so entering cost auto-fills price; and
  // the store's collections for tagging.
@@ -166,8 +181,32 @@ export default function IntakePage() {
  setBusy(false);
  }
 
- // Fill ONLY the blank fields with AI — whatever the seller typed is kept and tells
- // the server to skip that work (a typed price skips the valuation call entirely).
+ // Establish the item's market value from the server ONCE — on price blur, when we don't already
+ // have it (e.g. the seller typed a price without running Fill-with-AI). After that the flag
+ // recomputes client-side as the price changes, so this stays cheap and instant.
+ async function checkPriceOnBlur() {
+ const priceUsd = Number(form.price) || 0;
+ if (priceUsd <= 0 || rawMarketCents) return; // no price, or market already known (client handles it)
+ if ((!form.brand.trim() && !form.title.trim()) || !photos.length) return; // not enough to price yet
+ try {
+ const r = await fetch("/api/store/price-check", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ price: priceUsd, brand: form.brand, title: form.title, era: form.era, material: form.material, category: form.category, photoUrl: photos[0] }),
+ });
+ const d = await r.json().catch(() => null);
+ if (!r.ok || !d) return;
+ const est = d.estimate;
+ if (typeof est?.marketCents === "number") setRawMarketCents(est.marketCents);
+ if (est?.suggestedCents) setMarketPrice(Math.round(est.suggestedCents / 100));
+ setPriceLow(typeof est?.lowCents === "number" ? Math.round(est.lowCents / 100) : null);
+ setPriceHigh(typeof est?.highCents === "number" ? Math.round(est.highCents / 100) : null);
+ setPriceFlag(d.priceFlag ?? null);
+ } catch { /* best-effort nudge; stay silent */ }
+ }
+
+ // Fill ONLY the blank fields with AI — whatever the seller typed is kept. Pricing always
+ // runs now (cheaply, off our own data), so a typed price still gets an over/under-market flag.
  async function fillWithAI() {
  if (!photos.length) { setErr("Add at least one photo first."); return; }
  setBusy(true);
@@ -195,6 +234,7 @@ export default function IntakePage() {
  if (typeof est?.rationale === "string") setPriceNote(est.rationale);
  setPriceLow(typeof est?.lowCents === "number" ? Math.round(est.lowCents / 100) : null);
  setPriceHigh(typeof est?.highCents === "number" ? Math.round(est.highCents / 100) : null);
+ setPriceFlag(d.priceFlag ?? null);
  if (dr?.careTag) setCareTag(dr.careTag);
  if (dr?.runway) setRunway(dr.runway);
 
@@ -268,7 +308,7 @@ export default function IntakePage() {
  function reset() {
  setPhase("form"); setPhotos([]); setRunway(null); setGhost(null); setForm(BLANK);
  setSelectedCols([]); setFlagged([]); setConfirmed({}); setErr(null); setSavedDraft(false);
- setReverseImage(null); setPromptVersion(null); setCareTag(null); setMarketPrice(null); setRawMarketCents(null); setPriceNote(""); setPriceLow(null); setPriceHigh(null); setAiDraft({}); setEmbedding(null);
+ setReverseImage(null); setPromptVersion(null); setCareTag(null); setMarketPrice(null); setRawMarketCents(null); setPriceNote(""); setPriceLow(null); setPriceHigh(null); setPriceFlag(null); setAiDraft({}); setEmbedding(null);
  }
 
  // ── Done ──
@@ -375,7 +415,7 @@ export default function IntakePage() {
  <Button className="mt-4 w-full" variant="secondary" onClick={fillWithAI} disabled={busy || !photos.length}>
  <Sparkles size={14} className="mr-1.5 inline" />{busy ? busyMsg : "Fill the rest with AI"}
  </Button>
- <p className="mt-1.5 text-[11px] text-stone-400">Only fills blanks. Set a price and it skips the pricing AI.</p>
+ <p className="mt-1.5 text-[11px] text-stone-400">Only fills blanks. Your price is always checked against live market comps.</p>
 
  <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => onPick(e.target.files)} />
  </div>
@@ -398,11 +438,16 @@ export default function IntakePage() {
  <div><label className={label}>Category</label><input className={input} value={form.category} onChange={(e) => set("category", e.target.value)} /></div>
  </div>
  <div className="grid grid-cols-2 gap-3">
- <div><label className={label}>Price ($)</label><input className={input} value={form.price} onChange={(e) => set("price", e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="You set it, or AI estimates" />{(priceNote || (markupPct != null && form.cost)) && <p className="mt-1 text-[10px] text-stone-400">{priceNote || `auto · ${markupPct}% over cost`}</p>}</div>
+ <div><label className={label}>Price ($)</label><input className={input} value={form.price} onChange={(e) => { const v = e.target.value.replace(/[^0-9.]/g, ""); set("price", v); if (rawMarketCents) setPriceFlag(flagFor(Number(v) || 0, marketPrice, priceLow, priceHigh)); }} onBlur={checkPriceOnBlur} inputMode="decimal" placeholder="You set it, or AI estimates" />{(priceNote || (markupPct != null && form.cost)) && <p className="mt-1 text-[10px] text-stone-400">{priceNote || `auto · ${markupPct}% over cost`}</p>}</div>
  <div><label className={label}>Cost ($) <span className="font-normal text-stone-400">— private</span></label><input className={input} value={form.cost} onChange={(e) => onCostChange(e.target.value)} inputMode="decimal" placeholder="What you paid" /></div>
  </div>
  {priceLow != null && priceHigh != null && priceHigh > priceLow && (
  <PriceScale low={priceLow} high={priceHigh} market={marketPrice} value={Number(form.price) || 0} />
+ )}
+ {priceFlag && (
+ <div className={`mt-2 rounded-lg px-3 py-2 text-[11px] font-medium ${priceFlag.level === "under" ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200" : priceFlag.level === "over" ? "bg-rose-50 text-rose-800 ring-1 ring-rose-200" : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"}`}>
+ {priceFlag.level === "under" ? "🔽 " : priceFlag.level === "over" ? "🔼 " : "✅ "}{priceFlag.message}
+ </div>
  )}
  <div>
  <label className={label}>Shipping parcel <span className="font-normal text-stone-400">— AI-estimated, edit if needed</span></label>

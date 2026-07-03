@@ -4,7 +4,7 @@ import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
 import { draftListing, isIntakeConfigured, PROMPT_VERSION } from "@/app/lib/ai-intake";
 import { ghostMannequinFromUrl, isPhotoroomConfigured } from "@/app/lib/photoroom";
 import { getVoice, buildStoreVoice } from "@/app/lib/store-voice";
-import { estimatePrice } from "@/app/lib/price-engine";
+import { estimatePrice, computePriceFlag } from "@/app/lib/price-engine";
 import { getMinMarkupBps } from "@/app/lib/store-pricing-db";
 import { getIntakeHints, getVisualHints, getStorePriceMultiplier } from "@/app/lib/intake-memory-db";
 import { embedImage, isEmbeddingConfigured } from "@/app/lib/embeddings";
@@ -77,9 +77,9 @@ function reverseImageHint(matches: VisualMatch[], brandKnown = false): string {
 }
 
 // POST { imageUrls, filled? } — fill in the BLANKS of a listing the seller started.
-// Manual-first: the seller types what they know; we only run the AI work the gaps
-// actually need. Whatever they filled is skipped — crucially, providing a price skips
-// the (rate-limit-heavy) valuation call, and a fully-typed listing makes ZERO AI calls.
+// Manual-first: the seller types what they know; we only run the AI DRAFT work the gaps
+// actually need. Pricing always runs (cheaply, off our own data) — when the seller set a
+// price it comes back as an over/under-market flag rather than overwriting their number.
 export async function POST(request: NextRequest) {
  const slug = await resolveStoreSlugAny(request);
  if (!slug) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
  const DRAFT_FIELDS = ["title", "brand", "era", "material", "condition", "category", "description"];
  const needDraft = DRAFT_FIELDS.some((k) => !has(k)); // any text field blank → run the vision draft
- const needPrice = !has("price"); // price typed → skip the valuation call entirely
+ const needPrice = !has("price"); // price typed → estimate becomes an over/under flag, not the price
  const needReverse = isCompsConfigured() && (needDraft || needPrice); // Lens → brand ID, runway/era, comps
 
  // Only learn the store voice when we're actually writing copy.
@@ -157,10 +157,12 @@ export async function POST(request: NextRequest) {
  }
  console.log(`[intake ${slug}] needDraft=${needDraft} needPrice=${needPrice} lens=${matches.length} brand=${idBrand.brand ?? "—"}`);
 
- // Price — only when the seller didn't type one. The query/context prefer their
- // typed values, falling back to the AI draft.
+ // Always compute a market estimate — the SUGGESTED price when the seller didn't type one,
+ // and an over/under-market FLAG when they did. Cost-controlled: the valuation reads our own
+ // data first (cache / benchmark / VYA sales + listings) and only pays for a live lookup cold.
  let estimate = null;
- if (needPrice) {
+ let priceFlag = null;
+ {
  const brandVal = has("brand") ? val("brand") : (draft?.brand?.value || "");
  const titleVal = has("title") ? val("title") : (draft?.title || "");
  const eraVal = has("era") ? val("era") : (draft?.era?.value || "");
@@ -194,6 +196,12 @@ export async function POST(request: NextRequest) {
  estimate.rationale += ` · ${pct >= 0 ? "+" : ""}${pct}% for this store's pricing`;
  }
  }
+
+ // Seller set their OWN price → keep it, and flag how it compares to the market value.
+ if (!needPrice && estimate?.marketCents) {
+ const sellerCents = Math.round(parseFloat(val("price")) * 100);
+ if (sellerCents > 0) priceFlag = computePriceFlag(sellerCents, estimate.marketCents, estimate.lowCents, estimate.highCents);
+ }
  }
 
  // If the vision draft didn't name a runway, mine the real comps/matches for a
@@ -207,7 +215,7 @@ export async function POST(request: NextRequest) {
  }
 
  return NextResponse.json({
- ok: true, draft, ghostUrl, photoroom: isPhotoroomConfigured(), estimate, embedding, promptVersion: PROMPT_VERSION,
+ ok: true, draft, ghostUrl, photoroom: isPhotoroomConfigured(), estimate, priceFlag, embedding, promptVersion: PROMPT_VERSION,
  // Only surface the reverse-image brand banner when WE identified the brand — never
  // when the seller supplied it (their brand stands, and Lens can find a look-alike).
  reverseImage: needReverse && !has("brand") ? { matches: matches.length, brand: idBrand.brand, hits: idBrand.hits, sampleTitles: matches.slice(0, 6).map((m) => m.title) } : null,

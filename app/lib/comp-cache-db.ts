@@ -1,0 +1,166 @@
+import { neon } from "@neondatabase/serverless";
+import type { Comp } from "./comps";
+import { convertCurrencyToUSD } from "./stores";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Comp cache — every external comp we pay SerpApi to fetch is saved here, so future
+// pricing for the same item/segment reuses our OWN history instead of spending again.
+// Each paid lookup becomes a reusable asset; repeat brands/items price for ~free, and
+// the cache also feeds the internal benchmark so we always have a market number.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function db() {
+ const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+ if (!url) throw new Error("No database URL");
+ return neon(url);
+}
+
+let ensured = false;
+async function ensure(): Promise<void> {
+ if (ensured) return;
+ const sql = db();
+ await sql`
+ CREATE TABLE IF NOT EXISTS comp_cache (
+  id BIGSERIAL PRIMARY KEY,
+  dedup_key TEXT NOT NULL UNIQUE,
+  query_norm TEXT NOT NULL,
+  brand TEXT,
+  category TEXT,
+  source TEXT NOT NULL,
+  title TEXT NOT NULL,
+  price_cents INT NOT NULL,
+  sold BOOLEAN NOT NULL DEFAULT false,
+  condition TEXT,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  link TEXT,
+  fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ )
+ `;
+ await sql`CREATE INDEX IF NOT EXISTS idx_comp_cache_query ON comp_cache(query_norm, fetched_at DESC)`;
+ await sql`CREATE INDEX IF NOT EXISTS idx_comp_cache_segment ON comp_cache(brand, category, fetched_at DESC)`;
+ ensured = true;
+}
+
+export function normalizeQuery(q: string): string {
+ return q.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function dedupKey(c: Comp): string {
+ return `${c.source}|${c.link || `${c.title}|${c.priceCents}`}`.slice(0, 400);
+}
+
+const toComp = (r: Record<string, unknown>): Comp => ({
+ title: r.title as string,
+ priceCents: Number(r.price_cents),
+ currency: (r.currency as string) || "USD",
+ sold: !!r.sold,
+ source: r.source as string,
+ link: (r.link as string) ?? undefined,
+ condition: (r.condition as string) ?? undefined,
+});
+
+/**
+ * Persist fetched comps so future lookups for the same item/segment reuse them (no new
+ * SerpApi spend). Upserts by a dedup key and refreshes fetched_at, so a re-fetch of the
+ * same listing just bumps its recency rather than duplicating. Best-effort — never throws.
+ */
+export async function saveComps(
+ comps: Comp[],
+ meta: { query: string; brand: string | null; category: string | null },
+): Promise<void> {
+ const real = comps.filter((c) => c.priceCents > 0);
+ if (!real.length) return;
+ try {
+ await ensure();
+ const sql = db();
+ const qn = normalizeQuery(meta.query);
+ const col = <T>(f: (c: Comp) => T) => real.map(f);
+ await sql`
+ INSERT INTO comp_cache (dedup_key, query_norm, brand, category, source, title, price_cents, sold, condition, currency, link)
+ SELECT * FROM unnest(
+  ${col(dedupKey)}::text[],
+  ${real.map(() => qn)}::text[],
+  ${real.map(() => meta.brand)}::text[],
+  ${real.map(() => meta.category)}::text[],
+  ${col((c) => c.source)}::text[],
+  ${col((c) => c.title.slice(0, 400))}::text[],
+  ${col((c) => c.priceCents)}::int[],
+  ${col((c) => c.sold)}::bool[],
+  ${col((c) => c.condition ?? null)}::text[],
+  ${col((c) => c.currency)}::text[],
+  ${col((c) => c.link ?? null)}::text[]
+ )
+ ON CONFLICT (dedup_key) DO UPDATE SET fetched_at = NOW(), query_norm = EXCLUDED.query_norm, brand = EXCLUDED.brand, category = EXCLUDED.category
+ `;
+ } catch (e) {
+ console.error("[comp-cache] saveComps failed:", e);
+ }
+}
+
+/**
+ * Reuse recently-fetched comps for this item — the exact normalized query first (most
+ * relevant), then the brand/category segment. Only rows newer than maxAgeDays. Empty when
+ * the cache is cold, which tells the caller to do a live lookup (and cache the results).
+ */
+export async function getCachedComps(opts: {
+ query: string;
+ brand: string | null;
+ category: string | null;
+ maxAgeDays: number;
+ limit: number;
+}): Promise<Comp[]> {
+ await ensure();
+ const sql = db();
+ const qn = normalizeQuery(opts.query);
+ const cutoff = new Date(Date.now() - opts.maxAgeDays * 86_400_000).toISOString();
+ const exact = (await sql`SELECT source, title, price_cents, sold, condition, currency, link FROM comp_cache WHERE query_norm = ${qn} AND fetched_at >= ${cutoff} ORDER BY fetched_at DESC LIMIT ${opts.limit}`) as Array<Record<string, unknown>>;
+ if (exact.length >= 6) return exact.map(toComp);
+ if (opts.brand && opts.category) {
+ const seg = (await sql`SELECT source, title, price_cents, sold, condition, currency, link FROM comp_cache WHERE brand = ${opts.brand} AND category = ${opts.category} AND fetched_at >= ${cutoff} ORDER BY fetched_at DESC LIMIT ${opts.limit}`) as Array<Record<string, unknown>>;
+ return [...exact, ...seg].map(toComp);
+ }
+ return exact.map(toComp);
+}
+
+/**
+ * Comps from VYA's OWN data, matched by brand:
+ *  - sold_items → items that actually SOLD on the marketplace (real transactions, weighted high)
+ *  - products → items currently LISTED (asking prices — a soft reference only; kept as
+ *    sold=false so the valuation weights them BELOW real sold prices, avoiding an
+ *    AI-pricing-off-its-own-AI-prices echo chamber).
+ * Prices are converted to USD. Empty when brand is unknown.
+ */
+export async function getVyaComps(opts: { brand: string | null; limit?: number }): Promise<Comp[]> {
+ const brand = (opts.brand ?? "").trim();
+ if (!brand) return [];
+ const limit = opts.limit ?? 15;
+ try {
+ const sql = db();
+ const [sold, listed] = (await Promise.all([
+  sql`SELECT title, final_price, currency FROM sold_items WHERE designer ILIKE ${brand} AND final_price > 0 ORDER BY sold_at DESC LIMIT ${limit}`,
+  sql`SELECT title, price, currency FROM products WHERE brand ILIKE ${brand} AND price > 0 ORDER BY created_at DESC NULLS LAST LIMIT ${limit}`,
+ ])) as [Array<Record<string, unknown>>, Array<Record<string, unknown>>];
+ const comps: Comp[] = [];
+ for (const r of sold) {
+  const usd = convertCurrencyToUSD(Number(r.final_price), (r.currency as string) || "USD");
+  if (usd > 0) comps.push({ title: r.title as string, priceCents: Math.round(usd * 100), currency: "USD", sold: true, source: "VYA (sold)" });
+ }
+ for (const r of listed) {
+  const usd = convertCurrencyToUSD(Number(r.price), (r.currency as string) || "USD");
+  if (usd > 0) comps.push({ title: r.title as string, priceCents: Math.round(usd * 100), currency: "USD", sold: false, source: "VYA (listed)" });
+ }
+ return comps;
+ } catch (e) {
+ console.error("[comp-cache] getVyaComps failed:", e);
+ return [];
+ }
+}
+
+/** Delete cache rows older than the given age — call from a nightly cron to bound growth. */
+export async function pruneCompCache(maxAgeDays = 90): Promise<number> {
+ await ensure();
+ const sql = db();
+ const cutoff = new Date(Date.now() - maxAgeDays * 86_400_000).toISOString();
+ const r = (await sql`DELETE FROM comp_cache WHERE fetched_at < ${cutoff} RETURNING id`) as unknown[];
+ return r.length;
+}
