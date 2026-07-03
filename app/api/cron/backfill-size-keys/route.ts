@@ -13,8 +13,14 @@ export async function GET(request: Request) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
  try {
- const result = await backfillSizeKeys({ onlyMissing: true, limit: 5000 });
- return NextResponse.json({ ok: true, ...result });
+ // ?full=1 recomputes size_keys for the WHOLE catalog — used after a size-derivation
+ // change (e.g. the shoe-size fix) so the filter tokens match the corrected display.
+ // The nightly run (no param) only fills rows that are missing keys.
+ const full = new URL(request.url).searchParams.get("full") === "1";
+ const result = full
+ ? await backfillSizeKeys({ onlyMissing: false })
+ : await backfillSizeKeys({ onlyMissing: true, limit: 5000 });
+ return NextResponse.json({ ok: true, full, ...result });
  } catch (err) {
  console.error("[cron/backfill-size-keys] failed:", err);
  return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });

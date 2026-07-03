@@ -37,11 +37,11 @@ const LETTER_SIZE_LABELS: Record<string, string> = {
  XL: "Extra Large (XL)", XXL: "XXL", XXXL: "XXXL", OS: "One Size", OSFM: "One Size",
 };
 
-function expandSize(size: string, categorySlug?: string): string {
+function expandSize(size: string, categorySlug?: string, title?: string): string {
  const upper = size.toUpperCase();
  if (LETTER_SIZE_LABELS[upper]) return LETTER_SIZE_LABELS[upper];
  if (categorySlug) {
- const converted = convertSizeToUS(size, categorySlug);
+ const converted = convertSizeToUS(size, categorySlug, title);
  if (converted) return converted;
  }
  return size;
@@ -234,7 +234,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
  // Use deriveSize to extract the correct size (checks title first, then description, then DB)
  const rawSize = deriveSize(product);
- const displaySize = rawSize ? expandSize(rawSize, currentCategorySlug) : null;
+ const displaySize = rawSize ? expandSize(rawSize, currentCategorySlug, product.title) : null;
 
  // Parse images from DB
  let productImages: string[] = [];

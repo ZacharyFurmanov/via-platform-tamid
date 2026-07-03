@@ -30,10 +30,13 @@ function fmtNum(n: number): string {
  * distinguish shoe EU/UK sizes from clothing EU/UK sizes.
  * Returns null if no conversion applies (caller should display the raw/normalized value).
  */
-export function convertSizeToUS(raw: string, categorySlug: string): string | null {
+export function convertSizeToUS(raw: string, categorySlug: string, title?: string): string | null {
  const s = raw.trim();
  const normalized = normalizeSize(s);
- const isShoe = SHOE_RE.test(categorySlug);
+ // Detect footwear from the TITLE as well as the category — category inference misses
+ // typo'd/one-word titles ("…LABOOTS"), and getting this wrong applies the CLOTHING scale
+ // to a shoe (EU 36 → "US 4" instead of the shoe table's US 5.5).
+ const isShoe = SHOE_RE.test(categorySlug) || (!!title && SHOE_RE.test(title));
 
  // European sizing — read the ACTUAL system off the original string. Italian,
  // French and German women's clothing use DIFFERENT US offsets, so collapsing
@@ -313,7 +316,7 @@ export function deriveDisplaySize(product: DBProduct): string | null {
  const raw = deriveSize(product);
  if (!raw) return null;
  const categorySlug = inferCategoryFromTitle(product.title);
- return convertSizeToUS(raw, categorySlug) ?? raw;
+ return convertSizeToUS(raw, categorySlug, product.title) ?? raw;
 }
 
 // Transform database products to InventoryItem format
