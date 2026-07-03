@@ -8,9 +8,8 @@ import { estimatePrice } from "@/app/lib/price-engine";
 import { getMinMarkupBps } from "@/app/lib/store-pricing-db";
 import { getIntakeHints, getVisualHints, getStorePriceMultiplier } from "@/app/lib/intake-memory-db";
 import { embedImage, isEmbeddingConfigured } from "@/app/lib/embeddings";
-import { reverseImageMatches, matchesToComps, isCompsConfigured, type VisualMatch } from "@/app/lib/comps";
+import { reverseImageMatches, matchesToComps, isCompsConfigured, fetchResaleTrend, type VisualMatch } from "@/app/lib/comps";
 import { inferBrandFromTitle } from "@/app/lib/market-data-db";
-import { getBrandTrend } from "@/app/lib/brand-heat-db";
 import { gate } from "@/app/lib/concurrency";
 
 export const dynamic = "force-dynamic";
@@ -170,8 +169,10 @@ export async function POST(request: NextRequest) {
  const baseTitle = titleVal || [eraVal, matVal, catVal].filter(Boolean).join(" ");
  const query = brandVal && !baseTitle.toLowerCase().includes(brandVal.toLowerCase()) ? `${brandVal} ${baseTitle}` : baseTitle;
  const minMarkupBps = await getMinMarkupBps(slug).catch(() => 3000);
- // Live demand trend — hot designers earn a modest premium in the valuation.
- const trend = brandVal ? await getBrandTrend(brandVal).catch(() => null) : null;
+ // Live resale-market demand — Google search interest across the whole secondhand world
+ // (not VYA's own pilot traffic). Hot designers earn a modest premium in the valuation.
+ const trendQuery = brandVal ? (catVal ? `${brandVal} ${catVal}` : brandVal) : "";
+ const trend = trendQuery ? await fetchResaleTrend(trendQuery).catch(() => null) : null;
  estimate = await AI_GATE().run(() => estimatePrice({
  query,
  photoUrl: mainUrl,
@@ -179,9 +180,9 @@ export async function POST(request: NextRequest) {
  knowledgeHintCents: draft?.priceHint ? draft.priceHint * 100 : null,
  extraComps: matchesToComps(relevantMatches),
  // Qualitative for the model — a raw momentum % must not become a price multiplier.
- context: { brand: brandVal || null, era: eraVal || null, runway: draft?.runway ?? null, trend: trend?.trending ? `${trend.brand} has elevated recent demand on VYA (trending)` : null },
+ context: { brand: brandVal || null, era: eraVal || null, runway: draft?.runway ?? null, trend: trend?.trending ? `${brandVal} has rising demand across the resale market (${trend.note})` : null },
  })).catch(() => null);
- if (estimate && trend?.trending) estimate.rationale += ` · 🔥 ${trend.brand} trending (${trend.note})`;
+ if (estimate && trend?.trending) estimate.rationale += ` · 🔥 ${brandVal} trending (${trend.note})`;
 
  // Scale by how this store prices vs. market (learned). marketCents stays raw.
  if (estimate && estimate.marketCents) {

@@ -3,6 +3,8 @@
 // an explicit enable flag, so it's fully dormant — no calls, no spend — until you
 // subscribe and flip PHOTOROOM-style SERPAPI_ENABLED=true.
 
+import { unstable_cache } from "next/cache";
+
 const SERPAPI_URL = "https://serpapi.com/search.json";
 
 export type Comp = { title: string; priceCents: number; currency: string; sold: boolean; source: string; link?: string; condition?: string };
@@ -104,3 +106,39 @@ export async function fetchComps(query: string): Promise<Comp[]> {
  unique.sort((a, b) => (PREMIUM.test(b.source) ? 1 : 0) - (PREMIUM.test(a.source) ? 1 : 0));
  return unique;
 }
+
+export type ResaleTrend = { momentumPct: number; trending: boolean; note: string; source: string };
+
+/** Broad resale-world demand trend for a brand/item via Google Trends (SerpApi).
+ *  Google search interest is the best cross-market proxy for real resale demand — it
+ *  spans the whole secondhand world (what shoppers are hunting for across every site),
+ *  not VYA's thin pilot traffic. Compares recent vs prior interest over ~3 months.
+ *  Returns null when comps aren't enabled or there isn't enough signal. */
+async function _fetchResaleTrendUncached(query: string): Promise<ResaleTrend | null> {
+ if (!isCompsConfigured() || !query.trim()) return null;
+ const r = await serp({ engine: "google_trends", q: query.trim(), data_type: "TIMESERIES", date: "today 3-m" });
+ const timeline = (r?.interest_over_time?.timeline_data ?? []) as any[];
+ const vals = timeline
+ .map((t) => Number(t?.values?.[0]?.extracted_value ?? t?.values?.[0]?.value ?? NaN))
+ .filter((n) => Number.isFinite(n));
+ if (vals.length < 8) return null; // not enough of a series to trust a direction
+ const half = Math.floor(vals.length / 2);
+ const avg = (a: number[]) => a.reduce((s, n) => s + n, 0) / (a.length || 1);
+ const prior = avg(vals.slice(0, half));
+ const recent = avg(vals.slice(half));
+ if (prior <= 0) return null;
+ const momentumPct = Math.round(((recent - prior) / prior) * 100);
+ return {
+ momentumPct,
+ trending: momentumPct >= 10, // a real, sustained uptick — not noise
+ note: `${momentumPct >= 0 ? "+" : ""}${momentumPct}% resale search demand vs prior 3mo`,
+ source: "Google Trends",
+ };
+}
+
+// Cache by query (brand+category) for a week: a brand's search-trend momentum barely moves
+// week to week and is shared across every listing of that brand — so this collapses the cost
+// from one SerpApi call per listing to roughly one call per brand per week.
+export const fetchResaleTrend = unstable_cache(_fetchResaleTrendUncached, ["resale-trend"], {
+ revalidate: 604800, // 7 days
+});
