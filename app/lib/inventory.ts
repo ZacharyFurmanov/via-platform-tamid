@@ -30,13 +30,16 @@ function fmtNum(n: number): string {
  * distinguish shoe EU/UK sizes from clothing EU/UK sizes.
  * Returns null if no conversion applies (caller should display the raw/normalized value).
  */
-export function convertSizeToUS(raw: string, categorySlug: string, title?: string): string | null {
+export function convertSizeToUS(raw: string, categorySlug: string, title?: string, currency?: string): string | null {
  const s = raw.trim();
  const normalized = normalizeSize(s);
  // Detect footwear from the TITLE as well as the category — category inference misses
  // typo'd/one-word titles ("…LABOOTS"), and getting this wrong applies the CLOTHING scale
  // to a shoe (EU 36 → "US 4" instead of the shoe table's US 5.5).
  const isShoe = SHOE_RE.test(categorySlug) || (!!title && SHOE_RE.test(title));
+ // The store's sizing region, inferred from its Shopify base currency — a UK shop's bare
+ // shoe number is a UK size (women's US = UK + 2), so "3.5" → US 5.5, not raw "3.5".
+ const region = currency === "GBP" ? "UK" : currency === "EUR" ? "EU" : "US";
 
  // European sizing — read the ACTUAL system off the original string. Italian,
  // French and German women's clothing use DIFFERENT US offsets, so collapsing
@@ -77,6 +80,10 @@ export function convertSizeToUS(raw: string, categorySlug: string, title?: strin
  if (isShoe && num >= 34 && num <= 44) {
   const us = EU_SHOE_TO_US[normalized];
   return us ? `US ${us}` : null;
+ }
+ // A UK shop's small bare shoe number is a UK size (women's US = UK + 2).
+ if (isShoe && region === "UK" && num >= 1 && num <= 12) {
+  return `US ${fmtNum(num + 2)}`;
  }
  if (!isShoe && num >= 32 && num <= 52 && num % 2 === 0) {
   return `US ${num - 32}`;
@@ -343,7 +350,7 @@ export function deriveDisplaySize(product: DBProduct): string | null {
  const raw = deriveSize(product);
  if (!raw) return null;
  const categorySlug = inferCategoryFromTitle(product.title);
- return convertSizeToUS(raw, categorySlug, product.title) ?? raw;
+ return convertSizeToUS(raw, categorySlug, product.title, product.currency) ?? raw;
 }
 
 // Transform database products to InventoryItem format
