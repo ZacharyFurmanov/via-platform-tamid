@@ -123,6 +123,10 @@ export default function IntakePage() {
  const [priceLow, setPriceLow] = useState<number | null>(null);
  const [priceHigh, setPriceHigh] = useState<number | null>(null);
  const [priceFlag, setPriceFlag] = useState<Flag | null>(null);
+ const [consigned, setConsigned] = useState(false);
+ const [consignors, setConsignors] = useState<{ id: number; name: string; defaultSplitPct: number | null }[]>([]);
+ const [consignCfg, setConsignCfg] = useState<{ storeDefaultSplitPct: number } | null>(null);
+ const [consign, setConsign] = useState({ consignorId: "", split: "", expiresAt: "", newName: "" });
 
  // Load the store's markup-over-cost setting so entering cost auto-fills price; and
  // the store's collections for tagging.
@@ -215,28 +219,22 @@ export default function IntakePage() {
  try {
  const filled: Record<string, string> = {};
  (Object.keys(form) as (keyof Form)[]).forEach((k) => { const v = String(form[k]).trim(); if (v) filled[k] = v; });
+ // Phase 1 — draft the FIELDS only (fast), so they render immediately; price/runway follow.
  const r = await fetch("/api/store/intake", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ imageUrls: photos, filled }),
+ body: JSON.stringify({ imageUrls: photos, filled, draftOnly: true }),
  });
  const d = await r.json();
  if (!r.ok) { setErr(d.error || "Couldn’t fill the listing."); setBusy(false); return; }
 
  const dr: Draft | null = d.draft || null;
- const est = d.estimate;
  if (d.ghostUrl) setGhost(d.ghostUrl);
  if (Array.isArray(d.embedding)) setEmbedding(d.embedding);
  setReverseImage(d.reverseImage || null);
  setPromptVersion(d.promptVersion || null);
- if (est?.suggestedCents) setMarketPrice(Math.round(est.suggestedCents / 100));
- if (typeof est?.marketCents === "number") setRawMarketCents(est.marketCents);
- if (typeof est?.rationale === "string") setPriceNote(est.rationale);
- setPriceLow(typeof est?.lowCents === "number" ? Math.round(est.lowCents / 100) : null);
- setPriceHigh(typeof est?.highCents === "number" ? Math.round(est.highCents / 100) : null);
- setPriceFlag(d.priceFlag ?? null);
  if (dr?.careTag) setCareTag(dr.careTag);
- if (dr?.runway) setRunway(dr.runway);
+ if (d.runway || dr?.runway) setRunway(d.runway ?? dr?.runway);
 
  // Flag risky fields the AI filled (were blank) with low confidence — before merge.
  if (dr) {
@@ -269,10 +267,42 @@ export default function IntakePage() {
  fill("description", dr.description);
  if (dr.parcel) { fill("weightOz", String(dr.parcel.weightOz)); fill("lengthIn", String(dr.parcel.lengthIn)); fill("widthIn", String(dr.parcel.widthIn)); fill("heightIn", String(dr.parcel.heightIn)); }
  }
- if (est?.suggestedCents) fill("price", String(Math.round(est.suggestedCents / 100)));
- else if (dr?.priceHint) fill("price", String(dr.priceHint));
  return next;
  });
+
+ // Phase 2 — price + over/under-market flag + runway (the fields are already on screen).
+ setBusyMsg("Pricing…");
+ const resolved = {
+ brand: filled.brand || dr?.brand?.value || "",
+ title: filled.title || dr?.title || "",
+ era: filled.era || dr?.era?.value || "",
+ material: filled.material || dr?.material?.value || "",
+ category: filled.category || dr?.category || "",
+ price: filled.price || "",
+ runway: (d.runway ?? dr?.runway) || "",
+ };
+ const r2 = await fetch("/api/store/intake/pricing", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ imageUrls: photos, fields: resolved, reverseComps: d.reverseComps ?? [], reverseTitles: d.reverseTitles ?? [], knowledgeHintCents: dr?.priceHint ? dr.priceHint * 100 : null, draftRanFull: d.needDraft === true }),
+ });
+ const d2 = await r2.json().catch(() => null);
+ if (r2.ok && d2) {
+ const est = d2.estimate;
+ if (est?.suggestedCents) setMarketPrice(Math.round(est.suggestedCents / 100));
+ if (typeof est?.marketCents === "number") setRawMarketCents(est.marketCents);
+ if (typeof est?.rationale === "string") setPriceNote(est.rationale);
+ setPriceLow(typeof est?.lowCents === "number" ? Math.round(est.lowCents / 100) : null);
+ setPriceHigh(typeof est?.highCents === "number" ? Math.round(est.highCents / 100) : null);
+ setPriceFlag(d2.priceFlag ?? null);
+ if (d2.runway) setRunway(d2.runway);
+ setForm((f) => {
+ if (String(f.price).trim()) return f; // seller's own price stands
+ if (est?.suggestedCents) return { ...f, price: String(Math.round(est.suggestedCents / 100)) };
+ if (dr?.priceHint) return { ...f, price: String(dr.priceHint) };
+ return f;
+ });
+ }
  } catch (e) {
  setErr(e instanceof Error ? e.message : "Something went wrong");
  }
@@ -280,6 +310,30 @@ export default function IntakePage() {
  }
 
  const allConfirmed = flagged.every((k) => confirmed[k]);
+
+ function toggleConsigned() {
+ const next = !consigned;
+ setConsigned(next);
+ if (next && !consignCfg) {
+ fetch("/api/store/consignment/consignors").then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setConsignors(d.consignors || []); }).catch(() => {});
+ fetch("/api/store/consignment/config").then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setConsignCfg({ storeDefaultSplitPct: d.settings?.storeDefaultSplitPct ?? 50 }); }).catch(() => {});
+ }
+ }
+ function pickConsignor(id: string) {
+ const c = consignors.find((x) => String(x.id) === id);
+ const prefill = c?.defaultSplitPct ?? consignCfg?.storeDefaultSplitPct ?? "";
+ setConsign((s) => ({ ...s, consignorId: id, split: String(prefill) }));
+ }
+ async function addConsignor() {
+ const name = consign.newName.trim();
+ if (!name) return;
+ const r = await fetch("/api/store/consignment/consignors", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+ const d = await r.json().catch(() => null);
+ if (r.ok && d?.consignor) {
+ setConsignors((cs) => [...cs, { id: d.consignor.id, name: d.consignor.name, defaultSplitPct: d.consignor.defaultSplitPct }]);
+ setConsign((s) => ({ ...s, consignorId: String(d.consignor.id), newName: "", split: s.split || String(consignCfg?.storeDefaultSplitPct ?? "") }));
+ }
+ }
 
  async function publish(status: "active" | "draft" = "active") {
  if (!form.title.trim()) { setErr("Add a title first."); return; }
@@ -293,7 +347,7 @@ export default function IntakePage() {
  const r = await fetch("/api/store/intake/publish", {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({ ...form, status, price: Number(form.price) || 0, cost: form.cost === "" ? null : Number(form.cost) || 0, collections: selectedCols, images, aiDraft, photo: photos[0] ?? null, embedding, marketCents: rawMarketCents, runway, reverseImage, promptVersion, reviewed: allConfirmed }),
+ body: JSON.stringify({ ...form, status, price: Number(form.price) || 0, cost: form.cost === "" ? null : Number(form.cost) || 0, collections: selectedCols, images, aiDraft, photo: photos[0] ?? null, embedding, marketCents: rawMarketCents, runway, reverseImage, promptVersion, reviewed: allConfirmed, consignment: consigned && consign.consignorId ? { consignorId: Number(consign.consignorId), splitPct: consign.split ? Number(consign.split) : null, expiresAt: consign.expiresAt || null } : null }),
  });
  const d = await r.json();
  if (!r.ok) throw new Error(d.error || "Publish failed");
@@ -308,7 +362,7 @@ export default function IntakePage() {
  function reset() {
  setPhase("form"); setPhotos([]); setRunway(null); setGhost(null); setForm(BLANK);
  setSelectedCols([]); setFlagged([]); setConfirmed({}); setErr(null); setSavedDraft(false);
- setReverseImage(null); setPromptVersion(null); setCareTag(null); setMarketPrice(null); setRawMarketCents(null); setPriceNote(""); setPriceLow(null); setPriceHigh(null); setPriceFlag(null); setAiDraft({}); setEmbedding(null);
+ setReverseImage(null); setPromptVersion(null); setCareTag(null); setMarketPrice(null); setRawMarketCents(null); setPriceNote(""); setPriceLow(null); setPriceHigh(null); setPriceFlag(null); setConsigned(false); setConsign({ consignorId: "", split: "", expiresAt: "", newName: "" }); setAiDraft({}); setEmbedding(null);
  }
 
  // ── Done ──
@@ -449,6 +503,33 @@ export default function IntakePage() {
  {priceFlag.level === "under" ? "🔽 " : priceFlag.level === "over" ? "🔼 " : "✅ "}{priceFlag.message}
  </div>
  )}
+
+ <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4">
+ <div className="flex items-center justify-between">
+ <div><p className="text-[13px] font-medium text-stone-800">Consignment</p><p className="text-[11px] text-stone-400">Track this for a consignor &mdash; they&rsquo;re auto-credited their split when it sells.</p></div>
+ <button type="button" onClick={toggleConsigned} className={`h-6 w-11 shrink-0 rounded-full p-0.5 transition ${consigned ? "bg-stone-900" : "bg-stone-200"}`} aria-label="Toggle consignment"><span className={`block h-5 w-5 rounded-full bg-white transition ${consigned ? "translate-x-5" : ""}`} /></button>
+ </div>
+ {consigned && (
+ <div className="mt-4 space-y-3">
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className={label}>Consignor</label>
+ <select className={input} value={consign.consignorId} onChange={(e) => pickConsignor(e.target.value)}>
+ <option value="">Select…</option>
+ {consignors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+ </select>
+ </div>
+ <div><label className={label}>Consignor split %</label><input className={input} value={consign.split} onChange={(e) => setConsign({ ...consign, split: e.target.value.replace(/[^0-9]/g, "") })} inputMode="numeric" placeholder="auto from rules" /></div>
+ </div>
+ <div className="flex items-end gap-2">
+ <div className="flex-1"><label className={label}>…or add a new consignor</label><input className={input} value={consign.newName} onChange={(e) => setConsign({ ...consign, newName: e.target.value })} placeholder="Name" /></div>
+ <button type="button" onClick={addConsignor} disabled={!consign.newName.trim()} className="rounded-lg border border-stone-200 px-3 py-2 text-[12.5px] text-stone-600 hover:bg-stone-50 disabled:opacity-40">Add</button>
+ </div>
+ <div><label className={label}>Consignment ends <span className="font-normal text-stone-400">— optional</span></label><input type="date" className={input} value={consign.expiresAt} onChange={(e) => setConsign({ ...consign, expiresAt: e.target.value })} /></div>
+ {consign.split && <p className="text-[11px] text-stone-400">Consignor gets {consign.split}% · store keeps {100 - (Number(consign.split) || 0)}%.</p>}
+ </div>
+ )}
+ </div>
  <div>
  <label className={label}>Shipping parcel <span className="font-normal text-stone-400">— AI-estimated, edit if needed</span></label>
  <div className="grid grid-cols-4 gap-2">

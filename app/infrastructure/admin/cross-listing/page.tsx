@@ -203,7 +203,7 @@ export default function CrossListingPage() {
  )}
  </Card>
 
- <p className="mt-3 text-[11px] text-stone-400">Depop, Grailed & Poshmark have no listing API, so those are copy-and-paste (title + description ready above). eBay & Etsy can be wired for one-click posting later. “Sold anywhere → pull everywhere” marks the piece removed on the others so you know exactly where to take it down.</p>
+ <p className="mt-3 text-[11px] text-stone-400">eBay auto-posts your listing and pulls it back automatically when the piece sells on VYA. More marketplaces are coming soon.</p>
  </div>
  );
 }

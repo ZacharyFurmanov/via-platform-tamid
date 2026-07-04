@@ -5,6 +5,8 @@ import { getSellerPayments } from "@/app/lib/seller-payments-db";
 import { stripePost, stripeConfigured } from "@/app/lib/stripe";
 import { getCartItemIds } from "@/app/lib/storefront-cart-db";
 import { applicationFeeCents } from "@/app/lib/payments-config";
+import { getConsignmentItemByProduct } from "@/app/lib/consignment-db";
+import { consignorCutCents } from "@/app/lib/consignment-logic";
 import type { Item } from "@/app/lib/db/schema";
 
 export const dynamic = "force-dynamic";
@@ -92,7 +94,15 @@ export async function POST(request: NextRequest) {
  shippingApplied = true;
  const cur = (reserved[0].currency || "usd").toLowerCase();
  if (shipHere > 0) lineItems[reserved.length] = { quantity: 1, price_data: { currency: cur, unit_amount: shipHere, product_data: { name: "Shipping" } } };
- const feeAmount = applicationFeeCents(subtotal) + shipHere;
+ // Consignment (Model A): route each consigned item's consignor cut into VYA's balance, on top
+ // of the platform fee — so we hold it and pay the consignor out (Stripe won't let the store
+ // transfer to them directly). The store nets the sale minus fee minus consignor cuts.
+ let consignTotal = 0;
+ for (const it of reserved) {
+ const ci = await getConsignmentItemByProduct(it.id).catch(() => null);
+ if (ci && ci.status === "active") consignTotal += consignorCutCents(it.priceCents, ci.splitPct);
+ }
+ const feeAmount = applicationFeeCents(subtotal) + shipHere + consignTotal;
  const itemIds = reserved.map((it) => it.id);
  const idCsv = itemIds.join(",");
  const meta: Record<string, string> = {

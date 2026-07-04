@@ -5,6 +5,10 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/consignment-payouts",
+      "schedule": "0 10 * * *"
+    },
+    {
       "path": "/api/cron/store-automations",
       "schedule": "0 15 * * *"
     },
@@ -119,6 +123,10 @@
     {
       "path": "/api/cron/refresh-store-voices",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/sync-ebay-sales",
+      "schedule": "0 * * * *"
     }
   ]
 }

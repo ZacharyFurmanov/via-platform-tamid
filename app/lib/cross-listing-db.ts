@@ -11,13 +11,13 @@ import { listOnDepop, endOnDepop, depopConnected, type DepopResult } from "./dep
 // content and track status, and tell the seller exactly where to pull a sold item.
 // eBay/Etsy DO have APIs (hasApi), so real auto-post/remove can plug in there later.
 
-export type Platform = { key: string; name: string; hasApi: boolean; titleMax: number; profileUrl: (handle: string) => string };
+export type Platform = { key: string; name: string; hasApi: boolean; live?: boolean; titleMax: number; profileUrl: (handle: string) => string };
 
 export const PLATFORMS: Platform[] = [
  { key: "depop", name: "Depop", hasApi: false, titleMax: 65, profileUrl: (h) => `https://www.depop.com/${h}` },
  { key: "grailed", name: "Grailed", hasApi: false, titleMax: 60, profileUrl: (h) => `https://www.grailed.com/${h}` },
  { key: "poshmark", name: "Poshmark", hasApi: false, titleMax: 80, profileUrl: (h) => `https://poshmark.com/closet/${h}` },
- { key: "ebay", name: "eBay", hasApi: true, titleMax: 80, profileUrl: (h) => `https://www.ebay.com/usr/${h}` },
+ { key: "ebay", name: "eBay", hasApi: true, live: true, titleMax: 80, profileUrl: (h) => `https://www.ebay.com/usr/${h}` },
  { key: "etsy", name: "Etsy", hasApi: true, titleMax: 140, profileUrl: (h) => `https://www.etsy.com/shop/${h}` },
 ];
 export const platformByKey = (k: string) => PLATFORMS.find((p) => p.key === k) || null;

@@ -124,6 +124,31 @@ export function computePriceFlag(sellerCents: number, marketCents: number, lowCe
  return { level: "at", pct, marketUsd, message: `Right at market (~$${marketUsd}).` };
 }
 
+/**
+ * FAST market reference from OWNED data only — the internal benchmark, else pooled cached +
+ * VYA comps. No Claude valuation, no live SerpApi, so it returns in a DB round-trip. Powers the
+ * instant over/under-market flag when the seller already typed a price (we don't need to SUGGEST
+ * one, just grade theirs). Returns null when there's too little owned data to be meaningful.
+ */
+export async function getMarketReferenceFast(opts: { query: string; brand: string | null }): Promise<PriceEstimate | null> {
+ const category = inferCategoryFromTitle(opts.query) as string;
+ const [benchmark, cached, vya] = await Promise.all([
+ getInternalPriceBenchmark({ brand: opts.brand, category }).catch(() => null),
+ getCachedComps({ query: opts.query, brand: opts.brand, category, maxAgeDays: 45, limit: 60 }).catch(() => []),
+ getVyaComps({ brand: opts.brand, limit: 30 }).catch(() => []),
+ ]);
+ if (benchmark?.medianCents) {
+ const m = benchmark.medianCents;
+ return { suggestedCents: m, marketCents: m, floorCents: null, lowCents: benchmark.p25Cents ?? Math.round(m * 0.85), highCents: benchmark.p75Cents ?? Math.round(m * 1.2), confidence: 0.6, comps: [], rationale: "Market rate from your marketplace data.", source: "benchmark" };
+ }
+ const pool = [...cached, ...vya];
+ const prices = pool.map((c) => c.priceCents).filter((p) => p > 0).sort((a, b) => a - b);
+ if (prices.length < 3) return null; // too little to say anything
+ const q = (f: number) => prices[Math.min(prices.length - 1, Math.floor(prices.length * f))];
+ const m = q(0.5);
+ return { suggestedCents: m, marketCents: m, floorCents: null, lowCents: q(0.25), highCents: q(0.75), confidence: 0.5, comps: pool.slice(0, 8), rationale: "Market rate from comparable resale + your listings.", source: "comps" };
+}
+
 export async function estimatePrice(opts: {
  query: string;
  photoUrl?: string;

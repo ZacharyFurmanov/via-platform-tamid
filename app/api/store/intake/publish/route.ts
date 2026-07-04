@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
+import { createConsignmentItem, resolveSplitForIntake } from "@/app/lib/consignment-db";
 import { stores, storeContactEmails } from "@/app/lib/stores";
 import { getOrCreateSeller } from "@/app/lib/db/sellers";
 import { createItem } from "@/app/lib/db/inventory";
@@ -56,6 +57,24 @@ export async function POST(request: NextRequest) {
  // Stores doing a drop stage pieces as drafts, then publish the batch at once.
  status: body.status === "draft" ? "draft" : "active",
  });
+
+ // Consignment: if this piece belongs to a consignor, record its terms and FREEZE the split
+ // (the seller's override if they set one, else resolved from consignor/store rules).
+ const consignment = body.consignment && typeof body.consignment === "object" ? (body.consignment as Record<string, unknown>) : null;
+ if (consignment && consignment.consignorId) {
+ const consignorId = Number(consignment.consignorId);
+ const priceCents = Math.round(price * 100);
+ const category = str(body.category, 60) || null;
+ const splitPct = typeof consignment.splitPct === "number" ? consignment.splitPct : await resolveSplitForIntake(slug, consignorId, priceCents, category).catch(() => 50);
+ await createConsignmentItem({
+ productId: String(item.id),
+ storeSlug: slug,
+ consignorId,
+ splitPct,
+ listedPriceCents: priceCents,
+ expiresAt: typeof consignment.expiresAt === "string" && consignment.expiresAt ? consignment.expiresAt : null,
+ }).catch((e) => console.error("[publish] consignment record failed:", e));
+ }
 
  // Collections: titles in → get-or-create per seller, then set membership. Sending
  // titles handles both picking an existing collection and creating a new one.

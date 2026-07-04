@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
  const [accounts, board, ebayTok, depopTok] = await Promise.all([getPlatformAccounts(slug), getCrossListBoard(slug), getEbayTokens(slug).catch(() => null), getDepopTokens(slug).catch(() => null)]);
  return NextResponse.json({
  ok: true,
- platforms: PLATFORMS.map((p) => ({ key: p.key, name: p.name, hasApi: p.hasApi })),
+ platforms: PLATFORMS.filter((p) => p.live).map((p) => ({ key: p.key, name: p.name, hasApi: p.hasApi })),
  accounts,
  board,
  ebay: { configured: ebayConfigured(), connected: !!ebayTok, user: ebayTok?.ebayUser || null },

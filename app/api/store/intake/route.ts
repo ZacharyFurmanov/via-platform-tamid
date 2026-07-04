@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
 import { draftListing, isIntakeConfigured, PROMPT_VERSION } from "@/app/lib/ai-intake";
+import { titleHasBrand, computeListingPricing } from "@/app/lib/intake-pricing";
 import { ghostMannequinFromUrl, isPhotoroomConfigured } from "@/app/lib/photoroom";
 import { getVoice, buildStoreVoice } from "@/app/lib/store-voice";
-import { estimatePrice, computePriceFlag } from "@/app/lib/price-engine";
-import { getMinMarkupBps } from "@/app/lib/store-pricing-db";
-import { getIntakeHints, getVisualHints, getStorePriceMultiplier } from "@/app/lib/intake-memory-db";
+import { getIntakeHints, getVisualHints } from "@/app/lib/intake-memory-db";
 import { embedImage, isEmbeddingConfigured } from "@/app/lib/embeddings";
-import { reverseImageMatches, matchesToComps, isCompsConfigured, fetchResaleTrend, type VisualMatch } from "@/app/lib/comps";
+import { reverseImageMatches, matchesToComps, isCompsConfigured, type VisualMatch } from "@/app/lib/comps";
 import { inferBrandFromTitle } from "@/app/lib/market-data-db";
 import { gate } from "@/app/lib/concurrency";
 
@@ -34,33 +33,7 @@ function brandFromMatches(matches: VisualMatch[]): { brand: string | null; hits:
  return { brand, hits };
 }
 
-// Does a match title carry the seller's brand? (normalized, punctuation-insensitive)
-function titleHasBrand(title: string, brand: string): boolean {
- const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
- const b = norm(brand);
- return b.length >= 3 && norm(title).includes(b);
-}
-
-// Resellers date archival pieces in their titles (e.g. "Prada F/W 1998 leather skirt").
-// Mine the SAME-BRAND comp/match titles for the most-cited season+year → runway string.
-function extractRunway(brand: string, titles: string[]): string | null {
- if (!brand) return null;
- const tally = new Map<string, number>();
- for (const t of titles) {
- if (!titleHasBrand(t, brand)) continue;
- const year = t.match(/\b(199\d|20[01]\d)\b/)?.[0];
- if (!year) continue;
- const low = t.toLowerCase();
- const season = /(s\/s|\bss\b|spring|resort|cruise)/.test(low) ? "S/S"
- : /(f\/w|a\/w|\bfw\b|\baw\b|fall|autumn|winter)/.test(low) ? "F/W" : "";
- if (!season) continue;
- const key = `${season} ${year}`;
- tally.set(key, (tally.get(key) || 0) + 1);
- }
- let best: string | null = null, n = 0;
- for (const [k, v] of tally) if (v > n) { best = k; n = v; }
- return best ? `${brand} ${best}` : null;
-}
+// titleHasBrand + extractRunway now live in ./intake-pricing (shared with the phase-2 endpoint).
 
 // Reverse-image matches → a strong, explicit brand-grounding instruction. These are
 // the same piece found across the web, so they beat any visual guess at the brand.
@@ -102,6 +75,7 @@ export async function POST(request: NextRequest) {
  const DRAFT_FIELDS = ["title", "brand", "era", "material", "condition", "category", "description"];
  const needDraft = DRAFT_FIELDS.some((k) => !has(k)); // any text field blank → run the vision draft
  const needPrice = !has("price"); // price typed → estimate becomes an over/under flag, not the price
+ const draftOnly = body?.draftOnly === true; // phase 1: return the drafted fields fast, price/runway come from /pricing
  const needReverse = isCompsConfigured() && (needDraft || needPrice); // Lens → brand ID, runway/era, comps
 
  // Only learn the store voice when we're actually writing copy.
@@ -157,65 +131,42 @@ export async function POST(request: NextRequest) {
  }
  console.log(`[intake ${slug}] needDraft=${needDraft} needPrice=${needPrice} lens=${matches.length} brand=${idBrand.brand ?? "—"}`);
 
- // Always compute a market estimate — the SUGGESTED price when the seller didn't type one,
- // and an over/under-market FLAG when they did. Cost-controlled: the valuation reads our own
- // data first (cache / benchmark / VYA sales + listings) and only pays for a live lookup cold.
+ // Price + over/under-market flag + runway. In draftOnly mode (phase 1) we SKIP this so the
+ // form can render the drafted FIELDS immediately; the client then calls
+ // /api/store/intake/pricing (phase 2) for these. Single-call mode computes them inline. The
+ // shared computeListingPricing keeps both paths identical.
  let estimate = null;
  let priceFlag = null;
- {
- const brandVal = has("brand") ? val("brand") : (draft?.brand?.value || "");
- const titleVal = has("title") ? val("title") : (draft?.title || "");
- const eraVal = has("era") ? val("era") : (draft?.era?.value || "");
- const matVal = has("material") ? val("material") : (draft?.material?.value || "");
- const catVal = has("category") ? val("category") : (draft?.category || "");
- const baseTitle = titleVal || [eraVal, matVal, catVal].filter(Boolean).join(" ");
- const query = brandVal && !baseTitle.toLowerCase().includes(brandVal.toLowerCase()) ? `${brandVal} ${baseTitle}` : baseTitle;
- const minMarkupBps = await getMinMarkupBps(slug).catch(() => 3000);
- // Live resale-market demand — Google search interest across the whole secondhand world
- // (not VYA's own pilot traffic). Hot designers earn a modest premium in the valuation.
- const trendQuery = brandVal ? (catVal ? `${brandVal} ${catVal}` : brandVal) : "";
- const trend = trendQuery ? await fetchResaleTrend(trendQuery).catch(() => null) : null;
- estimate = await AI_GATE().run(() => estimatePrice({
- query,
- photoUrl: mainUrl,
- minMarkupBps,
+ let runway: string | null = has("runway") ? val("runway") : (draft?.runway ?? null);
+ const reverseComps = matchesToComps(relevantMatches);
+ const reverseTitles = relevantMatches.map((m) => m.title);
+ if (!draftOnly) {
+ const pr = await computeListingPricing({
+ slug,
+ brand: has("brand") ? val("brand") : (draft?.brand?.value || ""),
+ title: has("title") ? val("title") : (draft?.title || ""),
+ era: has("era") ? val("era") : (draft?.era?.value || ""),
+ material: has("material") ? val("material") : (draft?.material?.value || ""),
+ category: has("category") ? val("category") : (draft?.category || ""),
+ price: has("price") ? val("price") : null,
+ imageUrls,
+ mainUrl,
+ extraComps: reverseComps,
+ reverseTitles,
  knowledgeHintCents: draft?.priceHint ? draft.priceHint * 100 : null,
- extraComps: matchesToComps(relevantMatches),
- // Qualitative for the model — a raw momentum % must not become a price multiplier.
- context: { brand: brandVal || null, era: eraVal || null, runway: draft?.runway ?? null, trend: trend?.trending ? `${brandVal} has rising demand across the resale market (${trend.note})` : null },
- })).catch(() => null);
- if (estimate && trend?.trending) estimate.rationale += ` · 🔥 ${brandVal} trending (${trend.note})`;
-
- // Scale by how this store prices vs. market (learned). marketCents stays raw.
- if (estimate && estimate.marketCents) {
- const mult = await getStorePriceMultiplier(slug).catch(() => 1);
- if (mult !== 1) {
- const adjusted = Math.round(estimate.marketCents * mult);
- estimate.suggestedCents = Math.max(adjusted, estimate.floorCents ?? 0);
- const pct = Math.round((mult - 1) * 100);
- estimate.rationale += ` · ${pct >= 0 ? "+" : ""}${pct}% for this store's pricing`;
- }
- }
-
- // Seller set their OWN price → keep it, and flag how it compares to the market value.
- if (!needPrice && estimate?.marketCents) {
- const sellerCents = Math.round(parseFloat(val("price")) * 100);
- if (sellerCents > 0) priceFlag = computePriceFlag(sellerCents, estimate.marketCents, estimate.lowCents, estimate.highCents);
- }
- }
-
- // If the vision draft didn't name a runway, mine the real comps/matches for a
- // documented season the resellers cite (it often lives in the price comps, which
- // the draft step never saw).
- if (draft && !draft.runway) {
- const b = has("brand") ? val("brand") : (draft.brand?.value || "");
- const titles = [...relevantMatches.map((m) => m.title), ...(estimate?.comps || []).map((c) => c.title)];
- const rw = extractRunway(b, titles);
- if (rw) draft.runway = rw;
+ runwaySoFar: runway,
+ draftRanFull: needDraft,
+ });
+ estimate = pr.estimate;
+ priceFlag = pr.priceFlag;
+ if (pr.runway) runway = pr.runway;
+ if (draft && runway) draft.runway = runway;
  }
 
  return NextResponse.json({
- ok: true, draft, ghostUrl, photoroom: isPhotoroomConfigured(), estimate, priceFlag, embedding, promptVersion: PROMPT_VERSION,
+ ok: true, draft, ghostUrl, photoroom: isPhotoroomConfigured(), estimate, priceFlag, runway, embedding, promptVersion: PROMPT_VERSION,
+ // For phase 2 (/api/store/intake/pricing): the reverse-image comps/titles + whether the draft ran.
+ needDraft, reverseComps, reverseTitles,
  // Only surface the reverse-image brand banner when WE identified the brand — never
  // when the seller supplied it (their brand stands, and Lens can find a look-alike).
  reverseImage: needReverse && !has("brand") ? { matches: matches.length, brand: idBrand.brand, hits: idBrand.hits, sampleTitles: matches.slice(0, 6).map((m) => m.title) } : null,

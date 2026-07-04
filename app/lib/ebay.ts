@@ -78,6 +78,27 @@ export async function ebayConnected(storeSlug: string): Promise<boolean> {
  return !!(await getEbayTokens(storeSlug));
 }
 
+// Orders sold on eBay since `sinceISO`, keyed by SKU (= our itemId). Powers the sale-sync that
+// pulls a piece off VYA when it sells on eBay, so it can't double-sell.
+export async function getRecentEbaySoldSkus(storeSlug: string, sinceISO: string): Promise<Array<{ sku: string; soldPriceCents: number; orderId: string }>> {
+ const token = await accessToken(storeSlug);
+ if (!token) return [];
+ const filter = encodeURIComponent(`creationdate:[${sinceISO}..]`);
+ const r = await ebayFetch(token, `/sell/fulfillment/v1/order?filter=${filter}&limit=100`);
+ if (!r.ok || !Array.isArray(r.json?.orders)) return [];
+ const out: Array<{ sku: string; soldPriceCents: number; orderId: string }> = [];
+ for (const order of r.json.orders) {
+ const orderId = String(order.orderId || "");
+ for (const li of order.lineItems || []) {
+ const sku = li?.sku ? String(li.sku) : "";
+ if (!sku) continue;
+ const val = Number(li?.lineItemCost?.value ?? li?.total?.value ?? 0);
+ out.push({ sku, soldPriceCents: Math.round(val * 100), orderId });
+ }
+ }
+ return out;
+}
+
 async function ebayFetch(token: string, path: string, init: RequestInit = {}): Promise<{ ok: boolean; status: number; json: any }> {
  const res = await fetch(`${API}${path}`, {
  ...init,

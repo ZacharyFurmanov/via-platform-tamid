@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { markSold, releaseReservation } from "@/app/lib/db/inventory";
+import { creditConsignedSale } from "@/app/lib/consignment-db";
 import { createPaidOrder, recordPayout, orderExistsForPaymentIntent, getOrdersNeedingConfirmation, markConfirmationSent } from "@/app/lib/db/orders";
 import { applicationFeeCents } from "@/app/lib/payments-config";
 import { sendBuyerOrderConfirmation, sendSellerSaleNotification } from "@/app/lib/email";
@@ -48,6 +49,8 @@ async function fulfill(o: { itemIds: string[]; sellerId: string; pi: string | nu
  stripePaymentIntent: o.pi,
  });
  await recordPayout({ orderId: order.id, sellerId: o.sellerId, amountCents: order.amountCents - fee, currency: order.currency });
+ // Consignment: if this piece was taken on consignment, credit the consignor their split.
+ creditConsignedSale({ productId: itemId, orderId: String(order.id), soldPriceCents: sold.priceCents }).catch(() => {});
  markCheckoutRecovered(itemId).catch(() => {}); // sold → stop any abandoned-cart nudge
  delistEverywhere(itemId, "vya").catch(() => {}); // sold on VYA → pull from other marketplaces
  idx++;

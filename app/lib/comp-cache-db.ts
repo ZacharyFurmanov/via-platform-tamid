@@ -156,6 +156,58 @@ export async function getVyaComps(opts: { brand: string | null; limit?: number }
  }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// piece_facts — derived facts about a SPECIFIC piece (brand + normalized title), currently the
+// runway season. Once any listing establishes a piece's runway, future identical pieces reuse it
+// instantly, and we accumulate an owned "piece → runway" knowledge base.
+// ─────────────────────────────────────────────────────────────────────────────
+let pieceFactsEnsured = false;
+async function ensurePieceFacts(): Promise<void> {
+ if (pieceFactsEnsured) return;
+ const sql = db();
+ await sql`
+ CREATE TABLE IF NOT EXISTS piece_facts (
+  id BIGSERIAL PRIMARY KEY,
+  key TEXT NOT NULL UNIQUE,
+  brand TEXT,
+  title_norm TEXT,
+  runway TEXT,
+  era TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ )
+ `;
+ pieceFactsEnsured = true;
+}
+
+function pieceKey(brand: string, title: string): string {
+ return `${brand.toLowerCase().trim()}|${normalizeQuery(title)}`.slice(0, 400);
+}
+
+/** Reuse a previously-determined runway for this exact piece (brand + normalized title). */
+export async function getPieceRunway(brand: string, title: string): Promise<string | null> {
+ if (!brand.trim() || !title.trim()) return null;
+ try {
+ await ensurePieceFacts();
+ const sql = db();
+ const rows = (await sql`SELECT runway FROM piece_facts WHERE key = ${pieceKey(brand, title)} AND runway IS NOT NULL LIMIT 1`) as Array<{ runway: string }>;
+ return rows[0]?.runway ?? null;
+ } catch {
+ return null;
+ }
+}
+
+/** Save a determined runway for this piece so future identical listings reuse it. Best-effort. */
+export async function savePieceRunway(brand: string, title: string, runway: string): Promise<void> {
+ if (!brand.trim() || !title.trim() || !runway.trim()) return;
+ try {
+ await ensurePieceFacts();
+ const sql = db();
+ await sql`INSERT INTO piece_facts (key, brand, title_norm, runway) VALUES (${pieceKey(brand, title)}, ${brand.trim()}, ${normalizeQuery(title)}, ${runway.trim()}) ON CONFLICT (key) DO UPDATE SET runway = EXCLUDED.runway, updated_at = NOW()`;
+ } catch (e) {
+ console.error("[piece-facts] savePieceRunway failed:", e);
+ }
+}
+
 /** Delete cache rows older than the given age — call from a nightly cron to bound growth. */
 export async function pruneCompCache(maxAgeDays = 90): Promise<number> {
  await ensure();

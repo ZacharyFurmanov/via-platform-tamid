@@ -151,3 +151,45 @@ export async function draftListing(
  const text = data.content?.find((c) => c.type === "text")?.text ?? "";
  return parseDraft(text);
 }
+
+// Proactive runway-provenance check. Runs whenever a listing has no runway yet (even when the
+// seller filled the main fields and the full draft was skipped) — so archival/runway pieces are
+// caught automatically, not only when the seller says so. Looks at the photo + brand + the
+// comparable listing titles as evidence, and stays conservative: it NAMES a documented season
+// when it genuinely recognizes the piece, and returns null for generic pieces (no fabrication).
+export async function identifyRunway(
+ imageUrls: string[],
+ brand: string,
+ item: string,
+ compTitles: string[],
+): Promise<string | null> {
+ const apiKey = process.env.ANTHROPIC_API_KEY;
+ if (!apiKey || !brand.trim()) return null;
+ const images = imageUrls.filter(Boolean).slice(0, 2).map((url) => ({ type: "image", source: { type: "url", url } }));
+ if (!images.length) return null;
+ const comps = compTitles.filter(Boolean).slice(0, 20).map((t) => `- ${t}`).join("\n");
+ const prompt = `You are a fashion archivist authenticating runway provenance. The pictured piece is: ${brand}${item ? ` — ${item}` : ""}.\n${comps ? `Comparable resale listings (evidence — resellers often cite the season):\n${comps}\n` : ""}\nIs this a DOCUMENTED RUNWAY piece? If you genuinely recognize it as being from a specific documented runway collection, or the comparable listings consistently point to one, NAME the exact season formatted "Brand S/S YYYY" or "Brand F/W YYYY" (e.g. "Tom Ford for Gucci S/S 2004", "Blumarine F/W 2002"). Be decisive when you recognize it — do NOT hedge to era-level. Return null for a generic piece not tied to a specific documented show; NEVER fabricate a season for a no-name or generic piece.\nReturn ONLY JSON: {"runway": string|null, "confidence": 0..1}.`;
+ try {
+ const res = await fetch(ANTHROPIC_URL, {
+ method: "POST",
+ headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+ body: JSON.stringify({
+ model: INTAKE_MODEL,
+ max_tokens: 200,
+ messages: [{ role: "user", content: [...images, { type: "text", text: prompt }] }],
+ }),
+ });
+ if (!res.ok) return null;
+ const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
+ const text = data.content?.find((c) => c.type === "text")?.text ?? "";
+ const m = text.match(/\{[\s\S]*\}/);
+ if (!m) return null;
+ const parsed = JSON.parse(m[0]) as { runway?: unknown; confidence?: unknown };
+ const runway = typeof parsed.runway === "string" && parsed.runway.trim() ? parsed.runway.trim().slice(0, 120) : null;
+ const conf = typeof parsed.confidence === "number" ? parsed.confidence : 0;
+ // Require real confidence to assert a runway — it's shown to buyers and lifts the price.
+ return runway && conf >= 0.5 ? runway : null;
+ } catch {
+ return null;
+ }
+}

@@ -5,6 +5,8 @@ import { getSellerPayments } from "@/app/lib/seller-payments-db";
 import { stripePost, stripeConfigured } from "@/app/lib/stripe";
 import { getCartItemIds } from "@/app/lib/storefront-cart-db";
 import { applicationFeeCents } from "@/app/lib/payments-config";
+import { getConsignmentItemByProduct } from "@/app/lib/consignment-db";
+import { consignorCutCents } from "@/app/lib/consignment-logic";
 
 export const dynamic = "force-dynamic";
 const COOKIE = "via_cart";
@@ -53,7 +55,13 @@ export async function POST(request: NextRequest) {
  try {
  const subtotal = reserved.reduce((s, it) => s + it.priceCents, 0);
  const amount = subtotal + shippingCostCents;
- const appFee = applicationFeeCents(subtotal) + shippingCostCents;
+ // Consignment (Model A): route consignor cuts into VYA's balance on top of the platform fee.
+ let consignTotal = 0;
+ for (const it of reserved) {
+ const ci = await getConsignmentItemByProduct(it.id).catch(() => null);
+ if (ci && ci.status === "active") consignTotal += consignorCutCents(it.priceCents, ci.splitPct);
+ }
+ const appFee = applicationFeeCents(subtotal) + shippingCostCents + consignTotal;
  const cur = (reserved[0].currency || "usd").toLowerCase();
  const meta: Record<string, string> = {
  itemIds: reserved.map((it) => it.id).join(","), sellerId: seller.id,

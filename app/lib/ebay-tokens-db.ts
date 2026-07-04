@@ -63,3 +63,10 @@ export async function clearEbayTokensByUser(ebayUser: string): Promise<void> {
  await ensureTable();
  await db()`DELETE FROM ebay_tokens WHERE lower(ebay_user) = ${ebayUser.toLowerCase()}`.catch(() => {});
 }
+
+// Every store with a connected eBay account — drives the sale-sync cron.
+export async function listEbayConnectedStores(): Promise<string[]> {
+ await ensureTable();
+ const rows = (await db()`SELECT store_slug FROM ebay_tokens`.catch(() => [])) as any[];
+ return rows.map((r) => String(r.store_slug));
+}
