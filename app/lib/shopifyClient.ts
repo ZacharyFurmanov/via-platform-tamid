@@ -1115,6 +1115,19 @@ export async function scrapeProductPageSections(url: string, extractFallbackDesc
  }
  }
 
+ // Size — some themes render the size as a "Size:" field driven by a Shopify metafield
+ // (e.g. "Size: IT 37.5 UK 4.5"), which never appears in body_html or the public
+ // products.json variant options. Pull it off the rendered page so deriveSize can surface
+ // it. Require a colon (so we skip "Size guide"/"Size chart"/variant-picker labels) and
+ // validate the value actually parses as a size before keeping it.
+ const sizeResult = new RegExp(`\\bSize\\b\\s*:\\s*(.{1,50}?)(?=${nextSection})`, "i").exec(text);
+ if (sizeResult) {
+ const val = sizeResult[1].replace(ECOM_JUNK_RE, "").trim();
+ if (val && extractSizeFromDescription(`Size: ${val}`)) {
+ sections.push(`<p>Size: ${val}</p>`);
+ }
+ }
+
  // When body_html is empty, try to extract the product description from the page.
  // Many Shopify themes render the description in a "Details" or "Description" tab
  // section that doesn't appear in body_html (e.g., Ange Archive's theme).
