@@ -25,7 +25,7 @@ export default function OnboardingPage() {
  const d = await r.json();
  setStoreName(d.storeName || "");
  if (d.onboarded) {
- router.replace("/store/home");
+ router.replace("/store/dashboard");
  return;
  }
  }
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
 
  {!path && !result && (
  <div className="mt-8 text-xs text-[#5D0F17]/45">
-  <button onClick={() => router.push("/store/home")} className="underline hover:text-[#5D0F17]">Skip for now</button>
+  <button onClick={() => router.push("/store/dashboard")} className="underline hover:text-[#5D0F17]">Skip for now</button>
  </div>
  )}
 
@@ -103,7 +103,7 @@ export default function OnboardingPage() {
  <p className="text-sm text-[#5D0F17]/60"><b>{result.pages}</b> {result.pages === 1 ? "page" : "pages"} captured{result.items ? ` · ${result.items} ${result.items === 1 ? "product" : "products"} imported` : ""}.</p>
  <div className="mt-5 flex flex-wrap gap-3">
   <a href={result.url} target="_blank" rel="noopener noreferrer" className="bg-[#5D0F17] text-[#FFFDF8] px-5 py-2.5 text-xs uppercase tracking-[0.15em] hover:bg-[#5D0F17]/85 transition">View your site ↗</a>
- <button onClick={() => router.push("/store/home")} className="px-5 py-2.5 text-xs uppercase tracking-[0.15em] text-[#5D0F17]/55 hover:text-[#5D0F17] transition">
+ <button onClick={() => router.push("/store/dashboard")} className="px-5 py-2.5 text-xs uppercase tracking-[0.15em] text-[#5D0F17]/55 hover:text-[#5D0F17] transition">
  Go to dashboard
  </button>
  </div>
@@ -129,7 +129,7 @@ export default function OnboardingPage() {
 
  <div className="mt-8 flex gap-5 text-xs text-[#5D0F17]/45">
  <button onClick={() => { setPath(null); setErr(null); }} className="underline hover:text-[#5D0F17]">← Back</button>
- <button onClick={() => router.push("/store/home")} className="underline hover:text-[#5D0F17]">Skip for now</button>
+ <button onClick={() => router.push("/store/dashboard")} className="underline hover:text-[#5D0F17]">Skip for now</button>
  </div>
  </>
  ) : null}

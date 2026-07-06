@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
       // The recommerce pages moved to the owner's infrastructure workspace. Only these
       // four were removed from /store, so redirecting them is safe (they 404 otherwise);
       // the rest of /store stays live for real sellers.
+      // Sellers' store portal lands on the classic dashboard (performance + sales), not the
+      // newer infra-style home. Repointed per the store owner — keep sellers on /store/dashboard.
+      { source: "/store/home", destination: "/store/dashboard", permanent: false },
       { source: "/store/intake", destination: "/infrastructure/admin/add-listing", permanent: false },
       { source: "/store/items", destination: "/infrastructure/admin/inventory", permanent: false },
       { source: "/store/customers", destination: "/infrastructure/admin/customers", permanent: false },

@@ -4,6 +4,8 @@ import { neon } from "@neondatabase/serverless";
 import type { ReminderCategory } from "@/app/lib/giveaway-db";
 import type { DBProduct } from "@/app/lib/db";
 import { makeRecipientToken } from "@/app/lib/recipientToken";
+import { storeContactEmails } from "@/app/lib/stores";
+import type { Offer } from "@/app/lib/offers-db";
 
 const getResend = () => {
  const apiKey = process.env.RESEND_API_KEY;
@@ -42,6 +44,67 @@ export async function sendOpsAlert(subject: string, body: string): Promise<void>
  } catch (e) {
  console.error(`[ops-alert] failed to send "${subject}":`, e);
  }
+}
+
+// ── Consumer offers (Depop/Poshmark-style negotiation) ──────────────────────────
+const offerMoney = (c: number) => `$${Math.round(c / 100).toLocaleString()}`;
+function offerBtn(url: string, label: string): string {
+ return `<a href="${url}" style="display:inline-block;background:#5D0F17;color:#FFFDF8;text-decoration:none;padding:10px 22px;border-radius:8px;font-size:14px">${label}</a>`;
+}
+
+/** Notify the store that a shopper made a fresh offer. Best-effort. */
+export async function sendNewOfferToStore(offer: Offer): Promise<void> {
+ try {
+ if (!process.env.RESEND_API_KEY) return;
+ const item = offer.itemTitle || "one of your pieces";
+ await getResend().emails.send({
+ from: FROM_EMAIL,
+ to: storeContactEmails[offer.storeSlug] || OPS_ALERT_EMAIL,
+ subject: `New offer: ${offerMoney(offer.amountCents)} on ${item}`,
+ html: `<p><b>${offer.buyerName || "A shopper"}</b> offered <b>${offerMoney(offer.amountCents)}</b> on <b>${item}</b> (asking ${offerMoney(offer.listPriceCents)}).</p>
+ <p>${offerBtn(`${BASE_URL}/infrastructure/admin/inbox`, "Review in your inbox")}</p>`,
+ });
+ } catch (e) { console.error("[offer] store new-offer notify failed", e); }
+}
+
+/** Notify the store that the buyer advanced an offer (accepted a counter, countered back, or passed). */
+export async function sendOfferUpdateToStore(offer: Offer): Promise<void> {
+ try {
+ if (!process.env.RESEND_API_KEY) return;
+ const item = offer.itemTitle || "your piece";
+ const line = offer.status === "accepted" ? `accepted your counter — <b>${offerMoney(offer.amountCents)}</b>, it’s a deal`
+ : offer.status === "pending" ? `countered at <b>${offerMoney(offer.amountCents)}</b>`
+ : offer.status === "withdrawn" ? "withdrew their offer" : "passed on the deal";
+ await getResend().emails.send({
+ from: FROM_EMAIL,
+ to: storeContactEmails[offer.storeSlug] || OPS_ALERT_EMAIL,
+ subject: `Offer update on ${item}`,
+ html: `<p>The buyer ${line} on <b>${item}</b>.</p><p>${offerBtn(`${BASE_URL}/infrastructure/admin/inbox`, "Open your inbox")}</p>`,
+ });
+ } catch (e) { console.error("[offer] store update notify failed", e); }
+}
+
+/** Notify the buyer that the store responded to their offer. Best-effort. */
+export async function sendOfferUpdateToBuyer(offer: Offer): Promise<void> {
+ try {
+ if (!process.env.RESEND_API_KEY || !offer.buyerEmail) return;
+ const item = offer.itemTitle || "the piece";
+ const link = `${BASE_URL}/offer/${offer.token}`;
+ let subject: string, body: string;
+ if (offer.status === "accepted") {
+ subject = `Your offer on ${item} was accepted 🎉`;
+ body = `<p>The seller accepted your offer of <b>${offerMoney(offer.amountCents)}</b> on <b>${item}</b>.</p>
+ <p>${offer.binding ? "Complete your purchase at the agreed price:" : "You can buy it now:"} ${offerBtn(link, "Buy now")}</p>`;
+ } else if (offer.status === "pending") {
+ subject = `The seller countered your offer on ${item}`;
+ body = `<p>The seller countered at <b>${offerMoney(offer.amountCents)}</b> on <b>${item}</b> (you offered less).</p>
+ <p>${offerBtn(link, "View & respond")}</p>`;
+ } else {
+ subject = `Update on your offer for ${item}`;
+ body = `<p>The seller passed on your offer for <b>${item}</b> this time — the piece is still available at ${offerMoney(offer.listPriceCents)}.</p>`;
+ }
+ await getResend().emails.send({ from: FROM_EMAIL, to: offer.buyerEmail, subject, html: body });
+ } catch (e) { console.error("[offer] buyer notify failed", e); }
 }
 
 // The verified ADDRESS order emails are sent from. The display NAME varies — the
@@ -373,6 +436,50 @@ function escapeHtml(s: string): string {
  * can't send "from" a gmail/unverified domain without it being spam-filtered).
  * Links are UTM-tagged so the campaign shows up in the store's audience insights.
  */
+// Lightweight, email-safe formatting for store-written emails (campaigns + automations). Stores
+// write with a familiar shorthand — # / ## headings, **bold**, *italic*, [links](url), - bullets,
+// ![images](url), --- dividers — and it renders to inline-styled HTML that survives email clients.
+export function renderEmailBody(raw: string): string {
+ const cleanUrl = (u: string) => (/^(https?:|mailto:)/i.test(u.trim()) ? u.trim() : "#");
+ const inline = (s: string) =>
+ escapeHtml(s)
+ .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, alt, url) => `<img src="${cleanUrl(url)}" alt="${alt}" style="max-width:100%;border-radius:6px;margin:10px 0;display:block;" />`)
+ .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, t, url) => `<a href="${cleanUrl(url)}" style="color:#5D0F17;text-decoration:underline;">${t}</a>`)
+ .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+ .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+ const lines = raw.replace(/\r\n/g, "\n").split("\n");
+ const out: string[] = [];
+ let para: string[] = [];
+ let list: string[] = [];
+ const flushPara = () => { if (para.length) { out.push(`<p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#292524;">${para.join("<br/>")}</p>`); para = []; } };
+ const flushList = () => { if (list.length) { out.push(`<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.7;color:#292524;">${list.map((li) => `<li style="margin:0 0 6px;">${li}</li>`).join("")}</ul>`); list = []; } };
+ for (const line of lines) {
+ const t = line.trim();
+ if (!t) { flushPara(); flushList(); continue; }
+ if (/^##\s+/.test(t)) { flushPara(); flushList(); out.push(`<h2 style="margin:18px 0 10px;font-size:17px;font-weight:600;color:#1c1917;">${inline(t.replace(/^##\s+/, ""))}</h2>`); continue; }
+ if (/^#\s+/.test(t)) { flushPara(); flushList(); out.push(`<h1 style="margin:18px 0 12px;font-size:21px;font-weight:600;letter-spacing:-0.01em;color:#1c1917;">${inline(t.replace(/^#\s+/, ""))}</h1>`); continue; }
+ if (/^(---|\*\*\*)$/.test(t)) { flushPara(); flushList(); out.push(`<hr style="border:none;border-top:1px solid #eee;margin:22px 0;" />`); continue; }
+ if (/^[-*]\s+/.test(t)) { flushPara(); list.push(inline(t.replace(/^[-*]\s+/, ""))); continue; }
+ para.push(inline(t));
+ }
+ flushPara(); flushList();
+ return out.join("") || `<p style="margin:0;font-size:15px;color:#a8a29e;">Your email will preview here as you write.</p>`;
+}
+
+// The full campaign/automation email — the shared renderer behind both what's sent and the
+// in-browser preview, so what a store sees is exactly what lands in the inbox.
+export function campaignEmailHtml(opts: { storeName: string; body: string; link?: string }): string {
+ const cleanName = opts.storeName.replace(/[<>"\n\r]/g, "").trim() || "Your store";
+ const cta = opts.link ? withUtm(opts.link, "campaign") : null;
+ const content = renderEmailBody(opts.body);
+ return `<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
+ <div style="max-width:560px;margin:0 auto;background:#ffffff;">
+ <div style="padding:28px 32px 6px;"><h1 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;">${escapeHtml(cleanName)}</h1></div>
+ <div style="padding:10px 32px 24px;">${content}${cta ? `<p style="margin:24px 0 0;"><a href="${cta}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:6px;font-size:14px;">Shop now</a></p>` : ""}</div>
+ <div style="padding:16px 32px 30px;border-top:1px solid #eeeeee;font-size:12px;color:#a8a29e;">You're receiving this because you shopped with ${escapeHtml(cleanName)}. Reply to this email to reach us.</div>
+ </div></body></html>`;
+}
+
 export async function sendStoreCampaign(opts: {
  storeName: string;
  storeEmail: string; // reply-to
@@ -386,14 +493,7 @@ export async function sendStoreCampaign(opts: {
  const cleanName = opts.storeName.replace(/[<>"\n\r]/g, "").trim() || "Your store";
  const sender = (opts.fromAddress && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(opts.fromAddress)) ? opts.fromAddress : "campaigns@vyaplatform.com";
  const from = `${cleanName} <${sender}>`;
- const cta = opts.link ? withUtm(opts.link, "campaign") : null;
- const paragraphs = opts.body.trim().split(/\n{2,}/).map((p) => `<p style="margin:0 0 16px;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`).join("");
- const html = `<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1917;">
- <div style="max-width:560px;margin:0 auto;background:#ffffff;">
- <div style="padding:28px 32px 6px;"><h1 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;">${escapeHtml(cleanName)}</h1></div>
- <div style="padding:10px 32px 24px;font-size:15px;line-height:1.7;color:#292524;">${paragraphs}${cta ? `<p style="margin:24px 0 0;"><a href="${cta}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:6px;font-size:14px;">Shop now</a></p>` : ""}</div>
- <div style="padding:16px 32px 30px;border-top:1px solid #eeeeee;font-size:12px;color:#a8a29e;">You're receiving this because you shopped with ${escapeHtml(cleanName)}. Reply to this email to reach us.</div>
- </div></body></html>`;
+ const html = campaignEmailHtml({ storeName: cleanName, body: opts.body, link: opts.link });
 
  let sent = 0, failed = 0;
  for (let i = 0; i < opts.recipients.length; i += 100) {

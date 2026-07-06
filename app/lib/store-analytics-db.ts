@@ -19,9 +19,13 @@ export type StoreAnalytics = {
  revenueByDay: { day: string; cents: number }[];
  inventory: { active: number; draft: number; sold: number; activeValueCents: number };
  topBrands: { brand: string; sold: number; revenueCents: number }[];
+ topCategories: { category: string; sold: number; revenueCents: number }[];
  recentSales: { title: string; amountCents: number; at: string | null }[];
  customers: number;
  buyers: number;
+ newBuyers: number;
+ returningBuyers: number;
+ prior: { revenueCents: number; orders: number };
  sessions: number;
  productViews: number;
  favorites: number;
@@ -36,10 +40,13 @@ const SOLD = ["paid", "shipped", "delivered"];
 export async function getStoreAnalytics(slug: string, days: number | null = 30): Promise<StoreAnalytics> {
  const sql = db();
  // Always a real cutoff — epoch for "all time" — so no conditional SQL fragments.
- const cutoff = new Date(days ? Date.now() - days * 86400000 : 0).toISOString();
+ const cutoffMs = days ? Date.now() - days * 86400000 : 0;
+ const cutoff = new Date(cutoffMs).toISOString();
+ // Prior window of equal length, for period-over-period deltas (empty for all-time).
+ const priorCutoff = new Date(days ? cutoffMs - days * 86400000 : 0).toISOString();
  const nil = <T>(): T[] => [] as T[];
 
- const [totals, byDay, inv, brands, recent, custRows, buyerRows, sessRows] = await Promise.all([
+ const [totals, byDay, inv, brands, cats, recent, custRows, buyerRows, newRet, prior, sessRows] = await Promise.all([
  sql`SELECT COUNT(*)::int AS orders, COALESCE(SUM(o.amount_cents), 0)::int AS revenue_cents
  FROM orders o JOIN sellers s ON s.id = o.seller_id
  WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.paid_at >= ${cutoff}`.catch(nil),
@@ -57,6 +64,10 @@ export async function getStoreAnalytics(slug: string, days: number | null = 30):
  FROM orders o JOIN items i ON i.id = o.item_id JOIN sellers s ON s.id = o.seller_id
  WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.paid_at >= ${cutoff}
  GROUP BY 1 ORDER BY revenue_cents DESC LIMIT 6`.catch(nil),
+ sql`SELECT COALESCE(NULLIF(i.category, ''), 'Other') AS category, COUNT(*)::int AS sold, SUM(o.amount_cents)::int AS revenue_cents
+ FROM orders o JOIN items i ON i.id = o.item_id JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.paid_at >= ${cutoff}
+ GROUP BY 1 ORDER BY revenue_cents DESC LIMIT 6`.catch(nil),
  sql`SELECT COALESCE(i.title, 'Item') AS title, o.amount_cents::int AS amount_cents, o.paid_at AS at
  FROM orders o LEFT JOIN items i ON i.id = o.item_id JOIN sellers s ON s.id = o.seller_id
  WHERE s.slug = ${slug} AND o.status = ANY(${SOLD})
@@ -65,6 +76,22 @@ export async function getStoreAnalytics(slug: string, days: number | null = 30):
  sql`SELECT COUNT(DISTINCT lower(o.buyer_email))::int AS n
  FROM orders o JOIN sellers s ON s.id = o.seller_id
  WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.buyer_email IS NOT NULL AND o.buyer_email <> ''`.catch(nil),
+ sql`WITH firstorder AS (
+ SELECT lower(o.buyer_email) AS email, MIN(o.paid_at) AS first_at
+ FROM orders o JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.buyer_email IS NOT NULL AND o.buyer_email <> ''
+ GROUP BY 1
+ ), periodbuyers AS (
+ SELECT DISTINCT lower(o.buyer_email) AS email
+ FROM orders o JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.paid_at >= ${cutoff} AND o.buyer_email IS NOT NULL AND o.buyer_email <> ''
+ )
+ SELECT COUNT(*) FILTER (WHERE f.first_at >= ${cutoff})::int AS new_buyers,
+ COUNT(*) FILTER (WHERE f.first_at < ${cutoff})::int AS returning_buyers
+ FROM periodbuyers p JOIN firstorder f ON f.email = p.email`.catch(nil),
+ sql`SELECT COUNT(*)::int AS orders, COALESCE(SUM(o.amount_cents), 0)::int AS revenue_cents
+ FROM orders o JOIN sellers s ON s.id = o.seller_id
+ WHERE s.slug = ${slug} AND o.status = ANY(${SOLD}) AND o.paid_at >= ${priorCutoff} AND o.paid_at < ${cutoff}`.catch(nil),
  sql`SELECT COUNT(*)::int AS n FROM store_visits WHERE store_slug = ${slug} AND timestamp >= ${cutoff}`.catch(nil),
  ]) as any[][];
 
@@ -87,9 +114,13 @@ export async function getStoreAnalytics(slug: string, days: number | null = 30):
  revenueByDay: byDay.map((r) => ({ day: String(r.day), cents: Number(r.cents) })),
  inventory: { active: Number(invRow.active || 0), draft: Number(invRow.draft || 0), sold: Number(invRow.sold || 0), activeValueCents: Number(invRow.active_value_cents || 0) },
  topBrands: brands.map((r) => ({ brand: String(r.brand), sold: Number(r.sold), revenueCents: Number(r.revenue_cents) })),
+ topCategories: cats.map((r) => ({ category: String(r.category), sold: Number(r.sold), revenueCents: Number(r.revenue_cents) })),
  recentSales: recent.map((r) => ({ title: String(r.title), amountCents: Number(r.amount_cents), at: r.at ? new Date(r.at).toISOString() : null })),
  customers: Number(custRows[0]?.n || 0),
  buyers: Number(buyerRows[0]?.n || 0),
+ newBuyers: Number(newRet[0]?.new_buyers || 0),
+ returningBuyers: Number(newRet[0]?.returning_buyers || 0),
+ prior: { revenueCents: Number(prior[0]?.revenue_cents || 0), orders: Number(prior[0]?.orders || 0) },
  sessions: Number(sessRows[0]?.n || 0),
  productViews: vfTotals.views,
  favorites: vfTotals.favorites,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { markSold, releaseReservation } from "@/app/lib/db/inventory";
 import { creditConsignedSale } from "@/app/lib/consignment-db";
+import { syncOrderToKlaviyo } from "@/app/lib/klaviyo";
 import { createPaidOrder, recordPayout, orderExistsForPaymentIntent, getOrdersNeedingConfirmation, markConfirmationSent } from "@/app/lib/db/orders";
 import { applicationFeeCents } from "@/app/lib/payments-config";
 import { sendBuyerOrderConfirmation, sendSellerSaleNotification } from "@/app/lib/email";
@@ -66,6 +67,8 @@ async function fulfill(o: { itemIds: string[]; sellerId: string; pi: string | nu
  await markConfirmationSent(ord.id);
  // Fire any "after an order" custom automations (a thank-you, a review ask…).
  if (ord.buyerEmail && ord.sellerSlug) fireAutomationTrigger(ord.sellerSlug, "order_placed", { email: ord.buyerEmail, name: ord.buyerName }, { item: ord.itemTitle || "your order" }).catch(() => {});
+ // Push the order into the store's Klaviyo, if they've connected one (post-purchase flows, LTV).
+ if (ord.buyerEmail && ord.sellerSlug) syncOrderToKlaviyo(ord.sellerSlug, { email: ord.buyerEmail, name: ord.buyerName, orderId: ord.id, valueCents: ord.amountCents, itemTitle: ord.itemTitle, currency: ord.currency }).catch(() => {});
  } catch (e) { console.error("confirmation email failed for order", ord.id, e); }
  }
  }

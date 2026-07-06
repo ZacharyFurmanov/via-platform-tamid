@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ShoppingCart, Sparkles, Heart, Eye, RotateCcw, Zap, Plus, X } from "lucide-react";
-import { Card, PageHeader, Button, Input, Field, inputCls, cn } from "@/app/store/ui";
+import { Card, PageHeader, Button, Input, Field, cn } from "@/app/store/ui";
+import EmailEditor from "@/app/store/EmailEditor";
 
 type Builtin = { kind: "builtin"; key: string; name: string; body: string; cadence: string; enabled: boolean };
 type Custom = { kind: "custom"; id: number; name: string; trigger: string; subject: string; body: string; enabled: boolean };
@@ -110,7 +111,7 @@ export default function AutomationsPage() {
  {/* Create modal */}
  {adding && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={() => setAdding(false)}>
- <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+ <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
  <h2 className="mb-4 text-base font-semibold text-stone-900">New automation</h2>
  <div className="space-y-3">
  <Field label="Name"><Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Welcome new customers" /></Field>
@@ -120,7 +121,7 @@ export default function AutomationsPage() {
  </select>
  </Field>
  <Field label="Subject"><Input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Welcome to the family ✨" /></Field>
- <Field label="Message"><textarea className={cn(inputCls, "h-28 py-2 leading-relaxed")} value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder="Thanks for joining — here’s what to expect…" /></Field>
+ <Field label="Message"><EmailEditor body={form.body} onBody={(v) => setForm((f) => ({ ...f, body: v }))} subject={form.subject} link="" placeholder="Thanks for joining — here’s what to expect…" /></Field>
  </div>
  {err && <p className="mt-3 text-xs text-red-600">{err}</p>}
  <div className="mt-5 flex items-center justify-end gap-2">

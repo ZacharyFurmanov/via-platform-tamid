@@ -5,6 +5,7 @@ import { getSellerBySlug } from "@/app/lib/db/sellers";
 import { getItem } from "@/app/lib/db/inventory";
 import { formatPrice } from "@/app/lib/formatPrice";
 import AskAboutItem from "@/app/s/AskAboutItem";
+import MakeOffer from "@/app/components/MakeOffer";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
  ) : (
  <a href={`/checkout?item=${item.id}`} className="block w-full py-4 text-center text-[11px] uppercase tracking-[0.2em] text-white transition hover:opacity-90" style={{ background: c.accent }}>Buy now — {price}</a>
  )}
- {!sold && <div className="mt-3"><AskAboutItem storeSlug={sf.storeSlug} itemTitle={item.title} accent={c.accent} /></div>}
+ {!sold && (
+ <div className="mt-3 flex flex-col gap-1">
+ <AskAboutItem storeSlug={sf.storeSlug} itemTitle={item.title} accent={c.accent} />
+ <MakeOffer storeSlug={sf.storeSlug} itemId={item.id} itemTitle={item.title} listPriceCents={item.priceCents} accent={c.accent} />
+ </div>
+ )}
  <p className="mt-5 text-[11px] leading-relaxed opacity-45">One-of-one vintage — once it’s gone, it’s gone. Secure checkout by Stripe.</p>
  </div>
  </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Home, PlusCircle, Package, ShoppingBag, MessageCircle, Store, Plug, Users, Megaphone, Tag, LineChart, CreditCard, BarChart3, Settings, Target, TrendingUp, Share2, Handshake, LogOut, type LucideIcon } from "lucide-react";
+import { Home, PlusCircle, Package, ShoppingBag, MessageCircle, Store, Plug, Users, Megaphone, Tag, CreditCard, BarChart3, Settings, Target, TrendingUp, Share2, Handshake, LayoutGrid, LogOut, type LucideIcon } from "lucide-react";
 import Sidekick from "@/app/store/Sidekick";
 
 type Sub = { href: string; label: string };
@@ -48,9 +48,9 @@ const GROUPS: { label?: string; items: NavItem[] }[] = [
  ],
  },
  { href: `${B}/discounts`, label: "Discounts", icon: Tag },
- { href: `${B}/performance`, label: "Performance", icon: LineChart },
  ],
  },
+ { label: "Apps", items: [{ href: `${B}/apps`, label: "Apps & integrations", icon: LayoutGrid }] },
  {
  label: "Business",
  items: [
