@@ -470,6 +470,13 @@ export const SHOPIFY_STORES: ShopifyStore[] = [
  storeDomain: "lamash-store.myshopify.com",
  scrapeProductPage: true,
  },
+ {
+ type: "shopify",
+ name: "Blummier",
+ slug: "blummier",
+ storeDomain: "blummier.com",
+ scrapeProductPage: true,
+ },
 ];
 
 // Big Cartel stores (public JSON API — no token required)

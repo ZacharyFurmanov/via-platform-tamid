@@ -92,6 +92,28 @@ export const stores = [
  "Returns accepted within 30 days of receipt. Items must be unworn, unused, with tags attached and in original packaging. Sale items are final sale. Refunds are issued to the original payment method once the return is approved. Contact info@blodaschoice.com to initiate a return.",
  },
  {
+ slug: "blummier",
+ dashboardToken: "bl-6a4f2e9c8b1d",
+ name: "Blummier",
+ location: "London, UK",
+ description: "",
+ website: "https://blummier.com",
+ contactEmail: "blummier@gmail.com",
+ dataSource: "blummier",
+ image: "/stores/placeholder.svg",
+ logo: "/stores/placeholder.svg",
+ logoBg: "#ffffff",
+ currency: "GBP",
+ commissionType: "shopify-collabs" as const,
+ collabsStoreId: "247860",
+ authenticityPolicy:
+ "Every piece at Blummier is personally sourced and hand-selected before listing. Items are accurately described with full condition details so you can shop with confidence.",
+ shippingPolicy:
+ "Ships from London, UK. Shipping rates and delivery times are calculated at checkout. International customers may be responsible for customs duties and taxes.",
+ returnPolicy:
+ "All sales are final. Please review all item details and photos carefully before purchasing.",
+ },
+ {
  slug: "california-boho-studio",
  dashboardToken: "cbs-4e8b2f1a9c7d",
  name: "California Boho Studio",
