@@ -19,9 +19,10 @@ export async function GET(request: Request) {
  const cronSecret = process.env.CRON_SECRET;
  const { searchParams } = new URL(request.url);
  const testEmail = searchParams.get("testEmail");
+ const status = searchParams.get("status"); // read-only lock inspection, no send
 
  // Allow unauthenticated access for test sends (testEmail param) — never touches the lock
- if (!testEmail && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
+ if (!testEmail && !status && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
  }
 
@@ -31,6 +32,18 @@ export async function GET(request: Request) {
 
  // Read last-sent time first (used for the since window + rollback below)
  const lastSentRaw = await getSetting("new_arrivals_last_sent_at");
+
+ // Lock status probe — tells us whether the 120h lock is what blocked the last cron run.
+ if (status) {
+ const hoursSince = lastSentRaw ? Math.round((Date.now() - new Date(lastSentRaw).getTime()) / 3_600_000) : null;
+ return NextResponse.json({
+ lastSentAt: lastSentRaw,
+ hoursSince,
+ lockWindowHours: 120,
+ wouldSendNow: !lastSentRaw || (hoursSince !== null && hoursSince >= 120),
+ now: new Date().toISOString(),
+ });
+ }
 
  // Tracks whether THIS invocation claimed the send slot, so we can roll the
  // timestamp back if the send doesn't actually go out (no products / no

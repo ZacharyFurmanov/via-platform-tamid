@@ -565,6 +565,7 @@ const PARTNERSHIPS_QUERY = `query PartnershipsAnalyticsQuery($first: Int, $last:
  }
  __typename
  }
+ pageInfo { hasNextPage endCursor }
  __typename
  }
 }`;
@@ -585,48 +586,57 @@ export async function GET(request: Request) {
  return NextResponse.json({ skipped: true, reason: "No credentials" });
  }
 
- let res: Response;
- try {
- res = await fetch(COLLABS_GRAPHQL_URL, {
- method: "POST",
- headers: {
+ // Paginate through ALL partnerships (Collabs returns 50/page). Reading only the first page
+ // meant orders from partnerships beyond the top 50 were never recorded as conversions. Follow
+ // the cursor, rotating the CSRF token Shopify hands back on each response.
+ const buildHeaders = (csrf: string) => ({
  "content-type": "application/json",
  "cookie": cookie,
- "x-csrf-token": csrfToken,
+ "x-csrf-token": csrf,
  "origin": "https://collabs.shopify.com",
  "referer": "https://collabs.shopify.com/",
  "x-client-type": "web",
  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
- },
+ });
+ const allNodes: Record<string, unknown>[] = [];
+ let after: string | null = null;
+ let activeCsrf = csrfToken;
+ for (let page = 0; page < 20; page++) { // safety cap: 20 × 100 = 2000 partnerships
+ let res: Response;
+ try {
+ res = await fetch(COLLABS_GRAPHQL_URL, {
+ method: "POST",
+ headers: buildHeaders(activeCsrf),
  body: JSON.stringify({
  operationName: "PartnershipsAnalyticsQuery",
- variables: { after: null, before: null, first: 50, last: null },
+ variables: { after, before: null, first: 100, last: null },
  query: PARTNERSHIPS_QUERY,
  }),
  });
  } catch (err) {
- console.error("[Sync Collabs Revenue] Fetch failed:", err);
- return NextResponse.json({ error: "Fetch failed", detail: String(err) }, { status: 502 });
+ if (page === 0) { console.error("[Sync Collabs Revenue] Fetch failed:", err); return NextResponse.json({ error: "Fetch failed", detail: String(err) }, { status: 502 }); }
+ break;
  }
-
  if (!res.ok) {
- console.error(`[Sync Collabs Revenue] Shopify returned ${res.status} — credentials may have expired`);
- return NextResponse.json({ error: `Shopify returned ${res.status}` }, { status: res.status });
+ if (page === 0) { console.error(`[Sync Collabs Revenue] Shopify returned ${res.status} — credentials may have expired`); return NextResponse.json({ error: `Shopify returned ${res.status}` }, { status: res.status }); }
+ break;
  }
-
- const newCsrfToken = res.headers.get("x-csrf-token");
- if (newCsrfToken) {
- await saveSetting("collabs_csrf_token", newCsrfToken);
- }
-
+ const rotated = res.headers.get("x-csrf-token");
+ if (rotated) { activeCsrf = rotated; await saveSetting("collabs_csrf_token", rotated); }
  const json = await res.json();
  if (json.errors) {
- console.error("[Sync Collabs Revenue] GraphQL errors:", json.errors);
- return NextResponse.json({ error: "GraphQL errors", detail: json.errors }, { status: 401 });
+ if (page === 0) { console.error("[Sync Collabs Revenue] GraphQL errors:", json.errors); return NextResponse.json({ error: "GraphQL errors", detail: json.errors }, { status: 401 }); }
+ break;
+ }
+ const conn = json?.data?.partnershipsForPayouts;
+ const pageNodes = (conn?.nodes ?? []) as Record<string, unknown>[];
+ allNodes.push(...pageNodes);
+ const pageInfo = conn?.pageInfo as { hasNextPage?: boolean; endCursor?: string } | undefined;
+ if (!pageInfo?.hasNextPage || !pageInfo?.endCursor || pageNodes.length === 0) break;
+ after = pageInfo.endCursor;
  }
 
- const nodes = json?.data?.partnershipsForPayouts?.nodes ?? [];
- const partnerships = nodes.map((node: Record<string, unknown>) => {
+ const partnerships = allNodes.map((node: Record<string, unknown>) => {
  const brand = node.partnershipBrand as Record<string, unknown>;
  const commission = node.totalCommissionEarned as Record<string, unknown>;
  const offer = node.affiliateOffer as Record<string, unknown> | null;
