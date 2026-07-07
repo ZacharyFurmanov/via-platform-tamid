@@ -124,18 +124,25 @@ export const infraMarkup = `<div class="grain"></div>
       <div class="build-result reveal d1">
         <div class="gen" id="genState"><span class="spin"></span> Designing your storefront…</div>
         <div class="browser result-store" id="resultStore">
-          <div class="bbar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">vya.shop</span></div>
-          <div class="store">
-            <div class="store-hd"><div class="nm serif">VYA</div><div class="tg">Curated vintage · worldwide</div></div>
+          <div class="bbar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">vyaplatform.com</span></div>
+          <iframe class="sf-clone" id="sfClone" title="Site preview" sandbox="allow-scripts allow-popups allow-forms" referrerpolicy="no-referrer" loading="lazy"></iframe>
+          <div class="store sf">
+            <div class="sf-announce">Complimentary tracked shipping on orders over $150</div>
+            <div class="sf-nav"><div class="sf-brand serif">VYA</div><div class="sf-links"><span>Home</span><span>Shop</span><span>About</span><span>Contact</span></div></div>
+            <div class="sf-hero">
+              <div class="nm serif">VYA</div>
+              <div class="tg">Curated vintage · worldwide</div>
+              <div class="sf-cta">Shop the collection</div>
+            </div>
             <div class="pgrid">
-              <div class="prod"><div class="img" style="background:linear-gradient(155deg,#7d2230,#c99a86)"><span class="badge">Margiela</span><div class="meta"><div class="pn">Deconstructed blazer</div><div class="pp">$420</div></div></div></div>
-              <div class="prod"><div class="img" style="background:linear-gradient(155deg,#6f6153,#cdc1b0)"><span class="badge">1970s</span><div class="meta"><div class="pn">Tan suede jacket</div><div class="pp">$168</div></div></div></div>
-              <div class="prod"><div class="img" style="background:linear-gradient(155deg,#9b7d83,#e4d3cc)"><span class="badge">Y2K</span><div class="meta"><div class="pn">Low-rise denim</div><div class="pp">$95</div></div></div></div>
-              <div class="prod"><div class="img" style="background:linear-gradient(155deg,#46101a,#8d6b5a)"><span class="badge">Chanel</span><div class="meta"><div class="pn">Quilted flap bag</div><div class="pp">$1,850</div></div></div></div>
+              <div class="prod"><div class="img ph" style="background:linear-gradient(150deg,#2c241d30,#5D0F1720)"></div></div>
+              <div class="prod"><div class="img ph" style="background:linear-gradient(150deg,#2c241d20,#5D0F171c)"></div></div>
+              <div class="prod"><div class="img ph" style="background:linear-gradient(150deg,#2c241d3a,#5D0F1726)"></div></div>
+              <div class="prod"><div class="img ph" style="background:linear-gradient(150deg,#2c241d1c,#5D0F1718)"></div></div>
             </div>
           </div>
         </div>
-        <div class="result-tag" id="resultTag">✓ Store ready — published to vya.shop</div>
+        <div class="result-tag" id="resultTag">✓ Store ready — published to vyaplatform.com</div>
       </div>
     </div>
   </div>

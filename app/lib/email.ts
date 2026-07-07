@@ -508,6 +508,78 @@ export async function sendStoreCampaign(opts: {
  return { sent, failed };
 }
 
+// The pure HTML for the new-arrivals email — a store name, intro, a 2-up grid of REAL product
+// cards (photo + title + price, each linking to the piece), and a Shop CTA. Exported so it can be
+// previewed without sending.
+export function newArrivalsEmailHtml(opts: {
+ storeName: string;
+ intro: string;
+ products: { title: string; image: string | null; priceCents: number; currency: string; url: string }[];
+ shopUrl?: string;
+}): string {
+ const cleanName = opts.storeName.replace(/[<>"\n\r]/g, "").trim() || "Your store";
+ const card = (p: { title: string; image: string | null; priceCents: number; currency: string; url: string }) => {
+ const img = p.image
+ ? `<a href="${p.url}"><img src="${p.image}" alt="${escapeHtml(p.title)}" width="252" style="display:block;width:100%;height:auto;border-radius:8px;border:0;background:#efe6d7;" border="0" /></a>`
+ : `<div style="width:100%;padding-bottom:120%;background:#efe6d7;border-radius:8px;"></div>`;
+ return `<td width="50%" valign="top" style="padding:8px;">
+ ${img}
+ <a href="${p.url}" style="text-decoration:none;">
+ <div style="margin:10px 2px 2px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.35;color:#292524;">${escapeHtml(p.title)}</div>
+ <div style="margin:2px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;color:#1c1917;">${formatEmailPrice(p.priceCents / 100, p.currency)}</div>
+ </a>
+ </td>`;
+ };
+ const rows: string[] = [];
+ for (let i = 0; i < opts.products.length; i += 2) {
+ rows.push(`<tr>${card(opts.products[i])}${opts.products[i + 1] ? card(opts.products[i + 1]) : '<td width="50%"></td>'}</tr>`);
+ }
+ const cta = opts.shopUrl
+ ? `<div style="text-align:center;padding:20px 0 4px;"><a href="${withUtm(opts.shopUrl, "new_arrivals")}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:13px 30px;border-radius:6px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;">Shop new arrivals</a></div>`
+ : "";
+ return `<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:'Helvetica Neue',Arial,sans-serif;color:#1c1917;">
+ <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+ <div style="padding:30px 28px 4px;text-align:center;"><h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:600;letter-spacing:0.01em;">${escapeHtml(cleanName)}</h1></div>
+ <div style="padding:10px 28px 6px;text-align:center;font-size:15px;line-height:1.6;color:#57534e;">${escapeHtml(opts.intro)}</div>
+ <div style="padding:8px 20px 8px;">
+ <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows.join("")}</table>
+ </div>
+ ${cta}
+ <div style="padding:22px 28px 30px;border-top:1px solid #eeeeee;margin-top:16px;font-size:12px;color:#a8a29e;text-align:center;">You're receiving this because you shopped with ${escapeHtml(cleanName)}. Reply to this email to reach us.</div>
+ </div></body></html>`;
+}
+
+// A proper new-arrivals email: a 2-up grid of REAL product cards instead of a bulleted list of
+// titles. Sent as the store, batched.
+export async function sendStoreNewArrivals(opts: {
+ storeName: string;
+ storeEmail: string | null; // reply-to
+ fromAddress?: string;
+ subject: string;
+ intro: string;
+ products: { title: string; image: string | null; priceCents: number; currency: string; url: string }[];
+ shopUrl?: string;
+ recipients: string[];
+}): Promise<{ sent: number; failed: number }> {
+ const resend = getResend();
+ const cleanName = opts.storeName.replace(/[<>"\n\r]/g, "").trim() || "Your store";
+ const sender = (opts.fromAddress && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(opts.fromAddress)) ? opts.fromAddress : "campaigns@vyaplatform.com";
+ const from = `${cleanName} <${sender}>`;
+ const html = newArrivalsEmailHtml({ storeName: cleanName, intro: opts.intro, products: opts.products, shopUrl: opts.shopUrl });
+
+ let sent = 0, failed = 0;
+ for (let i = 0; i < opts.recipients.length; i += 100) {
+ const chunk = opts.recipients.slice(i, i + 100);
+ try {
+ await resend.batch.send(chunk.map((to) => ({ from, to, replyTo: opts.storeEmail || undefined, subject: opts.subject, html })));
+ sent += chunk.length;
+ } catch {
+ failed += chunk.length;
+ }
+ }
+ return { sent, failed };
+}
+
 export async function sendGiveawayConfirmation(email: string, referralCode: string) {
  const resend = getResend();
  const referralLink = withUtm(`${BASE_URL}/waitlist?ref=${referralCode}`, "giveaway", "referral_link");
@@ -969,7 +1041,7 @@ export async function sendNewArrivalsEmail(
  // Hand-curated picks keep the exact order they were chosen; the automatic
  // selection gets grouped by brand for a nicer flow.
  const sortedProducts = preserveOrder ? products : sortByBrand(products).sorted;
- const subject = "New Arrivals Sourced Just for You";
+ const subject = "Fresh drop alert, meet our new arrivals";
  // Cap at 25 pieces.
  const display = sortedProducts.slice(0, 25);
 

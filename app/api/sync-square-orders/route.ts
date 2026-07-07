@@ -31,11 +31,14 @@ export async function POST(request: Request) {
       ? new Date(since).toISOString()
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Fetch completed orders from Square Orders API
+    // Fetch orders from the Square Orders API. Include OPEN as well as COMPLETED: a Square Online
+    // sale is captured/paid but sits in OPEN until the seller fulfils it, so COMPLETED-only misses
+    // real recent orders. saveConversion is idempotent on the order id, so an order later moving
+    // OPEN → COMPLETED won't double-count.
     const searchBody: Record<string, unknown> = {
       query: {
         filter: {
-          state_filter: { states: ["COMPLETED"] },
+          state_filter: { states: ["OPEN", "COMPLETED"] },
           date_time_filter: {
             updated_at: { start_at: cutoff },
           },
@@ -71,6 +74,7 @@ export async function POST(request: Request) {
         created_at: string;
         updated_at: string;
         total_money?: { amount: number; currency: string };
+        net_amount_due_money?: { amount: number; currency: string };
         line_items?: Array<{
           name: string;
           quantity: string;
@@ -93,6 +97,8 @@ export async function POST(request: Request) {
       const currency = order.total_money?.currency ?? "USD";
       const orderTotal = (order.total_money?.amount ?? 0) / 100;
       if (orderTotal <= 0) continue;
+      // Skip OPEN orders that still owe a balance (unpaid invoices/holds) — only record paid sales.
+      if ((order.net_amount_due_money?.amount ?? 0) > 0) continue;
 
       const items = (order.line_items ?? []).map((li) => ({
         productName: li.name,

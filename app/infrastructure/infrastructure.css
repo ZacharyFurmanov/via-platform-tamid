@@ -138,6 +138,29 @@
 #infra .bbar .d{width:10px;height:10px;border-radius:50%;background:#d8cdba}
 #infra .bbar .url{margin-left:14px;font-family:var(--label);font-size:14px;color:var(--mute);background:#fff;border:1px solid var(--line);border-radius:20px;padding:3px 14px}
 #infra .store{padding:26px}
+/* Result store renders like a real VYA storefront: announcement + nav + hero + CTA, then the grid.
+   Scoped to .result-store so the hero coverflow's .store (which uses .store-hd) is untouched. */
+#infra .result-store .store{padding:0}
+#infra .sf-announce{padding:11px 16px;text-align:center;font-family:var(--label);font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:var(--oxblood);color:#f7efe6}
+#infra .sf-nav{display:flex;flex-direction:column;align-items:center;gap:9px;padding:22px 16px 16px;border-bottom:1px solid var(--line)}
+#infra .sf-brand{font-family:var(--head);font-size:21px;font-weight:500;letter-spacing:.02em}
+#infra .sf-links{display:flex;gap:24px;font-family:var(--label);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+#infra .sf-hero{text-align:center;padding:56px 24px 44px}
+#infra .sf-hero .nm{font-family:var(--head);font-size:clamp(40px,6vw,60px);font-weight:500;line-height:1.02}
+#infra .sf-hero .tg{font-family:var(--body);font-size:16px;color:var(--ink);opacity:.72;margin-top:16px;letter-spacing:0;text-transform:none;font-weight:400}
+#infra .sf-cta{display:inline-block;margin-top:28px;padding:14px 36px;font-family:var(--label);font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;background:var(--oxblood);color:#f7efe6}
+/* Import mode: the store's real homepage hero image behind an overlay (their actual first page). */
+#infra .sf-hero.has-img{position:relative;background-size:cover;background-position:center;padding:96px 24px 80px;overflow:hidden}
+#infra .sf-hero.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,14,.28),rgba(20,16,14,.55))}
+#infra .sf-hero.has-img>*{position:relative;z-index:1}
+#infra .sf-hero.has-img .nm{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+#infra .sf-hero.has-img .tg{color:rgba(255,255,255,.92);opacity:1}
+#infra .result-store .pgrid{padding:0 24px 32px}
+#infra .prod .img.ph::after{display:none}
+/* Import mode: a faithful live clone of the store's real homepage in a sandboxed frame. */
+#infra .sf-clone{display:none;width:100%;height:620px;border:0;background:#fff}
+#infra .result-store.cloning .store{display:none}
+#infra .result-store.cloning .sf-clone{display:block}
 #infra .store-hd{text-align:center;margin-bottom:22px}
 #infra .store-hd .nm{font-family:var(--head);font-size:30px;font-weight:500}
 #infra .store-hd .tg{font-family:var(--label);font-size:14px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-top:4px}

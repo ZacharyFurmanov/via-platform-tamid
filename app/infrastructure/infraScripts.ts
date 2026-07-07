@@ -106,6 +106,23 @@ addEventListener('scroll',()=>{hdr.classList.toggle('scrolled',scrollY>20)});
  const $=id=>document.getElementById(id);
  const res=$('resultStore'),gen=$('genState'),tag=$('resultTag');if(!res)return;
  const storeEl=res.querySelector('.store'),nameEl=res.querySelector('.nm'),tagEl=res.querySelector('.tg'),urlEl=res.querySelector('.url'),grid=res.querySelector('.pgrid');
+ const annEl=res.querySelector('.sf-announce'),brandEl=res.querySelector('.sf-brand'),ctaEl=res.querySelector('.sf-cta'),heroEl=res.querySelector('.sf-hero');
+ // Dress the storefront chrome (name in nav + hero, announcement bar, CTA button) in a palette.
+ function chrome(name,tagline,bg,ink,accent,urlText){
+   storeEl.style.background=bg;
+   if(heroEl){heroEl.classList.remove('has-img');heroEl.style.backgroundImage='';}
+   if(brandEl){brandEl.textContent=name;brandEl.style.color=ink;}
+   nameEl.textContent=name;nameEl.style.color=ink;
+   tagEl.textContent=tagline;tagEl.style.color=ink;
+   if(annEl){annEl.style.background=accent;annEl.style.color=bg;}
+   if(ctaEl){ctaEl.style.background=accent;ctaEl.style.color=bg;}
+   urlEl.textContent=urlText;
+ }
+ // Empty product slots tinted from the palette (8-digit hex alpha over the store bg).
+ function phTiles(ink,accent){
+   const a=['30','20','3a','1c','34','26','18','2c'];
+   grid.innerHTML=a.map((al,i)=>'<div class="prod"><div class="img ph" style="background:linear-gradient(150deg,'+ink+al+','+accent+a[(i+3)%a.length]+')"></div></div>').join('');
+ }
  const palettes={
   mono:{keys:['black and white','black & white','b&w','monochrome','black-and-white','greyscale','grayscale'],bg:'#ffffff',name:'#141414',tag:'#777777',tiles:['#222,#7e7e7e','#333,#9a9a9a','#3a3a3a,#aeaeae','#2a2a2a,#8a8a8a']},
   oldmoney:{keys:['old money','old-money','heritage','timeless','quiet luxury','classic','refined','preppy','elevated','ivory'],bg:'#f3efe6',name:'#29302a',tag:'#8a8478',tiles:['#2f3a30,#a3b09c','#34465e,#9fb0c4','#6b5836,#cdba92','#3a352f,#9c9182']},
@@ -142,13 +159,12 @@ addEventListener('scroll',()=>{hdr.classList.toggle('scrolled',scrollY>20)});
    if(desc)return desc;
    return 'Curated vintage';
  }
- const slug=n=>n.toLowerCase().replace(/[^a-z0-9]/g,'')+'.vya.shop';
+ const slug=n=>n.toLowerCase().replace(/[^a-z0-9]/g,'')+'.vyaplatform.com';
  const titleize=s=>s.replace(/\b\w/g,c=>c.toUpperCase());
  const fromUrl=u=>{u=u.replace(/^https?:\/\//,'').replace(/^www\./,'');let h=u.split('/')[0].split('.')[0];if(['shop','store'].includes(h))h=u.split('/')[0].split('.')[1]||h;return titleize(h.replace(/[-_]/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2'));};
- function paint(pal,name,tagText,prods){
-   storeEl.style.background=pal.bg;nameEl.style.color=pal.name;tagEl.style.color=pal.tag;
-   nameEl.textContent=name;tagEl.textContent=tagText;urlEl.textContent=slug(name);
-   grid.innerHTML=prods.map((p,i)=>`<div class="prod"><div class="img" style="background:linear-gradient(155deg,${pal.tiles[i%pal.tiles.length]})"><div class="meta"><div class="pn">${p[0]}</div><div class="pp">${p[1]}</div></div></div></div>`).join('');
+ function paint(pal,name,tagText){
+   chrome(name,tagText,pal.bg,pal.name,pal.name,slug(name));
+   phTiles(pal.name,pal.name);
    tag.textContent='✓ Store ready — published to '+slug(name);
  }
  const SSWIMG='https://images.squarespace-cdn.com/content/v1/681a7e7f321f915140724edc/';
@@ -163,43 +179,76 @@ addEventListener('scroll',()=>{hdr.classList.toggle('scrolled',scrollY>20)});
  // backend to generate the storefront design, copy, and product suggestions.
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function finishGen(){gen.innerHTML=SPIN;gen.classList.remove('show');res.classList.add('show');tag.classList.add('show');}
- function paintReal(name,tagText,urlText,prods,brand){
-   storeEl.style.background='#fff';nameEl.style.color=brand||'#2c241d';tagEl.style.color='#9b7d83';
-   nameEl.textContent=name;tagEl.textContent=tagText;urlEl.textContent=urlText;
-   grid.innerHTML=prods.slice(0,8).map(p=>"<div class='prod'><div class='img' style=\"background-image:url('"+String(p.image).replace(/'/g,'%27')+"');background-size:cover;background-position:center;background-color:#efe6d7\"><div class='meta'><div class='pn'>"+esc(p.name)+"</div><div class='pp'>"+esc(p.price)+"</div></div></div></div>").join('');
+ function realGrid(prods){return prods.slice(0,8).map(p=>"<div class='prod'><div class='img' style=\"background-image:url('"+String(p.image).replace(/'/g,'%27')+"');background-size:cover;background-position:center;background-color:#efe6d7\"><div class='meta'><div class='pn'>"+esc(p.name)+"</div><div class='pp'>"+esc(p.price)+"</div></div></div></div>").join('');}
+ // Imported site: the seller's OWN homepage — lead with their real hero image (the store's
+ // first page), then a featured row of their real products underneath.
+ function paintReal(name,tagText,urlText,prods,brand,heroImg){
+   const accent=brand||'#5D0F17';
+   chrome(name,tagText,'#ffffff',brand||'#2c241d',accent,urlText);
+   if(heroImg&&heroEl){
+     heroEl.classList.add('has-img');
+     heroEl.style.backgroundImage="url('"+String(heroImg).replace(/'/g,'%27')+"')";
+     nameEl.style.color='#fff';tagEl.style.color='#fff';
+   }
+   grid.innerHTML=realGrid(prods);
  }
- async function runImport(){
-   const u=($('importUrl').value||'').trim();
-   const dom=u?u.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0].toLowerCase():'your-site.com';
-   res.classList.remove('show');tag.classList.remove('show');gen.classList.add('show');
-   gen.textContent='Reading '+dom+'…';
-   setTimeout(()=>{if(gen.classList.contains('show'))gen.textContent='Importing listings, photos & details…';},900);
+ // Paint an AI-generated store: its chosen VYA template's palette + tasteful empty product slots
+ // (we don't drop other stores' real products into a prospective seller's preview — the seller
+ // fills these with their own pieces).
+ function paintGenerated(d){
+   const pal=d.palette||{};
+   chrome(d.storeName,d.tagline,pal.bg||'#fff',pal.name||'#2c241d',pal.accent||'#5D0F17',slug(d.storeName));
+   phTiles(pal.name||'#2c241d',pal.accent||'#5D0F17');
+   tag.textContent='✓ Store ready — published to '+slug(d.storeName);
+ }
+ // Latest action wins: an in-flight generate/import that resolves late must not clobber a newer
+ // one (e.g. the auto-generate on scroll finishing after the user hits Import).
+ let seq=0;
+ async function runGenerate(){
+   const my=++seq;
+   const t=($('prompt').value||'').trim();
+   res.classList.remove('show');tag.classList.remove('show');
+   gen.classList.add('show');gen.innerHTML=SPIN;
    try{
-     const r=await fetch('/api/public/import-store?url='+encodeURIComponent(u||dom));
+     const r=await fetch('/api/public/generate-store',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({description:t})});
      const d=await r.json();
-     if(d&&d.ok&&Array.isArray(d.products)&&d.products.length){
-       paintReal(d.storeName||fromUrl(dom),'Imported from '+dom,dom+' · rebuilt on VYA',d.products,d.brandColor);
-       tag.textContent='✓ Imported '+d.products.length+' live listings from '+dom+' — rebuilt on VYA';
-       finishGen();return;
-     }
-     throw new Error((d&&d.error)||'no products');
+     if(my!==seq)return;
+     if(d&&d.ok&&d.storeName){paintGenerated(d);finishGen();return;}
+     throw new Error('gen failed');
    }catch(e){
-     const key=Object.keys(KNOWN).find(k=>dom.includes(k.split('.')[0]));
-     if(key){const s=KNOWN[key];storeEl.style.background=s.bg;nameEl.style.color=s.nc;tagEl.style.color=s.tc;
-       nameEl.textContent=s.name;tagEl.textContent=s.tag;urlEl.textContent=s.url;
-       grid.innerHTML=s.prods.map(p=>"<div class='prod'><div class='img' style=\"background-image:url('"+p[2]+"');background-size:cover;background-position:center\"><div class='meta'><div class='pn'>"+p[0]+"</div><div class='pp'>"+p[1]+"</div></div></div></div>").join('');
-       tag.textContent='✓ Imported from '+dom+' — rebuilt on VYA';
-     } else {paint(palettes.vya,fromUrl(dom)||'Imported Store','Imported from '+dom,prodSets.vya);tag.textContent='Preview — connect this store to import it live';}
-     finishGen();
+     if(my!==seq)return;
+     // Fallback: local keyword paint (still reveals a store so the trial never dead-ends).
+     const pal=pickPalette(t),er=eras(t),name=parseName(t)||'Your Vintage Store',tg=parseTag(t,er),prods=pickProds(t,er);
+     paint(pal,name,tg,prods);finishGen();
    }
  }
+ // Import a site: a faithful LIVE clone of the store's real homepage, rendered in a sandboxed
+ // iframe — their actual site (hero, nav, everything), just framed inside VYA.
+ const cloneEl=$('sfClone');
+ function runImport(){
+   const my=++seq;
+   const u=($('importUrl').value||'').trim();
+   const dom=u?u.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0].toLowerCase():'your-site.com';
+   res.classList.remove('show','cloning');tag.classList.remove('show');
+   gen.classList.add('show');gen.textContent='Cloning '+dom+'…';
+   urlEl.textContent=dom+' · live on VYA';
+   // Point the iframe at the clone endpoint (a real doc URL) so the theme's own JS runs normally
+   // and draws its videos/lazy images. Reveal as soon as it starts painting — don't wait for every
+   // asset — so it feels fast; the images fill in progressively.
+   let shown=false;
+   const reveal=()=>{ if(shown||my!==seq)return; shown=true;
+     res.classList.add('cloning','show');
+     tag.textContent='✓ '+dom+" — your real homepage, live on VYA";tag.classList.add('show');
+     gen.classList.remove('show');
+   };
+   cloneEl.onload=reveal;
+   cloneEl.removeAttribute('srcdoc');
+   cloneEl.src='/api/public/clone-homepage?url='+encodeURIComponent(u||dom);
+   setTimeout(reveal,3000);
+ }
  function generate(mode){
-   res.classList.remove('show');tag.classList.remove('show');gen.classList.add('show');
-   if(mode==='import'){runImport();return;}
-   const t=$('prompt').value||'';
-   const pal=pickPalette(t),er=eras(t),name=parseName(t)||'Your Vintage Store',tg=parseTag(t,er),prods=pickProds(t,er);
-   gen.innerHTML=SPIN;
-   setTimeout(()=>{paint(pal,name,tg,prods);gen.classList.remove('show');res.classList.add('show');tag.classList.add('show');},1400);
+   if(mode==='import'){res.classList.remove('show');tag.classList.remove('show');gen.classList.add('show');runImport();return;}
+   res.classList.remove('cloning');runGenerate();
  }
  document.querySelectorAll('.tab').forEach(tb=>tb.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));tb.classList.add('on');const d=tb.dataset.tab==='desc';$('paneDesc').style.display=d?'block':'none';$('paneImport').style.display=d?'none':'block';});
  const chipMap={'Old money · B&W':'The Heritage Club — timeless 80s & 90s tailoring. Black and white, old money.','Warm & earthy':'Sunset Supply — 70s boho and western finds. Warm, earthy, cozy.','Bold & playful':'Loud Era — Y2K and 2000s pieces. Bold, colorful, playful.','Dark & moody':'After Hours — 90s grunge and archival. Dark and moody.'};

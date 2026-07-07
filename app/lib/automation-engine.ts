@@ -1,8 +1,11 @@
-import { sendStoreCampaign } from "./email";
+import { sendStoreCampaign, sendStoreNewArrivals } from "./email";
 import { resolveStoreSender } from "./email-settings-db";
 import { getCustomAutomationsForTrigger, isAutomationEnabled } from "./automations-db";
 import { listCustomerProfiles } from "./store-customers-db";
+import { getStorefrontBySlug } from "./storefront-db";
 import type { AbandonedCart } from "./checkout-attempts-db";
+
+const NEW_ARRIVALS_BASE = "https://vyaplatform.com";
 
 // The recommerce automation engine: turns a store's automation settings + custom
 // triggers into actually-sent emails, honoring the on/off toggles and each customer's
@@ -41,23 +44,37 @@ export async function fireAutomationTrigger(
  * "new arrivals" flow is on OR a custom "new_listing" automation is active. Batched,
  * so a whole drop is one email — never one per publish.
  */
-export async function sendNewListingsDigest(storeSlug: string, newItems: { title: string }[]): Promise<{ sent: number } | null> {
+export type NewListingItem = { id: string; title: string; image: string | null; priceCents: number; currency: string };
+// testRecipient: send only to that address, skipping the enabled/subscriber gates — for previews.
+export async function sendNewListingsDigest(storeSlug: string, newItems: NewListingItem[], testRecipient?: string): Promise<{ sent: number } | null> {
  if (!newItems.length) return null;
- const builtinOn = await isAutomationEnabled(storeSlug, "new_arrivals").catch(() => true);
  const custom = await getCustomAutomationsForTrigger(storeSlug, "new_listing").catch(() => []);
+ if (!testRecipient) {
+ const builtinOn = await isAutomationEnabled(storeSlug, "new_arrivals").catch(() => true);
  if (!builtinOn && custom.length === 0) return null;
+ }
 
  const { fromName, fromAddress, replyTo, website } = await resolveStoreSender(storeSlug);
- if (!replyTo) return null;
+ if (!replyTo && !testRecipient) return null;
+ let recipients: string[];
+ if (testRecipient) {
+ recipients = [testRecipient];
+ } else {
  const profiles = await listCustomerProfiles(storeSlug).catch(() => []);
- const recipients = [...new Set(profiles.filter((c) => c.subscribed && c.email.includes("@")).map((c) => c.email))];
+ recipients = [...new Set(profiles.filter((c) => c.subscribed && c.email.includes("@")).map((c) => c.email))];
+ }
  if (!recipients.length) return null;
 
- const list = newItems.slice(0, 12).map((i) => `• ${i.title}`).join("\n");
+ // Link each piece to its storefront product page when the store has a live storefront; else the
+ // store's own site, else VYA.
+ const sf = await getStorefrontBySlug(storeSlug).catch(() => null);
+ const itemUrl = (id: string) => (sf?.handle ? `${NEW_ARRIVALS_BASE}/s/${sf.handle}/p/${id}` : (website || NEW_ARRIVALS_BASE));
+ const shopUrl = sf?.handle ? `${NEW_ARRIVALS_BASE}/s/${sf.handle}/shop` : website;
+ const products = newItems.slice(0, 12).map((i) => ({ title: i.title, image: i.image, priceCents: i.priceCents, currency: i.currency, url: itemUrl(i.id) }));
+
  const subject = custom[0]?.subject?.trim() || `New arrivals from ${fromName}`;
- const intro = custom[0]?.body?.trim() || "Fresh one-of-one pieces just landed. Shop them before they’re gone:";
- const body = `${intro}\n\n${list}`;
- const r = await sendStoreCampaign({ storeName: fromName, storeEmail: replyTo, fromAddress, subject, body, link: website, recipients }).catch(() => null);
+ const intro = custom[0]?.body?.trim() || "Fresh one-of-one pieces just landed. Shop them before they’re gone.";
+ const r = await sendStoreNewArrivals({ storeName: fromName, storeEmail: replyTo, fromAddress, subject, intro, products, shopUrl, recipients }).catch(() => null);
  return r ? { sent: r.sent } : null;
 }
 
