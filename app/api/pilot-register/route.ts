@@ -21,6 +21,41 @@ function getDatabaseUrl() {
   return url;
 }
 
+// Per-IP rate limit on this public form. A real person signs up once; a bot hammers it. 10/hour
+// is generous for shared networks while stopping a flood. DB-backed so it holds across the
+// serverless instances Vercel spins up (in-memory wouldn't).
+const REGISTER_RATE_LIMIT = 10;
+let rateTableReady = false;
+function getSql() { return neon(getDatabaseUrl()); }
+type Sql = ReturnType<typeof getSql>;
+async function ensureRateTable(sql: Sql) {
+  if (rateTableReady) return;
+  await sql`CREATE TABLE IF NOT EXISTS register_attempts (ip TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_register_attempts_ip_ts ON register_attempts (ip, created_at)`;
+  rateTableReady = true;
+}
+function clientIp(request: NextRequest): string {
+  const xff = request.headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  return request.headers.get("x-real-ip") || "unknown";
+}
+// Returns true if this IP is over the limit (already logged the attempt when under).
+async function overRateLimit(request: NextRequest): Promise<boolean> {
+  try {
+    const sql = getSql();
+    await ensureRateTable(sql);
+    const ip = clientIp(request);
+    const recent = (await sql`SELECT count(*)::int AS n FROM register_attempts WHERE ip = ${ip} AND created_at >= now() - interval '1 hour'`) as { n: number }[];
+    if (recent[0].n >= REGISTER_RATE_LIMIT) return true;
+    await sql`INSERT INTO register_attempts (ip) VALUES (${ip})`;
+    // Opportunistic cleanup so the table can't grow unbounded under a distributed flood.
+    if (Math.random() < 0.02) await sql`DELETE FROM register_attempts WHERE created_at < now() - interval '2 days'`.catch(() => {});
+    return false;
+  } catch {
+    return false; // never block real signups if the limiter itself errors
+  }
+}
+
 async function recordPromoCode(email: string, promoKey: string) {
   const sql = neon(getDatabaseUrl());
   await sql`ALTER TABLE pilot_access ADD COLUMN IF NOT EXISTS promo_code TEXT`;
@@ -38,6 +73,26 @@ export async function POST(request: NextRequest) {
 
     if (!email || !firstName) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
+    }
+
+    // Spam guard: the pilot form was flooded by bots injecting casino/link spam into the name
+    // fields. Reject any submission whose name contains a URL, a messaging-app handle, or obvious
+    // spam markers, or that is absurdly long — real names never do. Blocks the flood without
+    // affecting genuine signups. (Longer-term: a captcha / rate-limit on this public endpoint.)
+    const nameBlob = `${firstName ?? ""} ${lastName ?? ""}`;
+    const SPAM = /https?:\/\/|www\.|bit\.ly|t\.me\/|wa\.me\/|telegram|whatsapp|\bcasino\b|\bbonus\b|\bspin[s]?\b|\bfree\s*money\b|[✨🎰🎁💰🔥]|[a-z0-9-]+\.(com|net|ru|xyz|top|shop|link|online|site|club|vip)\b/i;
+    if (SPAM.test(nameBlob) || (firstName || "").length > 60 || (lastName || "").length > 60) {
+      return NextResponse.json({ error: "Invalid submission." }, { status: 400 });
+    }
+    // Phone (when given) must look like a phone, not a spam string.
+    if (phone && !/^[+()\d\s.-]{6,20}$/.test(String(phone).trim())) {
+      return NextResponse.json({ error: "Invalid phone number." }, { status: 400 });
+    }
+
+    // Rate-limit by IP (defense-in-depth for bots that drop the URL spam). Runs after the cheap
+    // content checks above, so the current URL-spam flood is rejected before any DB work.
+    if (await overRateLimit(request)) {
+      return NextResponse.json({ error: "Too many attempts from your network. Please try again later." }, { status: 429 });
     }
 
     const normalizedEmail = email.trim().toLowerCase();

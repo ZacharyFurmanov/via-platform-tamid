@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import crypto from "crypto";
 
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 function getDb() {
  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
  if (!url) throw new Error("DATABASE_URL not set");
@@ -27,6 +30,38 @@ export async function GET(request: NextRequest) {
  }
  try {
  const sql = getDb();
+
+ // Diagnostic: where do the "customers" come from? Reveals whether the count is real
+ // (waitlist/pilot rows) or inflated by a fan-out JOIN (many users sharing one email).
+ if (new URL(request.url).searchParams.get("debug") === "counts") {
+ const [wl, pa, us, dup, ac] = await Promise.all([
+ sql`SELECT count(*)::int AS n FROM waitlist`.catch(() => [{ n: -1 }]),
+ sql`SELECT count(*)::int AS n FROM pilot_access`.catch(() => [{ n: -1 }]),
+ sql`SELECT count(*)::int AS n, count(DISTINCT LOWER(email))::int AS distinct_email FROM users`.catch(() => [{ n: -1, distinct_email: -1 }]),
+ sql`SELECT COALESCE(MAX(c),0)::int AS max_users_per_email, COUNT(*)::int AS emails_with_dupes FROM (SELECT COUNT(*) c FROM users WHERE email IS NOT NULL GROUP BY LOWER(email) HAVING COUNT(*) > 1) t`.catch(() => [{ max_users_per_email: -1, emails_with_dupes: -1 }]),
+ sql`SELECT count(*)::int AS n FROM (SELECT email FROM pilot_access UNION SELECT email FROM waitlist w WHERE LOWER(w.email) NOT IN (SELECT LOWER(email) FROM pilot_access)) x`.catch(() => [{ n: -1 }]),
+ ]) as { n: number; distinct_email?: number; max_users_per_email?: number; emails_with_dupes?: number }[][];
+ /* eslint-disable @typescript-eslint/no-explicit-any */
+ const [distinct, bySource, byStatus, recent, dupEmails] = await Promise.all([
+ sql`SELECT count(DISTINCT LOWER(email))::int AS n FROM pilot_access`.catch(() => [{ n: -1 }]),
+ sql`SELECT COALESCE(source,'(null)') AS source, count(*)::int AS n FROM pilot_access GROUP BY source ORDER BY n DESC LIMIT 10`.catch(() => []),
+ sql`SELECT COALESCE(status,'(null)') AS status, count(*)::int AS n FROM pilot_access GROUP BY status ORDER BY n DESC LIMIT 10`.catch(() => []),
+ sql`SELECT count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int AS d1, count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS d7, count(*) FILTER (WHERE created_at >= now() - interval '30 days')::int AS d30 FROM pilot_access`.catch(() => [{ d1: -1, d7: -1, d30: -1 }]),
+ sql`SELECT LOWER(email) AS email, count(*)::int AS n FROM pilot_access GROUP BY LOWER(email) ORDER BY n DESC LIMIT 5`.catch(() => []),
+ ]) as any[][];
+ return NextResponse.json({
+ waitlist_rows: wl[0].n,
+ pilot_access_rows: pa[0].n,
+ pilot_access_distinct_emails: distinct[0].n,
+ all_customers_union: ac[0].n,
+ users_rows: us[0].n, users_distinct_emails: us[0].distinct_email,
+ max_users_sharing_one_email: dup[0].max_users_per_email,
+ pilot_access_by_source: bySource,
+ pilot_access_by_status: byStatus,
+ pilot_access_created: recent[0],
+ top_duplicated_emails: dupEmails,
+ });
+ }
 
  // Ensure the pilot_access.source column exists (registration captures it now) so
  // the query below can read it even before any new registration has created it.
@@ -67,10 +102,13 @@ export async function GET(request: NextRequest) {
  ),
  fav_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(created_at) AS last_at FROM product_favorites WHERE user_id IS NOT NULL GROUP BY user_id::text),
  cart_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(added_at) AS last_at FROM user_cart_items WHERE user_id IS NOT NULL GROUP BY user_id::text),
- click_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM clicks WHERE user_id IS NOT NULL GROUP BY user_id::text),
- view_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM product_views WHERE user_id IS NOT NULL GROUP BY user_id::text),
+ -- The high-volume event tables (clicks, views, page-views) are bounded to the last year so the
+ -- aggregate uses the timestamp index instead of scanning the whole history on every request —
+ -- otherwise this page gets slower as those tables grow and eventually hangs.
+ click_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM clicks WHERE user_id IS NOT NULL AND timestamp >= now() - interval '365 days' GROUP BY user_id::text),
+ view_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM product_views WHERE user_id IS NOT NULL AND timestamp >= now() - interval '365 days' GROUP BY user_id::text),
  order_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
- page_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM page_type_views WHERE user_id IS NOT NULL GROUP BY user_id::text),
+ page_counts AS (SELECT user_id::text AS uid, COUNT(*) AS cnt, MAX(timestamp) AS last_at FROM page_type_views WHERE user_id IS NOT NULL AND timestamp >= now() - interval '365 days' GROUP BY user_id::text),
  ltv_amounts AS (SELECT user_id::text AS uid, SUM(order_total) AS total FROM conversions WHERE order_total > 0 AND user_id IS NOT NULL GROUP BY user_id::text),
  -- Prefer the earliest NON-direct source: ordinary return visits get logged as
  -- "direct", so picking strictly the earliest visit would mask a real source we

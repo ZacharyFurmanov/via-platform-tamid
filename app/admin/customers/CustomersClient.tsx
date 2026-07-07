@@ -264,6 +264,10 @@ export default function CustomersClient() {
  const [error, setError] = useState<string | null>(null);
  const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
  const [search, setSearch] = useState(searchParams.get("search") ?? "");
+ // Render in pages so a large customer list doesn't freeze the browser (each row is heavy).
+ const PAGE = 100;
+ const [visibleCount, setVisibleCount] = useState(PAGE);
+ useEffect(() => { setVisibleCount(PAGE); }, [filter, search]);
  const [approving, setApproving] = useState<string | null>(null);
  const [approvingAll, setApprovingAll] = useState(false);
  const [emailProgress, setEmailProgress] = useState<string | null>(null);
@@ -537,7 +541,7 @@ export default function CustomersClient() {
  </tr>
  </thead>
  <tbody>
- {filtered.map((c, i) => (
+ {filtered.slice(0, visibleCount).map((c, i) => (
  <tr key={c.email} onClick={() => router.push(`/admin/customers/${encodeURIComponent(c.email)}`)} style={{ borderBottom: "1px solid #f4f4f5", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
  <td style={{ padding: "12px 16px", color: "#d4d4d8" }}>{i + 1}</td>
  <td style={{ padding: "12px 16px" }}>
@@ -662,8 +666,15 @@ export default function CustomersClient() {
  ))}
  </tbody>
  </table>
+ {filtered.length > visibleCount && (
+ <div style={{ textAlign: "center", padding: "12px 16px", borderTop: "1px solid #f4f4f5" }}>
+ <button onClick={() => setVisibleCount((v) => v + PAGE)} style={{ padding: "8px 20px", border: "1px solid #e4e4e7", background: "#fff", color: "#09090b", cursor: "pointer", fontSize: 13, borderRadius: 6 }}>
+ Load {Math.min(PAGE, filtered.length - visibleCount)} more
+ </button>
+ </div>
+ )}
  <p style={{ fontSize: 12, color: "#a1a1aa", padding: "10px 16px" }}>
- Showing {filtered.length} of {customers.length} customers
+ Showing {Math.min(visibleCount, filtered.length)} of {filtered.length}{filtered.length !== customers.length ? ` (of ${customers.length})` : ""} customers
  </p>
  </div>
  )}
