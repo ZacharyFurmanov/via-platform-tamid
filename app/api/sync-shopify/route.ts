@@ -96,8 +96,9 @@ export async function POST(request: NextRequest) {
  } else {
  // Try public products.json endpoint (no token required)
  try {
- const storeEntry = stores.find((s) => s.slug === providedSlug || s.name.toLowerCase() === storeName.toLowerCase());
- const storeCurrency = (storeEntry as any)?.currency ?? "USD";
+ const storeEntry = stores.find((s) => s.slug === providedSlug || s.name.toLowerCase() === storeName.toLowerCase()) as any;
+ // feedCurrency overrides for Markets stores whose products.json is already USD-localized.
+ const storeCurrency = storeEntry?.feedCurrency ?? storeEntry?.currency ?? "USD";
  const skipSoldOut = (storeEntry as any)?.skipSoldOutFilter === true;
  fetchResult = await fetchShopifyProductsPublic(
  storeDomain,

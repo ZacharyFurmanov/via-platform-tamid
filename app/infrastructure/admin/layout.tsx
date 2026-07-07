@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Home, PlusCircle, Package, ShoppingBag, MessageCircle, Store, Plug, Users, Megaphone, Tag, CreditCard, BarChart3, Settings, Target, TrendingUp, Share2, Handshake, LayoutGrid, LogOut, type LucideIcon } from "lucide-react";
+import { Home, PlusCircle, Package, ShoppingBag, MessageCircle, Store, Plug, Users, Megaphone, Tag, CreditCard, BarChart3, Settings, Target, TrendingUp, Share2, Handshake, LayoutGrid, LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import Sidekick from "@/app/store/Sidekick";
 
 type Sub = { href: string; label: string };
@@ -69,10 +69,12 @@ export default function InfrastructureLayout({ children }: { children: React.Rea
  const pathname = usePathname();
  const router = useRouter();
  const [ok, setOk] = useState<boolean | null>(null);
+ const [navOpen, setNavOpen] = useState(false); // mobile drawer
 
  useEffect(() => {
  fetch("/api/infrastructure/whoami").then((r) => setOk(r.ok)).catch(() => setOk(false));
  }, []);
+
 
  useEffect(() => {
  if (ok === false) router.replace("/admin/login?redirect=/infrastructure/admin");
@@ -86,12 +88,20 @@ export default function InfrastructureLayout({ children }: { children: React.Rea
 
  return (
  <div className="flex min-h-screen bg-stone-50" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
- <aside className="fixed left-0 top-0 flex h-screen w-[220px] flex-col overflow-y-auto border-r border-stone-200 bg-white px-3 py-5">
+ {/* Mobile top bar — hamburger opens the drawer */}
+ <div className="fixed inset-x-0 top-0 z-40 flex items-center gap-3 border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+ <button onClick={() => setNavOpen(true)} aria-label="Open menu" className="text-stone-600"><Menu size={20} /></button>
+ <p className="text-[14px] font-semibold tracking-tight text-stone-900">Infrastructure</p>
+ </div>
+ {/* Backdrop when the mobile drawer is open */}
+ {navOpen && <div onClick={() => setNavOpen(false)} className="fixed inset-0 z-40 bg-black/30 md:hidden" aria-hidden="true" />}
+ <aside className={`fixed left-0 top-0 z-50 flex h-screen w-[220px] flex-col overflow-y-auto border-r border-stone-200 bg-white px-3 py-5 transition-transform duration-200 md:translate-x-0 ${navOpen ? "translate-x-0" : "-translate-x-full"}`}>
+ <button onClick={() => setNavOpen(false)} aria-label="Close menu" className="absolute right-3 top-4 text-stone-400 hover:text-stone-600 md:hidden"><X size={18} /></button>
  <div className="px-3 pb-4">
  <p className="text-[15px] font-semibold tracking-tight text-stone-900">Infrastructure</p>
  <p className="text-[11px] text-stone-400">VYA platform · owner workspace</p>
  </div>
- <nav className="flex-1">
+ <nav className="flex-1" onClick={() => setNavOpen(false)}>
  {GROUPS.map((g, gi) => (
  <div key={gi} className={gi === 0 ? "" : "mt-4"}>
  {g.label && <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-400">{g.label}</p>}
@@ -134,7 +144,7 @@ export default function InfrastructureLayout({ children }: { children: React.Rea
  </Link>
  </div>
  </aside>
- <main className="ml-[220px] flex-1">{children}</main>
+ <main className="ml-0 flex-1 pt-14 md:ml-[220px] md:pt-0">{children}</main>
  <Sidekick />
  </div>
  );

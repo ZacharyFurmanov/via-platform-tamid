@@ -11,6 +11,7 @@ import { listCapturePaths, getCapturePage, updateCapturePageHtml, setSiteCss } f
 import { list } from "@vercel/blob";
 import type { StorefrontTheme } from "./store-import";
 import { AI_MODELS } from "./ai-models";
+import { getMemories, addMemory, forgetMemory } from "./assistant-memory-db";
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = AI_MODELS.assistant;
@@ -58,6 +59,9 @@ const TOOLS = [
  { name: "edit_captured_page", description: "Edit copy on one page of the captured site: replace every occurrence of `find` with `replace` in that page's HTML (path from list_captured_pages). Use for wording changes, fixing a typo, updating a banner/announcement. `find` must be exact visible text. Confirm first.", input_schema: { type: "object", properties: { path: { type: "string" }, find: { type: "string" }, replace: { type: "string" } }, required: ["path", "find", "replace"] } },
  { name: "style_captured_site", description: "Apply site-wide custom CSS to the captured site — injected over the original styles on every page, for color/font/spacing/button tweaks. Pass the full CSS to set (replaces any previous custom CSS); pass empty css to clear. Confirm first.", input_schema: { type: "object", properties: { css: { type: "string" } }, required: ["css"] } },
  { name: "set_layout", description: "Replace the ENTIRE home page with a full set of sections at once — use this to build or rebuild a whole storefront in one go. Provide blocks as an ordered array of { type, props, style? }. Types + props: announcement {text}; hero {heading, subtext, cta, image}; featured {heading}; text {heading, body}; image {image, caption}; gallery {images: newline-separated URLs}; video {url: a YouTube/Vimeo/.mp4 link, caption}; newsletter {heading, subtext}. Optionally give a section style.bg ('accent', 'dark', or a #hex) for contrast — e.g. a dark about section. Write real, tailored copy for this seller — don't leave placeholders. Confirm before calling.", input_schema: { type: "object", properties: { blocks: { type: "array", items: { type: "object", properties: { type: { type: "string", enum: BLOCK_TYPE_IDS }, props: { type: "object" }, style: { type: "object", properties: { bg: { type: "string" } } } }, required: ["type"] } } }, required: ["blocks"] } },
+ { name: "remember_fact", description: "Save a durable fact about this seller or store to long-term memory — a preference, brand-voice note, a decision, a recurring detail — anything worth recalling in future conversations (e.g. 'Prefers minimal, editorial storefronts', 'Brand voice is playful and irreverent', 'Ships only within the US', 'Focuses on 90s designer denim'). Do this whenever the seller tells you something about themselves or their store that should persist. One clear, self-contained fact per call. No need to confirm — just remember and mention it briefly.", input_schema: { type: "object", properties: { fact: { type: "string" } }, required: ["fact"] } },
+ { name: "forget_fact", description: "Remove saved memories matching a phrase (case-insensitive substring). Use when the seller says something changed or asks you to forget it.", input_schema: { type: "object", properties: { match: { type: "string" } }, required: ["match"] } },
+ { name: "list_memory", description: "List everything currently in long-term memory for this store.", input_schema: { type: "object", properties: {} } },
 ];
 
 async function loadTheme(slug: string): Promise<StorefrontTheme> {
@@ -217,6 +221,19 @@ async function runTool(slug: string, name: string, input: any): Promise<any> {
  await setStorefrontTheme(slug, theme);
  return { ok: true, remaining: next.map((p) => p.slug) };
  }
+ case "remember_fact": {
+ const fact = String(input.fact ?? "").trim();
+ const saved = await addMemory(slug, fact);
+ return saved ? { ok: true, remembered: fact } : { ok: true, note: "Already knew that (or nothing to save)." };
+ }
+ case "forget_fact": {
+ const removed = await forgetMemory(slug, String(input.match ?? ""));
+ return { ok: true, forgot: removed };
+ }
+ case "list_memory": {
+ const memory = await getMemories(slug);
+ return { memory, count: memory.length };
+ }
  default:
  return { error: "Unknown tool." };
  }
@@ -229,6 +246,9 @@ You can:
 - Build the storefront page out of sections (blocks) — add, edit, reorder, and remove an announcement bar, hero banner, featured-products grid, text, image, gallery, or newsletter. This is how you "build" the page when a seller asks for things like "add a sale banner" or "put an about section at the bottom." Give a section a colored background with style.bg ('accent', 'dark', or a #hex).
 - Create and manage additional pages (About, FAQ, Shipping & Returns, etc.) with create_page / list_pages / set_page_layout / delete_page. Extra pages are built from the same sections and are linked in the nav automatically.
 - Help with listings — list inventory, write and improve product descriptions, and edit titles, prices, and descriptions.
+- Remember across conversations — when the seller shares a preference, their brand voice, or a decision worth keeping, save it with remember_fact so you recall it next time. Everything you already remember is given to you at the start of each chat; use it and don't re-ask.
+
+You can also answer questions, not just take actions — resale and vintage expertise, pricing and merchandising, marketing and growth, business advice, or general questions even outside VYA. Be genuinely useful and never refuse a question just because it's off-topic.
 
 When a seller asks you to build or change part of their page, prefer the section tools (add_section / update_section / move_section / remove_section). Check the current layout with list_sections first when it helps.
 
@@ -238,10 +258,15 @@ Rules:
 - For READ actions (get_storefront, list_photos, list_inventory, write_description, list_sections) just do it, no need to ask.
 - For any CHANGE (update_storefront_design, set_hero_photo, update_listing, add_section, update_section, remove_section, move_section) first state in one short line exactly what you'll change, and ask the seller to confirm. Only call the write tool AFTER they confirm in their next message.
 - Be concise and friendly — prefer doing over explaining. After a change, confirm what changed in one line.
-- You only ever act on THIS seller's own store. If asked for something you can't do yet (orders, shipping, pricing, analytics, payouts), say it's on the way.`;
+- You only ever take ACTIONS on THIS seller's own store. For an action you genuinely can't perform yet (e.g. orders, shipping, payouts), say it's on the way — but still answer the underlying question if you can.`;
 
 export async function runAssistant(slug: string, messages: AssistantMessage[], context?: { page?: string }): Promise<{ reply: string; actions: AssistantAction[] }> {
- const sys = SYSTEM + (context?.page ? `\n\nThe seller is currently on the "${context.page}" page of the portal.` : "");
+ // Inject long-term memory so the Sidekick "remembers" the seller across conversations.
+ const memories = await getMemories(slug).catch(() => []);
+ const memText = memories.length
+ ? `\n\nLong-term memory — what you already know about this seller & store from past conversations (use it; don't ask again for things listed here):\n${memories.map((m) => `- ${m}`).join("\n")}`
+ : "";
+ const sys = SYSTEM + memText + (context?.page ? `\n\nThe seller is currently on the "${context.page}" page of the portal.` : "");
  const convo: AssistantMessage[] = messages.map((m) => ({ role: m.role, content: m.content }));
  const actions: AssistantAction[] = [];
 

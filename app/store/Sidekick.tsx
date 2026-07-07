@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Sparkles, X, ArrowUp } from "lucide-react";
+import { Sparkles, X, ArrowUp, SquarePen } from "lucide-react";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -35,6 +35,18 @@ export default function Sidekick() {
  useEffect(() => { pathRef.current = pathname; }, [pathname]);
 
  useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }); }, [msgs, busy]);
+
+ // Load the saved conversation so it survives refreshes/sessions.
+ useEffect(() => {
+ fetch("/api/store/assistant").then((r) => (r.ok ? r.json() : null)).then((d) => {
+ if (d && Array.isArray(d.messages) && d.messages.length) { msgsRef.current = d.messages; setMsgs(d.messages); }
+ }).catch(() => {});
+ }, []);
+
+ async function newChat() {
+ msgsRef.current = []; setMsgs([]); setInput("");
+ await fetch("/api/store/assistant", { method: "DELETE" }).catch(() => {});
+ }
 
  async function send(textArg?: string) {
  const text = (textArg ?? input).trim();
@@ -85,7 +97,10 @@ export default function Sidekick() {
  <div className="fixed bottom-5 right-5 z-50 flex h-[560px] max-h-[80vh] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col rounded-2xl border border-black/10 bg-[#FFFDF8] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.45)]">
  <div className="flex items-center justify-between border-b border-black/[0.07] px-4 py-3">
  <div className="flex items-center gap-2 text-[#5D0F17]"><Sparkles size={15} /><span className="font-serif text-sm">VYA</span></div>
- <button onClick={() => setOpen(false)} className="text-[#5D0F17]/45 hover:text-[#5D0F17]"><X size={17} /></button>
+ <div className="flex items-center gap-1 text-[#5D0F17]/45">
+ <button onClick={newChat} title="New chat" aria-label="New chat" className="p-1 hover:text-[#5D0F17]"><SquarePen size={15} /></button>
+ <button onClick={() => setOpen(false)} aria-label="Close" className="p-1 hover:text-[#5D0F17]"><X size={17} /></button>
+ </div>
  </div>
 
  <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">

@@ -67,8 +67,9 @@ export async function GET(request: Request) {
  1000
  );
  } else {
- const storeInfo = stores.find((s) => s.slug === store.slug);
- const storeCurrency = (storeInfo as any)?.currency ?? "USD";
+ const storeInfo = stores.find((s) => s.slug === store.slug) as any;
+ // feedCurrency overrides for Markets stores whose products.json is already USD-localized.
+ const storeCurrency = storeInfo?.feedCurrency ?? storeInfo?.currency ?? "USD";
  fetchResult = await fetchShopifyProductsPublic(
  store.storeDomain,
  store.name,

@@ -104,6 +104,11 @@ export const stores = [
  logo: "/stores/placeholder.svg",
  logoBg: "#ffffff",
  currency: "GBP",
+ // Blummier runs Shopify Markets: its products.json is served to our US-based sync ALREADY in
+ // USD (the same price US shoppers see on blummier.com), so the product feed must NOT be
+ // re-converted from GBP. `currency` above stays GBP for orders/commissions (which do arrive in
+ // GBP via Collabs/webhooks); `feedCurrency` overrides only the product-catalog conversion.
+ feedCurrency: "USD",
  commissionType: "shopify-collabs" as const,
  collabsStoreId: "247860",
  authenticityPolicy:
