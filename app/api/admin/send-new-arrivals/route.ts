@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getApprovedPilotEmails } from "@/app/lib/pilot-db";
 import { sendNewArrivalsEmail } from "@/app/lib/email";
+import { getEmailPickProducts } from "@/app/lib/editors-picks-db";
 import { getSetting, saveSetting } from "@/app/lib/settings-db";
 import type { DBProduct } from "@/app/lib/db";
 import { DISABLED_STORE_SLUGS } from "@/app/lib/db";
@@ -106,10 +107,15 @@ export async function POST(request: NextRequest) {
  LIMIT 50
  `;
 
- const products = rows as DBProduct[];
+ // Hand-curated email picks (from /admin/collections → "New Arrivals Email") take precedence,
+ // exactly like the cron — otherwise the manual button would ignore your curation and send the
+ // auto-ranked window instead. Fall back to the auto window only when nothing is curated.
+ const emailPicks = await getEmailPickProducts();
+ const usingPicks = emailPicks.length > 0;
+ const products = usingPicks ? emailPicks : (rows as DBProduct[]);
 
  if (preview) {
- return NextResponse.json({ preview: true, since: sinceIso, products: products.length });
+ return NextResponse.json({ preview: true, since: sinceIso, products: products.length, usingPicks });
  }
 
  if (products.length === 0) {
@@ -122,7 +128,7 @@ export async function POST(request: NextRequest) {
  return NextResponse.json({ ok: true, message: "No approved users to email.", sent: 0 });
  }
 
- const { sent, failed } = await sendNewArrivalsEmail(emails, products);
+ const { sent, failed } = await sendNewArrivalsEmail(emails, products, usingPicks);
 
  // Reset the cron lock so the scheduled job won't double-send this week
  if (sendForReal) {
