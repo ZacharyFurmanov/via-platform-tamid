@@ -10,6 +10,8 @@ import { ebayConfigured } from "@/app/lib/ebay";
 import { getEbayTokens, clearEbayTokens } from "@/app/lib/ebay-tokens-db";
 import { depopConfigured } from "@/app/lib/depop";
 import { getDepopTokens, clearDepopTokens } from "@/app/lib/depop-tokens-db";
+import { etsyStatus } from "@/app/lib/etsy";
+import { clearEtsyTokens } from "@/app/lib/etsy-tokens-db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +19,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
  const slug = await resolveStoreSlugAny(request);
  if (!slug) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
- const [accounts, board, ebayTok, depopTok] = await Promise.all([getPlatformAccounts(slug), getCrossListBoard(slug), getEbayTokens(slug).catch(() => null), getDepopTokens(slug).catch(() => null)]);
+ const [accounts, board, ebayTok, depopTok, etsy] = await Promise.all([getPlatformAccounts(slug), getCrossListBoard(slug), getEbayTokens(slug).catch(() => null), getDepopTokens(slug).catch(() => null), etsyStatus(slug).catch(() => ({ configured: false, connected: false, shop: null }))]);
  return NextResponse.json({
  ok: true,
  platforms: PLATFORMS.filter((p) => p.live).map((p) => ({ key: p.key, name: p.name, hasApi: p.hasApi })),
@@ -25,6 +27,7 @@ export async function GET(request: NextRequest) {
  board,
  ebay: { configured: ebayConfigured(), connected: !!ebayTok, user: ebayTok?.ebayUser || null },
  depop: { configured: depopConfigured(), connected: !!depopTok, user: depopTok?.depopUser || null },
+ etsy,
  });
 }
 
@@ -48,6 +51,7 @@ export async function DELETE(request: NextRequest) {
  const platform = new URL(request.url).searchParams.get("platform") || "";
  if (platform === "ebay") { await clearEbayTokens(slug); return NextResponse.json({ ok: true, accounts: await getPlatformAccounts(slug) }); }
  if (platform === "depop") { await clearDepopTokens(slug); return NextResponse.json({ ok: true, accounts: await getPlatformAccounts(slug) }); }
+ if (platform === "etsy") { await clearEtsyTokens(slug); return NextResponse.json({ ok: true, accounts: await getPlatformAccounts(slug) }); }
  await removePlatformAccount(slug, platform);
  return NextResponse.json({ ok: true, accounts: await getPlatformAccounts(slug) });
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PlusCircle, Package, ShoppingBag, Megaphone, BarChart3, Store, Heart, Eye, Sparkles, ArrowUp, ArrowLeft, SquarePen } from "lucide-react";
 import { Card } from "@/app/store/ui";
+import { RichText, TypingDots } from "@/app/store/chatRender";
 
 type Overview = {
  revenueCents: number; orders: number; inventory: { active: number }; customers: number;
@@ -50,6 +51,12 @@ export default function WorkspaceHome() {
 
  useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }); }, [msgs, busy, chatMode]);
 
+ // Hide the floating Sidekick launcher while the full-page home chat is open — one "Ask VYA" at a time.
+ useEffect(() => {
+ window.dispatchEvent(new CustomEvent("vya:home-chat", { detail: chatMode }));
+ return () => { window.dispatchEvent(new CustomEvent("vya:home-chat", { detail: false })); };
+ }, [chatMode]);
+
  async function send(text: string) {
  const t = text.trim();
  if (!t || busyRef.current) return;
@@ -90,20 +97,41 @@ export default function WorkspaceHome() {
  <button onClick={() => setChatMode(false)} className="flex items-center gap-1.5 text-[13px] text-stone-500 transition hover:text-stone-900">
  <ArrowLeft size={16} /> Dashboard
  </button>
- <div className="flex items-center gap-2 text-[#5D0F17]"><Sparkles size={15} /><span className="text-sm font-medium">VYA</span></div>
+ <div className="flex items-center gap-2">
+ <span className="relative grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#5D0F17] to-[#3a0a0f] text-white">
+ <Sparkles size={14} />
+ <span className="vya-status-dot absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
+ </span>
+ <div className="leading-tight">
+ <div className="text-[13px] font-semibold text-stone-900">VYA</div>
+ <div className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-stone-400">AI Assistant · Online</div>
+ </div>
+ </div>
  <button onClick={newChat} title="New chat" className="flex items-center gap-1.5 text-[13px] text-stone-500 transition hover:text-stone-900">
  <SquarePen size={15} /> New
  </button>
  </div>
 
- <div ref={scroller} className="flex-1 overflow-y-auto">
- <div className="mx-auto max-w-3xl space-y-4 px-4 py-6 sm:px-6">
+ <div ref={scroller} className="flex-1 overflow-y-auto bg-white">
+ <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6">
  {msgs.map((m, i) => (
- <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
- <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${m.role === "user" ? "rounded-br-sm bg-[#5D0F17] text-white" : "rounded-bl-sm bg-white text-stone-800 shadow-sm ring-1 ring-stone-200"}`}>{m.content}</div>
+ m.role === "user" ? (
+ <div key={i} className="vya-msg-in flex justify-end">
+ <div className="max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-[#5D0F17] px-4 py-2.5 text-[14px] leading-relaxed text-white">{m.content}</div>
  </div>
+ ) : (
+ <div key={i} className="vya-msg-in flex gap-3">
+ <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#5D0F17] to-[#3a0a0f] text-white"><Sparkles size={13} /></span>
+ <div className="min-w-0 flex-1 pt-0.5 text-[14px] leading-relaxed text-stone-800"><RichText text={m.content} /></div>
+ </div>
+ )
  ))}
- {busy && <div className="flex justify-start"><div className="rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-[14px] text-stone-400 shadow-sm ring-1 ring-stone-200">…</div></div>}
+ {busy && (
+ <div className="vya-msg-in flex gap-3">
+ <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#5D0F17] to-[#3a0a0f] text-white"><Sparkles size={13} /></span>
+ <div className="pt-2"><TypingDots /></div>
+ </div>
+ )}
  </div>
  </div>
 

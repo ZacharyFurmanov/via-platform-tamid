@@ -8,6 +8,7 @@ import { Card, CardHeader, PageHeader, Button, Input, EmptyState } from "@/app/s
 type Platform = { key: string; name: string; hasApi: boolean };
 type Account = { platform: string; handle: string; autoList: boolean };
 type Ebay = { configured: boolean; connected: boolean; user: string | null };
+type Etsy = { configured: boolean; connected: boolean; shop: string | null };
 type BoardRow = { itemId: string; title: string; priceCents: number; image: string | null; status: string; listings: Record<string, string> };
 type Content = { title: string; body: string; tags: string[]; price: string };
 
@@ -25,6 +26,7 @@ export default function CrossListingPage() {
  const [platforms, setPlatforms] = useState<Platform[]>([]);
  const [accounts, setAccounts] = useState<Account[]>([]);
  const [ebay, setEbay] = useState<Ebay | null>(null);
+ const [etsy, setEtsy] = useState<Etsy | null>(null);
  const [board, setBoard] = useState<BoardRow[]>([]);
  const [loading, setLoading] = useState(true);
  const [handles, setHandles] = useState<Record<string, string>>({});
@@ -35,14 +37,14 @@ export default function CrossListingPage() {
 
  async function load() {
  const r = await fetch("/api/store/cross-listing").then((x) => (x.ok ? x.json() : null)).catch(() => null);
- if (r) { setPlatforms(r.platforms); setAccounts(r.accounts); setBoard(r.board); setEbay(r.ebay); }
+ if (r) { setPlatforms(r.platforms); setAccounts(r.accounts); setBoard(r.board); setEbay(r.ebay); setEtsy(r.etsy); }
  setLoading(false);
  }
  useEffect(() => {
  let active = true;
  (async () => {
  const r = await fetch("/api/store/cross-listing").then((x) => (x.ok ? x.json() : null)).catch(() => null);
- if (r && active) { setPlatforms(r.platforms); setAccounts(r.accounts); setBoard(r.board); setEbay(r.ebay); }
+ if (r && active) { setPlatforms(r.platforms); setAccounts(r.accounts); setBoard(r.board); setEbay(r.ebay); setEtsy(r.etsy); }
  if (active) setLoading(false);
  })();
  return () => { active = false; };
@@ -79,7 +81,7 @@ export default function CrossListingPage() {
  try { await navigator.clipboard.writeText(v); setCopied(key); setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500); } catch { /* ignore */ }
  }
 
- const connected = platforms.filter((p) => acct(p.key) || (p.key === "ebay" && ebay?.connected));
+ const connected = platforms.filter((p) => acct(p.key) || (p.key === "ebay" && ebay?.connected) || (p.key === "etsy" && etsy?.connected));
 
  return (
  <div className="mx-auto max-w-3xl px-6 py-8">
@@ -107,6 +109,27 @@ export default function CrossListingPage() {
  <>
  <span className="flex-1 text-[12px] text-stone-500">Connect your eBay account to auto-post &amp; auto-remove.</span>
  <a href="/api/store/cross-listing/ebay/connect"><Button>Connect eBay</Button></a>
+ </>
+ )}
+ </div>
+ );
+ }
+ // Etsy uses OAuth (real auto-posting + auto-delisting), not a handle.
+ if (p.key === "etsy") {
+ return (
+ <div key={p.key} className="flex items-center gap-3 px-5 py-3">
+ <div className="w-24 shrink-0"><span className="text-[13px] font-medium text-stone-800">Etsy</span><span className="ml-1 rounded bg-emerald-50 px-1 text-[10px] text-emerald-600">API</span></div>
+ {!etsy?.configured ? (
+ <span className="flex-1 text-[12px] text-stone-400">Not set up on the server yet (needs Etsy app keys).</span>
+ ) : etsy?.connected ? (
+ <>
+ <span className="flex-1 truncate text-[13px] text-emerald-700">✓ Connected{etsy.shop ? ` · ${etsy.shop}` : ""} — auto-posts &amp; delists</span>
+ <button onClick={() => disconnect("etsy")} className="text-[12px] text-stone-400 hover:text-rose-600">Disconnect</button>
+ </>
+ ) : (
+ <>
+ <span className="flex-1 text-[12px] text-stone-500">Connect your Etsy shop to auto-post &amp; auto-delist.</span>
+ <a href="/api/store/cross-listing/etsy/connect"><Button>Connect Etsy</Button></a>
  </>
  )}
  </div>

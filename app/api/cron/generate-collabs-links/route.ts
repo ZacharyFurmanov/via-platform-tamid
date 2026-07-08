@@ -9,6 +9,7 @@ import {
  fetchCollabsProducts,
  createAffiliateLink,
 } from "@/app/lib/collabs";
+import { backfillDtIds } from "@/app/lib/collabsDtId";
 
 // Allow up to 5 minutes for bulk generation
 export const maxDuration = 300;
@@ -168,6 +169,10 @@ export async function GET(request: Request) {
  );
  }
 
+ // Pre-warm dt_id for every product that now has a link but no cached dt_id, so checkout
+ // never has to resolve it live (and multi-item carts keep full Collabs attribution).
+ const dtIds = await backfillDtIds().catch(() => ({ resolved: 0, attempted: 0 }));
+
  const summary = {
  success: totalFailed === 0 && !rateLimited,
  storesProcessed: COLLABS_STORES.length,
@@ -177,6 +182,8 @@ export async function GET(request: Request) {
  rateLimited,
  stillMissing: stillMissingProducts.length,
  stuckOver3Days: stuckProducts.length,
+ dtIdsResolved: dtIds.resolved,
+ dtIdsAttempted: dtIds.attempted,
  stores: storeResults,
  };
 

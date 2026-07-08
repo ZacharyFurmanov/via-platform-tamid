@@ -28,7 +28,7 @@ function brandFromTitles(titles: string[]): string | null {
 }
 
 export type EvalMiss = { field: string; image: string; guessed: string | null; truth: string };
-export type FieldScore = { field: string; correct: number; total: number; pct: number };
+export type FieldScore = { field: string; correct: number; total: number; pct: number | null };
 export type EvalResult = {
  sample: number;
  withReverseImage: boolean;
@@ -83,7 +83,8 @@ export async function runEval(opts: { sample: number; withReverseImage: boolean;
  const fieldStat = (key: string): FieldScore => {
  const graded = valid.filter((v) => v[key].ok !== null && v[key].truth);
  const correct = graded.filter((v) => v[key].ok).length;
- return { field: key, correct, total: graded.length, pct: graded.length ? Math.round((correct / graded.length) * 100) : 0 };
+ // No labeled answers for this field → "n/a" (null), not a misleading 0%.
+ return { field: key, correct, total: graded.length, pct: graded.length ? Math.round((correct / graded.length) * 100) : null };
  };
 
  const misses: EvalMiss[] = [];

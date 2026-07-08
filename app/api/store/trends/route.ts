@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { resolveStoreSlugAny } from "@/app/lib/storeAuth";
 import { getBrandHeatIndex, getCategoryHeat, getBrandTrend } from "@/app/lib/brand-heat-db";
+import { getGoogleTrends, getResaleMarket, isMarketTrendsConfigured } from "@/app/lib/market-trends";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +35,27 @@ export async function GET(request: NextRequest) {
  }
  } catch { /* best effort */ }
 
+ // External signal: real Google Search momentum for the trending brands (+ the store's own),
+ // so the tab reflects the whole resale market, not just VYA. Dormant until SerpApi is enabled.
+ const brandNames = [...new Set([
+ ...(heat.brands as { brand: string }[]).map((b) => b.brand),
+ ...yourBrands.map((b) => b.brand),
+ ].filter(Boolean))].slice(0, 20);
+ // Read the persisted snapshots (populated daily by the snapshot-market-trends cron) — no live
+ // SerpApi call on page view.
+ const [googleTrends, resaleMarket] = await Promise.all([
+ getGoogleTrends(brandNames).catch(() => []),
+ getResaleMarket(brandNames).catch(() => []),
+ ]);
+
  return NextResponse.json({
  ok: true,
  generatedAt: heat.generatedAt,
  rising: heat.brands,
  categories,
  yourBrands,
+ googleTrends,
+ resaleMarket,
+ webConfigured: isMarketTrendsConfigured(),
  });
 }

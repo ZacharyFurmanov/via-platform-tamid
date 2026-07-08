@@ -199,10 +199,13 @@ export async function GET(request: NextRequest) {
  // collabs.shop redirect below.
  }
 
- // If the destination isn't a cart URL (single product page), legacy redirect
- // through collabs.shop is still the right move so the cookie drops on a real
- // store page.
- if (numericProductId != null) {
+ // No dt_id, single destination (a product page or a single-item cart): the legacy
+ // collabs.shop redirect is still the right move so the Collabs cookie drops on a real
+ // store page. We only SKIP it for a MULTI-item cart — there, redirecting to one
+ // product's collabs link would drop every other item, so a multi-cart falls through to
+ // the cart redirect below (which still attaches via_click_id for webhook attribution).
+ const isMultiCart = parsedUrl.pathname.includes(",");
+ if (numericProductId != null && !isMultiCart) {
  const collabsLink = await getCollabsLink(numericProductId).catch(() => null);
  if (collabsLink) {
  return NextResponse.redirect(collabsLink, 302);

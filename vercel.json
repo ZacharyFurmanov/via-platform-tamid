@@ -127,6 +127,10 @@
     {
       "path": "/api/cron/sync-ebay-sales",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/snapshot-market-trends",
+      "schedule": "0 7 * * *"
     }
   ]
 }

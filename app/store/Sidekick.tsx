@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Sparkles, X, ArrowUp, SquarePen } from "lucide-react";
+import { Sparkles, X, ArrowUp, SquarePen, Check } from "lucide-react";
+import { RichText, TypingDots } from "./chatRender";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Action = { name: string; ok: boolean };
+type Msg = { role: "user" | "assistant"; content: string; actions?: Action[] };
 
 const PAGE_LABEL: Record<string, string> = {
  "/store/home": "Home", "/store/intake": "Add listing", "/store/items": "Inventory", "/store/orders": "Orders",
  "/store/inbox": "Inbox", "/store/storefront": "Storefront", "/store/customers": "Customers", "/store/payments": "Payments",
  "/store/dashboard": "Analytics", "/store/settings": "Settings",
- // The infrastructure workspace uses the same Sidekick with its own routes.
  "/infrastructure/admin/home": "Home", "/infrastructure/admin/add-listing": "Add listing", "/infrastructure/admin/inventory": "Inventory",
  "/infrastructure/admin/orders": "Orders", "/infrastructure/admin/inbox": "Inbox", "/infrastructure/admin/storefront": "Storefront",
  "/infrastructure/admin/customers": "Customers", "/infrastructure/admin/payments": "Payments", "/infrastructure/admin/dashboard": "Analytics",
@@ -18,17 +19,40 @@ const PAGE_LABEL: Record<string, string> = {
  "/infrastructure/admin/connect": "Connect", "/infrastructure/admin/import": "Bring your site", "/infrastructure/admin/ai": "AI accuracy",
 };
 
-// Writes that change something visible — tell the page to refresh after.
 const WRITE_TOOLS = new Set(["update_storefront_design", "set_hero_photo", "update_listing", "add_section", "update_section", "remove_section", "move_section", "set_layout", "create_page", "set_page_layout", "delete_page", "edit_captured_page", "style_captured_site"]);
+
+// Friendly labels for the "what VYA did" chips.
+const ACTION_LABELS: Record<string, string> = {
+ update_storefront_design: "Updated design", set_hero_photo: "Set hero photo", update_listing: "Updated listing",
+ add_section: "Added section", update_section: "Edited section", remove_section: "Removed section", move_section: "Moved section",
+ set_layout: "Rebuilt page", create_page: "Created page", set_page_layout: "Updated page", delete_page: "Deleted page",
+ edit_captured_page: "Edited copy", style_captured_site: "Applied styling", remember_fact: "Remembered", forget_fact: "Forgot",
+};
+
+const SUGGESTIONS = ["Build my whole storefront for me", "Make my storefront more elegant", "Add a sale announcement bar", "Write a description for my Chanel bag"];
+
+function ActionChips({ actions }: { actions?: Action[] }) {
+ const chips = (actions ?? []).filter((a) => a.ok && ACTION_LABELS[a.name]);
+ if (!chips.length) return null;
+ return (
+ <div className="mt-2 flex flex-wrap gap-1.5">
+ {chips.map((a, i) => (
+ <span key={i} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/[0.08] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-600/15">
+ <Check size={10} strokeWidth={3} /> {ACTION_LABELS[a.name]}
+ </span>
+ ))}
+ </div>
+ );
+}
 
 export default function Sidekick() {
  const pathname = usePathname();
  const [open, setOpen] = useState(false);
+ const [suppressed, setSuppressed] = useState(false); // hide launcher when the home full-page chat is open
  const [msgs, setMsgs] = useState<Msg[]>([]);
  const [input, setInput] = useState("");
  const [busy, setBusy] = useState(false);
  const scroller = useRef<HTMLDivElement>(null);
- // Refs so the (once-registered) "vya:ask" listener always sees current state.
  const msgsRef = useRef<Msg[]>([]);
  const busyRef = useRef(false);
  const pathRef = useRef(pathname);
@@ -36,7 +60,6 @@ export default function Sidekick() {
 
  useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }); }, [msgs, busy]);
 
- // Load the saved conversation so it survives refreshes/sessions.
  useEffect(() => {
  fetch("/api/store/assistant").then((r) => (r.ok ? r.json() : null)).then((d) => {
  if (d && Array.isArray(d.messages) && d.messages.length) { msgsRef.current = d.messages; setMsgs(d.messages); }
@@ -51,26 +74,23 @@ export default function Sidekick() {
  async function send(textArg?: string) {
  const text = (textArg ?? input).trim();
  if (!text || busyRef.current) return;
- const next = [...msgsRef.current, { role: "user" as const, content: text }];
+ const next: Msg[] = [...msgsRef.current, { role: "user", content: text }];
  msgsRef.current = next; setMsgs(next); setInput(""); busyRef.current = true; setBusy(true);
  try {
  const page = PAGE_LABEL[pathRef.current] || undefined;
  const r = await fetch("/api/store/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next, page }) });
  const d = await r.json();
  const reply = !r.ok ? (d.error || "Something went wrong.") : (d.reply || "(done)");
- const after = [...msgsRef.current, { role: "assistant" as const, content: reply }];
+ const after: Msg[] = [...msgsRef.current, { role: "assistant", content: reply, actions: d.actions }];
  msgsRef.current = after; setMsgs(after);
- if (r.ok && (d.actions || []).some((a: { name: string; ok: boolean }) => a.ok && WRITE_TOOLS.has(a.name))) {
- window.dispatchEvent(new Event("vya:store-updated"));
- }
+ if (r.ok && (d.actions || []).some((a: Action) => a.ok && WRITE_TOOLS.has(a.name))) window.dispatchEvent(new Event("vya:store-updated"));
  } catch {
- const after = [...msgsRef.current, { role: "assistant" as const, content: "Couldn’t reach me just now — try again." }];
+ const after: Msg[] = [...msgsRef.current, { role: "assistant", content: "Couldn’t reach me just now — try again." }];
  msgsRef.current = after; setMsgs(after);
  }
  busyRef.current = false; setBusy(false);
  }
 
- // The home-page hero bar (and anything else) can open VYA with a question.
  useEffect(() => {
  function onAsk(e: Event) {
  const detail = (e as CustomEvent).detail;
@@ -82,59 +102,88 @@ export default function Sidekick() {
  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, []);
 
+ // The home full-page chat signals when it's open so we hide our (redundant) launcher.
+ useEffect(() => {
+ const onHomeChat = (e: Event) => setSuppressed(!!(e as CustomEvent).detail);
+ window.addEventListener("vya:home-chat", onHomeChat as EventListener);
+ return () => window.removeEventListener("vya:home-chat", onHomeChat as EventListener);
+ }, []);
+
  return (
  <>
  {/* Launcher */}
- {!open && (
- <button onClick={() => setOpen(true)} className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[#5D0F17] px-4 py-3 text-[#FFFDF8] shadow-lg hover:bg-[#5D0F17]/90 transition">
- <Sparkles size={16} />
- <span className="text-xs uppercase tracking-[0.15em]">VYA</span>
+ {!open && !suppressed && (
+ <button onClick={() => setOpen(true)} className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[#5D0F17] py-2.5 pl-2.5 pr-4 text-[#FFFDF8] shadow-[0_10px_30px_-8px_rgba(93,15,23,0.6)] transition hover:bg-[#4a0c12]">
+ <span className="relative grid h-7 w-7 place-items-center rounded-full bg-white/10">
+ <Sparkles size={15} />
+ <span className="vya-status-dot absolute -right-0 -top-0 h-2 w-2 rounded-full border border-[#5D0F17] bg-emerald-400" />
+ </span>
+ <span className="font-mono text-[11px] uppercase tracking-[0.18em]">Ask VYA</span>
  </button>
  )}
 
  {/* Panel */}
  {open && (
- <div className="fixed bottom-5 right-5 z-50 flex h-[560px] max-h-[80vh] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col rounded-2xl border border-black/10 bg-[#FFFDF8] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.45)]">
- <div className="flex items-center justify-between border-b border-black/[0.07] px-4 py-3">
- <div className="flex items-center gap-2 text-[#5D0F17]"><Sparkles size={15} /><span className="font-serif text-sm">VYA</span></div>
- <div className="flex items-center gap-1 text-[#5D0F17]/45">
- <button onClick={newChat} title="New chat" aria-label="New chat" className="p-1 hover:text-[#5D0F17]"><SquarePen size={15} /></button>
- <button onClick={() => setOpen(false)} aria-label="Close" className="p-1 hover:text-[#5D0F17]"><X size={17} /></button>
+ <div className="fixed bottom-5 right-5 z-50 flex h-[600px] max-h-[82vh] w-[400px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-[#FBF9F5] shadow-[0_28px_80px_-24px_rgba(0,0,0,0.5)]">
+ {/* Header */}
+ <div className="flex items-center justify-between border-b border-black/[0.06] bg-gradient-to-br from-[#5D0F17] to-[#3a0a0f] px-4 py-3 text-[#FFFDF8]">
+ <div className="flex items-center gap-2.5">
+ <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-white/[0.12] ring-1 ring-white/15">
+ <Sparkles size={15} />
+ <span className="vya-status-dot absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#4a0c12] bg-emerald-400" />
+ </span>
+ <div>
+ <div className="text-[14px] font-semibold leading-tight">VYA</div>
+ <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/55">AI Assistant · Online</div>
+ </div>
+ </div>
+ <div className="flex items-center gap-0.5">
+ <button onClick={newChat} title="New chat" aria-label="New chat" className="rounded-md p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"><SquarePen size={15} /></button>
+ <button onClick={() => setOpen(false)} aria-label="Close" className="rounded-md p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"><X size={16} /></button>
  </div>
  </div>
 
- <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+ {/* Log */}
+ <div ref={scroller} className="flex-1 space-y-3.5 overflow-y-auto px-4 py-4">
  {msgs.length === 0 && (
- <div className="text-[#5D0F17]/55 text-sm">
- <p className="mb-3">Hi — I can help you run and customize your store. Try:</p>
+ <div className="text-[13px] text-[#5D0F17]/60">
+ <p className="mb-3 leading-relaxed">Hi — I run and customize your store with you. I remember our chats. Try:</p>
  <div className="space-y-1.5">
- {["Build my whole storefront for me", "Make my storefront more elegant", "Add a sale announcement bar", "Write a description for my Chanel bag"].map((s) => (
- <button key={s} onClick={() => send(s)} className="block w-full text-left text-[13px] border border-[#5D0F17]/12 bg-white px-3 py-2 hover:border-[#5D0F17]/30 transition">{s}</button>
+ {SUGGESTIONS.map((s) => (
+ <button key={s} onClick={() => send(s)} className="block w-full rounded-lg border border-[#5D0F17]/12 bg-white px-3 py-2 text-left text-[12.5px] text-[#3a2f28] transition hover:border-[#5D0F17]/30 hover:bg-[#5D0F17]/[0.03]">{s}</button>
  ))}
  </div>
  </div>
  )}
  {msgs.map((m, i) => (
- <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
- <div className={`max-w-[85%] px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap ${m.role === "user" ? "bg-[#5D0F17] text-[#FFFDF8] rounded-2xl rounded-br-sm" : "bg-[#5D0F17]/[0.06] text-[#2c241d] rounded-2xl rounded-bl-sm"}`}>{m.content}</div>
+ <div key={i} className={`vya-msg-in flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+ <div className={`max-w-[86%] px-3.5 py-2.5 text-[13.5px] leading-relaxed ${m.role === "user" ? "rounded-2xl rounded-br-md bg-[#5D0F17] text-[#FFFDF8]" : "rounded-2xl rounded-bl-md bg-white text-[#2c241d] ring-1 ring-black/[0.06]"}`}>
+ {m.role === "assistant" ? <RichText text={m.content} /> : <span className="whitespace-pre-wrap">{m.content}</span>}
+ {m.role === "assistant" && <ActionChips actions={m.actions} />}
+ </div>
  </div>
  ))}
- {busy && <div className="flex justify-start"><div className="bg-[#5D0F17]/[0.06] text-[#5D0F17]/50 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-[13px]">…</div></div>}
+ {busy && (
+ <div className="vya-msg-in flex justify-start">
+ <div className="rounded-2xl rounded-bl-md bg-white px-4 py-3 ring-1 ring-black/[0.06]"><TypingDots /></div>
+ </div>
+ )}
  </div>
 
- <div className="border-t border-black/[0.07] p-3">
- <div className="flex items-end gap-2 rounded-xl border border-[#5D0F17]/15 bg-white px-3 py-2">
+ {/* Composer */}
+ <div className="border-t border-black/[0.06] bg-[#FBF9F5] p-3">
+ <div className="flex items-end gap-2 rounded-xl border border-[#5D0F17]/15 bg-white px-3 py-2 transition focus-within:border-[#5D0F17]/40 focus-within:ring-2 focus-within:ring-[#5D0F17]/10">
  <textarea
  value={input}
  onChange={(e) => setInput(e.target.value)}
  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
- placeholder="Ask or tell me to do something…"
+ placeholder="Ask, or tell me to do something…"
  rows={1}
- className="flex-1 resize-none bg-transparent text-sm text-[#2c241d] outline-none max-h-24"
+ className="max-h-28 flex-1 resize-none bg-transparent text-[13.5px] text-[#2c241d] outline-none placeholder:text-[#5D0F17]/35"
  />
- <button onClick={() => send()} disabled={busy || !input.trim()} className="shrink-0 rounded-full bg-[#5D0F17] p-1.5 text-[#FFFDF8] disabled:opacity-40"><ArrowUp size={15} /></button>
+ <button onClick={() => send()} disabled={busy || !input.trim()} aria-label="Send" className="shrink-0 rounded-lg bg-[#5D0F17] p-1.5 text-[#FFFDF8] transition hover:bg-[#4a0c12] disabled:opacity-40"><ArrowUp size={15} /></button>
  </div>
- <p className="mt-1.5 text-center text-[10px] text-[#5D0F17]/35">VYA confirms before changing anything.</p>
+ <p className="mt-1.5 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-[#5D0F17]/35">Enter to send · VYA confirms before changes</p>
  </div>
  </div>
  )}

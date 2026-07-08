@@ -100,6 +100,35 @@ export async function getDtIdForProduct(productId: number): Promise<string | nul
 }
 
 /**
+ * Pre-resolve and cache the `dt_id` for products that have a collabs_link but no cached dt_id yet,
+ * so checkout NEVER depends on a live collabs.shop fetch at click time (which could fail or, on a
+ * multi-item cart, drop attribution). Run from the collabs-link generation cron — which also fires
+ * right after each store sync — so a product's dt_id is warm within moments of getting its link.
+ * Newest links first. Returns how many were resolved.
+ */
+export async function backfillDtIds(limit = 250): Promise<{ resolved: number; attempted: number }> {
+ await ensureDtIdColumn();
+ const sql = neon(getDbUrl());
+ const rows = (await sql`
+  SELECT id, collabs_link FROM products
+  WHERE collabs_link IS NOT NULL AND collabs_link <> '' AND (collabs_dt_id IS NULL OR collabs_dt_id = '')
+  ORDER BY collabs_link_set_at DESC NULLS LAST
+  LIMIT ${limit}
+ `.catch(() => [])) as { id: number; collabs_link: string }[];
+
+ let resolved = 0;
+ for (const r of rows) {
+ const dt = await fetchDtIdFromCollabsLink(r.collabs_link).catch(() => null);
+ if (dt) {
+ await sql`UPDATE products SET collabs_dt_id = ${dt} WHERE id = ${r.id}`.catch(() => {});
+ resolved++;
+ }
+ await new Promise((res) => setTimeout(res, 150)); // gentle on collabs.shop
+ }
+ return { resolved, attempted: rows.length };
+}
+
+/**
  * Builds a Shopify cart URL with the dt_id query param appended.
  * Returns null if any required piece is missing.
  */

@@ -21,21 +21,26 @@ function buildGroupCheckoutUrl(items: CartItem[]): string {
  const variantEntries: string[] = [];
  let storeOrigin = "";
 
+ // Combine EVERY item that has a proper Shopify cart variant, from the same store. A single item
+ // without one (e.g. a piece synced without a variant id) is skipped rather than bailing the whole
+ // cart to one product page — so multi-item checkout keeps as many items as it can.
  for (const item of items) {
- if (!item.checkoutUrl) return items[0].externalUrl;
+ if (!item.checkoutUrl) continue;
  try {
  const url = new URL(item.checkoutUrl);
- if (!storeOrigin) storeOrigin = url.origin;
  const cartMatch = url.pathname.match(/^\/cart\/(\d+):(\d+)/);
- if (!cartMatch) return items[0].externalUrl;
+ if (!cartMatch) continue;
+ if (!storeOrigin) storeOrigin = url.origin;
+ else if (url.origin !== storeOrigin) continue; // only same-store variants combine into one cart
  variantEntries.push(`${cartMatch[1]}:${cartMatch[2]}`);
  } catch {
- return items[0].externalUrl;
+ continue;
  }
  }
 
  // Return a clean cart URL — the /api/track route handles the /discount/ redirect
- // for attribution, so we don't need to embed the discount code here.
+ // for attribution, so we don't need to embed the discount code here. Only fall back to a single
+ // product page when NOT ONE item had a usable cart variant.
  if (!storeOrigin || variantEntries.length === 0) return items[0].externalUrl;
  return `${storeOrigin}/cart/${variantEntries.join(",")}`;
 }

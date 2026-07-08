@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { getItem } from "./db/inventory";
 import { listOnEbay, endOnEbay, ebayConnected, type EbayResult } from "./ebay";
 import { listOnDepop, endOnDepop, depopConnected, type DepopResult } from "./depop";
+import { listOnEtsy, endOnEtsy, etsyConnected, type EtsyResult } from "./etsy";
 
 // Cross-listing: a seller publishes to VYA, and we fan the item out to their other
 // marketplaces; when it sells ANYWHERE, we pull it from everywhere (no double-sell).
@@ -14,11 +15,18 @@ import { listOnDepop, endOnDepop, depopConnected, type DepopResult } from "./dep
 export type Platform = { key: string; name: string; hasApi: boolean; live?: boolean; titleMax: number; profileUrl: (handle: string) => string };
 
 export const PLATFORMS: Platform[] = [
- { key: "depop", name: "Depop", hasApi: false, titleMax: 65, profileUrl: (h) => `https://www.depop.com/${h}` },
- { key: "grailed", name: "Grailed", hasApi: false, titleMax: 60, profileUrl: (h) => `https://www.grailed.com/${h}` },
- { key: "poshmark", name: "Poshmark", hasApi: false, titleMax: 80, profileUrl: (h) => `https://poshmark.com/closet/${h}` },
+ // eBay is the one live API integration (auto-posts + auto-removes). The rest are "copy" channels:
+ // VYA writes each a title within its char limit + tags, and the seller pastes it.
  { key: "ebay", name: "eBay", hasApi: true, live: true, titleMax: 80, profileUrl: (h) => `https://www.ebay.com/usr/${h}` },
- { key: "etsy", name: "Etsy", hasApi: true, titleMax: 140, profileUrl: (h) => `https://www.etsy.com/shop/${h}` },
+ { key: "depop", name: "Depop", hasApi: false, live: true, titleMax: 65, profileUrl: (h) => `https://www.depop.com/${h}` },
+ { key: "poshmark", name: "Poshmark", hasApi: false, live: true, titleMax: 80, profileUrl: (h) => `https://poshmark.com/closet/${h}` },
+ { key: "etsy", name: "Etsy", hasApi: true, live: true, titleMax: 140, profileUrl: (h) => `https://www.etsy.com/shop/${h}` },
+ { key: "vestiaire", name: "Vestiaire Collective", hasApi: false, live: true, titleMax: 50, profileUrl: (h) => `https://www.vestiairecollective.com/profile/${h}/` },
+ { key: "vinted", name: "Vinted", hasApi: false, live: true, titleMax: 100, profileUrl: (h) => `https://www.vinted.com/member/${h}` },
+ { key: "mercari", name: "Mercari", hasApi: false, live: true, titleMax: 80, profileUrl: (h) => `https://www.mercari.com/u/${h}/` },
+ { key: "grailed", name: "Grailed", hasApi: false, live: true, titleMax: 60, profileUrl: (h) => `https://www.grailed.com/${h}` },
+ { key: "instagram", name: "Instagram", hasApi: false, live: true, titleMax: 125, profileUrl: (h) => `https://www.instagram.com/${h}/` },
+ { key: "facebook", name: "Facebook Marketplace", hasApi: false, live: true, titleMax: 100, profileUrl: (h) => `https://www.facebook.com/${h}` },
 ];
 export const platformByKey = (k: string) => PLATFORMS.find((p) => p.key === k) || null;
 
@@ -34,7 +42,11 @@ export function crossPostContent(item: ItemForPost, platformKey: string): { titl
  const bits = [brand, item.category, item.size ? `Size ${item.size}` : "", item.condition ? `${item.condition} condition` : ""].filter(Boolean);
  const tags = Array.from(new Set([brand, item.category || "", item.size ? `size ${item.size}` : "", "vintage"].filter(Boolean).map((t) => String(t).toLowerCase().replace(/\s+/g, ""))));
  const desc = (item.description || "").trim() || `${bits.join(" · ")}. One-of-one — grab it before it's gone.`;
- const body = platformKey === "depop" ? `${desc}\n\n${tags.slice(0, 5).map((t) => `#${t}`).join(" ")}` : desc;
+ // Hashtag-driven feeds (Depop, Instagram) get inline tags appended to the caption.
+ const hashtagPlatforms = new Set(["depop", "instagram"]);
+ const body = hashtagPlatforms.has(platformKey)
+ ? `${desc}\n\n${tags.slice(0, platformKey === "instagram" ? 10 : 5).map((t) => `#${t}`).join(" ")}`
+ : desc;
  return { title, body, tags, price: `$${Math.round(item.priceCents / 100)}` };
 }
 
@@ -105,13 +117,23 @@ export async function createCrossListingsForItem(storeSlug: string, itemId: stri
 // Actually POST to the platforms that have a real API (eBay + Depop). Best-effort +
 // background: on success we store the live listing URL, on failure the error message.
 export async function syncItemToApiPlatforms(storeSlug: string, itemId: string): Promise<void> {
- const [ebayOn, depopOn] = await Promise.all([
+ const [ebayOn, depopOn, etsyOn] = await Promise.all([
  ebayConnected(storeSlug).catch(() => false),
  depopConnected(storeSlug).catch(() => false),
+ etsyConnected(storeSlug).catch(() => false),
  ]);
- if (!ebayOn && !depopOn) return;
+ if (!ebayOn && !depopOn && !etsyOn) return;
  const item = await getItem(itemId).catch(() => null);
  if (!item) return;
+
+ if (etsyOn) {
+ await markCrossListing(storeSlug, itemId, "etsy", "pending");
+ const r = await listOnEtsy(storeSlug, {
+ itemId, title: item.title, description: item.description ?? item.title,
+ priceUsd: (item.priceCents || 0) / 100, imageUrls: item.images || [],
+ }).catch((): EtsyResult => ({ ok: false, error: "Etsy push failed." }));
+ await markCrossListing(storeSlug, itemId, "etsy", r.ok ? "listed" : "error", r.ok ? (r.listingUrl ?? null) : (r.error ?? "error"));
+ }
 
  if (ebayOn) {
  await markCrossListing(storeSlug, itemId, "ebay", "pending");
@@ -159,7 +181,7 @@ export async function markCrossListing(storeSlug: string, itemId: string, platfo
 export async function delistEverywhere(itemId: string, soldPlatform: string): Promise<{ platform: string; name: string; handle: string | null; hasApi: boolean }[]> {
  await ensureTables();
  const sql = db();
- const rows = (await sql`SELECT store_slug, platform, status FROM cross_listings WHERE item_id = ${itemId}`.catch(() => [])) as any[];
+ const rows = (await sql`SELECT store_slug, platform, status, external_url FROM cross_listings WHERE item_id = ${itemId}`.catch(() => [])) as any[];
  if (!rows.length) return [];
  const storeSlug = rows[0].store_slug as string;
  const accounts = await getPlatformAccounts(storeSlug);
@@ -171,6 +193,8 @@ export async function delistEverywhere(itemId: string, soldPlatform: string): Pr
  // eBay has an API — actually end the live listing (unless eBay is where it sold).
  if (!isSoldHere && r.platform === "ebay") endOnEbay(storeSlug, itemId).catch(() => {});
  if (!isSoldHere && r.platform === "depop") endOnDepop(storeSlug, itemId).catch(() => {});
+ // Etsy has an API — deactivate the live listing (its id lives in the stored listing URL).
+ if (!isSoldHere && r.platform === "etsy" && r.external_url) endOnEtsy(storeSlug, String(r.external_url)).catch(() => {});
  if (!isSoldHere && r.status !== "removed" && r.status !== "sold") {
  const p = platformByKey(r.platform);
  toPull.push({ platform: r.platform, name: p?.name || r.platform, handle: accounts.find((a) => a.platform === r.platform)?.handle || null, hasApi: !!p?.hasApi });

@@ -684,6 +684,16 @@ export async function GET(request: Request) {
  const deltaOrders = currOrders - prevOrders;
  const deltaCommission = currCommission - prevCommission;
 
+ // First time we've ever seen this partnership (newly added to the config, or newly
+ // surfaced by the pagination fix): BASELINE it at its current count — do not backfill its
+ // whole prior order history as synthetic conversions. Those orders predate our tracking and
+ // are already recorded via the Shopify order webhook, so fabricating them here duplicates.
+ // Genuinely NEW orders after this baseline record normally on subsequent runs.
+ if (deltaOrders > 0 && !prev) {
+ console.log(`[Sync Collabs Revenue] ${p.name}: first seen — baselining at ${currOrders} orders (not backfilling history)`);
+ continue;
+ }
+
  if (deltaOrders > 0) {
  try {
  const recorded = await saveCollabsConversions(p.id, p.name, deltaOrders, deltaCommission, p.currency ?? "USD", now, lastSyncedAt, prevOrders, p.commissionRules ?? [], cookie, csrfToken);
