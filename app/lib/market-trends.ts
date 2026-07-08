@@ -73,7 +73,22 @@ async function ebaySoldStats(brand: string): Promise<{ soldCount: number; median
  const r = await serp({ engine: "ebay", _nkw: brand, ebay_domain: "ebay.com", LH_Sold: "1", LH_Complete: "1" });
  const rows: any[] = r?.organic_results || [];
  const cents = rows.map((row) => priceToCents(row.price)).filter((c): c is number => !!c && c > 0).sort((a, b) => a - b);
- return { soldCount: rows.length, medianCents: cents.length ? cents[Math.floor(cents.length / 2)] : null };
+ // organic_results is only page 1 (~60), so prefer eBay's real total-sold count when present.
+ const total = Number(r?.search_information?.total_results);
+ const soldCount = Number.isFinite(total) && total > 0 ? total : rows.length;
+ return { soldCount, medianCents: cents.length ? cents[Math.floor(cents.length / 2)] : null };
+}
+
+// Run fn over items with bounded concurrency — SerpApi is the bottleneck, so parallelize the
+// calls (sequentially, ~16 calls × 20s each could blow past the function's time limit).
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+ const out: R[] = new Array(items.length);
+ let next = 0;
+ const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+ while (next < items.length) { const i = next++; out[i] = await fn(items[i]); }
+ });
+ await Promise.all(workers);
+ return out;
 }
 
 // Fetch fresh Google + eBay signal for the given brands and SAVE snapshots. Returns counts saved.
@@ -83,23 +98,29 @@ export async function captureMarketTrends(brands: string[]): Promise<{ google: n
  const sql = tdb();
  await ensureTables(sql);
 
- let google = 0;
+ // Google is 5 queries per call → a few batches; eBay is one call per brand. Fetch both sets
+ // concurrently (bounded, so we don't trip SerpApi rate limits), THEN write.
  const gList = list.slice(0, 20);
- for (let i = 0; i < gList.length; i += 5) {
- const batch = await fetchGoogleBatch(gList.slice(i, i + 5));
- for (const b of batch) {
+ const gBatches: string[][] = [];
+ for (let i = 0; i < gList.length; i += 5) gBatches.push(gList.slice(i, i + 5));
+
+ const [gResults, stats] = await Promise.all([
+ mapLimit(gBatches, 4, (b) => fetchGoogleBatch(b).catch(() => [] as BrandSearchTrend[])),
+ mapLimit(list.slice(0, 12), 8, (brand) => ebaySoldStats(brand).then((st) => ({ brand, st })).catch(() => null)),
+ ]);
+
+ let google = 0;
+ for (const batch of gResults) for (const b of batch) {
  if (b.avgInterest > 0 || b.momentumPct !== null) {
  await sql`INSERT INTO google_search_snapshots (brand, momentum_pct, avg_interest, breakout) VALUES (${b.brand}, ${b.momentumPct}, ${b.avgInterest}, ${b.breakout})`.catch(() => {});
  google++;
  }
  }
- }
 
  let resale = 0;
- for (const brand of list.slice(0, 12)) { // eBay costs one call per brand
- const st = await ebaySoldStats(brand);
- if (st.soldCount > 0 || st.medianCents) {
- await sql`INSERT INTO resale_market_snapshots (brand, sold_count, median_price_cents) VALUES (${brand}, ${st.soldCount}, ${st.medianCents})`.catch(() => {});
+ for (const s of stats) {
+ if (s && (s.st.soldCount > 0 || s.st.medianCents)) {
+ await sql`INSERT INTO resale_market_snapshots (brand, sold_count, median_price_cents) VALUES (${s.brand}, ${s.st.soldCount}, ${s.st.medianCents})`.catch(() => {});
  resale++;
  }
  }

@@ -34,7 +34,10 @@ export function priceToCents(p: any): number | null {
  let v: number | null = null;
  if (typeof p === "number") v = p;
  else if (typeof p?.extracted_value === "number") v = p.extracted_value;
+ else if (typeof p?.extracted === "number") v = p.extracted; // eBay engine
  else if (typeof p?.from?.extracted_value === "number") v = p.from.extracted_value;
+ else if (typeof p?.from?.extracted === "number") v = p.from.extracted; // eBay price range
+ else if (typeof p?.raw === "string") { const n = parseFloat(p.raw.replace(/[^0-9.]/g, "")); v = Number.isFinite(n) ? n : null; }
  else if (typeof p === "string") { const n = parseFloat(p.replace(/[^0-9.]/g, "")); v = Number.isFinite(n) ? n : null; }
  return v && v > 0 ? Math.round(v * 100) : null;
 }
