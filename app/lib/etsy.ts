@@ -13,7 +13,9 @@ import { getEtsyTokens, saveEtsyTokens, updateEtsyTokens, saveEtsyShop } from ".
 const AUTHORIZE = "https://www.etsy.com/oauth/connect";
 const TOKEN = "https://api.etsy.com/v3/public/oauth/token";
 const API = "https://openapi.etsy.com/v3/application";
-const SCOPES = ["listings_r", "listings_w", "listings_d", "transactions_r", "shops_r"];
+// No listings_d (delete): the "delist" sets a listing to inactive, which is an edit (listings_w),
+// not a delete. Requesting delete is the top red flag for new Etsy app review — don't ask for it.
+const SCOPES = ["listings_r", "listings_w", "transactions_r", "shops_r"];
 
 export type EtsyResult = { ok: boolean; listingUrl?: string; listingId?: string; error?: string };
 export type EtsyItem = { itemId: string; title: string; description: string; priceUsd: number; imageUrls: string[] };

@@ -35,7 +35,7 @@ function tdb() {
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
 export type BrandSearchTrend = { brand: string; momentumPct: number | null; avgInterest: number; breakout: boolean };
-export type ResaleMarket = { brand: string; soldCount: number; medianPriceCents: number | null; volMomentumPct: number | null; priceMomentumPct: number | null };
+export type ResaleMarket = { brand: string; soldCount: number; medianPriceCents: number | null; webMedianCents: number | null; volMomentumPct: number | null; priceMomentumPct: number | null };
 
 let _ready = false;
 async function ensureTables(sql: ReturnType<typeof tdb>) {
@@ -44,39 +44,50 @@ async function ensureTables(sql: ReturnType<typeof tdb>) {
  await sql`CREATE INDEX IF NOT EXISTS idx_gss_brand_ts ON google_search_snapshots (lower(brand), captured_at DESC)`.catch(() => {});
  await sql`CREATE TABLE IF NOT EXISTS resale_market_snapshots (id BIGSERIAL PRIMARY KEY, brand TEXT NOT NULL, sold_count INT NOT NULL, median_price_cents INT, captured_at TIMESTAMPTZ NOT NULL DEFAULT now())`.catch(() => {});
  await sql`CREATE INDEX IF NOT EXISTS idx_resale_snap_brand_ts ON resale_market_snapshots (lower(brand), captured_at DESC)`.catch(() => {});
+ // web_median_cents = median ASKING price across resale sites Google Shopping indexes (Vestiaire,
+ // Grailed, RealReal, etc.) — added later, so ALTER for existing tables.
+ await sql`ALTER TABLE resale_market_snapshots ADD COLUMN IF NOT EXISTS web_median_cents INT`.catch(() => {});
  _ready = true;
 }
 
 // ── CAPTURE: SerpApi → DB (called by the daily cron) ──
 
-// One SerpApi google_trends TIMESERIES call covers up to 5 queries; momentum = last ~quarter of the
-// 3-month series vs the prior quarter; breakout = a big recent surge.
-async function fetchGoogleBatch(brands: string[]): Promise<BrandSearchTrend[]> {
- const j = await serp({ engine: "google_trends", q: brands.join(","), data_type: "TIMESERIES", date: "today 3-m", hl: "en", geo: "US" });
+// One Google Trends request PER BRAND — never batched. Google normalizes every query in a request
+// against the single highest-volume one, so a rising niche/archival label batched with Louis Vuitton
+// reads as ~0 (pure noise). Solo queries give each brand its own 0–100 range, so momentum is real.
+// momentum = last ~quarter of the 3-month series vs the prior quarter; breakout = a big recent surge.
+async function fetchGoogleTrend(brand: string): Promise<BrandSearchTrend> {
+ const j = await serp({ engine: "google_trends", q: brand, data_type: "TIMESERIES", date: "today 3-m", hl: "en", geo: "US" });
  const timeline: any[] = j?.interest_over_time?.timeline_data ?? [];
- return brands.map((brand, idx) => {
- const series = timeline.map((t) => {
- const vals: any[] = t.values || [];
- const v = vals.find((x) => String(x.query || "").toLowerCase() === brand.toLowerCase()) ?? vals[idx];
- return Number(v?.extracted_value ?? v?.value ?? 0);
- }).filter((n) => Number.isFinite(n));
+ const series = timeline.map((t) => Number(t.values?.[0]?.extracted_value ?? t.values?.[0]?.value ?? 0)).filter((n) => Number.isFinite(n));
  if (series.length < 4) return { brand, momentumPct: null, avgInterest: Math.round(avg(series)), breakout: false };
  const w = Math.max(2, Math.floor(series.length / 4));
  const recent = series.slice(-w), prior = series.slice(-2 * w, -w);
  const rAvg = avg(recent), pAvg = avg(prior);
  const momentumPct = pAvg > 0 ? Math.round(((rAvg - pAvg) / pAvg) * 100) : (rAvg > 0 ? 100 : null);
  return { brand, momentumPct, avgInterest: Math.round(avg(series)), breakout: momentumPct != null && momentumPct >= 80 && rAvg >= 20 };
- });
+}
+
+function median(cents: number[]): number | null {
+ const s = cents.filter((c) => !!c && c > 0).sort((a, b) => a - b);
+ return s.length ? s[Math.floor(s.length / 2)] : null;
 }
 
 async function ebaySoldStats(brand: string): Promise<{ soldCount: number; medianCents: number | null }> {
  const r = await serp({ engine: "ebay", _nkw: brand, ebay_domain: "ebay.com", LH_Sold: "1", LH_Complete: "1" });
  const rows: any[] = r?.organic_results || [];
- const cents = rows.map((row) => priceToCents(row.price)).filter((c): c is number => !!c && c > 0).sort((a, b) => a - b);
  // organic_results is only page 1 (~60), so prefer eBay's real total-sold count when present.
  const total = Number(r?.search_information?.total_results);
  const soldCount = Number.isFinite(total) && total > 0 ? total : rows.length;
- return { soldCount, medianCents: cents.length ? cents[Math.floor(cents.length / 2)] : null };
+ return { soldCount, medianCents: median(rows.map((row) => priceToCents(row.price) ?? 0)) };
+}
+
+// Median ASKING price across resale sites Google Shopping indexes (Vestiaire, Grailed, RealReal,
+// eBay listings, etc.) — a broad multi-site price read to complement eBay's SOLD price.
+async function webAskingMedian(brand: string): Promise<number | null> {
+ const r = await serp({ engine: "google_shopping", q: brand, gl: "us" });
+ const rows: any[] = r?.shopping_results || [];
+ return median(rows.map((row) => priceToCents(row.extracted_price ?? row.price) ?? 0));
 }
 
 // Run fn over items with bounded concurrency — SerpApi is the bottleneck, so parallelize the
@@ -98,20 +109,16 @@ export async function captureMarketTrends(brands: string[]): Promise<{ google: n
  const sql = tdb();
  await ensureTables(sql);
 
- // Google is 5 queries per call → a few batches; eBay is one call per brand. Fetch both sets
- // concurrently (bounded, so we don't trip SerpApi rate limits), THEN write.
- const gList = list.slice(0, 20);
- const gBatches: string[][] = [];
- for (let i = 0; i < gList.length; i += 5) gBatches.push(gList.slice(i, i + 5));
-
+ // One Google call per brand + one eBay call per brand. Fetch both sets concurrently (bounded, so
+ // we don't trip SerpApi rate limits), THEN write.
  const [gResults, stats] = await Promise.all([
- mapLimit(gBatches, 4, (b) => fetchGoogleBatch(b).catch(() => [] as BrandSearchTrend[])),
- mapLimit(list.slice(0, 12), 8, (brand) => ebaySoldStats(brand).then((st) => ({ brand, st })).catch(() => null)),
+ mapLimit(list.slice(0, 20), 6, (brand) => fetchGoogleTrend(brand).catch(() => null)),
+ mapLimit(list.slice(0, 12), 8, (brand) => Promise.all([ebaySoldStats(brand), webAskingMedian(brand).catch(() => null)]).then(([st, web]) => ({ brand, st, web })).catch(() => null)),
  ]);
 
  let google = 0;
- for (const batch of gResults) for (const b of batch) {
- if (b.avgInterest > 0 || b.momentumPct !== null) {
+ for (const b of gResults) {
+ if (b && (b.avgInterest > 0 || b.momentumPct !== null)) {
  await sql`INSERT INTO google_search_snapshots (brand, momentum_pct, avg_interest, breakout) VALUES (${b.brand}, ${b.momentumPct}, ${b.avgInterest}, ${b.breakout})`.catch(() => {});
  google++;
  }
@@ -119,8 +126,8 @@ export async function captureMarketTrends(brands: string[]): Promise<{ google: n
 
  let resale = 0;
  for (const s of stats) {
- if (s && (s.st.soldCount > 0 || s.st.medianCents)) {
- await sql`INSERT INTO resale_market_snapshots (brand, sold_count, median_price_cents) VALUES (${s.brand}, ${s.st.soldCount}, ${s.st.medianCents})`.catch(() => {});
+ if (s && (s.st.soldCount > 0 || s.st.medianCents || s.web)) {
+ await sql`INSERT INTO resale_market_snapshots (brand, sold_count, median_price_cents, web_median_cents) VALUES (${s.brand}, ${s.st.soldCount}, ${s.st.medianCents}, ${s.web})`.catch(() => {});
  resale++;
  }
  }
@@ -151,14 +158,14 @@ export async function getResaleMarket(brands: string[]): Promise<ResaleMarket[]>
  const sql = tdb();
  const out: ResaleMarket[] = [];
  for (const brand of list) {
- const latest = (await sql`SELECT sold_count, median_price_cents FROM resale_market_snapshots WHERE lower(brand) = lower(${brand}) ORDER BY captured_at DESC LIMIT 1`.catch(() => [])) as { sold_count: number; median_price_cents: number | null }[];
+ const latest = (await sql`SELECT sold_count, median_price_cents, web_median_cents FROM resale_market_snapshots WHERE lower(brand) = lower(${brand}) ORDER BY captured_at DESC LIMIT 1`.catch(() => [])) as { sold_count: number; median_price_cents: number | null; web_median_cents: number | null }[];
  const l = latest[0];
  if (!l) continue;
  const prior = (await sql`SELECT sold_count, median_price_cents FROM resale_market_snapshots WHERE lower(brand) = lower(${brand}) AND captured_at <= now() - interval '6 days' ORDER BY captured_at DESC LIMIT 1`.catch(() => [])) as { sold_count: number; median_price_cents: number | null }[];
  const p = prior[0];
  const volMomentumPct = p && p.sold_count > 0 ? Math.round(((l.sold_count - p.sold_count) / p.sold_count) * 100) : null;
  const priceMomentumPct = p?.median_price_cents && l.median_price_cents ? Math.round(((l.median_price_cents - p.median_price_cents) / p.median_price_cents) * 100) : null;
- out.push({ brand, soldCount: l.sold_count, medianPriceCents: l.median_price_cents, volMomentumPct, priceMomentumPct });
+ out.push({ brand, soldCount: l.sold_count, medianPriceCents: l.median_price_cents, webMedianCents: l.web_median_cents, volMomentumPct, priceMomentumPct });
  }
  return out;
 }
